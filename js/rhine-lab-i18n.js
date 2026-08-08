@@ -537,8 +537,9 @@
         button.setAttribute('aria-label', label);
         button.setAttribute('title', label);
         button.setAttribute('aria-pressed', String(language === 'en'));
-        const display = button.querySelector('[data-i18n-skip]');
-        if (display) display.textContent = nextIsEnglish ? 'EN' : '中';
+        button.querySelectorAll('[data-language-option]').forEach(function (option) {
+            option.classList.toggle('active', option.dataset.languageOption === language);
+        });
     }
 
     function setLanguage(nextLanguage, notify) {
