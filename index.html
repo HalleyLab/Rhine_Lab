@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d8ff45">
+    <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、样本与实验日程。">
+    <meta property="og:title" content="Rhine Lab · 生命科学研究工作台">
+    <meta property="og:description" content="实验记录、动物管理、试剂库存、样本库与实验日程的一体化科研工作台。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="images/rhine-life-logo.png">
+    <title>Rhine Lab · 生命科学研究工作台</title>
+    <link rel="manifest" href="app.webmanifest">
+    <link rel="icon" href="images/rhine-lab-icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/rhine-lab.css">
+</head>
+<body>
+    <a class="skip-link" href="#mainContent">跳至主要内容</a>
+
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-lockup">
+                <img class="brand-logo" src="images/rhine-life-logo.png" alt="莱茵生命 RHINE LAB">
+                <span class="brand-terminal">生命科学<br>研究终端</span>
+            </div>
+
+            <div class="facility-chip"><i></i> RHINE NETWORK / NODE 07</div>
+
+            <nav class="primary-nav" aria-label="Rhine Lab 功能导航">
+                <p class="nav-label">WORKSPACE / 工作区</p>
+                <button class="nav-item active" type="button" data-view="dashboard"><span class="nav-code">01</span><span>工作总览</span><b>OVERVIEW</b></button>
+                <button class="nav-item" type="button" data-view="experiments"><span class="nav-code">02</span><span>实验记录</span><b>RECORDS</b></button>
+                <button class="nav-item" type="button" data-view="mice"><span class="nav-code">03</span><span>动物管理</span><b>ANIMALS</b></button>
+                <button class="nav-item" type="button" data-view="reagents"><span class="nav-code">04</span><span>试剂库存</span><b>REAGENTS</b></button>
+                <button class="nav-item" type="button" data-view="samples"><span class="nav-code">05</span><span>样本库</span><b>BIOBANK</b></button>
+                <button class="nav-item" type="button" data-view="protocols"><span class="nav-code">06</span><span>实验方案</span><b>PROTOCOLS</b></button>
+                <button class="nav-item" type="button" data-view="schedule"><span class="nav-code">07</span><span>日程排班</span><b>SCHEDULE</b></button>
+            </nav>
+
+            <div class="sidebar-foot">
+                <div class="system-status"><span class="pulse-dot"></span><div><strong id="systemConnectionLabel">本地模式</strong><small id="systemSyncLabel">云同步未连接</small></div><b id="systemSyncBadge">LOCAL</b></div>
+            </div>
+        </aside>
+
+        <section class="app-stage">
+            <header class="topbar">
+                <button class="menu-toggle" id="menuToggle" type="button" aria-label="打开导航" aria-expanded="false"><i></i><i></i><i></i></button>
+                <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
+                <label class="global-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input id="globalSearch" type="search" placeholder="检索实验、动物、试剂或样本…" autocomplete="off">
+                    <kbd>CTRL K</kbd>
+                </label>
+                <div class="top-actions">
+                    <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="syncDialog" aria-haspopup="dialog">
+                        <i aria-hidden="true"></i><span id="syncStatusLabel">仅此设备</span>
+                    </button>
+                    <div class="workspace-mode-toggle" id="workspaceModeToggle" aria-label="切换工作区范围">
+                        <button class="active" type="button" data-workspace-mode="personal">个人</button>
+                        <button type="button" data-workspace-mode="lab">LAB 共用</button>
+                    </div>
+                    <button class="icon-button" id="themeToggle" type="button" aria-label="切换夜间模式" title="切换夜间模式">◐</button>
+                    <button class="icon-button notice-button" id="notificationToggle" type="button" aria-label="打开通知，3 条未读" aria-controls="notificationPanel" aria-expanded="false" title="通知">!<span id="noticeCount">3</span></button>
+                </div>
+            </header>
+
+            <aside class="notification-panel" id="notificationPanel" aria-labelledby="notificationTitle" hidden>
+                <header>
+                    <div><p class="micro-label">SYSTEM NOTIFICATIONS</p><h2 id="notificationTitle">通知中心</h2></div>
+                    <button class="notification-close" id="notificationClose" type="button" aria-label="关闭通知">×</button>
+                </header>
+                <div class="notification-list">
+                    <button class="notification-item unread" type="button" data-notification-id="reagent-low" data-notification-view="reagents">
+                        <i class="danger"></i><span><strong>Anti-c-Fos antibody 库存不足</strong><small>当前余量 18%，建议尽快补充 · 32 分钟前</small></span><b>→</b>
+                    </button>
+                    <button class="notification-item unread" type="button" data-notification-id="reagent-expiry" data-notification-view="reagents">
+                        <i class="warning"></i><span><strong>Matrigel 即将到期</strong><small>有效期为 2026-08-22 · 1 小时前</small></span><b>→</b>
+                    </button>
+                    <button class="notification-item unread" type="button" data-notification-id="imaging-reminder" data-notification-view="schedule">
+                        <i></i><span><strong>双光子成像预约提醒</strong><small>今天 14:30 · 成像中心 2P-01</small></span><b>→</b>
+                    </button>
+                </div>
+                <footer><span><i class="pulse-dot"></i> 系统信息实时更新</span><button id="markAllRead" type="button">全部标为已读</button></footer>
+            </aside>
+
+            <main id="mainContent" tabindex="-1">
+                <section class="workspace-scope-banner" id="workspaceScopeBanner" hidden>
+                    <div><p class="micro-label">LAB SHARED WORKSPACE</p><h2>实验室共用界面</h2><span>集中查看所有成员录入的实验、Protocol、库存、动物与样本信息。</span></div>
+                    <div class="workspace-scope-stats" id="workspaceScopeStats"></div>
+                </section>
+                <section class="view active" id="view-dashboard" data-title="工作总览">
+                    <div class="dashboard-hero">
+                        <div class="hero-copy">
+                            <p class="eyebrow"><span>RESEARCH CONTROL</span> / 研究控制台</p>
+                            <h1 id="timeGreeting">早上好，研究员。</h1>
+                            <p>今天有 <strong id="todayTaskCount">4 项任务</strong> 等待处理，细胞成像实验将在 <strong>14:30</strong> 开始。</p>
+                            <div class="hero-progress" aria-hidden="true"><i></i><span>FACILITY STATUS · READY</span><i></i></div>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="button ghost" type="button" data-view-target="schedule">查看日程</button>
+                            <button class="button primary" type="button" data-add="experiment"><span>＋</span> 新建实验记录</button>
+                        </div>
+                        <div class="hero-atmosphere" aria-hidden="true">
+                            <span class="light-arc arc-one"></span><span class="light-arc arc-two"></span>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
+                        </div>
+                        <div class="hero-index" aria-hidden="true"><small>SECTION</small><strong>01</strong><span>RL / OPS</span></div>
+                    </div>
+
+                    <div class="metrics-grid" id="metricsGrid"></div>
+
+                    <div class="dashboard-grid">
+                        <section class="panel project-panel">
+                            <header class="panel-head"><div><p class="micro-label">ACTIVE PIPELINE</p><h2>进行中的研究项目</h2></div><button class="text-button" type="button" data-view-target="experiments">查看全部 <span>↗</span></button></header>
+                            <div class="project-list" id="dashboardProjects"></div>
+                        </section>
+
+                        <section class="panel today-panel">
+                            <header class="panel-head"><div><p class="micro-label">TODAY · <span id="todayLabel"></span></p><h2>今日安排</h2></div><button class="square-button" type="button" data-add="task" aria-label="添加日程">＋</button></header>
+                            <div class="today-list" id="dashboardSchedule"></div>
+                            <button class="full-link" type="button" data-view-target="schedule">打开完整日程 <span>→</span></button>
+                        </section>
+
+                        <section class="panel alert-panel">
+                            <header class="panel-head"><div><p class="micro-label">INVENTORY SIGNAL</p><h2>库存与样本预警</h2></div><span class="status-chip caution">需要关注</span></header>
+                            <div class="alert-table-wrap">
+                                <table class="data-table compact-table">
+                                    <thead><tr><th>对象</th><th>分类</th><th>当前状态</th><th>位置 / 截止</th><th></th></tr></thead>
+                                    <tbody id="dashboardAlerts"></tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section class="panel activity-panel">
+                            <header class="panel-head"><div><p class="micro-label">ACTIVITY STREAM</p><h2>近期动态</h2></div><span class="live-label"><i></i> LIVE</span></header>
+                            <div class="activity-stream" id="activityStream"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="view" id="view-experiments" data-title="实验记录">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>EXPERIMENT ARCHIVE</span> / 实验档案</p><h1>实验记录</h1><p>从假设、执行到结果，把每一次实验变成可追溯的证据链。</p></div>
+                        <button class="button primary" type="button" data-add="experiment"><span>＋</span> 新建记录</button>
+                        <div class="heading-code">02</div>
+                    </div>
+                    <div class="module-toolbar">
+                        <div class="filter-tabs" id="experimentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="进行中">进行中</button><button data-filter="待分析">待分析</button><button data-filter="已完成">已完成</button></div>
+                        <label class="inline-search"><span>⌕</span><input id="experimentSearch" type="search" placeholder="筛选项目、编号或实验类型"></label>
+                    </div>
+                    <div class="record-grid" id="experimentGrid"></div>
+                </section>
+
+                <section class="view" id="view-mice" data-title="动物管理">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>ANIMAL FACILITY</span> / 实验动物中心</p><h1>动物管理</h1><p>集中管理实验动物的笼位、品系、基因型、实验状态与伦理信息。</p></div>
+                        <button class="button primary" type="button" data-add="mouse"><span>＋</span> 登记动物</button>
+                        <div class="heading-code">03</div>
+                    </div>
+                    <div class="mini-metrics" id="mouseMetrics"></div>
+                    <section class="panel table-panel">
+                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">A</span><div><p class="micro-label">COLONY REGISTRY</p><h2>在库动物</h2></div></div><label class="inline-search"><span>⌕</span><input id="mouseSearch" type="search" placeholder="搜索编号、品系或笼位"></label></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>动物编号</th><th>品系 / 基因型</th><th>性别</th><th>出生日期</th><th>笼位</th><th>实验状态</th><th>伦理编号</th><th></th></tr></thead><tbody id="mouseTable"></tbody></table></div>
+                    </section>
+                </section>
+
+                <section class="view" id="view-reagents" data-title="试剂库存">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>CHEMICAL INVENTORY</span> / 物料追踪</p><h1>试剂库存</h1><p>批号、余量、效期与存储条件始终清晰，减少实验前的库存意外。</p></div>
+                        <button class="button primary" type="button" data-add="reagent"><span>＋</span> 录入试剂</button>
+                        <div class="heading-code">04</div>
+                    </div>
+                    <div class="mini-metrics" id="reagentMetrics"></div>
+                    <section class="panel table-panel">
+                        <div class="module-toolbar in-panel"><div class="filter-tabs" id="reagentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="抗体">抗体</button><button data-filter="培养基">培养基</button><button data-filter="化学试剂">化学试剂</button></div><label class="inline-search"><span>⌕</span><input id="reagentSearch" type="search" placeholder="搜索名称、货号或位置"></label></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>试剂名称</th><th>类别 / 货号</th><th>批次</th><th>存储位置</th><th>实际库存</th><th>有效期</th><th>状态</th><th></th></tr></thead><tbody id="reagentTable"></tbody></table></div>
+                    </section>
+                </section>
+
+                <section class="view" id="view-samples" data-title="样本库">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>BIOBANK MATRIX</span> / 生物样本库</p><h1>样本库</h1><p>用冻存盒位置图快速定位组织、细胞、DNA 与血清样本。</p></div>
+                        <button class="button primary" type="button" data-add="sample"><span>＋</span> 登记样本</button>
+                        <div class="heading-code">05</div>
+                    </div>
+                    <section class="freezer-manager panel" aria-label="冻存盒管理">
+                        <div class="freezer-box-tabs" id="freezerBoxTabs"></div>
+                        <div class="freezer-manager-actions">
+                            <button class="button ghost" type="button" data-scan-freezer><span>⌁</span> 拍照识别</button>
+                            <button class="button primary" type="button" data-add="freezer"><span>＋</span> 新增冻存盒</button>
+                        </div>
+                    </section>
+                    <div class="biobank-layout">
+                        <section class="panel freezer-panel">
+                            <header class="panel-head"><div><p class="micro-label" id="freezerBoxTemperature">FREEZER MAP · -80°C</p><h2 id="freezerBoxTitle">冻存盒</h2><small class="matrix-hint" id="freezerBoxLocation">点击任意空位即可开始登记样本</small></div><div class="legend"><span><i class="cell occupied"></i>已占用</span><span><i class="cell selected"></i>当前</span><span><i class="cell"></i>空位</span></div></header>
+                            <div class="cryo-matrix" id="cryoMatrix" aria-label="冻存盒位置图"></div>
+                        </section>
+                        <aside class="panel sample-detail" id="sampleDetail"></aside>
+                    </div>
+                    <section class="panel sample-list-panel">
+                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">SAMPLE CATALOG</p><h2>样本目录</h2></div></div><label class="inline-search"><span>⌕</span><input id="sampleSearch" type="search" placeholder="搜索样本编号或来源"></label></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>样本编号</th><th>类型</th><th>来源</th><th>处理方式</th><th>存储位置</th><th>入库日期</th><th>状态</th></tr></thead><tbody id="sampleTable"></tbody></table></div>
+                    </section>
+                </section>
+
+                <section class="view" id="view-protocols" data-title="实验方案">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>PROTOCOL LIBRARY</span> / 标准作业库</p><h1>实验方案</h1><p>把关键步骤、风险节点和版本历史组织为可执行的实验 SOP。</p></div>
+                        <div class="heading-actions"><span class="heading-status"><i></i> <b id="protocolCount">6</b> 份 SOP 已同步</span><button class="button primary" type="button" data-add="protocol"><span>＋</span> 录入 Protocol</button></div>
+                        <div class="heading-code">06</div>
+                    </div>
+                    <div class="protocol-grid" id="protocolGrid"></div>
+                </section>
+
+                <section class="view" id="view-schedule" data-title="日程排班">
+                    <div class="page-heading technical-heading">
+                        <div><p class="eyebrow"><span>OPERATIONS SCHEDULE</span> / 运行日程</p><h1>日程排班</h1><p>切换日历或每日模式；在每日时间网格中拖动，即可建立新的日程时段。</p></div>
+                        <button class="button primary" type="button" data-add="task"><span>＋</span> 添加日程</button>
+                        <div class="heading-code">07</div>
+                    </div>
+                    <div class="calendar-toolbar">
+                        <div class="calendar-modes" role="group" aria-label="日程显示方式"><button class="active" type="button" data-calendar-mode="day">每日</button><button type="button" data-calendar-mode="month">日历</button></div>
+                        <div class="calendar-navigation"><button type="button" data-calendar-nav="prev" aria-label="上一时间段">←</button><button type="button" data-calendar-nav="today">今天</button><button type="button" data-calendar-nav="next" aria-label="下一时间段">→</button><strong id="calendarPeriodLabel"></strong></div>
+                    </div>
+                    <div class="calendar-view active" id="calendarDayView">
+                        <div class="schedule-layout">
+                            <section class="panel timeline-panel">
+                                <header class="panel-head"><div><p class="micro-label">DAILY TIMELINE · DRAG TO CREATE</p><h2 id="scheduleDateTitle">今日运行计划</h2></div><span class="drag-hint"><i></i> 在空白时间段拖动创建</span></header>
+                                <div class="day-timeline" id="dayTimeline" aria-label="每日时间网格"></div>
+                            </section>
+                            <aside class="panel utilization-panel"><p class="micro-label">FACILITY LOAD</p><h2>资源使用率</h2><div id="facilityLoads"></div><div class="safety-note"><span>!</span><div><strong>安全提醒</strong><p>离开实验室前确认生物安全柜 UV 已关闭，并完成危废登记。</p></div></div></aside>
+                        </div>
+                    </div>
+                    <div class="calendar-view" id="calendarMonthView" hidden>
+                        <div class="month-layout">
+                            <section class="panel month-panel"><div class="month-weekdays" aria-hidden="true"><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span></div><div class="month-grid" id="monthCalendarGrid"></div></section>
+                            <aside class="panel month-agenda"><p class="micro-label">SELECTED DATE</p><h2 id="monthAgendaTitle">当日日程</h2><div id="monthAgendaList"></div><button class="button primary" id="monthAgendaAdd" type="button">＋ 添加到这一天</button></aside>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </section>
+    </div>
+
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <button class="search-backdrop" type="button" aria-label="关闭检索结果"></button>
+        <section class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+            <header><div><p class="micro-label">GLOBAL DATABASE SEARCH</p><h2 id="searchTitle">全局检索</h2></div><button class="close-button" type="button" data-close-search>ESC</button></header>
+            <label class="dialog-search"><span>⌕</span><input id="overlaySearchInput" type="search" placeholder="输入关键词…" autocomplete="off"></label>
+            <div class="search-results" id="searchResults"></div>
+        </section>
+    </div>
+
+    <dialog class="entry-dialog" id="entryDialog">
+        <form id="entryForm" method="dialog">
+            <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭">×</button></header>
+            <div class="form-grid" id="dialogFields"></div>
+            <footer><p><span class="pulse-dot"></span> <span id="entrySaveStatus">数据将先保存到本机缓存</span></p><div><button class="button ghost" type="button" data-close-dialog>取消</button><button class="button primary" type="submit">确认保存</button></div></footer>
+        </form>
+    </dialog>
+
+    <dialog class="sync-dialog" id="syncDialog">
+        <article>
+            <header>
+                <div><p class="micro-label">CROSS-DEVICE SYNC</p><h2>设备同步</h2></div>
+                <button class="dialog-close" type="button" data-close-sync aria-label="关闭">×</button>
+            </header>
+            <section class="sync-intro">
+                <span class="sync-orbit" aria-hidden="true"><i></i></span>
+                <div><strong id="syncDialogTitle">当前仅保存在这台设备</strong><p id="syncDialogDescription">连接云数据库并登录后，电脑与手机会使用同一份数据。</p></div>
+            </section>
+            <form id="syncLoginForm" class="sync-login-form">
+                <label><span>登录邮箱</span><input id="syncEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+                <button class="button primary" type="submit">发送登录链接</button>
+            </form>
+            <section class="sync-account" id="syncAccount" hidden>
+                <div><small>已登录账户</small><strong id="syncAccountEmail">—</strong></div>
+                <div><small>LAB 权限</small><strong id="syncAccountRole">个人工作区</strong></div>
+            </section>
+            <p class="sync-message" id="syncMessage">云同步尚未配置；页面仍可作为本地工作台使用。</p>
+            <footer>
+                <button class="button ghost" id="installAppButton" type="button" hidden>安装到此设备</button>
+                <button class="button ghost" id="syncSignOut" type="button" hidden>退出登录</button>
+                <button class="button primary" type="button" data-close-sync>完成</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <dialog class="record-detail-dialog" id="recordDetailDialog">
+        <article>
+            <header>
+                <div><p class="micro-label" id="recordDetailKicker">DATABASE RECORD</p><h2 id="recordDetailTitle">详细信息</h2></div>
+                <button class="dialog-close" type="button" data-close-record-detail aria-label="关闭">×</button>
+            </header>
+            <div class="record-detail-body" id="recordDetailBody"></div>
+            <footer><span><i class="pulse-dot"></i> 数据来自当前工作区</span><button class="button primary" type="button" data-close-record-detail>完成</button></footer>
+        </article>
+    </dialog>
+
+    <dialog class="protocol-detail-dialog" id="protocolDetailDialog">
+        <article>
+            <header><div><p class="micro-label" id="protocolDetailNumber">PROTOCOL DETAIL</p><h2 id="protocolDetailTitle">Protocol</h2></div><button class="dialog-close" type="button" data-close-protocol aria-label="关闭">×</button></header>
+            <div class="protocol-detail-body" id="protocolDetailBody"></div>
+            <footer><span id="protocolDetailUsage">理论用量按每次执行计算</span><button class="button primary" id="scheduleProtocolButton" type="button">安排此 Protocol</button></footer>
+        </article>
+    </dialog>
+
+    <dialog class="experiment-detail-dialog" id="experimentDetailDialog">
+        <form id="experimentDetailForm" method="dialog">
+            <header><div><p class="micro-label" id="experimentDetailNumber">EXPERIMENT RECORD</p><h2 id="experimentDetailTitle">实验记录</h2></div><button class="dialog-close" type="button" data-close-experiment aria-label="关闭">×</button></header>
+            <div class="experiment-detail-body">
+                <section class="experiment-detail-fields">
+                    <label><span>记录状态</span><select id="experimentDetailStatus" name="status"><option>进行中</option><option>待分析</option><option>已完成</option></select></label>
+                    <label><span>关联 Protocol</span><select id="experimentDetailProtocol" name="protocolId"></select></label>
+                    <label class="full"><span>本次记录与备注</span><textarea id="experimentDetailDescription" name="description"></textarea></label>
+                </section>
+                <section class="experiment-usage-section">
+                    <div class="experiment-section-head"><div><p class="micro-label">ACTUAL REAGENT USAGE</p><h3>本次试剂用量</h3></div><span class="usage-source-badge" id="experimentUsageSource">按 Protocol 默认</span></div>
+                    <p class="experiment-usage-help">先显示关联 Protocol 的单次用量。可直接修改、删除或增加试剂；记录完成后，库存余量将采用这里保存的数值。</p>
+                    <div class="experiment-usage-rows" id="experimentUsageRows"></div>
+                    <button class="add-reagent-row" type="button" data-add-experiment-reagent>＋ 增加本次试剂</button>
+                </section>
+                <section class="experiment-photo-panel" id="experimentPhotoPanel" hidden></section>
+            </div>
+            <footer><span id="experimentUsageImpact">未完成的记录不会计入库存消耗</span><div><button class="button ghost" type="button" data-close-experiment>取消</button><button class="button primary" type="submit">保存本次记录</button></div></footer>
+        </form>
+    </dialog>
+
+    <dialog class="freezer-scan-dialog" id="freezerScanDialog">
+        <article>
+            <header><div><p class="micro-label">PHOTO-ASSISTED INTAKE</p><h2>冻存盒拍照识别</h2><small id="freezerScanBoxName">当前冻存盒</small></div><button class="dialog-close" type="button" data-close-scan aria-label="关闭">×</button></header>
+            <div class="freezer-scan-body">
+                <label class="scan-upload" for="freezerScanInput"><input id="freezerScanInput" type="file" accept="image/*" capture="environment"><span>拍照或选择冻存盒照片</span><small>请让冻存盒正对镜头并尽量占满画面</small></label>
+                <div class="scan-workspace">
+                    <div class="scan-image-stage"><canvas id="freezerScanCanvas" hidden></canvas><p id="freezerScanPlaceholder">照片会在这里显示，并按当前冻存盒网格分析管位。</p></div>
+                    <div class="scan-result-panel">
+                        <div class="scan-control"><label for="freezerScanSensitivity">识别灵敏度</label><input id="freezerScanSensitivity" type="range" min="10" max="90" value="54"><span id="freezerScanSummary">等待照片</span></div>
+                        <div class="scan-position-grid" id="freezerScanGrid" aria-label="识别结果，可点击修正"></div>
+                        <p>绿色为疑似有冻存管，灰色为已登记位置。识别结果可逐格点击修正。</p>
+                    </div>
+                </div>
+            </div>
+            <footer><button class="button ghost" type="button" data-close-scan>取消</button><button class="button primary" id="freezerScanStart" type="button" data-start-scan-intake disabled>按识别结果逐个录入</button></footer>
+        </article>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
+    <div class="mobile-scrim" id="mobileScrim"></div>
+
+    <script src="js/rhine-lab-config.js"></script>
+    <script src="js/rhine-lab-sync.js"></script>
+    <script src="js/rhine-lab-pwa.js"></script>
+    <script src="js/rhine-lab-bootstrap.js"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{
+  "exampleSeedVersion": 3,
+  "experiments": [
+    {
+      "id": "RL-EXP-030",
+      "title": "神经类器官氧化应激成像",
+      "project": "神经退行性病变模型",
+      "createdBy": "NODE-04",
+      "status": "进行中",
+      "type": "三维培养",
+      "date": "2026-08-08",
+      "progress": 52,
+      "description": "比较氧化应激前后类器官 ROS 信号与细胞死亡的空间分布。",
+      "protocolId": "SOP-IM-021"
+    },
+    {
+      "id": "RL-EXP-029",
+      "title": "AAV 表达窗口验证",
+      "project": "病毒载体质控",
+      "createdBy": "NODE-05",
+      "status": "待分析",
+      "type": "病毒载体",
+      "date": "2026-08-07",
+      "progress": 81,
+      "description": "比较不同感染复数和观察时间点的荧光表达强度。"
+    },
+    {
+      "id": "RL-EXP-028",
+      "title": "星形胶质细胞代谢追踪",
+      "project": "胶质细胞代谢耦联",
+      "createdBy": "NODE-02",
+      "status": "进行中",
+      "type": "细胞实验",
+      "date": "2026-08-06",
+      "progress": 37,
+      "description": "追踪炎症刺激后的葡萄糖类似物摄取速率变化。",
+      "protocolId": "SOP-CC-029"
+    },
+    {
+      "id": "RL-EXP-027",
+      "title": "脑组织 RNA 完整性评估",
+      "project": "转录组样本质控",
+      "createdBy": "NODE-03",
+      "status": "已完成",
+      "type": "核酸质控",
+      "date": "2026-08-04",
+      "progress": 100,
+      "description": "完成脑区样本的浓度、纯度与完整性检测。",
+      "protocolId": "SOP-MB-041",
+      "reagentUsage": [
+        { "catalog": "15596026", "amount": 1 },
+        { "catalog": "P4417", "amount": 8 }
+      ]
+    },
+    {
+      "id": "RL-EXP-026",
+      "title": "海马区神经元钙成像",
+      "project": "记忆环路可塑性",
+      "createdBy": "NODE-01",
+      "status": "进行中",
+      "type": "活体成像",
+      "date": "2026-08-08",
+      "progress": 68,
+      "description": "记录训练后的 CA1 神经元群体活动。",
+      "protocolId": "SOP-IM-021"
+    }
+  ],
+  "mice": [
+    { "id": "M-24071", "strain": "C57BL/6J", "genotype": "WT", "sex": "雄", "birth": "2026-05-18", "cage": "A-12", "status": "实验中", "ethics": "ZJU2026-017", "createdBy": "NODE-01" },
+    { "id": "M-24072", "strain": "C57BL/6J", "genotype": "WT", "sex": "雌", "birth": "2026-05-18", "cage": "A-12", "status": "实验中", "ethics": "ZJU2026-017", "createdBy": "NODE-01" },
+    { "id": "M-24088", "strain": "Camk2a-Cre", "genotype": "Cre+", "sex": "雄", "birth": "2026-06-02", "cage": "B-04", "status": "繁育中", "ethics": "ZJU2026-021", "createdBy": "NODE-02" },
+    { "id": "M-24089", "strain": "Camk2a-Cre", "genotype": "Cre−", "sex": "雌", "birth": "2026-06-02", "cage": "B-04", "status": "待分配", "ethics": "ZJU2026-021", "createdBy": "NODE-02" },
+    { "id": "M-24119", "strain": "Aldh1l1-CreERT2", "genotype": "Cre+", "sex": "雄", "birth": "2026-07-09", "cage": "C-06", "status": "观察期", "ethics": "ZJU2026-026", "createdBy": "NODE-04" },
+    { "id": "M-24120", "strain": "Aldh1l1-CreERT2", "genotype": "Cre−", "sex": "雌", "birth": "2026-07-09", "cage": "C-06", "status": "待分配", "ethics": "ZJU2026-026", "createdBy": "NODE-04" },
+    { "id": "M-24121", "strain": "Thy1-GCaMP6s", "genotype": "Tg/+", "sex": "雄", "birth": "2026-06-28", "cage": "D-03", "status": "实验中", "ethics": "ZJU2026-017", "createdBy": "NODE-05" },
+    { "id": "M-24122", "strain": "C57BL/6J", "genotype": "WT", "sex": "雌", "birth": "2026-07-16", "cage": "D-08", "status": "繁育中", "ethics": "ZJU2026-031", "createdBy": "NODE-02" }
+  ],
+  "reagents": [
+    { "name": "Anti-c-Fos antibody", "category": "抗体", "catalog": "ab190289", "lot": "GR3418-7", "location": "-20°C / R2-B4", "totalQty": 100, "currentQty": 18, "unit": "µL", "expiry": "2026-09-12", "status": "余量低", "createdBy": "NODE-01" },
+    { "name": "DMEM, high glucose", "category": "培养基", "catalog": "11965092", "lot": "2645218", "location": "4°C / C1-A2", "totalQty": 500, "currentQty": 330, "unit": "mL", "expiry": "2027-01-28", "status": "正常", "createdBy": "NODE-02" },
+    { "name": "Matrigel Matrix", "category": "培养基", "catalog": "354234", "lot": "3227005", "location": "-20°C / R1-C3", "totalQty": 10, "currentQty": 3.2, "unit": "mL", "expiry": "2026-08-22", "status": "临期", "createdBy": "NODE-02" },
+    { "name": "Paraformaldehyde", "category": "化学试剂", "catalog": "P6148", "lot": "SLCP9012", "location": "RT / S3-12", "totalQty": 1000, "currentQty": 720, "unit": "mL", "expiry": "2028-03-14", "status": "正常", "createdBy": "NODE-03" },
+    { "name": "DAPI Solution", "category": "染料", "catalog": "D9542", "lot": "MKCP1178", "location": "4°C / C2-D1", "totalQty": 10, "currentQty": 4.3, "unit": "mL", "expiry": "2027-05-05", "status": "正常", "createdBy": "NODE-03" },
+    { "name": "TRIzol Reagent", "category": "化学试剂", "catalog": "15596026", "lot": "2834011", "location": "4°C / C1-B5", "totalQty": 100, "currentQty": 21, "unit": "mL", "expiry": "2026-12-30", "status": "余量低", "createdBy": "NODE-04" },
+    { "name": "Anti-GAPDH antibody", "category": "抗体", "catalog": "2118S", "lot": "16", "location": "-20°C / R2-B2", "totalQty": 100, "currentQty": 54, "unit": "µL", "expiry": "2027-08-19", "status": "正常", "createdBy": "NODE-04" },
+    { "name": "PBS, pH 7.4", "category": "培养基", "catalog": "P4417", "lot": "SLDR4821", "location": "RT / S2-08", "totalQty": 1000, "currentQty": 760, "unit": "mL", "expiry": "2028-05-20", "status": "正常", "createdBy": "NODE-05" }
+  ],
+  "freezerBoxes": [
+    { "id": "FB-FZ03-B2", "name": "FZ-03 / B2", "storageLocation": "-80°C 冰箱 FZ-03 · 第 2 层 · B 位", "temperature": "-80°C", "rows": 9, "columns": 9, "createdBy": "NODE-01" },
+    { "id": "FB-FZ03-C1", "name": "FZ-03 / C1", "storageLocation": "-80°C 冰箱 FZ-03 · 第 3 层 · C 位", "temperature": "-80°C", "rows": 9, "columns": 9, "createdBy": "NODE-04" },
+    { "id": "FB-LN02-A1", "name": "LN-02 / A1", "storageLocation": "液氮罐 LN-02 · 提篮 A · 第 1 层", "temperature": "液氮", "rows": 9, "columns": 9, "createdBy": "NODE-05" }
+  ],
+  "samples": [
+    { "id": "RL-S-0869", "type": "RNA", "source": "M-24121 / 视觉皮层", "processing": "TRIzol 提取", "boxId": "FB-FZ03-C1", "position": "A1", "location": "FZ-03 / C1 · A1", "date": "2026-08-08", "status": "质控中", "createdBy": "NODE-05" },
+    { "id": "RL-S-0868", "type": "脑组织", "source": "M-24119 / 纹状体", "processing": "液氮速冻", "boxId": "FB-FZ03-C1", "position": "A4", "location": "FZ-03 / C1 · A4", "date": "2026-08-08", "status": "在库", "createdBy": "NODE-04" },
+    { "id": "RL-S-0867", "type": "细胞沉淀", "source": "类器官 / H2O2-200", "processing": "PBS 清洗", "boxId": "FB-FZ03-C1", "position": "B2", "location": "FZ-03 / C1 · B2", "date": "2026-08-07", "status": "在库", "createdBy": "NODE-04" },
+    { "id": "RL-S-0866", "type": "DNA", "source": "M-24120 / 耳样", "processing": "Proteinase K", "boxId": "FB-FZ03-C1", "position": "C7", "location": "FZ-03 / C1 · C7", "date": "2026-08-07", "status": "在库", "createdBy": "NODE-03" },
+    { "id": "RL-S-0861", "type": "脑组织", "source": "M-24071 / 海马", "processing": "PFA 固定", "boxId": "FB-FZ03-B2", "position": "A2", "location": "FZ-03 / B2 · A2", "date": "2026-08-08", "status": "在库", "createdBy": "NODE-01" },
+    { "id": "RL-S-0860", "type": "脑组织", "source": "M-24072 / 海马", "processing": "液氮速冻", "boxId": "FB-FZ03-B2", "position": "A5", "location": "FZ-03 / B2 · A5", "date": "2026-08-08", "status": "在库", "createdBy": "NODE-01" },
+    { "id": "RL-S-0858", "type": "细胞沉淀", "source": "BV2 / LPS-500", "processing": "PBS 清洗", "boxId": "FB-FZ03-B2", "position": "B3", "location": "FZ-03 / B2 · B3", "date": "2026-08-07", "status": "在库", "createdBy": "NODE-02" },
+    { "id": "RL-S-0863", "type": "细胞沉淀", "source": "HEK293T / AAV-07", "processing": "液氮速冻", "boxId": "FB-LN02-A1", "position": "D5", "location": "LN-02 / A1 · D5", "date": "2026-08-05", "status": "在库", "createdBy": "NODE-05" }
+  ],
+  "schedule": [
+    { "id": "T-101", "date": "2026-08-08", "time": "09:00", "end": "10:00", "title": "BV2 细胞换液", "resource": "细胞房 · BSC-02", "type": "cell", "protocolId": "SOP-CC-014", "done": true, "createdBy": "NODE-02" },
+    { "id": "T-102", "date": "2026-08-08", "time": "10:30", "end": "11:30", "title": "小鼠基因分型取样", "resource": "屏障设施 · A 区", "type": "animal", "protocolId": "SOP-AN-008", "done": false, "createdBy": "NODE-01" },
+    { "id": "T-103", "date": "2026-08-08", "time": "14:30", "end": "16:00", "title": "海马区双光子成像", "resource": "成像中心 · 2P-01", "type": "cell", "protocolId": "SOP-IM-021", "done": false, "createdBy": "NODE-01" },
+    { "id": "T-104", "date": "2026-08-08", "time": "16:30", "end": "17:30", "title": "qPCR 数据质控", "resource": "分析工位 · WS-07", "type": "analysis", "protocolId": "", "done": false, "createdBy": "NODE-03" },
+    { "id": "T-105", "date": "2026-08-08", "time": "18:00", "end": "19:00", "title": "项目周会", "resource": "会议室 · R203", "type": "meeting", "protocolId": "", "done": false, "createdBy": "NODE-04" },
+    { "id": "T-106", "date": "2026-08-11", "time": "09:30", "end": "11:00", "title": "免疫荧光染色", "resource": "组织学平台 · IF-02", "type": "cell", "protocolId": "SOP-IM-021", "done": false, "createdBy": "NODE-04" },
+    { "id": "T-107", "date": "2026-08-18", "time": "13:00", "end": "15:00", "title": "Western Blot", "resource": "分子平台 · WB-03", "type": "analysis", "protocolId": "SOP-MB-033", "done": false, "createdBy": "NODE-03" }
+  ],
+  "protocols": [
+    { "id": "SOP-CC-014", "number": "SOP-CC-014 · V3.2", "title": "哺乳动物细胞复苏", "summary": "从液氮取样、快速复温到换液培养的标准流程。", "steps": ["37°C 水浴快速复温冻存管", "转移至预温完全培养基", "300g 离心 5 分钟", "新鲜培养基重悬并接种", "次日换液并记录细胞状态"], "reagents": [{ "catalog": "11965092", "amount": 12 }], "tag": "细胞培养", "meta": "更新 2026-07-18", "createdBy": "NODE-02" },
+    { "id": "SOP-AN-008", "number": "SOP-AN-008 · V2.6", "title": "小鼠基因型鉴定", "summary": "耳样采集、裂解、PCR 扩增及凝胶结果判读。", "steps": ["核对动物编号与伦理批件", "采集耳样并完成笼卡记录", "Proteinase K 裂解组织", "配置 PCR 反应体系", "琼脂糖凝胶电泳", "判读条带并回填基因型"], "reagents": [], "tag": "动物实验", "meta": "更新 2026-07-29", "createdBy": "NODE-01" },
+    { "id": "SOP-IM-021", "number": "SOP-IM-021 · V1.9", "title": "免疫荧光染色", "summary": "固定、通透、封闭、抗体孵育和封片成像的完整操作序列。", "steps": ["PFA 固定并用 PBS 清洗", "通透与血清封闭", "一抗 4°C 孵育过夜", "清洗并孵育荧光二抗", "DAPI 染核", "封片并完成成像"], "reagents": [{ "catalog": "P6148", "amount": 25 }, { "catalog": "ab190289", "amount": 2 }, { "catalog": "D9542", "amount": 0.02 }], "tag": "组织学", "meta": "更新 2026-08-02", "createdBy": "NODE-04" },
+    { "id": "SOP-MB-033", "number": "SOP-MB-033 · V4.1", "title": "Western Blot", "summary": "蛋白定量、电泳、转膜、抗体孵育与曝光定量。", "steps": ["裂解样本并完成蛋白定量", "配置凝胶并上样电泳", "湿转至 PVDF 膜", "封闭并孵育一抗", "清洗并孵育二抗", "化学发光成像", "归一化定量并存档"], "reagents": [{ "catalog": "2118S", "amount": 2 }], "tag": "分子生物学", "meta": "更新 2026-06-24", "createdBy": "NODE-03" },
+    { "id": "SOP-MB-041", "number": "SOP-MB-041 · V1.3", "title": "组织 RNA 提取与质控", "summary": "从低温组织匀浆到 RNA 纯化和完整性检查的标准流程。", "steps": ["预冷器材并核对样本编号", "加入 TRIzol 完成组织匀浆", "室温静置并加入氯仿", "离心后转移水相", "异丙醇沉淀 RNA", "乙醇清洗并溶解沉淀", "测定浓度与纯度", "完成完整性检测并归档"], "reagents": [{ "catalog": "15596026", "amount": 1 }, { "catalog": "P4417", "amount": 8 }], "tag": "分子生物学", "meta": "更新 2026-08-05", "createdBy": "NODE-03" },
+    { "id": "SOP-CC-029", "number": "SOP-CC-029 · V2.0", "title": "BV2 炎症刺激与收样", "summary": "细胞铺板、刺激处理、时间点收样与污染检查流程。", "steps": ["检查细胞密度与形态", "按目标密度完成铺板", "更换同步化培养基", "加入刺激物并启动计时", "按时间点采集上清", "清洗并收集细胞沉淀", "完成样本编号与冻存"], "reagents": [{ "catalog": "11965092", "amount": 10 }, { "catalog": "P4417", "amount": 15 }], "tag": "细胞实验", "meta": "更新 2026-08-04", "createdBy": "NODE-02" }
+  ],
+  "activities": [
+    { "text": "更新了“神经类器官氧化应激成像”的实验进度", "time": "8 分钟前" },
+    { "text": "系统检测到 Anti-c-Fos antibody 余量低", "time": "32 分钟前" },
+    { "text": "上传了 qPCR 原始结果", "time": "1 小时前" },
+    { "text": "M-24088 的基因型记录已通过复核", "time": "昨天 18:42" }
+  ]
+}
