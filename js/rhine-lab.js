@@ -263,7 +263,23 @@
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
+        window.addEventListener('rhine:languagechange', handleLanguageChange);
         startCloudSync();
+    }
+
+    function handleLanguageChange() {
+        setTodayLabels();
+        renderAll();
+        applyNotificationState();
+        switchView(activeView, false);
+    }
+
+    function interfaceLocale() {
+        return window.RhineLabI18n ? window.RhineLabI18n.getLocale() : 'zh-CN';
+    }
+
+    function interfaceText(value) {
+        return window.RhineLabI18n ? window.RhineLabI18n.t(value) : value;
     }
 
     function scopeStorageKey(mode) {
@@ -526,9 +542,10 @@
 
     function setTodayLabels() {
         const now = new Date();
-        const label = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' }).format(now);
+        const locale = interfaceLocale();
+        const label = new Intl.DateTimeFormat(locale, { month: '2-digit', day: '2-digit', weekday: 'short' }).format(now);
         document.getElementById('todayLabel').textContent = label;
-        document.getElementById('scheduleDateTitle').textContent = now.getFullYear() + ' 年 ' + (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日';
+        document.getElementById('scheduleDateTitle').textContent = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(now);
         updateTimeGreeting(now);
     }
 
@@ -539,7 +556,7 @@
         if (hour >= 5 && hour < 11) greeting = '早上好';
         else if (hour >= 11 && hour < 13) greeting = '中午好';
         else if (hour >= 13 && hour < 18) greeting = '下午好';
-        document.getElementById('timeGreeting').textContent = greeting + '，研究员。';
+        document.getElementById('timeGreeting').textContent = interfaceText(greeting + '，研究员。');
     }
 
     function bindEvents() {
@@ -964,8 +981,9 @@
         document.querySelectorAll('.nav-item').forEach(function (button) {
             button.classList.toggle('active', button.dataset.view === view);
         });
-        els.breadcrumb.textContent = target.dataset.title;
-        document.title = target.dataset.title + ' · Rhine Lab';
+        const translatedTitle = interfaceText(target.dataset.title);
+        els.breadcrumb.textContent = translatedTitle;
+        document.title = translatedTitle + ' · Rhine Lab';
         if (updateHash) history.pushState(null, '', '#' + view);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -2148,11 +2166,11 @@ function getReagentDisplayStatus(reagent) {
     }
 
     function formatFullDate(date) {
-        return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
+        return new Intl.DateTimeFormat(interfaceLocale(), { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
     }
 
     function formatShortDate(date) {
-        return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }).format(date);
+        return new Intl.DateTimeFormat(interfaceLocale(), { month: 'long', day: 'numeric', weekday: 'short' }).format(date);
     }
 
     function timeToMinutes(time) {
@@ -2191,7 +2209,7 @@ function getReagentDisplayStatus(reagent) {
     }
 
     function formatQuantity(value) {
-        return Number(value || 0).toLocaleString('zh-CN', { maximumFractionDigits: 3 });
+        return Number(value || 0).toLocaleString(interfaceLocale(), { maximumFractionDigits: 3 });
     }
 
     function esc(value) {
