@@ -59,6 +59,7 @@
                         <button class="active" type="button" data-workspace-mode="personal">个人</button>
                         <button type="button" data-workspace-mode="lab">LAB 共用</button>
                     </div>
+                    <button class="icon-button language-toggle" id="languageToggle" type="button" data-i18n-control aria-label="Switch to English" title="Switch to English"><span data-i18n-skip>EN</span></button>
                     <button class="icon-button" id="themeToggle" type="button" aria-label="切换夜间模式" title="切换夜间模式">◐</button>
                     <button class="icon-button notice-button" id="notificationToggle" type="button" aria-label="打开通知，3 条未读" aria-controls="notificationPanel" aria-expanded="false" title="通知">!<span id="noticeCount">3</span></button>
                 </div>
@@ -347,6 +348,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
+    <script src="js/rhine-lab-i18n.js"></script>
     <script src="js/rhine-lab-config.js"></script>
     <script src="js/rhine-lab-sync.js"></script>
     <script src="js/rhine-lab-pwa.js"></script>
