@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhine-lab-pages-v2';
+const CACHE_NAME = 'rhine-lab-pages-v19';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
     './css/rhine-lab.css',
-  './js/rhine-lab-config.js',
-  './js/rhine-lab-i18n.js',
+    './js/rhine-lab-config.js',
+    './js/rhine-lab-i18n.js',
     './js/rhine-lab-sync.js',
     './js/rhine-lab-pwa.js',
     './js/rhine-lab-bootstrap.js',
@@ -25,7 +25,7 @@ self.addEventListener('install', function (event) {
 self.addEventListener('activate', function (event) {
     event.waitUntil(caches.keys().then(function (keys) {
         return Promise.all(keys.filter(function (key) {
-            return key.startsWith('rhine-lab-shell-') && key !== CACHE_NAME;
+            return key.startsWith('rhine-lab-') && key !== CACHE_NAME;
         }).map(function (key) {
             return caches.delete(key);
         }));
@@ -45,21 +45,22 @@ self.addEventListener('fetch', function (event) {
             caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
             return response;
         }).catch(function () {
-            return caches.match(request).then(function (cached) {
-                return cached || caches.match('./index.html');
+            return caches.open(CACHE_NAME).then(function (cache) {
+                return cache.match(request).then(function (cached) {
+                    return cached || cache.match('./index.html');
+                });
             });
         }));
         return;
     }
 
-    event.respondWith(caches.match(request).then(function (cached) {
-        const network = fetch(request).then(function (response) {
-            if (response.ok) {
-                const copy = response.clone();
-                caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
-            }
-            return response;
+    event.respondWith(caches.open(CACHE_NAME).then(function (cache) {
+        return cache.match(request).then(function (cached) {
+            const network = fetch(request).then(function (response) {
+                if (response.ok) cache.put(request, response.clone());
+                return response;
+            });
+            return cached || network;
         });
-        return cached || network;
     }));
 });
