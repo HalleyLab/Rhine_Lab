@@ -874,14 +874,39 @@
     }
 
     function observeChanges() {
+        const pendingRoots = new Set();
+        let scheduled = false;
+
+        function flushPendingTranslations() {
+            scheduled = false;
+            const roots = Array.from(pendingRoots).filter(function (root) {
+                return root && (root.isConnected || root === document.body);
+            });
+            pendingRoots.clear();
+            const topLevelRoots = roots.filter(function (root, index) {
+                return !roots.some(function (other, otherIndex) {
+                    return index !== otherIndex && other.nodeType === Node.ELEMENT_NODE && other.contains(root);
+                });
+            });
+            topLevelRoots.forEach(applyTree);
+        }
+
+        function scheduleTranslation(root) {
+            if (root) pendingRoots.add(root);
+            if (scheduled) return;
+            scheduled = true;
+            if (typeof queueMicrotask === 'function') queueMicrotask(flushPendingTranslations);
+            else Promise.resolve().then(flushPendingTranslations);
+        }
+
         const observer = new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {
                 if (mutation.type === 'characterData') {
-                    applyTextNode(mutation.target);
+                    scheduleTranslation(mutation.target);
                     return;
                 }
-                mutation.addedNodes.forEach(applyTree);
-                if (mutation.type === 'attributes') applyAttributes(mutation.target);
+                if (mutation.type === 'childList' && mutation.addedNodes.length) scheduleTranslation(mutation.target);
+                if (mutation.type === 'attributes') scheduleTranslation(mutation.target);
             });
         });
         observer.observe(document.body, {

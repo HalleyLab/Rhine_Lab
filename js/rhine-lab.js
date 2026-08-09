@@ -326,7 +326,6 @@
         window.setInterval(applyTimeThemeIfAutomatic, 60000);
         window.setInterval(updateRunTimerDisplay, 1000);
         saveState();
-        renderAll();
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
@@ -341,7 +340,6 @@
     function handleLanguageChange() {
         setTodayLabels();
         updateThemeToggleLabel();
-        renderAll();
         applyNotificationState();
         switchView(activeView, false);
     }
@@ -581,7 +579,7 @@
     function saveState(options) {
         localStorage.setItem(scopeStorageKey(workspaceMode), JSON.stringify(state));
         if (!(options && options.remote) && window.RhineLabSync) {
-            window.RhineLabSync.queueState(clone(state), workspaceMode);
+            window.RhineLabSync.queueState(state, workspaceMode);
         }
     }
 
@@ -1306,8 +1304,6 @@
         if (pendingTasks.length) {
             state.activities.unshift({ text: '结束今日工作并完成 ' + pendingTasks.length + ' 项日程', time: '刚刚' });
             saveState();
-            renderDashboard();
-            renderReagents();
             renderSchedule();
         }
         if (!todaysTasks.length) {
@@ -1379,6 +1375,8 @@
         const target = document.getElementById('view-' + view);
         if (!target) return;
         activeView = view;
+        renderWorkspaceScope();
+        renderView(view);
         document.querySelectorAll('.view').forEach(function (section) {
             section.classList.toggle('active', section === target);
         });
@@ -1394,15 +1392,23 @@
 
     function renderAll() {
         renderWorkspaceScope();
-        renderDashboard();
-        renderExperiments();
-        renderResults();
-        renderMice();
-        renderReagents();
-        renderSamples();
-        renderProtocols();
-        renderSchedule();
-        renderCellCultures();
+        renderView(activeView);
+    }
+
+    function renderView(view) {
+        const renderers = {
+            dashboard: renderDashboard,
+            experiments: renderExperiments,
+            results: renderResults,
+            mice: renderMice,
+            reagents: renderReagents,
+            samples: renderSamples,
+            protocols: renderProtocols,
+            schedule: renderSchedule,
+            cells: renderCellCultures
+        };
+        const renderer = renderers[view];
+        if (renderer) renderer();
     }
 
     function renderDashboard() {
@@ -1537,9 +1543,9 @@
 
     function resultAttachmentLinkHtml(attachment) {
         const isImage = String(attachment.type || '').startsWith('image/');
-        const dataUrl = String(attachment.data || '').startsWith('data:') ? attachment.data : '';
-        const preview = isImage && dataUrl ? '<img src="' + esc(dataUrl) + '" alt="' + esc(attachment.name) + '">' : '<span aria-hidden="true">FILE</span>';
-        return '<a href="' + esc(dataUrl || '#') + '" download="' + esc(attachment.name) + '" title="' + esc(attachment.name) + '">' + preview + '<small>' + esc(attachment.name) + '</small></a>';
+        const attachmentUrl = /^(?:data:|https?:\/\/)/i.test(String(attachment.data || '')) ? attachment.data : '';
+        const preview = isImage && attachmentUrl ? '<img loading="lazy" decoding="async" src="' + esc(attachmentUrl) + '" alt="' + esc(attachment.name) + '">' : '<span aria-hidden="true">FILE</span>';
+        return '<a href="' + esc(attachmentUrl || '#') + '" download="' + esc(attachment.name) + '" title="' + esc(attachment.name) + '">' + preview + '<small>' + esc(attachment.name) + '</small></a>';
     }
 
     function renderMice() {
@@ -2083,9 +2089,7 @@
         if (!task) return;
         task.done = !task.done;
         saveState();
-        renderDashboard();
-        renderReagents();
-        renderSchedule();
+        renderAll();
         showToast(task.done ? (task.protocolId ? '任务已完成，理论试剂余量已更新' : '任务已完成') : (task.protocolId ? '任务已恢复，理论试剂余量已回滚' : '任务已恢复'));
     }
 
@@ -2554,6 +2558,7 @@
         const expression = els.experimentRunBody.querySelector('[data-run-expression]');
         if (notes) context.stepState.notes = notes.value;
         if (expression) context.stepState.calculator.expression = expression.value;
+        window.clearTimeout(runInputSaveTimer);
         saveState();
     }
 
@@ -2563,7 +2568,7 @@
         if (event.target.matches('[data-run-notes]')) context.stepState.notes = event.target.value;
         if (event.target.matches('[data-run-expression]')) context.stepState.calculator.expression = event.target.value;
         window.clearTimeout(runInputSaveTimer);
-        runInputSaveTimer = window.setTimeout(function () { saveState(); }, 350);
+        runInputSaveTimer = window.setTimeout(function () { saveState(); }, 700);
     }
 
     function handleRunWorkspaceChange(event) {
@@ -2584,7 +2589,10 @@
             renderExperimentRun();
             return;
         }
-        if (event.target.matches('[data-run-notes], [data-run-expression]')) saveState();
+        if (event.target.matches('[data-run-notes], [data-run-expression]')) {
+            window.clearTimeout(runInputSaveTimer);
+            saveState();
+        }
     }
 
     async function addRunStepPhotos(input) {

@@ -9363,3 +9363,12 @@ html[lang="en"] .experiment-results-board * {
     .pending-result-attachments { grid-template-columns: 1fr; }
     .experiment-day-head > div { align-items: flex-start; flex-direction: column; gap: 2px; }
 }
+
+/* Skip layout and paint work for dated groups until they approach the viewport. */
+@supports (content-visibility: auto) {
+    .experiment-day-group,
+    .result-day-group {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 320px;
+    }
+}
