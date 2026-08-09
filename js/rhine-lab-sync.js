@@ -270,8 +270,34 @@
         (copy.freezerBoxes || []).forEach(function (box) {
             jobs.push(uploadAttachmentField(box, 'lastScanPhoto', 'lastScanPhotoPath', scope));
         });
+        (copy.results || []).forEach(function (result) {
+            (result.attachments || []).forEach(function (attachment) {
+                jobs.push(uploadResultAttachment(attachment, scope));
+            });
+        });
         await Promise.all(jobs);
         return copy;
+    }
+
+    async function uploadResultAttachment(attachment, scope) {
+        const dataUrl = attachment && attachment.data;
+        if (!dataUrl || !String(dataUrl).startsWith('data:')) {
+            if (dataUrl && String(dataUrl).startsWith('http')) delete attachment.data;
+            return;
+        }
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+        const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+        const nameExtension = String(attachment.name || '').match(/\.[a-z0-9]{1,8}$/i);
+        const mimeExtension = blob.type === 'application/pdf' ? '.pdf' : blob.type === 'text/csv' ? '.csv' : blob.type === 'text/plain' ? '.txt' : blob.type === 'image/png' ? '.png' : blob.type === 'image/webp' ? '.webp' : blob.type.startsWith('image/') ? '.jpg' : '.bin';
+        const extension = nameExtension ? nameExtension[0].toLowerCase() : mimeExtension;
+        const root = scope === 'lab' ? 'lab/' + membership.lab_id : 'user/' + user.id;
+        const path = root + '/results/' + hash + extension;
+        const upload = await supabase.storage.from(ATTACHMENT_BUCKET).upload(path, blob, { upsert: true, contentType: blob.type || attachment.type || 'application/octet-stream' });
+        if (upload.error) throw upload.error;
+        attachment.path = path;
+        delete attachment.data;
     }
 
     async function uploadAttachmentField(record, dataField, pathField, scope) {
@@ -303,6 +329,11 @@
         });
         (copy.freezerBoxes || []).forEach(function (box) {
             jobs.push(signAttachmentField(box, 'lastScanPhotoPath', 'lastScanPhoto'));
+        });
+        (copy.results || []).forEach(function (result) {
+            (result.attachments || []).forEach(function (attachment) {
+                jobs.push(signAttachmentField(attachment, 'path', 'data'));
+            });
         });
         await Promise.all(jobs);
         return copy;
