@@ -75,6 +75,81 @@
     { "id": "M-24121", "strain": "Thy1-GCaMP6s", "genotype": "Tg/+", "sex": "雄", "birth": "2026-06-28", "cage": "D-03", "status": "实验中", "ethics": "ZJU2026-017", "createdBy": "NODE-05" },
     { "id": "M-24122", "strain": "C57BL/6J", "genotype": "WT", "sex": "雌", "birth": "2026-07-16", "cage": "D-08", "status": "繁育中", "ethics": "ZJU2026-031", "createdBy": "NODE-02" }
   ],
+  "cellCultures": [
+    {
+      "id": "CELL-BV2-01",
+      "name": "BV2",
+      "species": "Mus musculus",
+      "medium": "DMEM + 10% FBS",
+      "container": "T75 培养瓶",
+      "vesselCount": 2,
+      "incubator": "37°C / 5% CO₂ · INC-02 / B3",
+      "passage": 18,
+      "confluence": 68,
+      "nextAction": "2026-08-09",
+      "status": "培养中",
+      "notes": "形态均一，无明显漂浮细胞。",
+      "createdBy": "NODE-02",
+      "history": [
+        { "id": "CELLLOG-BV2-003", "date": "2026-08-07", "action": "传代", "passage": 18, "ratio": "1:4", "container": "T75 培养瓶", "vesselCount": 2, "confluence": 86, "medium": "DMEM + 10% FBS", "notes": "PBS 清洗后常规消化，贴壁状态正常。", "photoData": "" },
+        { "id": "CELLLOG-BV2-002", "date": "2026-08-05", "action": "换液", "passage": 17, "ratio": "—", "container": "T75 培养瓶", "vesselCount": 1, "confluence": 62, "medium": "DMEM + 10% FBS", "notes": "培养基颜色正常。", "photoData": "" }
+      ]
+    },
+    {
+      "id": "CELL-HEK293T-02",
+      "name": "HEK293T",
+      "species": "Homo sapiens",
+      "medium": "DMEM + 10% FBS + P/S",
+      "container": "10 cm 培养皿",
+      "vesselCount": 3,
+      "incubator": "37°C / 5% CO₂ · INC-01 / A2",
+      "passage": 31,
+      "confluence": 42,
+      "nextAction": "2026-08-10",
+      "status": "培养中",
+      "notes": "用于 AAV 包装预实验。",
+      "createdBy": "NODE-05",
+      "history": [
+        { "id": "CELLLOG-293T-002", "date": "2026-08-08", "action": "传代", "passage": 31, "ratio": "1:5", "container": "10 cm 培养皿", "vesselCount": 3, "confluence": 92, "medium": "DMEM + 10% FBS + P/S", "notes": "分瓶后分布均匀。", "photoData": "" }
+      ]
+    },
+    {
+      "id": "CELL-ORG-03",
+      "name": "iPSC 神经类器官",
+      "species": "Homo sapiens",
+      "medium": "Neural differentiation medium",
+      "container": "低吸附 6 孔板",
+      "vesselCount": 2,
+      "incubator": "37°C / 5% CO₂ · INC-03 / C1",
+      "passage": 7,
+      "confluence": 55,
+      "nextAction": "2026-08-09",
+      "status": "分化中",
+      "notes": "D42，计划下一次半量换液并拍照。",
+      "createdBy": "NODE-04",
+      "history": [
+        { "id": "CELLLOG-ORG-002", "date": "2026-08-07", "action": "换液", "passage": 7, "ratio": "半量", "container": "低吸附 6 孔板", "vesselCount": 2, "confluence": 55, "medium": "Neural differentiation medium", "notes": "类器官边界清晰，未见明显坏死中心扩大。", "photoData": "" }
+      ]
+    },
+    {
+      "id": "CELL-ASTRO-04",
+      "name": "原代星形胶质细胞",
+      "species": "Rattus norvegicus",
+      "medium": "DMEM/F12 + 10% FBS",
+      "container": "T25 培养瓶",
+      "vesselCount": 2,
+      "incubator": "37°C / 5% CO₂ · INC-02 / B1",
+      "passage": 3,
+      "confluence": 82,
+      "nextAction": "2026-08-08",
+      "status": "待传代",
+      "notes": "汇合度较高，建议今日完成传代。",
+      "createdBy": "NODE-03",
+      "history": [
+        { "id": "CELLLOG-ASTRO-001", "date": "2026-08-04", "action": "复苏", "passage": 3, "ratio": "1 vial", "container": "T25 培养瓶", "vesselCount": 2, "confluence": 18, "medium": "DMEM/F12 + 10% FBS", "notes": "复苏后贴壁良好。", "photoData": "" }
+      ]
+    }
+  ],
   "reagents": [
     { "name": "Anti-c-Fos antibody", "category": "抗体", "catalog": "ab190289", "lot": "GR3418-7", "location": "-20°C / R2-B4", "totalQty": 100, "currentQty": 18, "unit": "µL", "expiry": "2026-09-12", "status": "余量低", "createdBy": "NODE-01" },
     { "name": "DMEM, high glucose", "category": "培养基", "catalog": "11965092", "lot": "2645218", "location": "4°C / C1-A2", "totalQty": 500, "currentQty": 330, "unit": "mL", "expiry": "2027-01-28", "status": "正常", "createdBy": "NODE-02" },
@@ -103,7 +178,7 @@
   "schedule": [
     { "id": "T-101", "date": "2026-08-08", "time": "09:00", "end": "10:00", "title": "BV2 细胞换液", "resource": "细胞房 · BSC-02", "type": "cell", "protocolId": "SOP-CC-014", "done": true, "createdBy": "NODE-02" },
     { "id": "T-102", "date": "2026-08-08", "time": "10:30", "end": "11:30", "title": "小鼠基因分型取样", "resource": "屏障设施 · A 区", "type": "animal", "protocolId": "SOP-AN-008", "done": false, "createdBy": "NODE-01" },
-    { "id": "T-103", "date": "2026-08-08", "time": "14:30", "end": "16:00", "title": "海马区双光子成像", "resource": "成像中心 · 2P-01", "type": "cell", "protocolId": "SOP-IM-021", "done": false, "createdBy": "NODE-01" },
+    { "id": "T-103", "date": "2026-08-08", "time": "14:30", "end": "16:00", "title": "海马区双光子成像", "resource": "成像中心 · 2P-01", "type": "cell", "experimentId": "RL-EXP-026", "protocolId": "SOP-IM-021", "done": false, "createdBy": "NODE-01" },
     { "id": "T-104", "date": "2026-08-08", "time": "16:30", "end": "17:30", "title": "qPCR 数据质控", "resource": "分析工位 · WS-07", "type": "analysis", "protocolId": "", "done": false, "createdBy": "NODE-03" },
     { "id": "T-105", "date": "2026-08-08", "time": "18:00", "end": "19:00", "title": "项目周会", "resource": "会议室 · R203", "type": "meeting", "protocolId": "", "done": false, "createdBy": "NODE-04" },
     { "id": "T-106", "date": "2026-08-11", "time": "09:30", "end": "11:00", "title": "免疫荧光染色", "resource": "组织学平台 · IF-02", "type": "cell", "protocolId": "SOP-IM-021", "done": false, "createdBy": "NODE-04" },
