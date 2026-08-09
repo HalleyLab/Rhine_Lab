@@ -12,6 +12,10 @@
             { id: 'RL-EXP-022', title: 'LPS 剂量响应曲线', project: '神经炎症干预', createdBy: 'NODE-02', status: '已完成', type: '蛋白检测', date: '2026-08-03', progress: 100, description: '建立 0–1000 ng/mL 剂量响应曲线，确定后续干预实验工作浓度。' },
             { id: 'RL-EXP-021', title: '病毒滴度预实验', project: '记忆环路可塑性', createdBy: 'NODE-01', status: '待分析', type: '病毒载体', date: '2026-08-01', progress: 76, description: '对三个稀释梯度进行感染效率比较，等待图像定量结果。' }
         ],
+        results: [
+            { id: 'RL-RES-001', experimentId: 'RL-EXP-027', date: '2026-08-04', summary: '16 份脑区 RNA 样本中，14 份 RIN ≥ 8.0，浓度与纯度达到建库要求。', conclusion: '低温匀浆与快速相分离流程稳定，可继续用于后续转录组样本制备。', nextStep: '复核两份低完整性样本的取材与冻融记录。', attachments: [], createdBy: 'NODE-03', history: [] },
+            { id: 'RL-RES-002', experimentId: 'RL-EXP-029', date: '2026-08-07', summary: '三个感染复数均检测到荧光表达，其中中剂量组在 72 小时时信噪比最佳。', conclusion: '中剂量条件兼顾表达强度与细胞状态，适合作为后续验证的起始参数。', nextStep: '补充更晚时间点并完成图像盲法定量。', attachments: [], createdBy: 'NODE-05', history: [] }
+        ],
         mice: [
             { id: 'M-24071', strain: 'C57BL/6J', genotype: 'WT', sex: '雄', birth: '2026-05-18', cage: 'A-12', status: '实验中', ethics: 'ZJU2026-017' },
             { id: 'M-24072', strain: 'C57BL/6J', genotype: 'WT', sex: '雄', birth: '2026-05-18', cage: 'A-12', status: '实验中', ethics: 'ZJU2026-017' },
@@ -106,6 +110,10 @@
             { id: 'RL-EXP-028', title: '星形胶质细胞代谢追踪', project: '胶质细胞代谢耦联', createdBy: 'NODE-02', status: '进行中', type: '细胞实验', date: '2026-08-06', progress: 37, description: '使用荧光葡萄糖类似物追踪炎症刺激后的摄取速率变化。' },
             { id: 'RL-EXP-027', title: '脑组织 RNA 完整性评估', project: '转录组样本质控', createdBy: 'NODE-03', status: '已完成', type: '核酸质控', date: '2026-08-04', progress: 100, description: '完成 16 份脑区样本的浓度、纯度与完整性检测并筛选建库样本。', protocolId: 'SOP-MB-041' }
         ],
+        results: [
+            { id: 'RL-RES-001', experimentId: 'RL-EXP-027', date: '2026-08-04', summary: '16 份脑区 RNA 样本中，14 份 RIN ≥ 8.0，浓度与纯度达到建库要求。', conclusion: '低温匀浆与快速相分离流程稳定，可继续用于后续转录组样本制备。', nextStep: '复核两份低完整性样本的取材与冻融记录。', attachments: [], createdBy: 'NODE-03', history: [] },
+            { id: 'RL-RES-002', experimentId: 'RL-EXP-029', date: '2026-08-07', summary: '三个感染复数均检测到荧光表达，其中中剂量组在 72 小时时信噪比最佳。', conclusion: '中剂量条件兼顾表达强度与细胞状态，适合作为后续验证的起始参数。', nextStep: '补充更晚时间点并完成图像盲法定量。', attachments: [], createdBy: 'NODE-05', history: [] }
+        ],
         mice: [
             { id: 'M-24119', strain: 'Aldh1l1-CreERT2', genotype: 'Cre+', sex: '雌', birth: '2026-07-09', cage: 'C-06', status: '观察期', ethics: 'ZJU2026-026', createdBy: 'NODE-04' },
             { id: 'M-24120', strain: 'Aldh1l1-CreERT2', genotype: 'Cre−', sex: '雄', birth: '2026-07-09', cage: 'C-06', status: '待分配', ethics: 'ZJU2026-026', createdBy: 'NODE-04' },
@@ -165,20 +173,21 @@
 
     protocols.push.apply(protocols, clone(additionalExamples.protocols));
     defaults.experiments = defaults.experiments.concat(clone(additionalExamples.experiments));
+    defaults.results = clone(additionalExamples.results);
     defaults.mice = defaults.mice.concat(clone(additionalExamples.mice));
     defaults.reagents = defaults.reagents.concat(clone(additionalExamples.reagents));
     defaults.samples = defaults.samples.concat(clone(additionalExamples.samples));
     defaults.schedule = defaults.schedule.concat(clone(additionalExamples.schedule));
     defaults.activities = defaults.activities.concat(clone(additionalExamples.activities));
     defaults.protocols = clone(protocols);
-    defaults.exampleSeedVersion = 2;
+    defaults.exampleSeedVersion = 4;
     defaults.auditLog = [];
 
     applyConfiguredSeed(window.RHINE_LAB_SEED);
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'mice', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -186,13 +195,14 @@
             protocols.push.apply(protocols, clone(seed.protocols));
             defaults.protocols = clone(seed.protocols);
         }
-        defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 3;
+        defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 4;
     }
 
     let workspaceMode = localStorage.getItem('rhineLabWorkspaceMode') === 'lab' ? 'lab' : 'personal';
     let state = migrateState(loadState(workspaceMode));
     let activeView = getInitialView();
     let experimentFilter = '全部';
+    let resultFilter = '全部';
     let reagentFilter = '全部';
     let workspaceReadOnly = workspaceMode === 'lab';
     let selectedSampleId = state.samples[0] ? state.samples[0].id : '';
@@ -210,6 +220,8 @@
     let pendingTaskDefaults = null;
     let pendingSampleDefaults = null;
     let pendingPhotoData = '';
+    let pendingResultExperimentId = '';
+    let pendingResultAttachments = [];
     let sampleIntakeQueue = [];
     let freezerScanScores = [];
     let freezerScanDetected = new Set();
@@ -359,6 +371,7 @@
         if (!stored || typeof stored !== 'object') return clone(defaults);
         return {
             experiments: Array.isArray(stored.experiments) ? stored.experiments : clone(defaults.experiments),
+            results: Array.isArray(stored.results) ? stored.results : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.results)),
             mice: Array.isArray(stored.mice) ? stored.mice : clone(defaults.mice),
             cellCultures: Array.isArray(stored.cellCultures) ? stored.cellCultures : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.cellCultures)),
             reagents: Array.isArray(stored.reagents) ? stored.reagents : clone(defaults.reagents),
@@ -384,6 +397,10 @@
                 if (!data.activities.some(item => item.text === activity.text)) data.activities.push(clone(activity));
             });
             data.exampleSeedVersion = 2;
+        }
+        if ((Number(data.exampleSeedVersion) || 0) < 4) {
+            mergeExampleRecords(data.results, additionalExamples.results, 'experimentId');
+            data.exampleSeedVersion = 4;
         }
         data.freezerBoxes = Array.isArray(data.freezerBoxes) && data.freezerBoxes.length ? data.freezerBoxes : clone(defaults.freezerBoxes);
         data.freezerBoxes = data.freezerBoxes.map(function (box, index) {
@@ -473,6 +490,21 @@
             return Object.assign({}, mouse, {
                 createdBy: anonymousContributor(mouse.createdBy),
                 history: Array.isArray(mouse.history) ? mouse.history : []
+            });
+        });
+
+        data.results = (Array.isArray(data.results) ? data.results : []).filter(function (result, index, list) {
+            return result && result.experimentId && list.findIndex(item => item && item.experimentId === result.experimentId) === index;
+        }).map(function (result, index) {
+            return Object.assign({}, result, {
+                id: result.id || 'RL-RES-' + String(index + 1).padStart(3, '0'),
+                date: result.date || todayIso(),
+                summary: result.summary || '',
+                conclusion: result.conclusion || '',
+                nextStep: result.nextStep || '',
+                attachments: Array.isArray(result.attachments) ? result.attachments : [],
+                createdBy: anonymousContributor(result.createdBy),
+                history: Array.isArray(result.history) ? result.history : []
             });
         });
 
@@ -581,7 +613,7 @@
 
     function getInitialView() {
         const hash = location.hash.replace('#', '');
-        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
+        return ['dashboard', 'experiments', 'results', 'mice', 'reagents', 'samples', 'protocols', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
     }
 
     function applySavedTheme() {
@@ -698,7 +730,7 @@
 
     function bindEvents() {
         document.addEventListener('click', function (event) {
-            const mutationTarget = event.target.closest('[data-add], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -723,6 +755,38 @@
             const add = event.target.closest('[data-add]');
             if (add) {
                 openEntryDialog(add.dataset.add);
+                return;
+            }
+
+            const addResult = event.target.closest('[data-add-result-for]');
+            if (addResult) {
+                pendingResultExperimentId = addResult.dataset.addResultFor;
+                openEntryDialog('result');
+                return;
+            }
+
+            const editResult = event.target.closest('[data-edit-result]');
+            if (editResult) {
+                const result = state.results.find(item => item.id === editResult.dataset.editResult);
+                if (result) openEntryDialog('result', { edit: true, key: result.id, record: result });
+                return;
+            }
+
+            const deleteResult = event.target.closest('[data-delete-result]');
+            if (deleteResult) {
+                const result = state.results.find(item => item.id === deleteResult.dataset.deleteResult);
+                if (!result) return;
+                const experiment = state.experiments.find(item => item.id === result.experimentId);
+                pendingDeleteRecord = { type: 'result', key: result.id, label: experiment ? experiment.title : result.id };
+                els.deleteRecordName.textContent = interfaceText('实验结果') + ' “' + pendingDeleteRecord.label + '”';
+                els.deleteConfirmDialog.showModal();
+                return;
+            }
+
+            const removeResultAttachment = event.target.closest('[data-remove-result-attachment]');
+            if (removeResultAttachment) {
+                pendingResultAttachments = pendingResultAttachments.filter(item => item.id !== removeResultAttachment.dataset.removeResultAttachment);
+                renderPendingResultAttachments();
                 return;
             }
 
@@ -895,6 +959,8 @@
             if (event.target.closest('[data-close-dialog]')) {
                 els.entryDialog.close();
                 editingRecord = null;
+                pendingResultExperimentId = '';
+                pendingResultAttachments = [];
                 if (activeDialogType === 'sample' && sampleIntakeQueue.length) {
                     sampleIntakeQueue = [];
                     showToast('已暂停照片识别后的批量录入');
@@ -1113,6 +1179,7 @@
         });
 
         document.getElementById('experimentSearch').addEventListener('input', renderExperiments);
+        document.getElementById('resultSearch').addEventListener('input', renderResults);
         document.getElementById('mouseSearch').addEventListener('input', renderMice);
         document.getElementById('reagentSearch').addEventListener('input', renderReagents);
         document.getElementById('sampleSearch').addEventListener('input', renderSamples);
@@ -1129,6 +1196,14 @@
             renderExperiments();
         });
 
+        document.getElementById('resultFilters').addEventListener('click', function (event) {
+            const button = event.target.closest('[data-filter]');
+            if (!button) return;
+            resultFilter = button.dataset.filter;
+            updateActiveFilter(event.currentTarget, button);
+            renderResults();
+        });
+
         document.getElementById('reagentFilters').addEventListener('click', function (event) {
             const button = event.target.closest('[data-filter]');
             if (!button) return;
@@ -1139,6 +1214,10 @@
 
         els.entryForm.addEventListener('submit', saveEntryFromDialog);
         els.entryForm.addEventListener('change', function (event) {
+            if (event.target.matches('[data-result-attachments]')) {
+                prepareResultAttachments(event.target);
+                return;
+            }
             if (event.target.matches('[data-photo-capture]')) {
                 preparePhotoAttachment(event.target);
                 return;
@@ -1155,6 +1234,11 @@
             if (event.target.name === 'experimentId' && event.target.value) {
                 const experiment = state.experiments.find(item => item.id === event.target.value);
                 if (!experiment) return;
+                if (activeDialogType === 'result') {
+                    const dateInput = els.entryForm.elements.namedItem('date');
+                    if (dateInput) dateInput.value = experiment.date || todayIso();
+                    return;
+                }
                 const titleInput = els.entryForm.elements.namedItem('title');
                 const protocolInput = els.entryForm.elements.namedItem('protocolId');
                 if (titleInput && !titleInput.value.trim()) titleInput.value = experiment.title;
@@ -1312,6 +1396,7 @@
         renderWorkspaceScope();
         renderDashboard();
         renderExperiments();
+        renderResults();
         renderMice();
         renderReagents();
         renderSamples();
@@ -1388,13 +1473,73 @@
             const haystack = [item.id, item.title, item.project, item.createdBy, item.type, item.description].join(' ').toLowerCase();
             return matchesFilter && haystack.includes(search);
         });
-        document.getElementById('experimentGrid').innerHTML = items.map(function (item) {
+        const grouped = groupByDate(items);
+        document.getElementById('experimentGrid').innerHTML = grouped.map(function (group) {
+            return '<section class="experiment-day-group"><header class="experiment-day-head"><div><span>' + esc(formatDayHeading(group.date)) + '</span><small>' + group.items.length + ' 条记录</small></div><i></i></header><div class="record-grid">' + group.items.map(experimentCardHtml).join('') + '</div></section>';
+        }).join('') || '<div class="empty-card">没有找到匹配的实验记录。</div>';
+    }
+
+    function experimentCardHtml(item) {
             const protocol = state.protocols.find(protocolItem => protocolItem.id === item.protocolId);
             const usage = getEffectiveExperimentUsage(item);
             const usageLabel = item.usageOverridden ? '本次用量已调整' : protocol ? '按 ' + protocol.id : '未关联 Protocol';
             const photoBadge = item.photoData ? '<span class="photo-badge">照片</span>' : '';
             return '<button class="record-card" type="button" data-experiment-id="' + esc(item.id) + '" data-code="' + esc(item.id.replace('RL-EXP-', '')) + '"><div class="record-card-top"><span class="micro-label">' + esc(item.id) + ' · ' + esc(item.type) + contributorInline(item) + '</span><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></div><h2>' + esc(item.title) + '</h2><p>' + esc(item.description) + '</p><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><div class="record-usage-line"><span>' + photoBadge + esc(usageLabel) + '</span><strong>' + usage.length + ' 种试剂 →</strong></div><div class="record-meta"><div><small>PROJECT</small><strong>' + esc(item.project) + '</strong></div><div><small>DATE</small><strong>' + esc(shortDate(item.date)) + '</strong></div></div></button>';
-        }).join('') || '<div class="empty-card">没有找到匹配的实验记录。</div>';
+    }
+
+    function groupByDate(items) {
+        const groups = new Map();
+        items.slice().sort(function (left, right) {
+            return String(right.date || '').localeCompare(String(left.date || '')) || String(right.id || '').localeCompare(String(left.id || ''));
+        }).forEach(function (item) {
+            const date = item.date || '未记录日期';
+            if (!groups.has(date)) groups.set(date, []);
+            groups.get(date).push(item);
+        });
+        return Array.from(groups, function (entry) { return { date: entry[0], items: entry[1] }; });
+    }
+
+    function formatDayHeading(value) {
+        if (value === '未记录日期') return value;
+        return new Intl.DateTimeFormat(interfaceLocale(), { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(parseLocalDate(value));
+    }
+
+    function renderResults() {
+        const search = valueOf('resultSearch').toLowerCase();
+        const records = state.experiments.filter(function (experiment) {
+            const result = state.results.find(item => item.experimentId === experiment.id);
+            const status = result ? '已填写' : '待填写';
+            const haystack = [experiment.id, experiment.title, experiment.project, experiment.type, result && result.summary, result && result.conclusion, result && result.nextStep].join(' ').toLowerCase();
+            return (resultFilter === '全部' || resultFilter === status) && haystack.includes(search);
+        });
+        const attachmentCount = state.results.reduce(function (total, result) { return total + result.attachments.length; }, 0);
+        const metrics = [
+            { label: '实验记录', value: state.experiments.length, code: 'REC' },
+            { label: '已填写结果', value: state.results.length, code: 'DONE' },
+            { label: '待填写结果', value: Math.max(0, state.experiments.length - state.results.length), code: 'WAIT' },
+            { label: '附件总数', value: attachmentCount, code: 'FILE' }
+        ];
+        document.getElementById('resultMetrics').innerHTML = miniMetricsHtml(metrics);
+        const grouped = groupByDate(records);
+        document.getElementById('resultGrid').innerHTML = grouped.map(function (group) {
+            return '<section class="result-day-group"><header class="experiment-day-head"><div><span>' + esc(formatDayHeading(group.date)) + '</span><small>' + group.items.length + ' 条实验记录</small></div><i></i></header><div class="result-card-grid">' + group.items.map(resultCardHtml).join('') + '</div></section>';
+        }).join('') || '<div class="empty-card">没有找到匹配的实验结果。</div>';
+    }
+
+    function resultCardHtml(experiment) {
+        const result = state.results.find(item => item.experimentId === experiment.id);
+        if (!result) {
+            return '<article class="result-card pending"><div class="result-card-top"><span class="micro-label">' + esc(experiment.id) + ' · ' + esc(experiment.type) + '</span><span class="status-chip caution">待填写</span></div><h2>' + esc(experiment.title) + '</h2><p>这条实验记录还没有对应结果。填写后可保存结论、照片和文件，并与原始记录保持一一对应。</p><div class="result-card-footer"><span>' + esc(experiment.project) + '</span><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></div></article>';
+        }
+        const attachments = result.attachments.slice(0, 4).map(resultAttachmentLinkHtml).join('');
+        return '<article class="result-card"><div class="result-card-top"><span class="micro-label">' + esc(experiment.id) + ' · ' + esc(result.id) + '</span><span class="status-chip">已填写</span></div><h2>' + esc(experiment.title) + '</h2><p class="result-summary">' + esc(result.summary) + '</p><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion) + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '<p class="result-no-attachments">尚未上传附件</p>') + '<div class="result-card-footer"><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></div></article>';
+    }
+
+    function resultAttachmentLinkHtml(attachment) {
+        const isImage = String(attachment.type || '').startsWith('image/');
+        const dataUrl = String(attachment.data || '').startsWith('data:') ? attachment.data : '';
+        const preview = isImage && dataUrl ? '<img src="' + esc(dataUrl) + '" alt="' + esc(attachment.name) + '">' : '<span aria-hidden="true">FILE</span>';
+        return '<a href="' + esc(dataUrl || '#') + '" download="' + esc(attachment.name) + '" title="' + esc(attachment.name) + '">' + preview + '<small>' + esc(attachment.name) + '</small></a>';
     }
 
     function renderMice() {
@@ -1598,7 +1743,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养' }[type] || '记录';
+        return { mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -1606,6 +1751,7 @@
         if (type === 'reagent') return state.reagents;
         if (type === 'sample') return state.samples;
         if (type === 'cell') return state.cellCultures;
+        if (type === 'result') return state.results;
         return [];
     }
 
@@ -1622,7 +1768,7 @@
         const target = activeRecordDetail;
         const record = findRecord(target.type, target.key);
         if (!record) return;
-        els.recordDetailDialog.close();
+        if (els.recordDetailDialog.open) els.recordDetailDialog.close();
         openEntryDialog(target.type, { edit: true, key: target.key, record: record });
     }
 
@@ -1666,7 +1812,7 @@
         saveState();
         renderAll();
         els.deleteConfirmDialog.close();
-        els.recordDetailDialog.close();
+        if (els.recordDetailDialog.open) els.recordDetailDialog.close();
         activeRecordDetail = null;
         pendingDeleteRecord = null;
         showToast(recordTypeLabel(target.type) + '条目已删除，操作记录已保存');
@@ -1683,6 +1829,7 @@
     function emptyWorkspaceState() {
         return {
             experiments: [],
+            results: [],
             mice: [],
             cellCultures: [],
             reagents: [],
@@ -3004,6 +3151,10 @@ function getReagentDisplayStatus(reagent) {
         const term = query.trim().toLowerCase();
         const entries = [];
         state.experiments.forEach(item => entries.push({ view: 'experiments', category: 'EXPERIMENT', title: item.title, detail: item.id + ' · ' + item.project, search: Object.values(item).join(' ') }));
+        state.results.forEach(function (item) {
+            const experiment = state.experiments.find(record => record.id === item.experimentId);
+            entries.push({ view: 'results', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
+        });
         state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
@@ -3027,6 +3178,17 @@ function getReagentDisplayStatus(reagent) {
                 field('protocolId', '关联 Protocol', 'protocol-select', '', false, true),
                 field('description', '实验目的与简述', 'textarea', '记录核心假设、变量和预期观察…', true, true),
                 field('photoData', '照片辅助录入', 'photo-capture', '拍摄实验记录、手写记录或仪器屏幕', false, true)
+            ]
+        },
+        result: {
+            kicker: 'EXPERIMENT RESULT', title: '填写实验结果',
+            fields: [
+                field('experimentId', '对应实验记录', 'result-experiment-select', '', true, true),
+                field('date', '结果日期', 'date', '', true),
+                field('summary', '主要结果', 'textarea', '记录最重要的观察、数值、图像特征或统计结果…', true, true),
+                field('conclusion', '结论与解释', 'textarea', '说明结果是否支持假设、可能原因与限制…', true, true),
+                field('nextStep', '下一步计划', 'textarea', '记录复现、补充实验或后续分析安排…', false, true),
+                field('attachments', '照片与文件附件', 'file-attachments', '', false, true)
             ]
         },
         mouse: {
@@ -3153,6 +3315,11 @@ function getReagentDisplayStatus(reagent) {
         let defaultsForEntry = null;
         if (editOptions) {
             defaultsForEntry = clone(editOptions.record);
+        } else if (type === 'result') {
+            const preferred = state.experiments.find(item => item.id === pendingResultExperimentId) || state.experiments.find(function (experiment) {
+                return !state.results.some(result => result.experimentId === experiment.id);
+            });
+            defaultsForEntry = { experimentId: preferred ? preferred.id : '', date: preferred ? preferred.date : todayIso() };
         } else if (type === 'task') {
             defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '09:00', end: '10:00', experimentId: '', protocolId: '' }, pendingTaskDefaults || {});
         } else if (type === 'sample') {
@@ -3177,11 +3344,13 @@ function getReagentDisplayStatus(reagent) {
             };
         }
         pendingPhotoData = editOptions && editOptions.record.photoData ? editOptions.record.photoData : '';
+        pendingResultAttachments = type === 'result' && editOptions ? clone(editOptions.record.attachments || []) : [];
         activeDialogType = type;
         els.dialogKicker.textContent = editOptions ? 'EDITABLE DATABASE RECORD' : schema.kicker;
         els.dialogTitle.textContent = editOptions ? '编辑' + recordTypeLabel(type) + '信息' : schema.title;
         els.entrySubmitButton.textContent = editOptions ? '保存修改' : '确认保存';
         els.dialogFields.innerHTML = schema.fields.map(fieldHtml).join('');
+        if (type === 'result') renderPendingResultAttachments();
         if (type === 'task') {
             els.dialogFields.insertAdjacentHTML('afterbegin', '<aside class="schedule-overlap-note"><span>↔</span><div><strong>支持重叠日程</strong><p>同一时间可以安排多个事件；每日视图会自动并排显示。</p></div></aside>');
         }
@@ -3250,6 +3419,15 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(experiment.id) + '">' + esc(experiment.title) + ' · ' + esc(experiment.id) + '</option>';
             })).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select><small class="field-note">可选择已有实验；留空时，点击日程中的“开始”会自动建立实验记录。</small>';
+        } else if (config.type === 'result-experiment-select') {
+            const currentResult = editingRecord ? state.results.find(item => item.id === editingRecord.key) : null;
+            const available = state.experiments.filter(function (experiment) {
+                return currentResult && currentResult.experimentId === experiment.id || !state.results.some(result => result.experimentId === experiment.id);
+            });
+            const options = ['<option value="">选择一条实验记录</option>'].concat(available.map(function (experiment) {
+                return '<option value="' + esc(experiment.id) + '">' + esc(experiment.date) + ' · ' + esc(experiment.title) + ' · ' + esc(experiment.id) + '</option>';
+            })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select><small class="field-note">每条实验记录只能保存一份实验结果；可随时编辑结果与附件。</small>';
         } else if (config.type === 'freezer-select') {
             const options = state.freezerBoxes.map(function (box) {
                 return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(box.storageLocation) + '</option>';
@@ -3259,6 +3437,8 @@ function getReagentDisplayStatus(reagent) {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows">' + reagentUsageRowHtml() + '</div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
             control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p></div>';
+        } else if (config.type === 'file-attachments') {
+            control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
             control = '<textarea id="field-' + config.name + '" name="' + config.name + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '></textarea>';
         } else {
@@ -3301,6 +3481,63 @@ function getReagentDisplayStatus(reagent) {
         }).join('');
         if (!options) return '<p class="field-note">请先在试剂库存中录入试剂。</p>';
         return '<div class="protocol-reagent-row"><select name="reagentCatalog">' + options + '</select><input name="reagentAmount" type="number" min="0.001" step="0.001" value="1" aria-label="单次用量"><span>库存单位 / 次</span><button type="button" data-remove-reagent-row aria-label="移除此试剂">×</button></div>';
+    }
+
+    async function prepareResultAttachments(input) {
+        const files = Array.from(input.files || []);
+        if (!files.length) return;
+        if (pendingResultAttachments.length + files.length > 6) {
+            showToast('每份实验结果最多保存 6 个附件');
+            input.value = '';
+            return;
+        }
+        for (const file of files) {
+            try {
+                const image = String(file.type || '').startsWith('image/');
+                if (!image && file.size > 1024 * 1024) {
+                    showToast('文件“' + file.name + '”超过 1 MB，未加入附件');
+                    continue;
+                }
+                const data = image ? await compressPhoto(file, 1400, .78) : await readFileAsDataUrl(file);
+                pendingResultAttachments.push({
+                    id: 'ATT-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+                    name: file.name,
+                    type: image ? 'image/jpeg' : (file.type || 'application/octet-stream'),
+                    size: file.size,
+                    data: data
+                });
+            } catch (error) {
+                showToast('无法读取文件“' + file.name + '”');
+            }
+        }
+        input.value = '';
+        renderPendingResultAttachments();
+    }
+
+    function readFileAsDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onload = function () { resolve(reader.result); };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderPendingResultAttachments() {
+        const container = document.getElementById('pendingResultAttachments');
+        if (!container) return;
+        container.innerHTML = pendingResultAttachments.map(function (attachment) {
+            const image = String(attachment.type || '').startsWith('image/');
+            const preview = image ? '<img src="' + esc(attachment.data) + '" alt="' + esc(attachment.name) + '">' : '<span class="pending-file-icon">FILE</span>';
+            return '<article>' + preview + '<div><strong>' + esc(attachment.name) + '</strong><small>' + formatFileSize(attachment.size) + '</small></div><button type="button" data-remove-result-attachment="' + esc(attachment.id) + '" aria-label="删除附件 ' + esc(attachment.name) + '">×</button></article>';
+        }).join('') || '<p class="result-attachment-empty">尚未上传附件</p>';
+    }
+
+    function formatFileSize(value) {
+        const bytes = Math.max(0, Number(value) || 0);
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1024 / 1024).toFixed(1) + ' MB';
     }
 
     async function preparePhotoAttachment(input) {
@@ -3364,7 +3601,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['mouse', 'reagent', 'sample', 'cell'].includes(activeDialogType)) {
+        if (editingRecord && ['mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -3377,6 +3614,21 @@ function getReagentDisplayStatus(reagent) {
             data.usageOverridden = false;
             state.experiments.unshift(data);
             activityText = '新建实验记录“' + data.title + '”';
+        } else if (activeDialogType === 'result') {
+            const experiment = state.experiments.find(item => item.id === data.experimentId);
+            if (!experiment) {
+                showToast('请选择一条有效的实验记录');
+                return;
+            }
+            if (state.results.some(item => item.experimentId === data.experimentId)) {
+                showToast('这条实验记录已经有对应结果，可直接编辑原结果');
+                return;
+            }
+            data.id = 'RL-RES-' + Date.now().toString().slice(-8);
+            data.attachments = clone(pendingResultAttachments);
+            data.history = [createdHistoryEntry()];
+            state.results.unshift(data);
+            activityText = '填写“' + experiment.title + '”的实验结果';
         } else if (activeDialogType === 'mouse') {
             if (state.mice.some(item => item.id === data.id)) {
                 showToast('该动物编号已存在，请使用新的编号');
@@ -3531,6 +3783,8 @@ function getReagentDisplayStatus(reagent) {
         renderAll();
         els.entryDialog.close();
         editingRecord = null;
+        pendingResultExperimentId = '';
+        pendingResultAttachments = [];
         showToast('记录已保存并同步到工作台');
         if (activeDialogType === 'passage' && activeCellId) {
             window.setTimeout(function () { openCellDetail(activeCellId); }, 120);
@@ -3589,6 +3843,18 @@ function getReagentDisplayStatus(reagent) {
             }
             updated.position = position;
             updated.location = formatSampleLocation(box, position);
+        } else if (target.type === 'result') {
+            const experiment = state.experiments.find(item => item.id === data.experimentId);
+            if (!experiment) {
+                showToast('请选择一条有效的实验记录');
+                return;
+            }
+            if (state.results.some(item => item.id !== current.id && item.experimentId === data.experimentId)) {
+                showToast('这条实验记录已经有对应结果');
+                return;
+            }
+            updated.id = current.id;
+            updated.attachments = clone(pendingResultAttachments);
         }
 
         const schema = dialogSchemas[target.type];
@@ -3627,12 +3893,18 @@ function getReagentDisplayStatus(reagent) {
         renderAll();
         els.entryDialog.close();
         editingRecord = null;
+        pendingResultExperimentId = '';
+        pendingResultAttachments = [];
         showToast('修改已保存，并写入变更记录');
         window.setTimeout(function () { openRecordDetail(target.type, target.key); }, 100);
     }
 
     function historyFieldValue(fieldName, value) {
         if (fieldName === 'photoData') return value ? '已附照片' : '未附照片';
+        if (fieldName === 'attachments') {
+            const attachments = Array.isArray(value) ? value : [];
+            return attachments.length + ' 个附件' + (attachments.length ? ' · ' + attachments.map(item => item.name).join('、') : '');
+        }
         return value;
     }
 
