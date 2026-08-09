@@ -1,5 +1,5 @@
 {
-  "exampleSeedVersion": 3,
+  "exampleSeedVersion": 4,
   "experiments": [
     {
       "id": "RL-EXP-030",
@@ -63,6 +63,30 @@
       "progress": 68,
       "description": "记录训练后的 CA1 神经元群体活动。",
       "protocolId": "SOP-IM-021"
+    }
+  ],
+  "results": [
+    {
+      "id": "RL-RES-001",
+      "experimentId": "RL-EXP-027",
+      "date": "2026-08-04",
+      "summary": "16 份脑区 RNA 样本中，14 份 RIN ≥ 8.0，浓度与纯度达到建库要求。",
+      "conclusion": "低温匀浆与快速相分离流程稳定，可继续用于后续转录组样本制备。",
+      "nextStep": "复核两份低完整性样本的取材与冻融记录。",
+      "attachments": [],
+      "createdBy": "NODE-03",
+      "history": []
+    },
+    {
+      "id": "RL-RES-002",
+      "experimentId": "RL-EXP-029",
+      "date": "2026-08-07",
+      "summary": "三个感染复数均检测到荧光表达，其中中剂量组在 72 小时时信噪比最佳。",
+      "conclusion": "中剂量条件兼顾表达强度与细胞状态，适合作为后续验证的起始参数。",
+      "nextStep": "补充更晚时间点并完成图像盲法定量。",
+      "attachments": [],
+      "createdBy": "NODE-05",
+      "history": []
     }
   ],
   "mice": [
