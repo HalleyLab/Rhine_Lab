@@ -1,9 +1,9 @@
-const CACHE_NAME = 'rhine-lab-pages-v26';
+const CACHE_NAME = 'rhine-lab-pages-v27';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
-    './css/rhine-lab.css',
+    './css/rhine-lab.css?v=20260810-2',
     './js/rhine-lab-config.js',
     './js/rhine-lab-i18n.js',
     './js/rhine-lab-sync.js',
@@ -50,6 +50,19 @@ self.addEventListener('fetch', function (event) {
                     return cached || cache.match('./index.html');
                 });
             });
+        }));
+        return;
+    }
+
+    if (request.destination === 'style' || request.destination === 'script') {
+        event.respondWith(fetch(request).then(function (response) {
+            if (response.ok) {
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
+            }
+            return response;
+        }).catch(function () {
+            return caches.match(request);
         }));
         return;
     }
