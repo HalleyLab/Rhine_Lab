@@ -1,0 +1,30 @@
+{
+  "appId": "com.halleylab.rhinelab",
+  "appName": "Rhine Lab",
+  "webDir": "www",
+  "backgroundColor": "#f2f4ed",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "backgroundColor": "#f2f4ed"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#f2f4ed"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "backgroundColor": "#252d29",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "backgroundColor": "#252d29",
+      "style": "LIGHT"
+    }
+  }
+}

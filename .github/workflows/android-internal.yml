@@ -1,0 +1,110 @@
+name: Build Android internal APK
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "android/**"
+      - "css/**"
+      - "data/**"
+      - "images/**"
+      - "js/**"
+      - "scripts/**"
+      - "index.html"
+      - "app.webmanifest"
+      - "capacitor.config.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/android-internal.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "android/**"
+      - "css/**"
+      - "data/**"
+      - "images/**"
+      - "js/**"
+      - "scripts/**"
+      - "index.html"
+      - "app.webmanifest"
+      - "capacitor.config.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/android-internal.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android internal test package
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Configure Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore internal debug signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: rhine-lab-android-debug-keystore-v1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Rhine Lab mobile assets
+        run: |
+          pnpm mobile:assets
+          pnpm exec capacitor-assets generate --android
+
+      - name: Synchronize Capacitor
+        run: pnpm mobile:sync
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Prepare downloadable package
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Rhine-Lab-0.1.0-internal.apk
+          sha256sum dist/Rhine-Lab-0.1.0-internal.apk > dist/Rhine-Lab-0.1.0-internal.apk.sha256
+
+      - name: Upload internal test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-Android-Internal
+          path: dist/*
+          retention-days: 30
+          if-no-files-found: error

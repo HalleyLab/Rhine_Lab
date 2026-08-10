@@ -1,0 +1,30 @@
+{
+  "name": "rhine-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rhine Lab internal mobile test build",
+  "type": "module",
+  "scripts": {
+    "mobile:prepare": "node scripts/prepare-mobile.mjs",
+    "mobile:assets": "node scripts/create-mobile-assets.mjs",
+    "mobile:sync": "pnpm mobile:prepare && cap sync android",
+    "android:debug": "pnpm mobile:sync && cd android && gradlew.bat assembleDebug",
+    "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.0",
+    "sharp": "0.35.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

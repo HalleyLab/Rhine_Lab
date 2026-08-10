@@ -436,3 +436,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Rhine Lab generated mobile build inputs and outputs
+www/
+assets/
+android/.gradle/
+android/local.properties
+android/app/build/
+*.jks
+*.keystore

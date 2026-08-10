@@ -3,6 +3,7 @@
 
     const config = window.RHINE_LAB_CONFIG || {};
     const ATTACHMENT_BUCKET = 'rhine-lab-attachments';
+    const NATIVE_AUTH_REDIRECT = 'rhinelab://auth/callback';
     const ui = {
         control: document.getElementById('syncControl'),
         label: document.getElementById('syncStatusLabel'),
@@ -100,6 +101,63 @@
         return 'rhineLabSyncDirty:' + (scope === 'lab' ? 'lab' : 'personal');
     }
 
+    function isNativeApp() {
+        return Boolean(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+    }
+
+    function authRedirectUrl() {
+        return isNativeApp() ? NATIVE_AUTH_REDIRECT : location.origin + location.pathname;
+    }
+
+    function authParameters(url) {
+        const parsed = new URL(url);
+        const query = new URLSearchParams(parsed.search.slice(1));
+        const fragment = new URLSearchParams(parsed.hash.slice(1));
+        fragment.forEach(function (value, key) {
+            if (!query.has(key)) query.set(key, value);
+        });
+        return query;
+    }
+
+    async function acceptNativeAuthUrl(url) {
+        if (!supabase || !url || !String(url).startsWith(NATIVE_AUTH_REDIRECT)) return;
+        const parameters = authParameters(url);
+        const errorDescription = parameters.get('error_description');
+        if (errorDescription) throw new Error(errorDescription);
+
+        const accessToken = parameters.get('access_token');
+        const refreshToken = parameters.get('refresh_token');
+        if (accessToken && refreshToken) {
+            const sessionResult = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
+            if (sessionResult.error) throw sessionResult.error;
+            return;
+        }
+
+        const code = parameters.get('code');
+        if (code) {
+            const exchangeResult = await supabase.auth.exchangeCodeForSession(code);
+            if (exchangeResult.error) throw exchangeResult.error;
+        }
+    }
+
+    async function bindNativeAuthCallback() {
+        if (!isNativeApp() || !supabase) return;
+        const nativeAppPlugin = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+        if (!nativeAppPlugin) return;
+
+        await nativeAppPlugin.addListener('appUrlOpen', function (event) {
+            acceptNativeAuthUrl(event && event.url).catch(function (error) {
+                setStatus('error', '????', readableError(error, '????????????'));
+            });
+        });
+
+        const launch = await nativeAppPlugin.getLaunchUrl();
+        if (launch && launch.url) await acceptNativeAuthUrl(launch.url);
+    }
+
     async function importClient() {
         const library = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
         return library.createClient(config.supabaseUrl.replace(/\/$/, ''), config.supabasePublishableKey, {
@@ -122,6 +180,7 @@
             supabase.auth.onAuthStateChange(function (_event, session) {
                 window.setTimeout(function () { handleSession(session); }, 0);
             });
+            await bindNativeAuthCallback();
             const result = await supabase.auth.getSession();
             if (result.error) throw result.error;
             await handleSession(result.data.session);
@@ -362,7 +421,7 @@
                 setStatus('connecting', '发送中', '正在发送安全登录链接…');
                 const result = await supabase.auth.signInWithOtp({
                     email: email,
-                    options: { emailRedirectTo: location.origin + location.pathname }
+                    options: { emailRedirectTo: authRedirectUrl() }
                 });
                 if (result.error) {
                     setStatus('error', '发送失败', readableError(result.error, '登录链接发送失败。'));

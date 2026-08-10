@@ -9372,3 +9372,29 @@ html[lang="en"] .experiment-results-board * {
         contain-intrinsic-size: auto 320px;
     }
 }
+
+/* Capacitor internal test build: respect device cutouts and system bars. */
+html.native-app {
+    --native-safe-top: env(safe-area-inset-top, 0px);
+    --native-safe-right: env(safe-area-inset-right, 0px);
+    --native-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --native-safe-left: env(safe-area-inset-left, 0px);
+}
+
+html.native-app body {
+    padding-right: var(--native-safe-right);
+    padding-bottom: var(--native-safe-bottom);
+    padding-left: var(--native-safe-left);
+}
+
+html.native-app .topbar {
+    top: var(--native-safe-top);
+}
+
+html.native-app .sidebar {
+    padding-top: var(--native-safe-top);
+}
+
+html.native-app main {
+    padding-top: calc(var(--topbar-height) + var(--native-safe-top) + 34px);
+}

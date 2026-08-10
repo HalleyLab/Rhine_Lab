@@ -47,6 +47,12 @@ python -m http.server 4173
 
 `.github/workflows/pages.yml` 会在 `main` 更新后部署静态站点。仓库需要在 **Settings → Pages → Build and deployment** 中选择 **GitHub Actions**。
 
+## 内部测试应用
+
+项目使用 Capacitor 8 封装 Android 内部测试版。GitHub Actions 会自动构建可下载的 APK，并将构建产物保留 30 天。
+
+安装方法、Supabase 移动端回调配置以及 iOS/TestFlight 准备说明请查看 [MOBILE_TESTING.md](MOBILE_TESTING.md)。
+
 ## 声明
 
 这是非官方、非商业的同人风格研究工具原型，与《明日方舟》及其权利方无隶属或授权关系。相关名称与视觉标识归各自权利方所有。

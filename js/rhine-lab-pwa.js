@@ -2,9 +2,29 @@
     'use strict';
 
     let installPrompt = null;
+    const capacitor = window.Capacitor;
+    const nativeApp = Boolean(capacitor && typeof capacitor.isNativePlatform === 'function' && capacitor.isNativePlatform());
     const installButton = document.getElementById('installAppButton');
 
+    if (nativeApp) {
+        document.documentElement.classList.add('native-app');
+        if (installButton) installButton.hidden = true;
+
+        const plugins = capacitor.Plugins || {};
+        if (plugins.StatusBar) {
+            plugins.StatusBar.setOverlaysWebView({ overlay: false }).catch(function () {});
+            plugins.StatusBar.setBackgroundColor({ color: '#252d29' }).catch(function () {});
+            plugins.StatusBar.setStyle({ style: 'LIGHT' }).catch(function () {});
+        }
+        if (plugins.SplashScreen) {
+            window.addEventListener('load', function () {
+                plugins.SplashScreen.hide().catch(function () {});
+            });
+        }
+    }
+
     window.addEventListener('beforeinstallprompt', function (event) {
+        if (nativeApp) return;
         event.preventDefault();
         installPrompt = event;
         if (installButton) installButton.hidden = false;
@@ -24,7 +44,7 @@
         if (installButton) installButton.hidden = true;
     });
 
-    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    if (!nativeApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('./sw.js').catch(function () {
                 // The site remains usable if service worker registration is unavailable.
