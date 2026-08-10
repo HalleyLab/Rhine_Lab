@@ -6,8 +6,8 @@
     window.RHINE_LAB_CONFIG = Object.assign({
         supabaseUrl: 'https://tyjaprmkrjxgccsnqwog.supabase.co',
         supabasePublishableKey: 'sb_publishable_7OQarZUrwQw9UdqTfGFaQw_vO5AqAQa',
-        labId: '',
-        autoInitializeLab: false,
+        labId: '949b4853-dd8b-47f7-899d-259c8694a9a7',
+        autoInitializeLab: true,
         seedUrl: './data/seed.json'
     }, window.RHINE_LAB_CONFIG || {});
 }());
