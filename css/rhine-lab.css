@@ -9398,3 +9398,57 @@ html.native-app .sidebar {
 html.native-app main {
     padding-top: calc(var(--topbar-height) + var(--native-safe-top) + 34px);
 }
+/* 2026-08-10: consistent information typography and denser record rows. */
+.page-heading.technical-heading .story-quote,
+.page-heading.technical-heading .story-quote cite {
+    font-family: var(--font-interface) !important;
+    font-size: 14px !important;
+    font-weight: 500;
+    line-height: 1.65;
+}
+
+.page-heading.technical-heading .story-quote cite {
+    color: var(--muted);
+    letter-spacing: 0;
+}
+
+.mini-metrics,
+.mini-metrics *,
+.module-toolbar,
+.module-toolbar *,
+.filter-tabs,
+.filter-tabs *,
+.global-search input,
+.inline-search input,
+.dialog-search input,
+input::placeholder,
+textarea::placeholder {
+    font-family: var(--font-interface) !important;
+}
+
+.mini-metric small,
+.filter-tabs button,
+.module-toolbar .section-title h2 {
+    font-weight: 700;
+}
+
+input::placeholder,
+textarea::placeholder {
+    font-weight: 500;
+}
+
+.data-table td {
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.data-table small,
+.amount-meter span {
+    font-size: 10.5px;
+}
+
+@media (max-width: 560px) {
+    .data-table td { font-size: 12.5px; }
+    .data-table small,
+    .amount-meter span { font-size: 10px; }
+}
