@@ -2,7 +2,7 @@
   "id": "rhine-lab",
   "name": "Rhine Lab 生命科学研究工作台",
   "short_name": "Rhine Lab",
-  "description": "实验记录、动物、试剂、样本、Protocol 与日程的一体化生命科学研究工作台。",
+  "description": "实验记录、动物、试剂、冻存样本、Protocol 与日程的一体化生命科学研究工作台。",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
@@ -20,7 +20,7 @@
   ],
   "shortcuts": [
     { "name": "实验记录", "url": "./#experiments" },
-    { "name": "样本库", "url": "./#samples" },
+    { "name": "冻存样本", "url": "./#samples" },
     { "name": "日程", "url": "./#schedule" }
   ]
 }
