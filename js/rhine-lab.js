@@ -235,7 +235,6 @@
     let state = migrateState(loadState(workspaceMode));
     let activeView = getInitialView();
     let experimentFilter = '全部';
-    let resultFilter = '全部';
     let reagentFilter = '全部';
     const publicDemoMode = isPublicDemoRuntime();
     let workspaceAccess = { authenticated: false, labReadOnly: true };
@@ -333,6 +332,7 @@
         experimentUsageSource: document.getElementById('experimentUsageSource'),
         experimentUsageImpact: document.getElementById('experimentUsageImpact'),
         experimentPhotoPanel: document.getElementById('experimentPhotoPanel'),
+        experimentResultSection: document.getElementById('experimentResultSection'),
         experimentRunDialog: document.getElementById('experimentRunDialog'),
         experimentRunKicker: document.getElementById('experimentRunKicker'),
         experimentRunTitle: document.getElementById('experimentRunTitle'),
@@ -512,6 +512,10 @@
                 reagents: Array.isArray(protocol.reagents) ? protocol.reagents : (seeded ? clone(seeded.reagents) : []),
                 tag: protocol.tag || '自定义方案',
                 meta: protocol.meta || '本地录入',
+                literatureTitle: String(protocol.literatureTitle || (seeded && seeded.literatureTitle) || '').trim(),
+                literatureCitation: String(protocol.literatureCitation || (seeded && seeded.literatureCitation) || '').trim(),
+                literatureId: String(protocol.literatureId || (seeded && seeded.literatureId) || '').trim(),
+                literatureUrl: String(protocol.literatureUrl || (seeded && seeded.literatureUrl) || '').trim(),
                 photoData: protocol.photoData || '',
                 createdBy: anonymousContributor(protocol.createdBy)
             };
@@ -786,7 +790,8 @@
 
     function getInitialView() {
         const hash = location.hash.replace('#', '');
-        return ['dashboard', 'experiments', 'results', 'mice', 'reagents', 'samples', 'protocols', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
+        if (hash === 'results') return 'experiments';
+        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
     }
 
     function applySavedTheme() {
@@ -1409,7 +1414,6 @@
         });
 
         document.getElementById('experimentSearch').addEventListener('input', renderExperiments);
-        document.getElementById('resultSearch').addEventListener('input', renderResults);
         document.getElementById('mouseSearch').addEventListener('input', renderMice);
         document.getElementById('reagentSearch').addEventListener('input', renderReagents);
         document.getElementById('sampleSearch').addEventListener('input', renderSamples);
@@ -1426,13 +1430,6 @@
             renderExperiments();
         });
 
-        document.getElementById('resultFilters').addEventListener('click', function (event) {
-            const button = event.target.closest('[data-filter]');
-            if (!button) return;
-            resultFilter = button.dataset.filter;
-            updateActiveFilter(event.currentTarget, button);
-            renderResults();
-        });
 
         document.getElementById('reagentFilters').addEventListener('click', function (event) {
             const button = event.target.closest('[data-filter]');
@@ -1605,6 +1602,7 @@
     }
 
     function switchView(view, updateHash = true) {
+        if (view === 'results') view = 'experiments';
         const target = document.getElementById('view-' + view);
         if (!target) return;
         activeView = view;
@@ -1632,7 +1630,6 @@
         const renderers = {
             dashboard: renderDashboard,
             experiments: renderExperiments,
-            results: renderResults,
             mice: renderMice,
             reagents: renderReagents,
             samples: renderSamples,
@@ -1708,8 +1705,11 @@
     function renderExperiments() {
         const search = valueOf('experimentSearch').toLowerCase();
         const items = state.experiments.filter(function (item) {
-            const matchesFilter = experimentFilter === '全部' || item.status === experimentFilter;
-            const haystack = [item.id, item.title, item.project, item.createdBy, item.type, item.description].join(' ').toLowerCase();
+            const result = state.results.find(entry => entry.experimentId === item.id);
+            let matchesFilter = experimentFilter === '全部' || item.status === experimentFilter;
+            if (experimentFilter === '有结果') matchesFilter = Boolean(result);
+            if (experimentFilter === '待填写结果') matchesFilter = !result;
+            const haystack = [item.id, item.title, item.project, item.createdBy, item.type, item.description, result && result.summary, result && result.conclusion, result && result.nextStep].join(' ').toLowerCase();
             return matchesFilter && haystack.includes(search);
         });
         const grouped = groupByDate(items);
@@ -1719,11 +1719,21 @@
     }
 
     function experimentCardHtml(item) {
-            const protocol = state.protocols.find(protocolItem => protocolItem.id === item.protocolId);
-            const usage = getEffectiveExperimentUsage(item);
-            const usageLabel = item.usageOverridden ? '本次用量已调整' : protocol ? '按 ' + protocol.id : '未关联 Protocol';
-            const photoBadge = item.photoData ? '<span class="photo-badge">照片</span>' : '';
-            return '<button class="record-card" type="button" data-experiment-id="' + esc(item.id) + '" data-code="' + esc(item.id.replace('RL-EXP-', '')) + '"><div class="record-card-top"><span class="micro-label">' + esc(item.id) + ' · ' + esc(item.type) + contributorInline(item) + '</span><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></div><h2>' + esc(item.title) + '</h2><p>' + esc(item.description) + '</p><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><div class="record-usage-line"><span>' + photoBadge + esc(usageLabel) + '</span><strong>' + usage.length + ' 种试剂 →</strong></div><div class="record-meta"><div><small>PROJECT</small><strong>' + esc(item.project) + '</strong></div><div><small>DATE</small><strong>' + esc(shortDate(item.date)) + '</strong></div></div></button>';
+        const protocol = state.protocols.find(protocolItem => protocolItem.id === item.protocolId);
+        const usage = getEffectiveExperimentUsage(item);
+        const usageLabel = item.usageOverridden ? '本次用量已调整' : protocol ? '按 ' + protocol.id : '未关联 Protocol';
+        const photoBadge = item.photoData ? '<span class="photo-badge">照片</span>' : '';
+        const record = '<button class="record-card" type="button" data-experiment-id="' + esc(item.id) + '" data-code="' + esc(item.id.replace('RL-EXP-', '')) + '"><div class="record-card-top"><span class="micro-label">' + esc(item.id) + ' · ' + esc(item.type) + contributorInline(item) + '</span><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></div><h2>' + esc(item.title) + '</h2><p>' + esc(item.description) + '</p><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><div class="record-usage-line"><span>' + photoBadge + esc(usageLabel) + '</span><strong>' + usage.length + ' 种试剂 →</strong></div><div class="record-meta"><div><small>PROJECT</small><strong>' + esc(item.project) + '</strong></div><div><small>DATE</small><strong>' + esc(shortDate(item.date)) + '</strong></div></div></button>';
+        return '<article class="experiment-record-entry">' + record + experimentResultInlineHtml(item, false) + '</article>';
+    }
+
+    function experimentResultInlineHtml(experiment, detailed) {
+        const result = state.results.find(item => item.experimentId === experiment.id);
+        if (!result) {
+            return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><p>在这条实验记录下补充主要结果、结论、下一步计划以及照片或文件。</p><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
+        }
+        const attachments = result.attachments.slice(0, detailed ? 6 : 3).map(resultAttachmentLinkHtml).join('');
+        return '<section class="experiment-inline-result completed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><p class="result-summary">' + esc(result.summary || '尚未填写主要结果。') + '</p><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '尚未填写结论。') + '</strong></div>' + (result.nextStep ? '<p class="experiment-result-next"><strong>下一步：</strong>' + esc(result.nextStep) + '</p>' : '') + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '<p class="result-no-attachments">尚未上传附件</p>') + '<footer><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></section>';
     }
 
     function groupByDate(items) {
@@ -1741,37 +1751,6 @@
     function formatDayHeading(value) {
         if (value === '未记录日期') return value;
         return new Intl.DateTimeFormat(interfaceLocale(), { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(parseLocalDate(value));
-    }
-
-    function renderResults() {
-        const search = valueOf('resultSearch').toLowerCase();
-        const records = state.experiments.filter(function (experiment) {
-            const result = state.results.find(item => item.experimentId === experiment.id);
-            const status = result ? '已填写' : '待填写';
-            const haystack = [experiment.id, experiment.title, experiment.project, experiment.type, result && result.summary, result && result.conclusion, result && result.nextStep].join(' ').toLowerCase();
-            return (resultFilter === '全部' || resultFilter === status) && haystack.includes(search);
-        });
-        const attachmentCount = state.results.reduce(function (total, result) { return total + result.attachments.length; }, 0);
-        const metrics = [
-            { label: '实验记录', value: state.experiments.length, code: 'REC' },
-            { label: '已填写结果', value: state.results.length, code: 'DONE' },
-            { label: '待填写结果', value: Math.max(0, state.experiments.length - state.results.length), code: 'WAIT' },
-            { label: '附件总数', value: attachmentCount, code: 'FILE' }
-        ];
-        document.getElementById('resultMetrics').innerHTML = miniMetricsHtml(metrics);
-        const grouped = groupByDate(records);
-        document.getElementById('resultGrid').innerHTML = grouped.map(function (group) {
-            return '<section class="result-day-group"><header class="experiment-day-head"><div><span>' + esc(formatDayHeading(group.date)) + '</span><small>' + group.items.length + ' 条实验记录</small></div><i></i></header><div class="result-card-grid">' + group.items.map(resultCardHtml).join('') + '</div></section>';
-        }).join('') || '<div class="empty-card">没有找到匹配的实验结果。</div>';
-    }
-
-    function resultCardHtml(experiment) {
-        const result = state.results.find(item => item.experimentId === experiment.id);
-        if (!result) {
-            return '<article class="result-card pending"><div class="result-card-top"><span class="micro-label">' + esc(experiment.id) + ' · ' + esc(experiment.type) + '</span><span class="status-chip caution">待填写</span></div><h2>' + esc(experiment.title) + '</h2><p>这条实验记录还没有对应结果。填写后可保存结论、照片和文件，并与原始记录保持一一对应。</p><div class="result-card-footer"><span>' + esc(experiment.project) + '</span><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></div></article>';
-        }
-        const attachments = result.attachments.slice(0, 4).map(resultAttachmentLinkHtml).join('');
-        return '<article class="result-card"><div class="result-card-top"><span class="micro-label">' + esc(experiment.id) + ' · ' + esc(result.id) + '</span><span class="status-chip">已填写</span></div><h2>' + esc(experiment.title) + '</h2><p class="result-summary">' + esc(result.summary) + '</p><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion) + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '<p class="result-no-attachments">尚未上传附件</p>') + '<div class="result-card-footer"><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></div></article>';
     }
 
     function resultAttachmentLinkHtml(attachment) {
@@ -2131,6 +2110,10 @@
         state.activities.unshift({ text: '删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录', time: '刚刚' });
         saveState();
         renderAll();
+        if (target.type === 'result' && els.experimentDetailDialog.open) {
+            const experiment = state.experiments.find(item => item.id === record.experimentId);
+            if (experiment) renderExperimentResultSection(experiment);
+        }
         els.deleteConfirmDialog.close();
         if (els.recordDetailDialog.open) els.recordDetailDialog.close();
         activeRecordDetail = null;
@@ -2266,7 +2249,8 @@
         document.getElementById('protocolCount').textContent = state.protocols.length;
         document.getElementById('protocolGrid').innerHTML = state.protocols.map(function (item) {
             const usageLabel = item.reagents.length ? item.reagents.length + ' 种试剂已关联' : '未关联库存试剂';
-            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + '</span><h2>' + esc(item.title) + '</h2><p>' + esc(item.summary) + '</p><div class="protocol-path-preview" aria-label="从准备到归档，共 ' + item.steps.length + ' 个步骤"><span>准备</span><i></i><span>执行</span><i></i><span>质控</span><i></i><span>归档</span><b>' + item.steps.length + ' 步</b></div><footer class="protocol-foot"><span>' + esc(item.tag) + ' · ' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
+            const literatureBadge = item.literatureTitle || item.literatureId || item.literatureUrl ? '<span class="protocol-reference-badge">文献</span>' : '';
+            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><p>' + esc(item.summary) + '</p><div class="protocol-path-preview" aria-label="从准备到归档，共 ' + item.steps.length + ' 个步骤"><span>准备</span><i></i><span>执行</span><i></i><span>质控</span><i></i><span>归档</span><b>' + item.steps.length + ' 步</b></div><footer class="protocol-foot"><span>' + esc(item.tag) + ' · ' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
         }).join('') || '<div class="empty-card">还没有 Protocol，点击“录入 Protocol”开始建立方案库。</div>';
     }
 
@@ -2494,6 +2478,18 @@
         });
     }
 
+    function protocolLiteratureHtml(protocol) {
+        const title = String(protocol.literatureTitle || '').trim();
+        const citation = String(protocol.literatureCitation || '').trim();
+        const identifier = String(protocol.literatureId || '').trim();
+        const suppliedUrl = String(protocol.literatureUrl || '').trim();
+        if (!title && !citation && !identifier && !suppliedUrl) return '';
+        let referenceUrl = /^https?:\/\//i.test(suppliedUrl) ? suppliedUrl : '';
+        if (!referenceUrl && /^10\.\d{4,9}\//i.test(identifier)) referenceUrl = 'https://doi.org/' + identifier;
+        if (!referenceUrl && /^(?:PMID\s*)?\d+$/i.test(identifier)) referenceUrl = 'https://pubmed.ncbi.nlm.nih.gov/' + identifier.replace(/\D/g, '') + '/';
+        const action = referenceUrl ? '<a class="protocol-literature-link" href="' + esc(referenceUrl) + '" target="_blank" rel="noopener noreferrer">查看原文 ↗</a>' : '';
+        return '<section class="protocol-literature-card"><header><div><p class="micro-label">RELATED LITERATURE</p><h3>关联文献</h3></div>' + action + '</header><strong>' + esc(title || identifier || '未命名文献') + '</strong>' + (citation ? '<p>' + esc(citation) + '</p>' : '') + (identifier ? '<code>' + esc(identifier) + '</code>' : '') + '</section>';
+    }
     function openProtocolDetail(id) {
         const protocol = state.protocols.find(item => item.id === id);
         if (!protocol) return;
@@ -2506,9 +2502,10 @@
             return '<tr><td><strong>' + esc(reagent.name) + '</strong><small>' + esc(reagent.catalog) + '</small></td><td>' + formatQuantity(usage.amount) + ' ' + esc(reagent.unit) + ' / 次</td><td>' + formatQuantity(getTheoreticalRemaining(reagent)) + ' ' + esc(reagent.unit) + '</td></tr>';
         }).join('');
         const protocolPhoto = protocol.photoData ? '<figure class="record-detail-photo protocol-source-photo"><img src="' + esc(protocol.photoData) + '" alt="' + esc(protocol.title) + ' 的原始方案照片"><figcaption>录入 Protocol 时保留的原始照片</figcaption></figure>' : '';
+        const protocolLiterature = protocolLiteratureHtml(protocol);
         els.protocolDetailNumber.textContent = protocol.number + ' · ' + protocol.tag + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
-        els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p>' + protocolPhoto + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
+        els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
         els.protocolDetailUsage.textContent = '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
@@ -2562,9 +2559,15 @@
             els.experimentPhotoPanel.hidden = true;
             els.experimentPhotoPanel.innerHTML = '';
         }
+        renderExperimentResultSection(experiment);
         updateExperimentUsageSource();
         updateExperimentUsageImpact();
-        els.experimentDetailDialog.showModal();
+        if (!els.experimentDetailDialog.open) els.experimentDetailDialog.showModal();
+    }
+
+    function renderExperimentResultSection(experiment) {
+        if (!els.experimentResultSection) return;
+        els.experimentResultSection.innerHTML = experimentResultInlineHtml(experiment, true);
     }
 
     function getEffectiveExperimentUsage(experiment) {
@@ -3495,12 +3498,12 @@ function getReagentDisplayStatus(reagent) {
         state.experiments.forEach(item => entries.push({ view: 'experiments', category: 'EXPERIMENT', title: item.title, detail: item.id + ' · ' + item.project, search: Object.values(item).join(' ') }));
         state.results.forEach(function (item) {
             const experiment = state.experiments.find(record => record.id === item.experimentId);
-            entries.push({ view: 'results', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
+            entries.push({ view: 'experiments', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
         });
         state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
-        state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number + ' · ' + item.tag, search: [item.number, item.title, item.summary, item.tag, item.steps.join(' ')].join(' ') }));
+        state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number + ' · ' + item.tag, search: [item.number, item.title, item.summary, item.tag, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
         state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator, item.status].join(' ') }));
         const results = entries.filter(item => !term || item.search.toLowerCase().includes(term)).slice(0, 12);
         els.searchResults.innerHTML = results.map(function (item) {
@@ -3651,6 +3654,10 @@ function getReagentDisplayStatus(reagent) {
                 field('title', 'Protocol 名称', 'text', '例：细胞免疫荧光染色', true),
                 field('tag', '方案分类', 'text', '例：组织学', true),
                 field('summary', '方案说明', 'textarea', '说明用途、关键条件和注意事项…', true, true),
+                field('literatureTitle', '关联文献题目', 'text', '输入与本 Protocol 相关的文献题目', false, true),
+                field('literatureCitation', '作者 / 期刊 / 年份', 'text', '例：Author et al. · Journal · 2025', false, true),
+                field('literatureId', 'DOI / PMID', 'text', '例：10.xxxx/xxxxx 或 PMID 12345678', false),
+                field('literatureUrl', '文献链接', 'url', 'https://doi.org/... 或 PubMed 链接', false),
                 field('stepsText', '实验步骤（每行一步）', 'textarea', '样本固定\n通透与封闭\n一抗孵育\n二抗染色', true, true),
                 field('reagents', '每次执行的试剂用量', 'reagent-list', '', false, true),
                 field('photoData', '方案照片辅助录入', 'photo-capture', '拍摄纸质 SOP 或实验本页面作为附件', false, true)
@@ -4272,6 +4279,10 @@ function getReagentDisplayStatus(reagent) {
                 reagents: Array.from(reagentMap, function (entry) { return { catalog: entry[0], amount: entry[1] }; }),
                 tag: displayOr(data.tag, '自定义方案'),
                 meta: '本地录入 ' + todayIso(),
+                literatureTitle: String(data.literatureTitle || '').trim(),
+                literatureCitation: String(data.literatureCitation || '').trim(),
+                literatureId: String(data.literatureId || '').trim(),
+                literatureUrl: String(data.literatureUrl || '').trim(),
                 photoData: data.photoData || '',
                 createdBy: data.createdBy
             };
@@ -4366,6 +4377,10 @@ function getReagentDisplayStatus(reagent) {
         saveState();
         renderAll();
         els.entryDialog.close();
+        if (activeDialogType === 'result' && activeExperimentId && els.experimentDetailDialog.open) {
+            const experiment = state.experiments.find(item => item.id === activeExperimentId);
+            if (experiment) renderExperimentResultSection(experiment);
+        }
         editingRecord = null;
         pendingResultExperimentId = '';
         pendingResultAttachments = [];
@@ -4480,6 +4495,10 @@ function getReagentDisplayStatus(reagent) {
         saveState();
         renderAll();
         els.entryDialog.close();
+        if (activeDialogType === 'result' && activeExperimentId && els.experimentDetailDialog.open) {
+            const experiment = state.experiments.find(item => item.id === activeExperimentId);
+            if (experiment) renderExperimentResultSection(experiment);
+        }
         editingRecord = null;
         pendingResultExperimentId = '';
         pendingResultAttachments = [];
@@ -4501,6 +4520,10 @@ function getReagentDisplayStatus(reagent) {
         if (type === 'reagent') openReagentDetail(key);
         if (type === 'sample') openSampleDetail(key);
         if (type === 'cell') openCellDetail(key);
+        if (type === 'result') {
+            const result = state.results.find(item => item.id === key);
+            if (result) openExperimentDetail(result.experimentId);
+        }
     }
 
     function isExpiringSoon(dateString) {

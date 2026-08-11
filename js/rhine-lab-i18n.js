@@ -783,7 +783,25 @@
         '今天还没有待处理任务。可前往': 'No pending tasks today. Go to',
         '添加安排。': 'to add an item.',
         '等待处理，下一项将在': 'pending; the next begins at',
-        '开始。': '.'
+        '开始。': '.',
+        '有结果': 'With results',
+        '待填写结果': 'Results pending',
+        '筛选实验、记录内容或结果': 'Filter experiments, record notes or results',
+        '在这条实验记录下补充主要结果、结论、下一步计划以及照片或文件。': 'Add key findings, conclusions, next steps, photos or files to this experiment record.',
+        '尚未填写主要结果。': 'No key findings recorded yet.',
+        '尚未填写结论。': 'No conclusion recorded yet.',
+        '下一步：': 'Next step:',
+        '关联文献题目': 'Related article title',
+        '输入与本 Protocol 相关的文献题目': 'Enter the title of literature supporting this Protocol',
+        '作者 / 期刊 / 年份': 'Authors / journal / year',
+        '例：Author et al. · Journal · 2025': 'Example: Author et al. · Journal · 2025',
+        '例：10.xxxx/xxxxx 或 PMID 12345678': 'Example: 10.xxxx/xxxxx or PMID 12345678',
+        '文献链接': 'Literature URL',
+        'https://doi.org/... 或 PubMed 链接': 'https://doi.org/... or a PubMed URL',
+        '文献': 'Literature',
+        '关联文献': 'Related literature',
+        '查看原文 ↗': 'Open source ↗',
+        '未命名文献': 'Untitled reference'
     });
 
     const patterns = [

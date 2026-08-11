@@ -55,7 +55,7 @@ body {
         linear-gradient(90deg, rgba(17, 22, 21, 0.028) 1px, transparent 1px),
         var(--canvas);
     background-size: 40px 40px;
-    font-family: SimHei, "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-family: var(--font-interface);
     font-size: 14px;
     transition: color .25s ease, background-color .25s ease;
 }
@@ -129,7 +129,7 @@ a {
     bottom: 196px;
     color: rgba(255, 255, 255, .025);
     white-space: pre;
-    font: 900 42px/.82 Arial, sans-serif;
+    font: 900 42px/.82 var(--font-interface);
     text-align: right;
     transform: rotate(-90deg) translateX(100%);
     transform-origin: right bottom;
@@ -152,7 +152,7 @@ a {
     top: 8px;
     right: 10px;
     color: #4a5550;
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .brand-mark {
@@ -190,7 +190,7 @@ a {
 .brand-mark span {
     position: relative;
     z-index: 1;
-    font: 900 25px/1 Arial, sans-serif;
+    font: 900 25px/1 var(--font-interface);
 }
 
 .brand-lockup strong {
@@ -216,7 +216,7 @@ a {
     padding: 7px 10px;
     border: 1px solid #35403c;
     color: #9ca8a3;
-    font: 700 9px/1.1 Consolas, monospace;
+    font: 700 9px/1.1 var(--font-interface);
     letter-spacing: .08em;
 }
 
@@ -240,7 +240,7 @@ a {
 .micro-label {
     margin: 0;
     color: var(--muted);
-    font: 800 9px/1.2 Consolas, monospace;
+    font: 800 9px/1.2 var(--font-interface);
     letter-spacing: .14em;
     text-transform: uppercase;
 }
@@ -297,7 +297,7 @@ a {
 .nav-item b {
     grid-column: 2;
     margin-top: -8px;
-    font: 600 8px/1 Consolas, monospace;
+    font: 600 8px/1 var(--font-interface);
     letter-spacing: .12em;
     opacity: .48;
 }
@@ -305,7 +305,7 @@ a {
 .nav-code {
     grid-row: 1 / span 2;
     color: #5f6a66;
-    font: 700 10px/1 Consolas, monospace;
+    font: 700 10px/1 var(--font-interface);
 }
 
 .nav-item.active .nav-code {
@@ -362,7 +362,7 @@ a {
 
 .system-status b {
     color: var(--acid);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .back-link {
@@ -428,7 +428,7 @@ a {
 .breadcrumb span,
 .breadcrumb i {
     color: var(--muted-2);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
     letter-spacing: .1em;
 }
 
@@ -450,7 +450,7 @@ a {
 .inline-search > span,
 .dialog-search > span {
     color: var(--muted);
-    font: 700 19px/1 Arial, sans-serif;
+    font: 700 19px/1 var(--font-interface);
     transform: rotate(-15deg);
 }
 
@@ -478,7 +478,7 @@ a {
     color: var(--muted-2);
     background: var(--surface-2);
     border: 1px solid var(--line);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .top-actions {
@@ -525,7 +525,7 @@ a {
     background: var(--danger);
     border: 2px solid var(--surface);
     border-radius: 50%;
-    font: 800 8px/1 Arial, sans-serif;
+    font: 800 8px/1 var(--font-interface);
 }
 
 .operator {
@@ -543,7 +543,7 @@ a {
     color: var(--sidebar);
     background: var(--acid);
     border: 1px solid #adcf2e;
-    font: 900 10px/1 Arial, sans-serif;
+    font: 900 10px/1 var(--font-interface);
 }
 
 .operator strong,
@@ -558,7 +558,7 @@ a {
 .operator small {
     margin-top: 3px;
     color: var(--muted);
-    font: 700 7px/1 Consolas, monospace;
+    font: 700 7px/1 var(--font-interface);
     letter-spacing: .08em;
 }
 
@@ -624,7 +624,7 @@ main {
 .eyebrow {
     margin: 0 0 14px;
     color: #8e9a95;
-    font: 700 9px/1.3 Consolas, monospace;
+    font: 700 9px/1.3 var(--font-interface);
     letter-spacing: .14em;
 }
 
@@ -685,14 +685,14 @@ main {
 .hero-index small,
 .hero-index span {
     position: relative;
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
     letter-spacing: .12em;
 }
 
 .hero-index strong {
     position: relative;
     color: var(--acid);
-    font: 800 64px/.9 Arial, sans-serif;
+    font: 800 64px/.9 var(--font-interface);
     letter-spacing: -.08em;
 }
 
@@ -760,7 +760,7 @@ main {
     right: 26px;
     bottom: -15px;
     color: rgba(216, 255, 69, .14);
-    font: 900 122px/.8 Arial, sans-serif;
+    font: 900 122px/.8 var(--font-interface);
     letter-spacing: -.08em;
     pointer-events: none;
 }
@@ -792,7 +792,7 @@ main {
     right: 10px;
     bottom: -8px;
     color: rgba(17, 22, 21, .035);
-    font: 900 68px/1 Arial, sans-serif;
+    font: 900 68px/1 var(--font-interface);
 }
 
 .metric-top {
@@ -810,12 +810,12 @@ main {
     color: #52604e;
     background: var(--acid-soft);
     border-left: 2px solid var(--acid-strong);
-    font: 900 8px/1 Consolas, monospace;
+    font: 900 8px/1 var(--font-interface);
 }
 
 .metric-trend {
     color: var(--ok);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .metric-value {
@@ -826,7 +826,7 @@ main {
 }
 
 .metric-value strong {
-    font: 800 32px/1 Arial, sans-serif;
+    font: 800 32px/1 var(--font-interface);
     letter-spacing: -.04em;
 }
 
@@ -920,7 +920,7 @@ main {
     color: var(--ink);
     background: var(--acid-soft);
     border: 1px solid rgba(183, 225, 47, .48);
-    font: 800 9px/1 Consolas, monospace;
+    font: 800 9px/1 var(--font-interface);
 }
 
 .project-row h3 {
@@ -951,7 +951,7 @@ main {
 .project-percent {
     color: var(--muted);
     text-align: right;
-    font: 700 10px/1 Consolas, monospace;
+    font: 700 10px/1 var(--font-interface);
 }
 
 .status-chip {
@@ -1007,7 +1007,7 @@ main {
 
 .today-item time {
     color: var(--muted);
-    font: 700 10px/1 Consolas, monospace;
+    font: 700 10px/1 var(--font-interface);
 }
 
 .task-marker {
@@ -1092,7 +1092,7 @@ main {
     color: var(--muted);
     background: var(--surface-2);
     border-bottom: 1px solid var(--line);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
     letter-spacing: .09em;
     text-transform: uppercase;
 }
@@ -1188,12 +1188,12 @@ main {
     display: block;
     margin-top: 3px;
     color: var(--muted-2);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .live-label {
     color: var(--ok);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
     letter-spacing: .1em;
 }
 
@@ -1293,7 +1293,7 @@ main {
     right: -5px;
     bottom: -13px;
     color: rgba(17, 22, 21, .035);
-    font: 900 64px/1 Arial, sans-serif;
+    font: 900 64px/1 var(--font-interface);
 }
 
 .record-card-top {
@@ -1333,7 +1333,7 @@ main {
 
 .record-meta small {
     color: var(--muted-2);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .record-meta strong {
@@ -1379,7 +1379,7 @@ main {
 
 .mini-metric strong {
     margin-top: 6px;
-    font: 800 22px/1 Arial, sans-serif;
+    font: 800 22px/1 var(--font-interface);
 }
 
 .mini-metric i {
@@ -1389,7 +1389,7 @@ main {
     height: 31px;
     color: #667151;
     background: var(--acid-soft);
-    font: 800 8px/1 Consolas, monospace;
+    font: 800 8px/1 var(--font-interface);
     font-style: normal;
 }
 
@@ -1406,7 +1406,7 @@ main {
     height: 29px;
     color: var(--sidebar);
     background: var(--acid);
-    font: 900 11px/1 Arial, sans-serif;
+    font: 900 11px/1 var(--font-interface);
 }
 
 .amount-meter {
@@ -1427,7 +1427,7 @@ main {
 }
 
 .amount-meter.low i { background: var(--danger); }
-.amount-meter span { color: var(--muted); font: 700 8px/1 Consolas, monospace; }
+.amount-meter span { color: var(--muted); font: 700 8px/1 var(--font-interface); }
 
 .biobank-layout,
 .schedule-layout {
@@ -1477,7 +1477,7 @@ main {
     color: var(--muted-2);
     background: var(--surface-2);
     cursor: pointer;
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
     transition: transform .16s ease, background .16s ease, border-color .16s ease;
 }
 
@@ -1513,7 +1513,7 @@ main {
     bottom: -7px;
     color: rgba(17, 22, 21, .04);
     white-space: pre;
-    font: 900 52px/.78 Arial, sans-serif;
+    font: 900 52px/.78 var(--font-interface);
     text-align: right;
 }
 
@@ -1538,7 +1538,7 @@ main {
     background: var(--surface);
     border: 1px solid var(--line);
     text-align: center;
-    font: 700 7px/1 Consolas, monospace;
+    font: 700 7px/1 var(--font-interface);
 }
 
 .sample-detail h2 {
@@ -1647,7 +1647,7 @@ main {
 
 .protocol-card .protocol-number {
     color: var(--muted-2);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .protocol-card h2 {
@@ -1690,7 +1690,7 @@ main {
 
 .protocol-foot span {
     color: var(--muted);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .protocol-foot a {
@@ -1736,7 +1736,7 @@ main {
     padding-top: 8px;
     color: var(--muted);
     border-right: 1px solid var(--line);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .timeline-time::after {
@@ -1797,7 +1797,7 @@ main {
 
 .load-item header span:last-child {
     color: var(--muted);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
 }
 
 .load-track {
@@ -1897,7 +1897,7 @@ main {
     width: 41px;
     height: 27px;
     color: var(--muted);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .dialog-search {
@@ -1942,7 +1942,7 @@ main {
 
 .search-result > span:first-child {
     color: var(--muted);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
 }
 
 .search-result strong,
@@ -2012,7 +2012,7 @@ main {
 
 .form-field label {
     color: var(--muted);
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
     letter-spacing: .05em;
 }
 
@@ -2269,7 +2269,7 @@ body.dark-theme {
 
 .language-dock-label {
     color: #eef4e9;
-    font: 900 7px/1 "Arial Narrow", Arial, sans-serif;
+    font: 900 7px/1 var(--font-interface);
     letter-spacing: .17em;
 }
 
@@ -2286,7 +2286,7 @@ body.dark-theme {
     border: 0;
     border-radius: 3px 0 0 12px;
     cursor: pointer;
-    font-family: "Arial Black", "Microsoft YaHei", "SimHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 11px;
     font-weight: 900;
     letter-spacing: .04em;
@@ -2379,7 +2379,7 @@ html[lang="en"] button,
 html[lang="en"] input,
 html[lang="en"] select,
 html[lang="en"] textarea {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-interface);
 }
 
 .nav-item {
@@ -2745,7 +2745,7 @@ html[lang="en"] textarea {
 .calendar-navigation strong {
     min-width: 190px;
     margin-left: 10px;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 14px;
     text-align: right;
 }
@@ -2799,7 +2799,7 @@ html[lang="en"] textarea {
     padding: 0 12px 0 0;
     color: var(--muted);
     text-align: right;
-    font: 700 9px/1 Consolas, monospace;
+    font: 700 9px/1 var(--font-interface);
     transform: translateY(-4px);
 }
 
@@ -2878,7 +2878,7 @@ html[lang="en"] textarea {
 
 .schedule-block strong {
     overflow: hidden;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 11px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2981,7 +2981,7 @@ html[lang="en"] textarea {
     height: 25px;
     margin-bottom: 5px;
     border-radius: 50%;
-    font: 800 10px/1 Arial, sans-serif;
+    font: 800 10px/1 var(--font-interface);
 }
 
 .month-day.today > time {
@@ -3034,7 +3034,7 @@ html[lang="en"] textarea {
 
 .month-agenda h2 {
     margin: 6px 0 16px;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 17px;
 }
 
@@ -3127,7 +3127,7 @@ html[lang="en"] textarea {
 
 .protocol-detail-dialog h2 {
     margin: 6px 0 0;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 23px;
 }
 
@@ -3151,7 +3151,7 @@ html[lang="en"] textarea {
 
 .protocol-detail-body h3 {
     margin: 7px 0 15px;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 16px;
 }
 
@@ -3179,7 +3179,7 @@ html[lang="en"] textarea {
     top: 11px;
     left: 8px;
     color: #75931e;
-    font: 800 10px/1.5 Consolas, monospace;
+    font: 800 10px/1.5 var(--font-interface);
 }
 
 .protocol-usage-table {
@@ -3455,13 +3455,13 @@ html[lang="en"] textarea {
 
 /* Standalone workspace typography and notification center. */
 .primary-nav {
-    font-family: SimHei, "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-family: var(--font-interface);
 }
 
 .primary-nav .nav-label {
     padding-top: 4px;
     padding-bottom: 13px;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 11px;
     font-weight: 900;
     letter-spacing: .12em;
@@ -3469,7 +3469,7 @@ html[lang="en"] textarea {
 
 .nav-item {
     min-height: 58px;
-    font-family: SimHei, "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-family: var(--font-interface);
     font-size: 15px;
     font-weight: 900;
     letter-spacing: .015em;
@@ -3531,7 +3531,7 @@ html[lang="en"] textarea {
     background: var(--danger);
     border: 2px solid rgba(245, 247, 242, .94);
     border-radius: 50%;
-    font: 800 8px/1 Arial, sans-serif;
+    font: 800 8px/1 var(--font-interface);
     transition: opacity .18s ease, transform .18s ease;
 }
 
@@ -3598,7 +3598,7 @@ html[lang="en"] textarea {
 
 .notification-panel h2 {
     margin: 5px 0 0;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 18px;
 }
 
@@ -3672,7 +3672,7 @@ html[lang="en"] textarea {
 }
 
 .notification-item strong {
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
     font-size: 12px;
 }
 
@@ -4131,7 +4131,7 @@ main {
     width: min(410px, 100%);
     margin-top: 24px;
     color: rgba(60, 73, 65, .53);
-    font: 700 8px/1 Consolas, monospace;
+    font: 700 8px/1 var(--font-interface);
     letter-spacing: .16em;
 }
 
@@ -6064,7 +6064,7 @@ body.dark-theme {
 
 .record-detail-code {
     color: var(--acid);
-    font: 900 9px/1.2 "Arial Narrow", Arial, sans-serif;
+    font: 900 9px/1.2 var(--font-interface);
     letter-spacing: .16em;
 }
 
@@ -6301,7 +6301,7 @@ body.dark-theme {
 
 .record-history-item time {
     color: var(--muted);
-    font: 700 8px/1.3 Consolas, monospace;
+    font: 700 8px/1.3 var(--font-interface);
 }
 
 .record-history-item p,
@@ -6597,7 +6597,7 @@ body.dark-theme {
     background: #fff;
     border-radius: 50%;
     place-items: center;
-    font: 900 10px/1 Consolas, monospace;
+    font: 900 10px/1 var(--font-interface);
 }
 
 .run-step-item.active > span,
@@ -6654,7 +6654,7 @@ body.dark-theme {
 
 .run-current-step span {
     color: var(--acid);
-    font: 900 10px/1.2 Consolas, monospace;
+    font: 900 10px/1.2 var(--font-interface);
     letter-spacing: .13em;
 }
 
@@ -6771,7 +6771,7 @@ body.dark-theme {
     display: block;
     margin: 20px 0;
     color: #26302c;
-    font: 700 clamp(28px, 4vw, 42px)/1 Arial, sans-serif;
+    font: 700 clamp(28px, 4vw, 42px)/1 var(--font-interface);
     letter-spacing: .05em;
 }
 
@@ -6802,7 +6802,7 @@ body.dark-theme {
 
 .calculator-tool > header > span {
     color: #70811f;
-    font: 800 13px/1 Arial, sans-serif;
+    font: 800 13px/1 var(--font-interface);
 }
 
 .calculator-tool label {
@@ -6894,7 +6894,7 @@ body.dark-theme {
     border: 1px solid var(--line-dark);
     cursor: pointer;
     place-items: center;
-    font: 800 7px/1 Arial, sans-serif;
+    font: 800 7px/1 var(--font-interface);
 }
 
 .apparatus-cell.round { border-radius: 50%; }
@@ -7011,7 +7011,7 @@ html[lang="en"] input,
 html[lang="en"] select,
 html[lang="en"] textarea,
 html[lang="en"] .schedule-block strong {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: var(--font-interface);
 }
 
 html[lang="en"] .nav-label,
@@ -7028,7 +7028,7 @@ html[lang="en"] .run-current-step span,
 html[lang="en"] .apparatus-cell,
 html[lang="en"] .language-dock-label,
 html[lang="en"] .record-detail-code {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: var(--font-interface);
 }
 
 .nav-item { font-size: 16px; }
@@ -7980,7 +7980,7 @@ html[lang="en"] .record-detail-code {
     background: var(--surface-2);
     border: 1px solid var(--line-dark);
     border-radius: 10px 3px 10px 3px;
-    font: 800 16px/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 800 16px/1 var(--font-interface);
     letter-spacing: .08em;
 }
 
@@ -8084,7 +8084,7 @@ html[lang="en"] .record-detail-code {
     border: 1px solid var(--acid-strong);
     border-radius: 9px 3px 9px 3px;
     cursor: pointer;
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
 }
 
 .schedule-block .schedule-run-button span,
@@ -8233,7 +8233,7 @@ html:not([lang="en"]) select,
 html:not([lang="en"]) select option,
 html:not([lang="en"]) select optgroup,
 html:not([lang="en"]) .custom-select-input {
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-interface);
 }
 
 .form-field select,
@@ -8496,7 +8496,7 @@ html body,
 html body *,
 html body *::before,
 html body *::after {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
 }
 
 .page-heading.technical-heading h1 {
@@ -8815,7 +8815,7 @@ select option,
 select optgroup {
     color: #17201c;
     background: #f3f6f1;
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
     font-size: 15.5px !important;
 }
 
@@ -8933,7 +8933,7 @@ select optgroup {
 .language-dock-label,
 .dark-theme .language-dock-label {
     color: #f5f8f5;
-    font-family: Helvetica, Arial, SimHei, "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-interface);
     font-size: 8.5px;
 }
 
@@ -9347,7 +9347,7 @@ html[lang="en"] .experiment-day-list,
 html[lang="en"] .experiment-day-list *,
 html[lang="en"] .experiment-results-board,
 html[lang="en"] .experiment-results-board * {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
 }
 
 @media (max-width: 900px) {
@@ -9401,7 +9401,7 @@ html.native-app main {
 /* 2026-08-10: consistent information typography and denser record rows. */
 .page-heading.technical-heading .story-quote,
 .page-heading.technical-heading .story-quote cite {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
     font-size: 14px !important;
     font-weight: 500;
     line-height: 1.65;
@@ -9423,7 +9423,7 @@ html.native-app main {
 .dialog-search input,
 input::placeholder,
 textarea::placeholder {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
 }
 
 .mini-metric small,
@@ -9459,7 +9459,7 @@ textarea::placeholder {
 
 html[lang="zh-CN"] .page-heading.technical-heading .story-quote,
 html[lang="zh-CN"] .page-heading.technical-heading .story-quote cite {
-    font-family: var(--font-cjk) !important;
+    font-family: var(--font-interface);
     font-size: 14px !important;
     font-weight: 600;
     line-height: 1.65;
@@ -9775,13 +9775,13 @@ html.native-app .app-boot-screen.is-hidden {
 
 .app-boot-screen strong {
     margin-top: 4px;
-    font: 800 11px/1.2 Helvetica, Arial, sans-serif;
+    font: 800 11px/1.2 var(--font-interface);
     letter-spacing: .18em;
 }
 
 .app-boot-screen span {
     color: #6e7874;
-    font-family: var(--font-cjk);
+    font-family: var(--font-interface);
     font-size: 12px;
     font-weight: 600;
 }
@@ -9884,7 +9884,7 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     background: var(--acid);
     border: 0;
     border-radius: 9px 3px 9px 3px;
-    font-family: var(--font-cjk);
+    font-family: var(--font-interface);
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -9926,7 +9926,7 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     background: var(--surface);
     border: 1px solid var(--line-dark);
     border-radius: 9px 3px 9px 3px;
-    font-family: var(--font-cjk);
+    font-family: var(--font-interface);
     font-size: 12px;
     line-height: 1.6;
     resize: vertical;
@@ -10204,6 +10204,8 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     font-family: "Rhine Interface";
     src: local("Helvetica Neue"), local("Helvetica"), local("Arial");
     font-display: swap;
+    font-style: normal;
+    font-weight: 100 900;
     unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2100-214F, U+2190-22FF, U+25A0-25FF;
 }
 
@@ -10211,6 +10213,8 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     font-family: "Rhine Interface";
     src: local("SimHei"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("Source Han Sans CN"), local("Microsoft YaHei");
     font-display: swap;
+    font-style: normal;
+    font-weight: 100 900;
     unicode-range: U+2E80-2FFF, U+3000-303F, U+31C0-31EF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF, U+20000-2A6DF, U+2A700-2CEAF, U+2CEB0-2EBEF, U+30000-3134F;
 }
 /* 2026-08-11 definitive type audit: Unicode-aware mixed-script stacks and a consistent information scale. */
@@ -10220,10 +10224,10 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     --font-interface: var(--font-cjk);
 }
 
-html body,
-html body *,
-html body *::before,
-html body *::after,
+/* The Unicode-ranged family is the single source of truth. Latin glyphs resolve
+   to Helvetica while CJK glyphs resolve to SimHei, including mixed strings. */
+html,
+body,
 button,
 input,
 textarea,
@@ -10232,58 +10236,29 @@ option,
 optgroup,
 table,
 dialog {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
+    font-synthesis: weight style;
 }
 
-html[lang="en"] body,
-html[lang="en"] body *,
-html[lang="en"] body *::before,
-html[lang="en"] body *::after,
-html[lang="en"] button,
-html[lang="en"] input,
-html[lang="en"] textarea,
-html[lang="en"] select,
-html[lang="en"] option,
-html[lang="en"] optgroup {
-    font-family: var(--font-latin) !important;
+body,
+button,
+input,
+textarea,
+select,
+option,
+optgroup {
+    font-weight: 500;
 }
 
-/* Keep every Chinese-mode runtime string, control and generated record in SimHei. */
-html:not([lang="en"]) body,
-html:not([lang="en"]) body *,
-html:not([lang="en"]) body *::before,
-html:not([lang="en"]) body *::after,
-html:not([lang="en"]) button,
-html:not([lang="en"]) input,
-html:not([lang="en"]) textarea,
-html:not([lang="en"]) select,
-html:not([lang="en"]) option,
-html:not([lang="en"]) optgroup,
-html:not([lang="en"]) table,
-html:not([lang="en"]) dialog,
-html:not([lang="en"]) input::placeholder,
-html:not([lang="en"]) textarea::placeholder {
-    font-family: var(--font-cjk) !important;
+#dashboardDaySummary {
+    font-family: var(--font-interface);
+    font-weight: 700;
 }
 
-/* Explicit coverage for dashboard summaries, metric cards and record editors. */
-#dashboardDaySummary,
-#dashboardDaySummary *,
-.metric-card,
-.metric-card *,
-.record-card,
-.record-card *,
-.data-table,
-.data-table *,
-.experiment-detail-dialog,
-.experiment-detail-dialog *,
-.entry-dialog,
-.entry-dialog *,
-.record-detail-dialog,
-.record-detail-dialog * {
-    font-family: inherit !important;
+#dashboardDaySummary strong {
+    font-family: inherit;
+    font-weight: 800;
 }
-
 input,
 textarea,
 select,
@@ -10294,21 +10269,18 @@ optgroup,
 .dialog-search input,
 .topbar input {
     font-size: 13px !important;
+    font-family: var(--font-interface);
+    font-weight: 600;
     line-height: 1.45;
 }
 
 input::placeholder,
 textarea::placeholder {
     color: #596660;
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
     font-size: 13px !important;
-    font-weight: 500;
+    font-weight: 600;
     opacity: 1;
-}
-
-html[lang="en"] input::placeholder,
-html[lang="en"] textarea::placeholder {
-    font-family: var(--font-latin) !important;
 }
 
 .dark-theme input::placeholder,
@@ -10420,7 +10392,7 @@ dialog small,
 
 .page-heading.technical-heading .story-quote,
 .page-heading.technical-heading .story-quote cite {
-    font-family: var(--font-interface) !important;
+    font-family: var(--font-interface);
     font-size: 13px !important;
     font-weight: 500;
     line-height: 1.65;
@@ -10428,7 +10400,7 @@ dialog small,
 
 html[lang="en"] .page-heading.technical-heading .story-quote,
 html[lang="en"] .page-heading.technical-heading .story-quote cite {
-    font-family: var(--font-latin) !important;
+    font-family: var(--font-interface);
 }
 
 .brand-lockup {
@@ -10500,4 +10472,152 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     dialog small,
     .notification-panel small { font-size: 11px !important; }
     .data-table td { font-size: 12.5px !important; }
+}
+
+/* Experiment records own their result data; the result panel remains visually secondary. */
+.experiment-record-entry {
+    display: grid;
+    min-width: 0;
+}
+
+.experiment-record-entry > .record-card {
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+}
+
+.experiment-inline-result {
+    display: grid;
+    gap: 12px;
+    padding: 16px 18px;
+    background: color-mix(in srgb, var(--surface) 94%, var(--acid-soft));
+    border: 1px solid var(--line);
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+}
+
+.experiment-inline-result > header,
+.experiment-inline-result > footer,
+.protocol-literature-card > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.experiment-inline-result h3,
+.protocol-literature-card h3 {
+    margin: 2px 0 0;
+    font-size: 16px;
+}
+
+.experiment-inline-result > p,
+.experiment-inline-result footer,
+.result-no-attachments {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.experiment-inline-result.pending {
+    border-style: dashed;
+}
+
+.experiment-inline-result.pending .button {
+    justify-self: start;
+}
+
+.result-conclusion {
+    display: grid;
+    gap: 4px;
+    padding: 11px 12px;
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+
+.result-conclusion small,
+.result-conclusion strong {
+    font-family: var(--font-interface);
+}
+
+.result-attachment-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.experiment-inline-result footer > div {
+    display: flex;
+    gap: 8px;
+}
+
+.experiment-result-section {
+    margin-top: 16px;
+}
+
+.protocol-reference-badge {
+    display: inline-flex;
+    margin-left: 8px;
+    padding: 3px 7px;
+    color: #526a12;
+    background: var(--acid-soft);
+    border: 1px solid rgba(145, 184, 41, .32);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.protocol-literature-card {
+    display: grid;
+    gap: 9px;
+    margin: 18px 0 24px;
+    padding: 18px;
+    background: color-mix(in srgb, var(--surface) 93%, var(--acid-soft));
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--acid);
+    border-radius: 14px;
+}
+
+.protocol-literature-card > strong {
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.protocol-literature-card > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.protocol-literature-card code {
+    justify-self: start;
+    padding: 4px 7px;
+    color: var(--ink);
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-family: var(--font-interface);
+    font-size: 12px;
+}
+
+.protocol-literature-link {
+    color: #5b7510;
+    font-size: 12.5px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.protocol-literature-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 700px) {
+    .experiment-inline-result { padding: 14px; }
+    .experiment-inline-result > header,
+    .experiment-inline-result > footer { align-items: flex-start; flex-direction: column; }
+    .experiment-inline-result footer > div { width: 100%; }
+    .experiment-inline-result footer .button { flex: 1; }
+    .protocol-literature-card > header { align-items: flex-start; flex-direction: column; }
 }
