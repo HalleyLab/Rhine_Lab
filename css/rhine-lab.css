@@ -10201,27 +10201,27 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
 
 /* Split local Latin and CJK faces by Unicode so mixed scientific labels use the intended glyphs. */
 @font-face {
-    font-family: "Rhine Interface";
-    src: local("Helvetica Neue"), local("Helvetica"), local("Arial");
+    font-family: "Rhine Helvetica";
+    src: local("Helvetica"), local("Helvetica Neue"), local("Arial");
     font-display: swap;
     font-style: normal;
-    font-weight: 100 900;
+    font-weight: 400;
     unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2100-214F, U+2190-22FF, U+25A0-25FF;
 }
 
 @font-face {
-    font-family: "Rhine Interface";
-    src: local("SimHei"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("Source Han Sans CN"), local("Microsoft YaHei");
+    font-family: "Rhine SimHei";
+    src: local("SimHei"), local("黑体"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("Source Han Sans CN"), local("Microsoft YaHei");
     font-display: swap;
     font-style: normal;
-    font-weight: 100 900;
+    font-weight: 400;
     unicode-range: U+2E80-2FFF, U+3000-303F, U+31C0-31EF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF, U+20000-2A6DF, U+2A700-2CEAF, U+2CEB0-2EBEF, U+30000-3134F;
 }
 /* 2026-08-11 definitive type audit: Unicode-aware mixed-script stacks and a consistent information scale. */
 :root {
-    --font-latin: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-cjk: "Rhine Interface", SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
-    --font-interface: var(--font-cjk);
+    --font-latin: "Rhine Helvetica", Helvetica, "Helvetica Neue", Arial, sans-serif;
+    --font-cjk: "Rhine SimHei", SimHei, "黑体", "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+    --font-interface: "Rhine Helvetica", "Rhine SimHei", SimHei, "黑体", sans-serif;
 }
 
 /* The Unicode-ranged family is the single source of truth. Latin glyphs resolve
