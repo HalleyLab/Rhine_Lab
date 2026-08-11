@@ -184,10 +184,42 @@
     defaults.auditLog = [];
 
     applyConfiguredSeed(window.RHINE_LAB_SEED);
+    seedDefaultAnimalHousing();
+
+    function seedDefaultAnimalHousing() {
+        if (!Array.isArray(defaults.animalRacks) || !defaults.animalRacks.length) {
+            defaults.animalRacks = [{ id: 'RACK-DEMO-01', name: '屏障设施 A 区笼架', facility: '动物中心 · A 区', rows: 4, columns: 12, createdBy: 'NODE-01' }];
+        }
+        const rack = defaults.animalRacks[0];
+        const cages = Array.isArray(defaults.animalCages) ? defaults.animalCages.slice() : [];
+        const byLabel = new Map(cages.map(function (cage) { return [String(cage.label || cage.position), cage]; }));
+        defaults.mice = defaults.mice.map(function (animal) {
+            const legacyLabel = String(animal.cage || '未分配');
+            let cage = byLabel.get(legacyLabel);
+            if (!cage) {
+                const position = normalizeAnimalPosition(legacyLabel) || firstAvailableAnimalPosition(rack, cages);
+                cage = {
+                    id: 'CAGE-DEMO-' + String(cages.length + 1).padStart(3, '0'),
+                    rackId: rack.id,
+                    position: position,
+                    label: legacyLabel,
+                    species: animal.species || '小鼠',
+                    capacity: 5,
+                    status: '在用',
+                    notes: '',
+                    createdBy: animal.createdBy || 'NODE-01'
+                };
+                cages.push(cage);
+                byLabel.set(legacyLabel, cage);
+            }
+            return Object.assign({}, animal, { species: animal.species || '小鼠', cageId: cage.id, cage: cage.label });
+        });
+        defaults.animalCages = cages;
+    }
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -198,15 +230,21 @@
         defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 4;
     }
 
+    let publicDemoUnlocked = false;
     let workspaceMode = localStorage.getItem('rhineLabWorkspaceMode') === 'lab' ? 'lab' : 'personal';
     let state = migrateState(loadState(workspaceMode));
     let activeView = getInitialView();
     let experimentFilter = '全部';
     let resultFilter = '全部';
     let reagentFilter = '全部';
-    let workspaceReadOnly = workspaceMode === 'lab';
+    const publicDemoMode = isPublicDemoRuntime();
+    let workspaceAccess = { authenticated: false, labReadOnly: true };
+    let workspaceReadOnly = publicDemoMode || workspaceMode === 'lab';
     let selectedSampleId = state.samples[0] ? state.samples[0].id : '';
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
+    let activeAnimalRackId = state.animalRacks.some(rack => rack.id === localStorage.getItem('rhineLabActiveAnimalRack')) ? localStorage.getItem('rhineLabActiveAnimalRack') : (state.animalRacks[0] ? state.animalRacks[0].id : '');
+    let selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
+    let pendingAnimalCageDefaults = null;
     let activeDialogType = '';
     let editingRecord = null;
     let activeRecordDetail = null;
@@ -385,11 +423,29 @@
 
     function loadState(mode) {
         try {
-            const stored = JSON.parse(localStorage.getItem(scopeStorageKey(mode)));
+            if (isPublicDemoRuntime() && !publicDemoUnlocked) return normalizeStateShape(clone(defaults));
+            const raw = localStorage.getItem(scopeStorageKey(mode));
+            if (!raw) {
+                const emptyFirstRun = isInstalledAppRuntime() || (isPublicDemoRuntime() && publicDemoUnlocked);
+                return normalizeStateShape(emptyFirstRun ? emptyWorkspaceState() : clone(defaults));
+            }
+            const stored = JSON.parse(raw);
             return normalizeStateShape(stored);
         } catch (error) {
-            return clone(defaults);
+            return normalizeStateShape(isInstalledAppRuntime() ? emptyWorkspaceState() : clone(defaults));
         }
+    }
+
+    function isPublicDemoRuntime() {
+        const hostedShowcase = /(^|\.)github\.io$/i.test(location.hostname) && /\/Rhine_Lab(?:\/|$)/i.test(location.pathname);
+        return hostedShowcase && !isInstalledAppRuntime();
+    }
+
+    function isInstalledAppRuntime() {
+        const distribution = String(window.RHINE_LAB_DISTRIBUTION || '').toLowerCase();
+        const nativeProtocol = /^(?:capacitor|chrome-extension|moz-extension):$/i.test(location.protocol);
+        const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        return distribution === 'desktop' || distribution === 'extension' || nativeProtocol || document.documentElement.classList.contains('native-app') || Boolean(standalone);
     }
 
     function normalizeStateShape(stored) {
@@ -398,6 +454,8 @@
             experiments: Array.isArray(stored.experiments) ? stored.experiments : clone(defaults.experiments),
             results: Array.isArray(stored.results) ? stored.results : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.results)),
             mice: Array.isArray(stored.mice) ? stored.mice : clone(defaults.mice),
+            animalRacks: Array.isArray(stored.animalRacks) ? stored.animalRacks : [],
+            animalCages: Array.isArray(stored.animalCages) ? stored.animalCages : [],
             cellCultures: Array.isArray(stored.cellCultures) ? stored.cellCultures : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.cellCultures)),
             reagents: Array.isArray(stored.reagents) ? stored.reagents : clone(defaults.reagents),
             samples: Array.isArray(stored.samples) ? stored.samples : clone(defaults.samples),
@@ -513,12 +571,7 @@
             });
         });
 
-        data.mice = data.mice.map(function (mouse) {
-            return Object.assign({}, mouse, {
-                createdBy: anonymousContributor(mouse.createdBy),
-                history: Array.isArray(mouse.history) ? mouse.history : []
-            });
-        });
+        migrateAnimalHousing(data);
 
         data.results = (Array.isArray(data.results) ? data.results : []).filter(function (result, index, list) {
             return result && result.experimentId && list.findIndex(item => item && item.experimentId === result.experimentId) === index;
@@ -595,6 +648,75 @@
         return data;
     }
 
+    function migrateAnimalHousing(data) {
+        data.animalRacks = (Array.isArray(data.animalRacks) ? data.animalRacks : []).map(function (rack, index) {
+            return Object.assign({}, rack, {
+                id: rack.id || 'RACK-' + String(index + 1).padStart(3, '0'),
+                name: rack.name || '动物笼架 ' + (index + 1),
+                facility: rack.facility || '位置待设置',
+                rows: Math.round(number(rack.rows, 1, 8)) || 4,
+                columns: Math.round(number(rack.columns, 1, 16)) || 8,
+                createdBy: anonymousContributor(rack.createdBy)
+            });
+        });
+        data.animalCages = (Array.isArray(data.animalCages) ? data.animalCages : []).map(function (cage, index) {
+            return Object.assign({}, cage, {
+                id: cage.id || 'CAGE-' + String(index + 1).padStart(3, '0'),
+                rackId: cage.rackId || (data.animalRacks[0] ? data.animalRacks[0].id : ''),
+                position: normalizeAnimalPosition(cage.position),
+                label: cage.label || cage.position || '笼位 ' + (index + 1),
+                species: cage.species || '混合 / 待设置',
+                capacity: Math.max(1, Math.round(positiveNumber(cage.capacity, 5))),
+                status: cage.status || '在用',
+                notes: cage.notes || '',
+                createdBy: anonymousContributor(cage.createdBy)
+            });
+        });
+        data.mice = (Array.isArray(data.mice) ? data.mice : []).map(function (animal) {
+            return Object.assign({}, animal, {
+                species: animal.species || '小鼠',
+                strain: animal.strain || animal.breed || '',
+                createdBy: anonymousContributor(animal.createdBy),
+                history: Array.isArray(animal.history) ? animal.history : []
+            });
+        });
+        if (!data.mice.length && !data.animalCages.length) return;
+        if (!data.animalRacks.length) {
+            data.animalRacks.push({ id: 'RACK-LEGACY-01', name: '迁移笼架', facility: '原有动物记录', rows: 6, columns: 12, createdBy: 'LOCAL-NODE' });
+        }
+        const rack = data.animalRacks[0];
+        data.mice = data.mice.map(function (animal) {
+            let cage = data.animalCages.find(item => item.id === animal.cageId);
+            if (!cage) {
+                const legacyLabel = String(animal.cage || '未分配');
+                cage = data.animalCages.find(item => item.rackId === rack.id && item.label === legacyLabel);
+                if (!cage) {
+                    const position = normalizeAnimalPosition(legacyLabel) || firstAvailableAnimalPosition(rack, data.animalCages);
+                    cage = { id: 'CAGE-MIG-' + String(data.animalCages.length + 1).padStart(3, '0'), rackId: rack.id, position: position, label: legacyLabel, species: animal.species, capacity: 5, status: '在用', notes: '', createdBy: animal.createdBy };
+                    data.animalCages.push(cage);
+                }
+            }
+            return Object.assign({}, animal, { cageId: cage.id, cage: cage.label });
+        });
+    }
+
+    function normalizeAnimalPosition(value) {
+        const match = String(value || '').trim().toUpperCase().match(/^([A-H])[-\s]?(\d{1,2})$/);
+        return match ? match[1] + Number(match[2]) : '';
+    }
+
+    function firstAvailableAnimalPosition(rack, cages) {
+        if (!rack) return '';
+        const occupied = new Set(cages.filter(item => item.rackId === rack.id).map(item => item.position));
+        for (let row = 0; row < rack.rows; row += 1) {
+            for (let column = 1; column <= rack.columns; column += 1) {
+                const position = String.fromCharCode(65 + row) + column;
+                if (!occupied.has(position)) return position;
+            }
+        }
+        return '';
+    }
+
     function mergeExampleRecords(target, examples, key) {
         examples.forEach(function (example) {
             if (!target.some(item => item[key] === example[key])) target.push(clone(example));
@@ -629,13 +751,37 @@
         if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) {
             activeFreezerBoxId = state.freezerBoxes[0].id;
         }
+        if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
+        if (!state.animalCages.some(cage => cage.id === selectedAnimalCageId)) selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
         saveState({ remote: true });
         renderAll();
     }
 
     function setWorkspaceAccess(access) {
-        workspaceReadOnly = workspaceMode === 'lab' && Boolean(access && access.readOnly);
+        const nextAuthenticated = Boolean(access && access.authenticated);
+        const publicAccessChanged = publicDemoMode && nextAuthenticated !== publicDemoUnlocked;
+        publicDemoUnlocked = nextAuthenticated;
+        workspaceAccess = {
+            authenticated: nextAuthenticated,
+            labReadOnly: Boolean(access && access.readOnly)
+        };
+        if (publicAccessChanged) {
+            state = nextAuthenticated
+                ? migrateState(loadState(workspaceMode))
+                : migrateState(normalizeStateShape(clone(defaults)));
+            selectedSampleId = state.samples[0] ? state.samples[0].id : '';
+            if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) activeFreezerBoxId = state.freezerBoxes[0].id;
+            if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
+            selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
+        }
+        workspaceReadOnly = computeWorkspaceReadOnly();
         applyWorkspaceMode();
+        if (publicAccessChanged) renderAll();
+    }
+
+    function computeWorkspaceReadOnly() {
+        if (publicDemoMode && !workspaceAccess.authenticated) return true;
+        return workspaceMode === 'lab' && workspaceAccess.labReadOnly;
     }
 
     function getInitialView() {
@@ -679,6 +825,9 @@
     function applyWorkspaceMode() {
         document.body.classList.toggle('lab-workspace', workspaceMode === 'lab');
         document.body.classList.toggle('workspace-readonly', workspaceReadOnly);
+        document.body.classList.toggle('public-demo-locked', publicDemoMode && !workspaceAccess.authenticated);
+        const publicBanner = document.getElementById('publicDemoBanner');
+        if (publicBanner) publicBanner.hidden = !(publicDemoMode && !workspaceAccess.authenticated);
         els.workspaceModeToggle.querySelectorAll('[data-workspace-mode]').forEach(function (button) {
             const active = button.dataset.workspaceMode === workspaceMode;
             button.classList.toggle('active', active);
@@ -699,7 +848,9 @@
         state = migrateState(loadState(mode));
         selectedSampleId = state.samples[0] ? state.samples[0].id : '';
         if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) activeFreezerBoxId = state.freezerBoxes[0].id;
-        workspaceReadOnly = mode === 'lab';
+        if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
+        selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
+        workspaceReadOnly = computeWorkspaceReadOnly();
         applyWorkspaceMode();
         renderAll();
         if (window.RhineLabSync) window.RhineLabSync.switchScope(mode);
@@ -757,7 +908,12 @@
 
     function bindEvents() {
         document.addEventListener('click', function (event) {
-            const mutationTarget = event.target.closest('[data-add], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            if (event.target.closest('[data-open-sync]')) {
+                const syncControl = document.getElementById('syncControl');
+                if (syncControl) syncControl.click();
+                return;
+            }
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -865,6 +1021,34 @@
             const animalRecord = event.target.closest('[data-mouse-id]');
             if (animalRecord) {
                 openAnimalDetail(animalRecord.dataset.mouseId);
+                return;
+            }
+
+            const animalRack = event.target.closest('[data-animal-rack]');
+            if (animalRack) {
+                selectAnimalRack(animalRack.dataset.animalRack);
+                return;
+            }
+
+            const animalCage = event.target.closest('[data-animal-cage]');
+            if (animalCage) {
+                selectAnimalCage(animalCage.dataset.animalCage);
+                return;
+            }
+
+            const animalPosition = event.target.closest('[data-animal-position]');
+            if (animalPosition) {
+                pendingAnimalCageDefaults = { rackId: activeAnimalRackId, position: animalPosition.dataset.animalPosition };
+                openEntryDialog('animalCage');
+                return;
+            }
+
+            if (event.target.closest('[data-add-animal-to-cage]')) {
+                if (!selectedAnimalCageId) {
+                    showToast('请先选择或新建一个笼位');
+                    return;
+                }
+                openEntryDialog('mouse');
                 return;
             }
 
@@ -1334,7 +1518,7 @@
             event.preventDefault();
             event.stopPropagation();
         }
-        showToast('LAB 共用页面为只读；请切换到个人工作区录入');
+        showToast(publicDemoMode && !workspaceAccess.authenticated ? '公开网页仅供展示；请先登录再修改' : 'LAB 共用页面为只读；请切换到个人工作区录入');
         return true;
     }
 
@@ -1466,7 +1650,7 @@
         const sampleCount = state.samples.length;
         const metrics = [
             { label: '进行中实验', value: activeExperiments, unit: '项', trend: state.experiments.length ? '+2 本周' : '暂无记录', code: 'EXP' },
-            { label: '在管实验动物', value: state.mice.length, unit: '只', trend: activeMice + ' 只实验中', code: 'ANI' },
+            { label: '在管实验动物', value: state.mice.length, unit: '个体', trend: activeMice + ' 个体实验中', code: 'ANI' },
             { label: '登记生物样本', value: sampleCount, unit: '份', trend: state.samples.length ? '+8 本周' : '暂无记录', code: 'BIO' },
             { label: '试剂预警', value: lowReagents, unit: '项', trend: lowReagents ? '需处理' : '状态良好', code: 'CHM' }
         ];
@@ -1598,17 +1782,96 @@
 
     function renderMice() {
         const search = valueOf('mouseSearch').toLowerCase();
-        const items = state.mice.filter(item => [item.id, item.strain, item.genotype, item.cage, item.status, item.ethics].join(' ').toLowerCase().includes(search));
+        const items = state.mice.filter(item => [item.id, item.species, item.strain, item.genotype, item.cage, item.status, item.ethics].join(' ').toLowerCase().includes(search));
+        const speciesCount = new Set(state.mice.map(item => item.species).filter(Boolean)).size;
         const metrics = [
-            { label: '在管总数', value: state.mice.length, code: 'ALL' },
-            { label: '实验进行中', value: state.mice.filter(item => item.status === '实验中').length, code: 'RUN' },
-            { label: '繁育队列', value: state.mice.filter(item => item.status === '繁育中').length, code: 'BRD' },
-            { label: '使用笼位', value: new Set(state.mice.map(item => item.cage)).size, code: 'CGE' }
+            { label: '动物个体', value: state.mice.length, code: 'ANI' },
+            { label: '动物物种', value: speciesCount, code: 'SPC' },
+            { label: '笼架数量', value: state.animalRacks.length, code: 'RCK' },
+            { label: '已建笼位', value: state.animalCages.length, code: 'CGE' }
         ];
         document.getElementById('mouseMetrics').innerHTML = miniMetricsHtml(metrics);
+        renderAnimalHousing();
         document.getElementById('mouseTable').innerHTML = items.map(function (item) {
-            return '<tr class="clickable-data-row" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>RFID VERIFIED' + contributorInline(item) + '</small></td><td><strong>' + esc(item.strain) + '</strong><small>' + esc(item.genotype) + '</small></td><td>' + esc(item.sex) + '</td><td>' + esc(item.birth) + '</td><td><strong>' + esc(item.cage) + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></td><td>' + esc(item.ethics) + '</td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
-        }).join('') || '<tr><td colspan="8">没有找到匹配的动物记录。</td></tr>';
+            return '<tr class="clickable-data-row" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>ANIMAL RECORD' + contributorInline(item) + '</small></td><td><strong>' + esc(item.species || '未设置') + '</strong></td><td><strong>' + esc(item.strain || '未设置') + '</strong><small>' + esc(item.genotype || '基因型未填写') + '</small></td><td>' + esc(item.sex || '未确认') + '</td><td>' + esc(item.birth || '未填写') + '</td><td><strong>' + esc(item.cage || '未分配') + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在养') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无动物条目；请先建立笼架和笼位，再添加动物。</td></tr>';
+    }
+
+    function renderAnimalHousing() {
+        const tabs = document.getElementById('animalRackTabs');
+        const grid = document.getElementById('animalRackGrid');
+        const title = document.getElementById('animalRackTitle');
+        const meta = document.getElementById('animalRackMeta');
+        const rack = state.animalRacks.find(item => item.id === activeAnimalRackId) || state.animalRacks[0];
+        if (!rack) {
+            activeAnimalRackId = '';
+            selectedAnimalCageId = '';
+            tabs.innerHTML = '<span class="animal-rack-empty-tabs">尚无笼架</span>';
+            title.textContent = '尚未建立笼架';
+            meta.textContent = '新建笼架后，可逐个添加笼位和动物。';
+            grid.removeAttribute('style');
+            grid.innerHTML = '<button class="empty-card" type="button" data-add="animalRack"><strong>＋ 新建第一个笼架</strong><span>设置位置、行数和列数</span></button>';
+            renderAnimalCageInspector();
+            return;
+        }
+        activeAnimalRackId = rack.id;
+        tabs.innerHTML = state.animalRacks.map(function (item) {
+            const cages = state.animalCages.filter(cage => cage.rackId === item.id);
+            const animals = state.mice.filter(animal => cages.some(cage => cage.id === animal.cageId)).length;
+            return '<button class="animal-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-animal-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + cages.length + ' 笼位 · ' + animals + ' 个体</small></button>';
+        }).join('');
+        const cages = state.animalCages.filter(item => item.rackId === rack.id);
+        const cageByPosition = new Map(cages.map(item => [item.position, item]));
+        if (!cages.some(item => item.id === selectedAnimalCageId)) selectedAnimalCageId = cages[0] ? cages[0].id : '';
+        title.textContent = rack.name;
+        meta.textContent = rack.facility + ' · ' + rack.rows + ' 行 × ' + rack.columns + ' 列';
+        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(56px, 1fr))';
+        let cells = '';
+        for (let row = 0; row < rack.rows; row += 1) {
+            for (let column = 1; column <= rack.columns; column += 1) {
+                const position = String.fromCharCode(65 + row) + column;
+                const cage = cageByPosition.get(position);
+                if (!cage) {
+                    cells += '<button class="animal-rack-position empty" type="button" data-animal-position="' + position + '" aria-label="在 ' + position + ' 新建笼位"><span>' + position + '</span><strong>＋</strong></button>';
+                    continue;
+                }
+                const count = state.mice.filter(animal => animal.cageId === cage.id).length;
+                cells += '<button class="animal-rack-position occupied' + (cage.id === selectedAnimalCageId ? ' active' : '') + '" type="button" data-animal-cage="' + esc(cage.id) + '"><span>' + position + '</span><strong>' + esc(cage.label) + '</strong><small>' + count + ' / ' + cage.capacity + ' 个体</small></button>';
+            }
+        }
+        grid.innerHTML = cells;
+        renderAnimalCageInspector();
+    }
+
+    function renderAnimalCageInspector() {
+        const inspector = document.getElementById('animalCageInspector');
+        const cage = state.animalCages.find(item => item.id === selectedAnimalCageId);
+        if (!cage) {
+            inspector.innerHTML = '<div class="animal-cage-empty"><span>CAGE</span><strong>选择一个笼位</strong><p>查看笼位条件与其中的动物，或点击空位建立新笼位。</p></div>';
+            return;
+        }
+        const animals = state.mice.filter(item => item.cageId === cage.id);
+        const animalRows = animals.map(function (animal) {
+            return '<button class="animal-cage-animal" type="button" data-mouse-id="' + esc(animal.id) + '"><strong>' + esc(animal.id) + ' · ' + esc(animal.species) + '</strong><small>' + esc(animal.strain || '品系未设置') + ' · ' + esc(animal.status || '在养') + '</small><b>→</b></button>';
+        }).join('') || '<p class="search-empty">此笼位尚无动物条目。</p>';
+        inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>建议物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button></div>';
+    }
+
+    function selectAnimalRack(id) {
+        const rack = state.animalRacks.find(item => item.id === id);
+        if (!rack) return;
+        activeAnimalRackId = rack.id;
+        localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
+        selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === rack.id) || {}).id || '';
+        renderMice();
+    }
+
+    function selectAnimalCage(id) {
+        const cage = state.animalCages.find(item => item.id === id);
+        if (!cage) return;
+        selectedAnimalCageId = cage.id;
+        if (cage.rackId !== activeAnimalRackId) activeAnimalRackId = cage.rackId;
+        renderMice();
     }
 
     function renderReagents() {
@@ -1702,18 +1965,20 @@
     function openAnimalDetail(id) {
         const animal = state.mice.find(item => item.id === id);
         if (!animal) return;
+        const cage = state.animalCages.find(item => item.id === animal.cageId);
+        const rack = cage ? state.animalRacks.find(item => item.id === cage.rackId) : null;
         prepareRecordDetail('mouse', animal.id);
         els.recordDetailKicker.textContent = 'ANIMAL RECORD · ' + animal.id;
-        els.recordDetailTitle.textContent = animal.id + ' · ' + animal.strain;
+        els.recordDetailTitle.textContent = animal.id + ' · ' + (animal.species || '动物');
         const nodeField = workspaceMode === 'lab' ? detailFieldHtml('录入节点', contributorName(animal)) : '';
         els.recordDetailBody.innerHTML =
-            '<section class="record-detail-hero animal-detail-hero"><div><span class="record-detail-code">' + esc(animal.id) + '</span><h3>' + esc(animal.strain) + '</h3><p>' + esc(animal.genotype) + ' · 笼位 ' + esc(animal.cage) + '</p></div><span class="status-chip ' + statusClass(animal.status) + '">' + esc(animal.status) + '</span></section>' +
-            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">IDENTITY & COLONY</p><h3>身份与群体信息</h3></div><div class="record-detail-grid">' +
-                detailFieldHtml('动物编号', animal.id) + detailFieldHtml('品系', animal.strain) + detailFieldHtml('基因型', animal.genotype) + detailFieldHtml('性别', animal.sex) +
-                detailFieldHtml('出生日期', animal.birth) + detailFieldHtml('当前周龄', animalAgeLabel(animal.birth)) + detailFieldHtml('笼位', animal.cage) + detailFieldHtml('实验状态', animal.status) +
-                detailFieldHtml('伦理审批编号', animal.ethics, true) + nodeField +
+            '<section class="record-detail-hero animal-detail-hero"><div><span class="record-detail-code">' + esc(animal.id) + '</span><h3>' + esc(animal.species || '动物') + '</h3><p>' + esc(animal.strain || '品种 / 品系未设置') + ' · 笼位 ' + esc(animal.cage || '未分配') + '</p></div><span class="status-chip ' + statusClass(animal.status) + '">' + esc(animal.status || '在养') + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">IDENTITY & HOUSING</p><h3>身份与饲养信息</h3></div><div class="record-detail-grid">' +
+                detailFieldHtml('动物编号', animal.id) + detailFieldHtml('物种', animal.species) + detailFieldHtml('品种 / 品系', animal.strain) + detailFieldHtml('基因型', animal.genotype) + detailFieldHtml('性别', animal.sex) +
+                detailFieldHtml('出生 / 孵化日期', animal.birth) + detailFieldHtml('当前年龄', animalAgeLabel(animal.birth)) + detailFieldHtml('笼位', animal.cage) + detailFieldHtml('所属笼架', rack ? rack.name : '未分配') + detailFieldHtml('状态', animal.status) +
+                detailFieldHtml('伦理审批编号', animal.ethics, true) + detailFieldHtml('备注', animal.notes, true) + nodeField +
             '</div></section>' +
-            '<section class="record-detail-section animal-track"><div class="record-detail-section-title"><p class="micro-label">LIFECYCLE TRACE</p><h3>动物状态轨迹</h3></div><div class="record-timeline"><article><i></i><div><small>出生登记</small><strong>' + esc(animal.birth) + '</strong></div></article><article><i></i><div><small>当前笼位</small><strong>' + esc(animal.cage) + '</strong></div></article><article class="active"><i></i><div><small>当前阶段</small><strong>' + esc(animal.status) + '</strong></div></article></div></section>' +
+            '<section class="record-detail-section animal-track"><div class="record-detail-section-title"><p class="micro-label">LIFECYCLE TRACE</p><h3>动物状态轨迹</h3></div><div class="record-timeline"><article><i></i><div><small>出生 / 孵化</small><strong>' + esc(animal.birth || '未填写') + '</strong></div></article><article><i></i><div><small>当前笼位</small><strong>' + esc(animal.cage || '未分配') + '</strong></div></article><article class="active"><i></i><div><small>当前阶段</small><strong>' + esc(animal.status || '在养') + '</strong></div></article></div></section>' +
             recordHistoryHtml(animal);
         els.recordDetailDialog.showModal();
     }
@@ -1885,6 +2150,8 @@
             experiments: [],
             results: [],
             mice: [],
+            animalRacks: [],
+            animalCages: [],
             cellCultures: [],
             reagents: [],
             samples: [],
@@ -3229,7 +3496,7 @@ function getReagentDisplayStatus(reagent) {
             const experiment = state.experiments.find(record => record.id === item.experimentId);
             entries.push({ view: 'results', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
         });
-        state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
+        state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number + ' · ' + item.tag, search: [item.number, item.title, item.summary, item.tag, item.steps.join(' ')].join(' ') }));
@@ -3266,16 +3533,39 @@ function getReagentDisplayStatus(reagent) {
             ]
         },
         mouse: {
-            kicker: 'ANIMAL REGISTRATION', title: '登记实验动物',
+            kicker: 'ANIMAL REGISTRATION', title: '添加动物条目',
             fields: [
-                field('id', '动物编号', 'text', 'M-24119', true),
-                field('strain', '品系', 'text', 'C57BL/6J', true),
-                field('genotype', '基因型', 'text', 'WT', true),
-                field('sex', '性别', 'select', ['雄', '雌', '待确认'], true),
-                field('birth', '出生日期', 'date', '', true),
-                field('cage', '笼位', 'text', 'C-03', true),
-                field('status', '实验状态', 'select', ['待分配', '观察期', '繁育中', '实验中'], true),
-                field('ethics', '伦理审批编号', 'text', 'ZJU2026-017', true)
+                field('id', '动物编号', 'text', '例：ANM-001', true),
+                field('species', '物种', 'select', ['小鼠', '大鼠', '兔', '豚鼠', '斑马鱼', '果蝇', '非人灵长类', '其他'], true),
+                field('strain', '品种 / 品系', 'text', '例：C57BL/6J', true),
+                field('genotype', '基因型 / 亚型', 'text', '例：WT', false),
+                field('sex', '性别', 'select', ['雄', '雌', '未知', '不适用'], true),
+                field('birth', '出生 / 孵化日期', 'date', '', false),
+                field('cageId', '所属笼位', 'animal-cage-select', '', true),
+                field('status', '当前状态', 'select', ['在养', '观察期', '繁育中', '实验中', '隔离中', '已转出'], true),
+                field('ethics', '伦理审批编号', 'text', '例：IACUC-2026-001', false),
+                field('notes', '动物备注', 'textarea', '记录体重、标记方式、来源或特殊照护要求…', false, true)
+            ]
+        },
+        animalRack: {
+            kicker: 'ANIMAL HOUSING', title: '新建动物笼架',
+            fields: [
+                field('name', '笼架名称', 'text', '例：屏障设施 A 区笼架', true),
+                field('facility', '所在位置', 'text', '例：动物中心 · A 区', true),
+                field('rows', '笼架行数', 'select', ['2', '3', '4', '5', '6', '7', '8'], true),
+                field('columns', '每行笼位数', 'select', ['4', '6', '8', '10', '12', '16'], true)
+            ]
+        },
+        animalCage: {
+            kicker: 'ANIMAL HOUSING', title: '新建动物笼位',
+            fields: [
+                field('rackId', '所属笼架', 'animal-rack-select', '', true),
+                field('position', '架内位置', 'text', '例：A1', true),
+                field('label', '笼位标签', 'text', '例：CAGE-A01', true),
+                field('species', '建议物种', 'select', ['小鼠', '大鼠', '兔', '豚鼠', '斑马鱼', '果蝇', '非人灵长类', '混合 / 待设置', '其他'], true),
+                field('capacity', '建议容量', 'number', '5', true),
+                field('status', '笼位状态', 'select', ['在用', '隔离', '清洁中', '停用'], true),
+                field('notes', '饲养条件与备注', 'textarea', '记录垫料、光照、饲料、温度或特殊照护要求…', false, true)
             ]
         },
         reagent: {
@@ -3398,6 +3688,14 @@ function getReagentDisplayStatus(reagent) {
             defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '09:00', end: '10:00', experimentId: '', protocolId: '' }, pendingTaskDefaults || {});
         } else if (type === 'sample') {
             defaultsForEntry = Object.assign({ boxId: activeFreezerBoxId, date: todayIso(), status: '在库' }, pendingSampleDefaults || {});
+        } else if (type === 'mouse') {
+            const cage = state.animalCages.find(item => item.id === selectedAnimalCageId);
+            defaultsForEntry = { cageId: cage ? cage.id : '', species: cage && !cage.species.includes('混合') ? cage.species : '小鼠', status: '在养' };
+        } else if (type === 'animalRack') {
+            defaultsForEntry = { rows: '4', columns: '8' };
+        } else if (type === 'animalCage') {
+            const rack = state.animalRacks.find(item => item.id === activeAnimalRackId);
+            defaultsForEntry = Object.assign({ rackId: rack ? rack.id : '', position: rack ? firstAvailableAnimalPosition(rack, state.animalCages) : '', species: '小鼠', capacity: 5, status: '在用' }, pendingAnimalCageDefaults || {});
         } else if (type === 'freezer') {
             defaultsForEntry = { rows: '9', columns: '9', temperature: '-80°C' };
         } else if (type === 'cell') {
@@ -3471,6 +3769,7 @@ function getReagentDisplayStatus(reagent) {
         }
         pendingTaskDefaults = null;
         pendingSampleDefaults = null;
+        pendingAnimalCageDefaults = null;
         els.entryDialog.showModal();
         const first = els.dialogFields.querySelector('input, select, textarea');
         if (first) first.focus();
@@ -3510,6 +3809,17 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(box.storageLocation) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select>';
+        } else if (config.type === 'animal-rack-select') {
+            const options = state.animalRacks.map(function (rack) {
+                return '<option value="' + esc(rack.id) + '">' + esc(rack.name) + ' · ' + esc(rack.facility) + '</option>';
+            }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建笼架</option>') + '</select>';
+        } else if (config.type === 'animal-cage-select') {
+            const options = state.animalCages.map(function (cage) {
+                const rack = state.animalRacks.find(item => item.id === cage.rackId);
+                return '<option value="' + esc(cage.id) + '">' + esc((rack ? rack.name + ' · ' : '') + cage.position + ' · ' + cage.label) + '</option>';
+            }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建笼位</option>') + '</select><small class="field-note">动物条目会归入所选笼位；一个笼位可以包含多个动物。</small>';
         } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
@@ -3836,15 +4146,67 @@ function getReagentDisplayStatus(reagent) {
             data.history = [createdHistoryEntry()];
             state.results.unshift(data);
             activityText = '填写“' + experiment.title + '”的实验结果';
+        } else if (activeDialogType === 'animalRack') {
+            const rack = {
+                id: generatedRecordId('RACK'),
+                name: displayOr(data.name, '未命名笼架'),
+                facility: displayOr(data.facility, '位置待设置'),
+                rows: Math.max(1, Math.round(positiveNumber(data.rows, 4))),
+                columns: Math.max(1, Math.round(positiveNumber(data.columns, 8))),
+                createdBy: data.createdBy
+            };
+            state.animalRacks.push(rack);
+            activeAnimalRackId = rack.id;
+            selectedAnimalCageId = '';
+            localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
+            activityText = '新建动物笼架“' + rack.name + '”';
+        } else if (activeDialogType === 'animalCage') {
+            const rack = state.animalRacks.find(item => item.id === data.rackId);
+            if (!rack) {
+                showToast('请先新建并选择一个动物笼架');
+                return;
+            }
+            const position = normalizeAnimalPosition(data.position) || firstAvailableAnimalPosition(rack, state.animalCages);
+            if (!position) {
+                showToast('当前笼架没有可用空位');
+                return;
+            }
+            const match = position.match(/^([A-H])(\d{1,2})$/);
+            if (!match || match[1].charCodeAt(0) - 64 > rack.rows || Number(match[2]) > rack.columns) {
+                showToast('笼位位置超出当前笼架范围');
+                return;
+            }
+            if (state.animalCages.some(item => item.rackId === rack.id && item.position === position)) {
+                showToast('该笼架位置已经建立了笼位');
+                return;
+            }
+            const cage = {
+                id: generatedRecordId('CAGE'), rackId: rack.id, position: position,
+                label: displayOr(data.label, '笼位 ' + position), species: displayOr(data.species, '混合 / 待设置'),
+                capacity: Math.max(1, Math.round(positiveNumber(data.capacity, 5))), status: displayOr(data.status, '在用'),
+                notes: String(data.notes || '').trim(), createdBy: data.createdBy
+            };
+            state.animalCages.push(cage);
+            activeAnimalRackId = rack.id;
+            selectedAnimalCageId = cage.id;
+            localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
+            activityText = '在“' + rack.name + '”新建笼位 ' + cage.label;
         } else if (activeDialogType === 'mouse') {
             data.id = displayOr(data.id, generatedRecordId('ANM'));
             if (state.mice.some(item => item.id === data.id)) {
                 showToast('该动物编号已存在，请使用新的编号');
                 return;
             }
+            const cage = state.animalCages.find(item => item.id === data.cageId);
+            data.species = displayOr(data.species, '未设置物种');
+            data.strain = String(data.strain || '').trim();
+            data.cageId = cage ? cage.id : '';
+            data.cage = cage ? cage.label : '未分配';
+            data.status = displayOr(data.status, '在养');
             data.history = [createdHistoryEntry()];
             state.mice.unshift(data);
-            activityText = '登记实验动物 ' + data.id;
+            if (cage) selectedAnimalCageId = cage.id;
+            activityText = '添加' + data.species + '动物条目 ' + data.id;
         } else if (activeDialogType === 'reagent') {
             data.catalog = displayOr(data.catalog, generatedRecordId('REAG'));
             if (state.reagents.some(item => item.catalog === data.catalog)) {
@@ -4036,6 +4398,10 @@ function getReagentDisplayStatus(reagent) {
 
         if (target.type === 'mouse') {
             updated.id = current.id;
+            const cage = state.animalCages.find(item => item.id === data.cageId);
+            updated.cageId = cage ? cage.id : '';
+            updated.cage = cage ? cage.label : '未分配';
+            updated.species = displayOr(data.species, '未设置物种');
         } else if (target.type === 'cell') {
             updated.id = current.id;
             updated.vesselCount = Math.max(1, Math.round(positiveNumber(data.vesselCount, current.vesselCount || 1)));

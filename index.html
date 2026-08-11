@@ -12,7 +12,7 @@
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-lab-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-1">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-2">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -60,6 +60,10 @@
                     <kbd>CTRL K</kbd>
                 </label>
                 <div class="top-actions">
+                    <div class="public-demo-banner" id="publicDemoBanner" hidden>
+                        <span>公开展示 · 只读</span>
+                        <button type="button" data-open-sync>登录后编辑</button>
+                    </div>
                     <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="syncDialog" aria-haspopup="dialog" aria-label="登录或管理设备同步" title="登录或管理设备同步">
                         <i aria-hidden="true"></i><span id="syncStatusLabel">登录 / 同步</span>
                     </button>
@@ -183,13 +187,29 @@
                 <section class="view" id="view-mice" data-title="动物管理">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>ANIMAL FACILITY</span></p><h1>动物管理</h1><p class="story-quote">“可我从来都无法赞同理所当然的牺牲。”<cite>——塞雷娅</cite></p></div>
-                        <button class="button primary" type="button" data-add="mouse"><span>＋</span> 登记动物</button>
+                        <div class="heading-actions animal-heading-actions"><button class="button ghost" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button><button class="button primary" type="button" data-add="mouse"><span>＋</span> 添加动物</button></div>
                         <div class="heading-code">04</div>
                     </div>
                     <div class="mini-metrics" id="mouseMetrics"></div>
+                    <section class="panel animal-rack-manager">
+                        <div class="module-toolbar in-panel animal-rack-toolbar">
+                            <div class="section-title"><span class="section-index">A</span><div><p class="micro-label">HOUSING MAP</p><h2>笼架与笼位</h2></div></div>
+                            <div class="animal-rack-actions"><span>点击空位新建笼位</span><button class="button ghost compact" type="button" data-add="animalCage">＋ 新建笼位</button></div>
+                        </div>
+                        <div class="animal-rack-tabs" id="animalRackTabs" aria-label="动物笼架"></div>
+                        <div class="animal-housing-layout">
+                            <div class="animal-rack-board">
+                                <header><div><p class="micro-label" id="animalRackKicker">ANIMAL RACK</p><h3 id="animalRackTitle">尚未建立笼架</h3><small id="animalRackMeta">新建笼架后，可逐个添加笼位和动物。</small></div><div class="animal-rack-legend"><span><i class="occupied"></i>已建笼位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
+                                <div class="animal-rack-grid" id="animalRackGrid"></div>
+                            </div>
+                            <aside class="animal-cage-inspector" id="animalCageInspector">
+                                <div class="animal-cage-empty"><span>CAGE</span><strong>选择一个笼位</strong><p>查看笼位条件与其中的动物，或点击空位建立新笼位。</p></div>
+                            </aside>
+                        </div>
+                    </section>
                     <section class="panel table-panel">
-                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">A</span><div><p class="micro-label">COLONY REGISTRY</p><h2>在库动物</h2></div></div><label class="inline-search"><span>⌕</span><input id="mouseSearch" type="search" placeholder="搜索编号、品系或笼位"></label></div>
-                        <div class="table-scroll"><table class="data-table"><thead><tr><th>动物编号</th><th>品系 / 基因型</th><th>性别</th><th>出生日期</th><th>笼位</th><th>实验状态</th><th>伦理编号</th><th></th></tr></thead><tbody id="mouseTable"></tbody></table></div>
+                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">ANIMAL REGISTRY</p><h2>动物条目</h2></div></div><label class="inline-search"><span>⌕</span><input id="mouseSearch" type="search" placeholder="搜索编号、物种、品系或笼位"></label></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>动物编号</th><th>物种</th><th>品种 / 品系</th><th>性别</th><th>出生 / 孵化日期</th><th>笼位</th><th>状态</th><th></th></tr></thead><tbody id="mouseTable"></tbody></table></div>
                     </section>
                 </section>
 

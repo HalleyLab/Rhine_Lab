@@ -1,15 +1,19 @@
 {
   "name": "rhine-lab",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
-  "description": "Rhine Lab internal mobile test build",
+  "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",
+  "main": "desktop/main.cjs",
   "scripts": {
     "mobile:prepare": "node scripts/prepare-mobile.mjs",
     "mobile:assets": "node scripts/create-mobile-assets.mjs",
     "mobile:sync": "pnpm mobile:prepare && cap sync android",
     "android:debug": "pnpm mobile:sync && cd android && gradlew.bat assembleDebug",
-    "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease"
+    "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease",
+    "desktop:start": "electron .",
+    "desktop:assets": "node scripts/create-desktop-assets.mjs",
+    "desktop:build": "pnpm desktop:assets && electron-builder --win portable"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
@@ -22,9 +26,34 @@
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.0",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.7",
     "sharp": "0.35.3"
   },
   "engines": {
     "node": ">=22"
+  },
+  "build": {
+    "appId": "com.halleylab.rhinelab.desktop",
+    "productName": "Rhine Lab",
+    "artifactName": "Rhine-Lab-${version}-Windows.${ext}",
+    "directories": {
+      "output": "dist/desktop"
+    },
+    "files": [
+      "index.html",
+      "app.webmanifest",
+      "css/**/*",
+      "data/**/*",
+      "images/**/*",
+      "js/**/*",
+      "desktop/**/*"
+    ],
+    "win": {
+      "icon": "images/rhine-lab-desktop-icon.png",
+      "target": [
+        "portable"
+      ]
+    }
   }
 }

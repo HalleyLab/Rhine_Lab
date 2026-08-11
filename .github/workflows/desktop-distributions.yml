@@ -1,0 +1,75 @@
+name: Build desktop distributions
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "browser-extension/**"
+      - "desktop/**"
+      - "css/**"
+      - "data/**"
+      - "images/**"
+      - "js/**"
+      - "index.html"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/desktop-distributions.yml"
+  push:
+    branches: [main]
+    paths:
+      - "browser-extension/**"
+      - "desktop/**"
+      - "css/**"
+      - "data/**"
+      - "images/**"
+      - "js/**"
+      - "index.html"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/desktop-distributions.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  extension:
+    name: Chrome and Edge extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package browser extension
+        run: |
+          mkdir -p dist
+          cd browser-extension
+          zip -r ../dist/Rhine-Lab-Browser-Extension-0.1.3.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-Browser-Extension
+          path: dist/Rhine-Lab-Browser-Extension-0.1.3.zip
+          retention-days: 30
+
+  windows:
+    name: Windows portable application
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build portable Windows app
+        run: pnpm desktop:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-Windows-Portable
+          path: dist/desktop/*.exe
+          retention-days: 30
+          if-no-files-found: error

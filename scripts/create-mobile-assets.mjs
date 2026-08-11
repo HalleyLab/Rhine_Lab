@@ -6,13 +6,14 @@ import sharp from 'sharp';
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, '..');
 const assetDirectory = path.join(projectRoot, 'assets');
-const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-life-logo.png'));
+const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
+const foregroundSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-mark.svg'));
 
 await mkdir(assetDirectory, { recursive: true });
 
-const iconMark = await sharp(iconSource)
-  .trim({ threshold: 10 })
-  .resize({ width: 700, height: 700, fit: 'inside', withoutEnlargement: false })
+const iconMark = await sharp(iconSource, { density: 288 })
+  .resize({ width: 840, height: 840, fit: 'contain', withoutEnlargement: false })
+  .ensureAlpha()
   .png()
   .toBuffer();
 
@@ -28,9 +29,9 @@ await sharp({
   .png()
   .toFile(path.join(assetDirectory, 'icon-only.png'));
 
-const foregroundMark = await sharp(iconSource)
-  .trim({ threshold: 10 })
-  .resize({ width: 610, height: 610, fit: 'inside', withoutEnlargement: false })
+const foregroundMark = await sharp(foregroundSource, { density: 288 })
+  .resize({ width: 720, height: 720, fit: 'contain', withoutEnlargement: false })
+  .ensureAlpha()
   .png()
   .toBuffer();
 
@@ -75,4 +76,4 @@ await Promise.all([
   createSplash('splash-dark.png', '#151c19')
 ]);
 
-console.log('Generated adaptive Rhine Life icon assets and plain mobile splash backgrounds.');
+console.log('Generated centered Rhine Lab launcher icons and plain mobile splash backgrounds.');
