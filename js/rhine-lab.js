@@ -1594,6 +1594,7 @@
         const count = document.querySelectorAll('[data-notification-id].unread:not([hidden])').length;
         els.noticeCount.textContent = count ? String(count) : '';
         els.notificationToggle.classList.toggle('is-read', count === 0);
+        if (els.markAllRead) els.markAllRead.disabled = count === 0;
         els.notificationToggle.setAttribute('aria-label', count ? '打开通知，' + count + ' 条未读' : '打开通知，没有未读消息');
     }
 

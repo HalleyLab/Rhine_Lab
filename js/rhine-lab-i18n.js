@@ -42,6 +42,8 @@
         '关闭通知': 'Close notifications',
         '全部标为已读': 'Mark all as read',
         '系统信息实时更新': 'System notifications update in real time',
+        '暂无通知': 'No notifications yet',
+        '当库存、日程或实验需要关注时，会显示在这里。': 'Inventory, schedule and experiment alerts will appear here when attention is required.',
         'Anti-c-Fos antibody 库存不足': 'Anti-c-Fos antibody stock is low',
         '当前余量 18%，建议尽快补充 · 32 分钟前': '18% of stock remains; replenishment recommended · 32 minutes ago',
         'Matrigel 即将到期': 'Matrigel expires soon',

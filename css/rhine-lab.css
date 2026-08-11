@@ -10198,10 +10198,25 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     .animal-rack-tab { min-width: 168px; }
 }
 
-/* 2026-08-11 definitive type audit: locale-owned stacks and a consistent information scale. */
+
+/* Split local Latin and CJK faces by Unicode so mixed scientific labels use the intended glyphs. */
+@font-face {
+    font-family: "Rhine Interface";
+    src: local("Helvetica Neue"), local("Helvetica"), local("Arial");
+    font-display: swap;
+    unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2100-214F, U+2190-22FF, U+25A0-25FF;
+}
+
+@font-face {
+    font-family: "Rhine Interface";
+    src: local("SimHei"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("Source Han Sans CN"), local("Microsoft YaHei");
+    font-display: swap;
+    unicode-range: U+2E80-2FFF, U+3000-303F, U+31C0-31EF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF, U+20000-2A6DF, U+2A700-2CEAF, U+2CEB0-2EBEF, U+30000-3134F;
+}
+/* 2026-08-11 definitive type audit: Unicode-aware mixed-script stacks and a consistent information scale. */
 :root {
     --font-latin: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-cjk: SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+    --font-cjk: "Rhine Interface", SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
     --font-interface: var(--font-cjk);
 }
 
@@ -10427,6 +10442,51 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     max-height: 55px;
     object-fit: contain;
     object-position: center;
+}
+
+/* Notification center starts empty; real alerts can be rendered from user-owned data. */
+.notification-empty {
+    display: grid;
+    min-height: 170px;
+    padding: 30px 22px;
+    color: var(--muted);
+    text-align: center;
+    place-items: center;
+}
+
+.notification-empty > div {
+    max-width: 280px;
+}
+
+.notification-empty i {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    margin: 0 auto 12px;
+    color: #6f861f;
+    background: var(--acid-soft);
+    border: 1px solid rgba(145, 184, 41, .3);
+    border-radius: 50%;
+    font-size: 20px;
+    font-style: normal;
+    place-items: center;
+}
+
+.notification-empty strong {
+    display: block;
+    color: var(--ink);
+    font-size: 14px;
+}
+
+.notification-empty p {
+    margin: 7px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.notification-panel > footer button:disabled {
+    cursor: not-allowed;
+    opacity: .38;
 }
 
 .brand-terminal {
