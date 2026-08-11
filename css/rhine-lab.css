@@ -9452,3 +9452,200 @@ textarea::placeholder {
     .data-table small,
     .amount-meter span { font-size: 10px; }
 }
+/* 2026-08-10: mobile account access, manager directory and explicit CJK quotation type. */
+:root {
+    --font-cjk: SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+}
+
+html[lang="zh-CN"] .page-heading.technical-heading .story-quote,
+html[lang="zh-CN"] .page-heading.technical-heading .story-quote cite {
+    font-family: var(--font-cjk) !important;
+    font-size: 14px !important;
+    font-weight: 600;
+    line-height: 1.65;
+}
+
+.lab-member-directory {
+    margin: 0 22px 18px;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 15px 5px 15px 5px;
+}
+
+.lab-member-directory-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.lab-member-directory-head > div:first-child {
+    display: grid;
+    gap: 4px;
+}
+
+.lab-member-directory-head small,
+.lab-member-directory-head span {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.lab-member-directory-head strong {
+    font-size: 15px;
+}
+
+.lab-member-directory-head > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lab-member-directory-head b {
+    display: grid;
+    min-width: 30px;
+    height: 30px;
+    place-items: center;
+    color: #243016;
+    background: var(--acid);
+    border-radius: 50%;
+    font-size: 12px;
+}
+
+.button.compact {
+    min-height: 32px;
+    padding: 0 11px;
+}
+
+.lab-member-list {
+    display: grid;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.lab-member-list > p {
+    margin: 0;
+    padding: 18px 16px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.lab-member-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 14px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.lab-member-item:last-child {
+    border-bottom: 0;
+}
+
+.lab-member-item strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lab-member-item span,
+.lab-member-item time {
+    color: var(--muted);
+    font-size: 10.5px;
+}
+
+.lab-member-item time {
+    grid-column: 1 / -1;
+}
+
+.dark-theme .lab-member-directory {
+    background: rgba(255, 255, 255, .035);
+    border-color: rgba(255, 255, 255, .08);
+}
+
+.dark-theme .lab-member-directory-head,
+.dark-theme .lab-member-item {
+    border-color: rgba(255, 255, 255, .08);
+}
+
+@media (max-width: 700px) {
+    .top-actions {
+        display: flex !important;
+        flex: 0 0 auto;
+        gap: 5px;
+        margin-left: auto;
+    }
+
+    .topbar .sync-control {
+        min-width: 86px;
+        min-height: 38px;
+        justify-content: center;
+        padding: 0 11px;
+        border-color: rgba(115, 145, 35, .48);
+        font-size: 11px;
+    }
+
+    .topbar .sync-control span {
+        display: inline !important;
+    }
+
+    .topbar .sync-control[data-sync-state="local"] {
+        color: #202b15;
+        background: var(--acid);
+        box-shadow: 0 7px 20px rgba(122, 155, 36, .22);
+    }
+
+    .topbar .sync-control[data-sync-state="local"] > i {
+        background: #5d7c16;
+        box-shadow: 0 0 0 4px rgba(55, 82, 8, .12);
+    }
+
+    .workspace-mode-toggle {
+        right: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .lab-member-directory {
+        margin-inline: 14px;
+    }
+}
+
+@media (max-width: 560px) {
+    .topbar {
+        gap: 7px;
+        padding-inline: 10px;
+    }
+
+    .topbar .breadcrumb,
+    .topbar .global-search {
+        display: none;
+    }
+
+    .topbar .language-dock button,
+    .dark-theme .topbar .language-dock button {
+        min-width: 64px;
+    }
+
+    .topbar .language-dock button span,
+    .dark-theme .topbar .language-dock button span {
+        min-width: 24px;
+        padding-inline: 3px;
+    }
+
+    .lab-member-directory-head {
+        align-items: flex-start;
+    }
+
+    .lab-member-item {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 360px) {
+    .topbar #notificationToggle {
+        display: none;
+    }
+}

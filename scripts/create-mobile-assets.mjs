@@ -6,19 +6,31 @@ import sharp from 'sharp';
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, '..');
 const assetDirectory = path.join(projectRoot, 'assets');
-const source = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
+const splashSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
+const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-life-logo.png'));
 
 await mkdir(assetDirectory, { recursive: true });
 
-const icon = await sharp(source)
-  .resize(1024, 1024)
+const iconMark = await sharp(iconSource)
+  .trim({ threshold: 10 })
+  .resize({ width: 700, height: 700, fit: 'inside', withoutEnlargement: false })
   .png()
   .toBuffer();
 
-await sharp(icon).toFile(path.join(assetDirectory, 'icon-only.png'));
+await sharp({
+  create: {
+    width: 1024,
+    height: 1024,
+    channels: 4,
+    background: '#f2f4ed'
+  }
+})
+  .composite([{ input: iconMark, gravity: 'centre' }])
+  .png()
+  .toFile(path.join(assetDirectory, 'icon-only.png'));
 
 async function createSplash(filename, background) {
-  const mark = await sharp(source)
+  const mark = await sharp(splashSource)
     .resize(1050, 1050)
     .png()
     .toBuffer();
@@ -41,4 +53,4 @@ await Promise.all([
   createSplash('splash-dark.png', '#151c19')
 ]);
 
-console.log('Generated internal-test icon and splash source assets.');
+console.log('Generated Rhine Life app icon and internal-test splash source assets.');

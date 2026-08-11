@@ -18,6 +18,7 @@ Rhine Lab 是一个面向生命科学研究的个人与实验室协作工作台�
 - 夜间模式为表单、下拉选项与功能标签提供完整的高对比度反色
 - 个人工作区与 LAB 共用只读/管理权限
 - Supabase 登录、跨设备同步、Realtime 和私有照片存储
+- LAB 所有者与管理员可在设备同步面板查看当前 LAB 绑定邮箱
 
 ## 2026-08-10 更新
 
@@ -43,7 +44,7 @@ python -m http.server 4173
 ## 启用云同步
 
 1. 创建 Supabase 项目。
-2. 在 SQL Editor 执行 `supabase/migrations/001_rhine_lab_sync.sql`。
+2. 在 SQL Editor 按编号顺序执行 `supabase/migrations/` 中的迁移文件。
 3. 注册管理账户，并创建第一条 `labs` 记录。
 4. 将 Project URL、publishable key 和 LAB ID 填入 `js/rhine-lab-config.js`。
 5. 在 Supabase Authentication 中将 GitHub Pages 地址加入 Redirect URLs。
