@@ -10621,3 +10621,283 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     .experiment-inline-result footer .button { flex: 1; }
     .protocol-literature-card > header { align-items: flex-start; flex-direction: column; }
 }
+/* Rhine Lab 0.1.5 bilingual density and control-size pass. */
+html[lang="en"] .nav-item b {
+    display: none !important;
+}
+
+html[lang="en"] .nav-item {
+    min-height: 54px;
+}
+
+.page-heading.technical-heading .story-quote,
+.page-heading.technical-heading .story-quote cite,
+html[lang="en"] .page-heading.technical-heading .story-quote,
+html[lang="en"] .page-heading.technical-heading .story-quote cite {
+    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-weight: 500;
+}
+
+#themeToggle,
+.top-actions #themeToggle {
+    display: grid;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    flex: 0 0 38px;
+    padding: 0;
+    place-items: center;
+    font-size: 18px !important;
+    line-height: 1;
+}
+
+.metric-icon,
+.project-code,
+.hero-progress span,
+.today-item time,
+.activity-item p,
+.cell-queue-item small,
+.record-detail-dialog .micro-label {
+    font-size: 11px !important;
+    line-height: 1.45;
+}
+
+.status-chip,
+.today-item small,
+.schedule-block small,
+.record-detail-alert p,
+.detail-stock-meter > span,
+.record-detail-dialog footer > span {
+    font-size: 12px !important;
+    line-height: 1.5;
+}
+
+.cell-culture-grid {
+    gap: 10px;
+    padding: 12px;
+}
+
+.cell-culture-card {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    border-radius: 15px 4px 15px 4px;
+}
+
+.cell-culture-thumb {
+    width: 78px;
+    height: 94px;
+    border-radius: 13px 4px 13px 4px;
+    font-size: 19px;
+}
+
+.cell-culture-main h3 {
+    margin: 6px 0 2px;
+    font-size: 18px;
+}
+
+.cell-culture-main > p {
+    font-size: 12.5px;
+}
+
+.cell-container-line {
+    margin-top: 9px;
+    padding-top: 8px;
+    font-size: 12px;
+}
+
+.cell-confluence {
+    margin-top: 8px;
+}
+
+.cell-confluence > span,
+.cell-culture-main footer {
+    font-size: 12px;
+}
+
+.cell-culture-main footer {
+    margin-top: 8px;
+}
+
+.record-detail-dialog {
+    width: min(900px, calc(100% - 28px));
+}
+
+.record-detail-dialog header,
+.record-detail-dialog footer {
+    padding: 14px 20px;
+}
+
+.record-detail-dialog h2 {
+    font-size: 25px;
+}
+
+.record-detail-body {
+    padding: 18px;
+}
+
+.record-detail-hero {
+    min-height: 124px;
+    padding: 20px;
+}
+
+.record-detail-hero h3 {
+    margin: 13px 0 5px;
+    font-size: clamp(25px, 3.4vw, 32px);
+}
+
+.record-detail-hero p {
+    font-size: 14px;
+}
+
+.record-detail-section {
+    margin-top: 10px;
+    padding: 17px;
+}
+
+.record-detail-section-title h3 {
+    margin: 3px 0 11px;
+    font-size: 20px;
+}
+
+.record-detail-grid {
+    gap: 8px;
+}
+
+.record-detail-field {
+    padding: 9px 11px;
+    border-radius: 9px 3px 9px 3px;
+}
+
+.record-detail-field small,
+.detail-list dt,
+.record-timeline small,
+.record-history-item time {
+    color: #4f5c56;
+    font-size: 12.5px !important;
+    font-weight: 900;
+    letter-spacing: .02em;
+    line-height: 1.35;
+}
+
+.dark-theme .record-detail-field small,
+.dark-theme .detail-list dt,
+.dark-theme .record-timeline small,
+.dark-theme .record-history-item time {
+    color: #c5cec8;
+}
+
+.record-detail-field strong,
+.detail-list dd {
+    margin-top: 5px;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.record-detail-alert {
+    margin-top: 10px;
+    padding: 12px 14px;
+}
+
+.detail-stock-meter {
+    margin-top: 9px;
+}
+
+.record-detail-actions .button {
+    min-height: 40px;
+    padding-inline: 15px;
+    font-size: 14px;
+}
+
+.entry-dialog .form-field > label,
+.entry-dialog .form-field > span {
+    color: #4f5c56;
+    font-size: 13px !important;
+    font-weight: 900;
+}
+
+.dark-theme .entry-dialog .form-field > label,
+.dark-theme .entry-dialog .form-field > span {
+    color: #c5cec8;
+}
+
+.entry-dialog .form-field input,
+.entry-dialog .form-field select,
+.entry-dialog .form-field textarea {
+    min-height: 40px;
+    font-size: 14px !important;
+}
+
+.entry-dialog .form-field textarea {
+    min-height: 82px;
+}
+
+@media (max-width: 700px) {
+    #themeToggle,
+    .top-actions #themeToggle {
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .cell-culture-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cell-culture-card {
+        grid-template-columns: 70px minmax(0, 1fr);
+    }
+
+    .cell-culture-thumb {
+        width: 70px;
+        height: 86px;
+    }
+
+    .record-detail-body {
+        padding: 12px;
+    }
+
+    .record-detail-section {
+        padding: 14px;
+    }
+
+    .record-detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+/* Rhine Lab 0.1.5 language control floor. */
+.topbar .language-dock button span,
+.dark-theme .topbar .language-dock button span {
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
+/* Rhine Lab 0.1.5 meaningful-text floor. */
+.record-card > p,
+.record-meta strong,
+.record-usage-line span,
+.record-usage-line strong {
+    font-size: 11px !important;
+    line-height: 1.45;
+}
+
+.protocol-number,
+.protocol-card > p,
+.protocol-path-preview span,
+.protocol-path-preview b,
+.protocol-foot span,
+.protocol-foot strong {
+    font-size: 11px !important;
+    line-height: 1.45;
+}
+
+.calendar-navigation button,
+.load-item header span {
+    font-size: 11px !important;
+}
+/* Rhine Lab 0.1.5 thumbnail-free culture cards. */
+.cell-culture-card {
+    grid-template-columns: minmax(0, 1fr);
+}

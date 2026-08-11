@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#d8ff45">
-    <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、样本、细胞维持与实验日程。">
+    <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、冻存样本、细胞维持与实验日程。">
     <meta property="og:title" content="Rhine Lab · 生命科学研究工作台">
-    <meta property="og:description" content="实验记录、动物管理、试剂库存、样本库、细胞维持与实验日程的一体化科研工作台。">
+    <meta property="og:description" content="实验记录、动物管理、试剂库存、冻存样本、细胞维持与实验日程的一体化科研工作台。">
     <meta property="og:type" content="website">
     <meta property="og:image" content="images/rhine-life-logo.png">
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-lab-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-7">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-8">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -38,7 +38,7 @@
                 <button class="nav-item" type="button" data-view="mice"><span class="nav-code">03</span><span>动物管理</span><b>ANIMALS</b></button>
                 <button class="nav-item" type="button" data-view="reagents"><span class="nav-code">04</span><span>试剂库存</span><b>REAGENTS</b></button>
                 <button class="nav-item" type="button" data-view="cells"><span class="nav-code">05</span><span>细胞维持</span><b>CELL CULTURE</b></button>
-                <button class="nav-item" type="button" data-view="samples"><span class="nav-code">06</span><span>样本库</span><b>BIOBANK</b></button>
+                <button class="nav-item" type="button" data-view="samples"><span class="nav-code">06</span><span>冻存样本</span><b>FROZEN SAMPLES</b></button>
                 <button class="nav-item" type="button" data-view="protocols"><span class="nav-code">07</span><span>实验方案</span><b>PROTOCOLS</b></button>
                 <button class="nav-item" type="button" data-view="schedule"><span class="nav-code">08</span><span>日程排班</span><b>SCHEDULE</b></button>
             </nav>
@@ -200,9 +200,9 @@
                     </section>
                 </section>
 
-                <section class="view" id="view-samples" data-title="样本库">
+                <section class="view" id="view-samples" data-title="冻存样本">
                     <div class="page-heading technical-heading">
-                        <div><p class="eyebrow"><span>BIOBANK MATRIX</span></p><h1>样本库</h1><p class="story-quote">“我会留下你的研究记录。”<cite>——克丽斯腾</cite></p></div>
+                        <div><p class="eyebrow"><span>FROZEN SAMPLE ARCHIVE</span></p><h1>冻存样本</h1><p class="story-quote">“我会留下你的研究记录。”<cite>——克丽斯腾</cite></p></div>
                         <button class="button primary" type="button" data-add="sample"><span>＋</span> 登记样本</button>
                         <div class="heading-code">06</div>
                     </div>
@@ -468,10 +468,10 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=20260811-7"></script>
+    <script src="js/rhine-lab-i18n.js?v=20260811-8"></script>
     <script src="js/rhine-lab-config.js"></script>
     <script src="js/rhine-lab-sync.js"></script>
     <script src="js/rhine-lab-pwa.js"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=20260811-7"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=20260811-8"></script>
 </body>
 </html>

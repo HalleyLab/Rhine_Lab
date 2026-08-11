@@ -1893,11 +1893,10 @@
         els.cellCultureGrid.innerHTML = items.map(function (culture) {
             const due = culture.nextAction && culture.nextAction <= today && culture.status !== '已结束';
             const status = due ? '待操作' : culture.status;
-            const thumb = culture.photoData ? '<img src="' + esc(culture.photoData) + '" alt="' + esc(culture.name) + ' 培养照片">' : '<span>' + esc(culture.name.slice(0, 2).toUpperCase()) + '</span>';
             return '<button class="cell-culture-card' + (due ? ' due' : '') + '" type="button" data-cell-id="' + esc(culture.id) + '">' +
-                '<div class="cell-culture-thumb">' + thumb + '</div><div class="cell-culture-main"><div class="cell-culture-top"><span class="micro-label">' + esc(culture.id) + contributorInline(culture) + '</span><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></div>' +
+                '<div class="cell-culture-main"> <div class="cell-culture-top"><span class="micro-label">' + esc(culture.id) + contributorInline(culture) + '</span><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></div>' +
                 '<h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · P' + esc(culture.passage) + '</p>' +
-                '<div class="cell-container-line"><span>容器</span><strong>' + esc(culture.vesselCount) + ' × ' + esc(culture.container) + '</strong></div>' +
+                '<div class="cell-container-line"><span>容器</span><strong>' + esc(culture.vesselCount) + ' × ' + esc(interfaceText(culture.container)) + '</strong></div>' +
                 '<div class="cell-confluence"><span><b>汇合度</b><strong>' + esc(culture.confluence) + '%</strong></span><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div></div>' +
                 '<footer><span>下次操作 <b>' + esc(culture.nextAction || '待安排') + '</b></span><strong>查看培养记录 →</strong></footer></div></button>';
         }).join('') || '<div class="empty-card cell-empty-card"><strong>尚未登记培养中的细胞</strong><p>点击“登记细胞”记录细胞系、容器、代次与培养条件。</p></div>';
@@ -1907,7 +1906,7 @@
         }).slice(0, 6);
         els.cellMaintenanceQueue.innerHTML = queue.map(function (culture) {
             const due = culture.nextAction && culture.nextAction <= today;
-            return '<button class="cell-queue-item' + (due ? ' due' : '') + '" type="button" data-cell-id="' + esc(culture.id) + '"><time>' + esc(shortDate(culture.nextAction)) + '</time><span><strong>' + esc(culture.name) + '</strong><small>P' + esc(culture.passage) + ' · ' + esc(culture.container) + '</small></span><b>' + (due ? '!' : '→') + '</b></button>';
+            return '<button class="cell-queue-item' + (due ? ' due' : '') + '" type="button" data-cell-id="' + esc(culture.id) + '"><time>' + esc(shortDate(culture.nextAction)) + '</time><span><strong>' + esc(culture.name) + '</strong><small>P' + esc(culture.passage) + ' · ' + esc(interfaceText(culture.container)) + '</small></span><b>' + (due ? '!' : '→') + '</b></button>';
         }).join('') || '<p class="search-empty">暂无待处理的培养操作。</p>';
     }
 
@@ -1923,12 +1922,12 @@
         els.recordDetailKicker.textContent = 'CELL CULTURE RECORD · ' + culture.id;
         els.recordDetailTitle.textContent = culture.name + ' · P' + culture.passage;
         els.recordDetailBody.innerHTML =
-            '<section class="record-detail-hero cell-detail-hero"><div><span class="record-detail-code">' + esc(culture.id) + '</span><h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · ' + esc(culture.vesselCount) + ' × ' + esc(culture.container) + '</p></div><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></section>' +
+            '<section class="record-detail-hero cell-detail-hero"><div><span class="record-detail-code">' + esc(culture.id) + '</span><h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · ' + esc(culture.vesselCount) + ' × ' + esc(interfaceText(culture.container)) + '</p></div><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></section>' +
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">CURRENT CULTURE</p><h3>当前培养信息</h3></div><div class="record-detail-grid">' +
                 detailFieldHtml('细胞名称', culture.name, true) + detailFieldHtml('物种 / 来源', culture.species) + detailFieldHtml('当前代次', 'P' + culture.passage) +
-                detailFieldHtml('培养基', culture.medium, true) + detailFieldHtml('培养容器', culture.vesselCount + ' × ' + culture.container) + detailFieldHtml('培养位置', culture.incubator, true) +
+                detailFieldHtml('培养基', culture.medium, true) + detailFieldHtml('培养容器', culture.vesselCount + ' × ' + interfaceText(culture.container)) + detailFieldHtml('培养位置', culture.incubator, true) +
                 detailFieldHtml('当前汇合度', culture.confluence + '%') + detailFieldHtml('下次操作', culture.nextAction) + detailFieldHtml('培养状态', culture.status) + detailFieldHtml('备注', culture.notes, true) + nodeField +
-            '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>汇合度 ' + esc(culture.confluence) + '%</span></div></section>' +
+            '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>' + esc(interfaceText('汇合度')) + ' ' + esc(culture.confluence) + '%</span></div></section>' +
             '<section class="record-detail-section cell-passage-section"><div class="record-detail-section-title passage-title"><div><p class="micro-label">CULTURE HISTORY</p><h3>传代与培养记录</h3></div><button class="button primary" type="button" data-add-passage>＋ 记录传代 / 操作</button></div>' + cellCultureHistoryHtml(culture) + '</section>' + photo + recordHistoryHtml(culture);
         els.recordDetailDialog.showModal();
     }
@@ -1938,7 +1937,7 @@
         if (!history.length) return '<p class="record-history-empty">暂无培养操作记录。完成第一次传代、换液或观察后，会显示在这里。</p>';
         return '<div class="cell-passage-list">' + history.map(function (entry) {
             const photo = entry.photoData ? '<img src="' + esc(entry.photoData) + '" alt="' + esc(culture.name) + ' ' + esc(entry.action) + '照片">' : '';
-            return '<article class="cell-passage-entry"><div class="cell-passage-date"><time>' + esc(entry.date) + '</time><span>' + esc(entry.action) + '</span></div><div class="cell-passage-content"><header><strong>P' + esc(entry.passage) + '</strong><span>' + esc(entry.vesselCount) + ' × ' + esc(entry.container) + '</span></header><dl><div><dt>比例 / 接种</dt><dd>' + esc(entry.ratio || '—') + '</dd></div><div><dt>操作后汇合度</dt><dd>' + esc(entry.confluence) + '%</dd></div><div><dt>培养基</dt><dd>' + esc(entry.medium || '—') + '</dd></div></dl><p>' + esc(entry.notes || '未填写备注') + '</p>' + photo + '</div></article>';
+            return '<article class="cell-passage-entry"><div class="cell-passage-date"><time>' + esc(entry.date) + '</time><span>' + esc(entry.action) + '</span></div><div class="cell-passage-content"><header><strong>P' + esc(entry.passage) + '</strong><span>' + esc(entry.vesselCount) + ' × ' + esc(interfaceText(entry.container)) + '</span></header><dl><div><dt>比例 / 接种</dt><dd>' + esc(entry.ratio || '—') + '</dd></div><div><dt>操作后汇合度</dt><dd>' + esc(entry.confluence) + '%</dd></div><div><dt>培养基</dt><dd>' + esc(entry.medium || '—') + '</dd></div></dl><p>' + esc(entry.notes || '未填写备注') + '</p>' + photo + '</div></article>';
         }).join('') + '</div>';
     }
 
@@ -1970,20 +1969,21 @@
         const displayStatus = getReagentDisplayStatus(reagent);
         const recordedConsumption = getProtocolConsumption(reagent.catalog);
         const linkedProtocols = state.protocols.filter(protocol => (protocol.reagents || []).some(usage => usage.catalog === reagent.catalog)).length;
+        const linkedProtocolsLabel = interfaceLocale() === 'en-US' ? linkedProtocols + ' ' + (linkedProtocols === 1 ? 'item' : 'items') : linkedProtocols + ' 项';
         const photo = reagent.photoData ? '<figure class="record-detail-photo"><img src="' + esc(reagent.photoData) + '" alt="' + esc(reagent.name) + ' 录入照片"><figcaption>录入时附加的试剂标签照片</figcaption></figure>' : '';
         const warning = displayStatus === '余量低' ? '<aside class="record-detail-alert"><span>!</span><div><strong>余量低</strong><p>根据已完成日程和实验记录触发低余量提醒，请核对实际库存并考虑补充。</p></div></aside>' : '';
         const nodeField = workspaceMode === 'lab' ? detailFieldHtml('录入节点', contributorName(reagent)) : '';
         els.recordDetailKicker.textContent = 'REAGENT RECORD · ' + reagent.catalog;
         els.recordDetailTitle.textContent = reagent.name;
         els.recordDetailBody.innerHTML =
-            '<section class="record-detail-hero reagent-detail-hero"><div><span class="record-detail-code">' + esc(reagent.catalog) + '</span><h3>' + esc(reagent.name) + '</h3><p>' + esc(reagent.category) + ' · LOT ' + esc(reagent.lot) + '</p></div><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></section>' +
+            '<section class="record-detail-hero reagent-detail-hero"><div><span class="record-detail-code">' + esc(reagent.catalog) + '</span><h3>' + esc(reagent.name) + '</h3><p>' + esc(interfaceText(reagent.category)) + ' · LOT ' + esc(reagent.lot) + '</p></div><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></section>' +
             warning +
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">INVENTORY PROFILE</p><h3>库存详细信息</h3></div><div class="record-detail-grid">' +
                 detailFieldHtml('试剂名称', reagent.name, true) + detailFieldHtml('类别', reagent.category) + detailFieldHtml('品牌货号', reagent.catalog) + detailFieldHtml('批次号', reagent.lot) +
                 detailFieldHtml('存储位置', reagent.location, true) + detailFieldHtml('当前实际库存', formatQuantity(reagent.currentQty) + ' / ' + formatQuantity(reagent.totalQty) + ' ' + reagent.unit) +
                 detailFieldHtml('实际库存比例', formatQuantity(reagent.amount) + '%') + detailFieldHtml('有效期', reagent.expiry) + detailFieldHtml('当前状态', displayStatus) + nodeField +
-            '</div><div class="detail-stock-meter"><div><i style="width:' + number(reagent.amount, 0, 100) + '%"></i></div><span>实际库存 ' + formatQuantity(reagent.amount) + '%</span></div></section>' +
-            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">USAGE TRACE</p><h3>使用关联</h3></div><div class="record-detail-grid compact">' + detailFieldHtml('关联 Protocol', linkedProtocols + ' 项') + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + '</div></section>' + photo + recordHistoryHtml(reagent);
+            '</div><div class="detail-stock-meter"><div><i style="width:' + number(reagent.amount, 0, 100) + '%"></i></div><span>' + esc(interfaceText('实际库存')) + ' ' + formatQuantity(reagent.amount) + '%</span></div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">USAGE TRACE</p><h3>使用关联</h3></div><div class="record-detail-grid compact">' + detailFieldHtml('关联 Protocol', linkedProtocolsLabel) + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + '</div></section>' + photo + recordHistoryHtml(reagent);
         els.recordDetailDialog.showModal();
     }
 
@@ -2208,7 +2208,7 @@
 
         els.freezerBoxTabs.innerHTML = state.freezerBoxes.map(function (box) {
             const count = state.samples.filter(item => item.boxId === box.id).length;
-            return '<button class="freezer-box-tab' + (box.id === activeBox.id ? ' active' : '') + '" type="button" data-freezer-box="' + esc(box.id) + '"><span><strong>' + esc(box.name) + (box.lastScanPhoto ? ' <em>已扫描</em>' : '') + '</strong><small>' + esc(box.storageLocation) + contributorInline(box) + '</small></span><b>' + count + ' / ' + (box.rows * box.columns) + '</b></button>';
+            return '<button class="freezer-box-tab' + (box.id === activeBox.id ? ' active' : '') + '" type="button" data-freezer-box="' + esc(box.id) + '"><span><strong>' + esc(box.name) + (box.lastScanPhoto ? ' <em>已扫描</em>' : '') + '</strong><small>' + esc(interfaceText(box.storageLocation)) + contributorInline(box) + '</small></span><b>' + count + ' / ' + (box.rows * box.columns) + '</b></button>';
         }).join('');
         els.freezerBoxTitle.textContent = '冻存盒 ' + activeBox.name;
         els.freezerBoxTemperature.textContent = 'FREEZER MAP · ' + activeBox.temperature;
@@ -2496,17 +2496,18 @@
         activeProtocolId = protocol.id;
         const linked = state.schedule.filter(item => item.protocolId === protocol.id);
         const completed = linked.filter(item => item.done);
+        const perRunSuffix = interfaceText('/ 次');
         const reagentRows = protocol.reagents.map(function (usage) {
             const reagent = state.reagents.find(item => item.catalog === usage.catalog);
-            if (!reagent) return '<tr><td>' + esc(usage.catalog) + '</td><td>' + formatQuantity(usage.amount) + ' / 次</td><td>库存未登记</td></tr>';
-            return '<tr><td><strong>' + esc(reagent.name) + '</strong><small>' + esc(reagent.catalog) + '</small></td><td>' + formatQuantity(usage.amount) + ' ' + esc(reagent.unit) + ' / 次</td><td>' + formatQuantity(getTheoreticalRemaining(reagent)) + ' ' + esc(reagent.unit) + '</td></tr>';
+            if (!reagent) return '<tr><td>' + esc(usage.catalog) + '</td><td>' + formatQuantity(usage.amount) + ' ' + perRunSuffix + '</td><td>库存未登记</td></tr>';
+            return '<tr><td><strong>' + esc(reagent.name) + '</strong><small>' + esc(reagent.catalog) + '</small></td><td>' + formatQuantity(usage.amount) + ' ' + esc(reagent.unit) + ' ' + perRunSuffix + '</td><td>' + formatQuantity(getTheoreticalRemaining(reagent)) + ' ' + esc(reagent.unit) + '</td></tr>';
         }).join('');
         const protocolPhoto = protocol.photoData ? '<figure class="record-detail-photo protocol-source-photo"><img src="' + esc(protocol.photoData) + '" alt="' + esc(protocol.title) + ' 的原始方案照片"><figcaption>录入 Protocol 时保留的原始照片</figcaption></figure>' : '';
         const protocolLiterature = protocolLiteratureHtml(protocol);
-        els.protocolDetailNumber.textContent = protocol.number + ' · ' + protocol.tag + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
+        els.protocolDetailNumber.textContent = protocol.number + ' · ' + interfaceText(protocol.tag) + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
         els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
-        els.protocolDetailUsage.textContent = '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
+        els.protocolDetailUsage.textContent = interfaceLocale() === 'en-US' ? linked.length + ' scheduled ' + (linked.length === 1 ? 'item' : 'items') + ' linked · ' + completed.length + ' completed ' + (completed.length === 1 ? 'run' : 'runs') : '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
 
@@ -2532,7 +2533,7 @@
             const phaseSize = baseSize + (phaseIndex < remainder ? 1 : 0);
             const phaseSteps = items.slice(cursor, cursor + phaseSize);
             cursor += phaseSize;
-            return '<section class="protocol-flow-phase"><header><span class="flow-phase-dot" aria-hidden="true"></span><div><strong>' + label[0] + '</strong><small>' + label[1] + '</small></div></header><div class="protocol-flow-steps">' + phaseSteps.map(function (step) {
+            return '<section class="protocol-flow-phase"><header><span class="flow-phase-dot" aria-hidden="true"></span><div><strong>' + esc(interfaceText(label[0])) + '</strong><small>' + label[1] + '</small></div></header><div class="protocol-flow-steps">' + phaseSteps.map(function (step) {
                 return '<article class="protocol-flow-node"><i aria-hidden="true"></i><p>' + esc(step) + '</p></article>';
             }).join('') + '</div></section>';
         }).join('') + '</div>';
@@ -3790,7 +3791,7 @@ function getReagentDisplayStatus(reagent) {
         if (config.type === 'select') {
             const options = config.placeholderOrOptions.map(function (option) {
                 const parts = String(option).split('|');
-                return '<option value="' + esc(parts[0]) + '">' + esc(parts[1] || parts[0]) + '</option>';
+                return '<option value="' + esc(parts[0]) + '">' + esc(interfaceText(parts[1] || parts[0])) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '" data-custom-select' + required + '>' + options + '<option value="__custom__">自定义…</option></select><input class="custom-select-input" name="' + config.name + 'Custom" type="text" data-custom-input-for="' + config.name + '" placeholder="输入自定义内容" hidden>';
         } else if (config.type === 'protocol-select') {
@@ -3814,12 +3815,12 @@ function getReagentDisplayStatus(reagent) {
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select><small class="field-note">每条实验记录只能保存一份实验结果；可随时编辑结果与附件。</small>';
         } else if (config.type === 'freezer-select') {
             const options = state.freezerBoxes.map(function (box) {
-                return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(box.storageLocation) + '</option>';
+                return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(interfaceText(box.storageLocation)) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select>';
         } else if (config.type === 'animal-rack-select') {
             const options = state.animalRacks.map(function (rack) {
-                return '<option value="' + esc(rack.id) + '">' + esc(rack.name) + ' · ' + esc(rack.facility) + '</option>';
+                return '<option value="' + esc(rack.id) + '">' + esc(interfaceText(rack.name)) + ' · ' + esc(interfaceText(rack.facility)) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建笼架</option>') + '</select>';
         } else if (config.type === 'animal-cage-select') {
