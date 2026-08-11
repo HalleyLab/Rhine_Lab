@@ -9737,19 +9737,11 @@ html.native-performance.app-backgrounded *::after {
     }
 }
 
-/* Simplified overview heading and native boot transition. */
+/* Keep the technical hero atmosphere while omitting the decorative section number. */
 .dashboard-hero {
-    min-height: 0;
-    padding: 30px 36px;
-    background: var(--surface) !important;
-    border: 1px solid var(--line);
-    border-left: 4px solid var(--acid-strong);
-    box-shadow: none;
+    padding-right: 42px;
 }
 
-.dashboard-hero::before,
-.dashboard-hero::after,
-.dashboard-hero .hero-atmosphere,
 .dashboard-hero .hero-index {
     display: none !important;
 }
@@ -9850,7 +9842,6 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     }
 
     .dashboard-hero {
-        min-height: 0;
         gap: 20px;
         padding: 24px !important;
     }
@@ -9859,5 +9850,101 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
 @media (max-width: 430px) {
     .dashboard-hero {
         padding: 22px 18px !important;
+    }
+}
+
+.entry-optional-note {
+    grid-column: 1 / -1;
+    margin: -2px 0 2px;
+    padding: 10px 12px;
+    color: var(--muted);
+    background: var(--acid-soft);
+    border-left: 3px solid var(--acid-strong);
+    border-radius: 3px 10px 10px 3px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.protocol-photo-recognition {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px;
+    background: rgba(182, 219, 58, .09);
+    border: 1px solid rgba(145, 187, 40, .28);
+    border-radius: 11px 3px 11px 3px;
+}
+
+.protocol-photo-recognition button {
+    min-height: 36px;
+    padding: 0 14px;
+    color: #1f2a22;
+    background: var(--acid);
+    border: 0;
+    border-radius: 9px 3px 9px 3px;
+    font-family: var(--font-cjk);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.protocol-photo-recognition button:disabled {
+    cursor: not-allowed;
+    opacity: .46;
+}
+
+.protocol-photo-recognition small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.protocol-ocr-result {
+    grid-column: 1 / -1;
+    padding-top: 4px;
+}
+
+.protocol-ocr-result[hidden] {
+    display: none;
+}
+
+.protocol-ocr-result summary {
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.protocol-ocr-result textarea {
+    width: 100%;
+    min-height: 110px;
+    margin-top: 9px;
+    padding: 11px 12px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-dark);
+    border-radius: 9px 3px 9px 3px;
+    font-family: var(--font-cjk);
+    font-size: 12px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.dark-theme .entry-optional-note,
+.dark-theme .protocol-photo-recognition {
+    color: #d7e0da;
+    background: rgba(182, 219, 58, .07);
+    border-color: rgba(182, 219, 58, .2);
+}
+
+@media (max-width: 560px) {
+    .protocol-photo-recognition {
+        grid-template-columns: 1fr;
+    }
+
+    .protocol-photo-recognition button {
+        width: 100%;
     }
 }

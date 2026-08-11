@@ -12,7 +12,7 @@
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-lab-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260810-5">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-1">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -115,6 +115,10 @@
                         <div class="hero-actions">
                             <button class="button ghost" type="button" data-view-target="schedule">查看日程</button>
                             <button class="button primary" type="button" data-add="experiment"><span>＋</span> 新建实验记录</button>
+                        </div>
+                        <div class="hero-atmosphere" aria-hidden="true">
+                            <span class="light-arc arc-one"></span><span class="light-arc arc-two"></span>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
                         </div>
                     </div>
 
@@ -298,7 +302,7 @@
     </div>
 
     <dialog class="entry-dialog" id="entryDialog">
-        <form id="entryForm" method="dialog">
+        <form id="entryForm" method="dialog" novalidate>
             <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭">×</button></header>
             <div class="form-grid" id="dialogFields"></div>
             <footer><p><span class="pulse-dot"></span> <span id="entrySaveStatus">数据将先保存到本机缓存</span></p><div><button class="button ghost" type="button" data-close-dialog>取消</button><button class="button primary" id="entrySubmitButton" type="submit">确认保存</button></div></footer>
