@@ -12,15 +12,24 @@
   "theme_color": "#d8ff45",
   "icons": [
     {
-      "src": "images/rhine-lab-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "images/rhine-life-app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
   "shortcuts": [
-    { "name": "实验记录", "url": "./#experiments" },
-    { "name": "冻存样本", "url": "./#samples" },
-    { "name": "日程", "url": "./#schedule" }
+    {
+      "name": "实验记录",
+      "url": "./#experiments"
+    },
+    {
+      "name": "冻存样本",
+      "url": "./#samples"
+    },
+    {
+      "name": "日程",
+      "url": "./#schedule"
+    }
   ]
 }

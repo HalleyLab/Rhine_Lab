@@ -1,14 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Rhine Lab Workspace",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Open the Rhine Lab workspace from Chrome or Microsoft Edge.",
   "action": {
     "default_title": "Open Rhine Lab",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
   },
   "permissions": [
     "tabs"
   ],
-  "homepage_url": "https://halleylab.github.io/Rhine_Lab/"
+  "homepage_url": "https://halleylab.github.io/Rhine_Lab/",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
 }

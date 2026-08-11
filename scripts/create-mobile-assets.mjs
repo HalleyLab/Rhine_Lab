@@ -6,13 +6,21 @@ import sharp from 'sharp';
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, '..');
 const assetDirectory = path.join(projectRoot, 'assets');
-const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
-const foregroundSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-mark.svg'));
+const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-life-logo.png'));
 
 await mkdir(assetDirectory, { recursive: true });
 
-const iconMark = await sharp(iconSource, { density: 288 })
-  .resize({ width: 840, height: 840, fit: 'contain', withoutEnlargement: false })
+const sourceMetadata = await sharp(iconSource).metadata();
+const symbolCrop = {
+  left: 0,
+  top: 0,
+  width: sourceMetadata.width,
+  height: Math.round(sourceMetadata.height * 0.76)
+};
+const iconMark = await sharp(iconSource)
+  .extract(symbolCrop)
+  .trim()
+  .resize({ width: 900, height: 780, fit: 'inside', withoutEnlargement: false })
   .ensureAlpha()
   .png()
   .toBuffer();
@@ -22,15 +30,17 @@ await sharp({
     width: 1024,
     height: 1024,
     channels: 4,
-    background: '#d8ff45'
+    background: '#f4f6ef'
   }
 })
   .composite([{ input: iconMark, gravity: 'centre' }])
   .png()
   .toFile(path.join(assetDirectory, 'icon-only.png'));
 
-const foregroundMark = await sharp(foregroundSource, { density: 288 })
-  .resize({ width: 720, height: 720, fit: 'contain', withoutEnlargement: false })
+const foregroundMark = await sharp(iconSource)
+  .extract(symbolCrop)
+  .trim()
+  .resize({ width: 780, height: 680, fit: 'inside', withoutEnlargement: false })
   .ensureAlpha()
   .png()
   .toBuffer();
@@ -52,7 +62,7 @@ await sharp({
     width: 1024,
     height: 1024,
     channels: 4,
-    background: '#d8ff45'
+    background: '#f4f6ef'
   }
 })
   .png()
@@ -76,4 +86,4 @@ await Promise.all([
   createSplash('splash-dark.png', '#151c19')
 ]);
 
-console.log('Generated centered Rhine Lab launcher icons and plain mobile splash backgrounds.');
+console.log('Generated official Rhine Life mark launcher icons and plain mobile splash backgrounds.');

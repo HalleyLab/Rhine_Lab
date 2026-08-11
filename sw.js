@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v38';
+const CACHE_NAME = 'rhine-lab-pages-v39';
 const APP_SHELL = [
     './',
     './index.html',
@@ -12,7 +12,7 @@ const APP_SHELL = [
     './js/rhine-lab.js?v=20260811-8',
     './data/seed.json',
     './images/rhine-life-logo.png',
-    './images/rhine-lab-icon.svg'
+    './images/rhine-life-app-icon.png'
 ];
 
 self.addEventListener('install', function (event) {

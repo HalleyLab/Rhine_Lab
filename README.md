@@ -84,7 +84,7 @@ GitHub Pages 地址未登录时只能浏览示例和已有数据。点击顶栏�
 
 ## Windows 独立应用
 
-`.github/workflows/desktop-distributions.yml` 会生成 `Rhine-Lab-0.1.5-Windows.exe` 便携版。用户下载后可直接运行，不需要安装或解压；首次打开为空工作区。未签名的内部测试包可能触发 Windows SmartScreen 提示。
+`.github/workflows/desktop-distributions.yml` 会生成 `Rhine-Lab-0.1.6-Windows.exe` 便携版。用户下载后可直接运行，不需要安装或解压；首次打开为空工作区。未签名的内部测试包可能触发 Windows SmartScreen 提示。
 
 本地开发运行：
 
@@ -95,6 +95,6 @@ pnpm desktop:start
 
 ## Chrome / Microsoft Edge 插件
 
-同一工作流会生成 `Rhine-Lab-Browser-Extension-0.1.5.zip`。该插件在浏览器工具栏提供 Rhine Lab 快捷入口，并沿用 GitHub Pages 的登录和同步状态。
+同一工作流会生成 `Rhine-Lab-Browser-Extension-0.1.6.zip`。该插件在浏览器工具栏提供 Rhine Lab 快捷入口，并沿用 GitHub Pages 的登录和同步状态。
 
 解压后在浏览器扩展管理页开启“开发者模式”，选择“加载已解压的扩展程序”，指向 `browser-extension` 目录。正式商店发布仍需分别提交 Chrome Web Store 和 Microsoft Edge Add-ons 审核。
