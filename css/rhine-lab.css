@@ -10198,10 +10198,10 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     .animal-rack-tab { min-width: 168px; }
 }
 
-/* 2026-08-11 definitive type audit: one glyph-aware stack and a consistent information scale. */
+/* 2026-08-11 definitive type audit: locale-owned stacks and a consistent information scale. */
 :root {
     --font-latin: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-cjk: "Helvetica Neue", Helvetica, Arial, SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+    --font-cjk: SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
     --font-interface: var(--font-cjk);
 }
 
@@ -10231,6 +10231,42 @@ html[lang="en"] select,
 html[lang="en"] option,
 html[lang="en"] optgroup {
     font-family: var(--font-latin) !important;
+}
+
+/* Keep every Chinese-mode runtime string, control and generated record in SimHei. */
+html:not([lang="en"]) body,
+html:not([lang="en"]) body *,
+html:not([lang="en"]) body *::before,
+html:not([lang="en"]) body *::after,
+html:not([lang="en"]) button,
+html:not([lang="en"]) input,
+html:not([lang="en"]) textarea,
+html:not([lang="en"]) select,
+html:not([lang="en"]) option,
+html:not([lang="en"]) optgroup,
+html:not([lang="en"]) table,
+html:not([lang="en"]) dialog,
+html:not([lang="en"]) input::placeholder,
+html:not([lang="en"]) textarea::placeholder {
+    font-family: var(--font-cjk) !important;
+}
+
+/* Explicit coverage for dashboard summaries, metric cards and record editors. */
+#dashboardDaySummary,
+#dashboardDaySummary *,
+.metric-card,
+.metric-card *,
+.record-card,
+.record-card *,
+.data-table,
+.data-table *,
+.experiment-detail-dialog,
+.experiment-detail-dialog *,
+.entry-dialog,
+.entry-dialog *,
+.record-detail-dialog,
+.record-detail-dialog * {
+    font-family: inherit !important;
 }
 
 input,
