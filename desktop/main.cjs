@@ -27,7 +27,7 @@ function createWindow() {
         minHeight: 680,
         show: false,
         backgroundColor: '#f2f4ed',
-        icon: path.join(__dirname, '..', 'images', 'rhine-life-logo.png'),
+        icon: path.join(__dirname, '..', 'images', 'rhine-lab-desktop-icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,

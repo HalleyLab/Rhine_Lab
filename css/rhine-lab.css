@@ -10197,3 +10197,211 @@ body.dark-theme .app-boot-screen span { color: #aeb8b2; }
     .animal-rack-tabs { padding-inline: 12px; }
     .animal-rack-tab { min-width: 168px; }
 }
+
+/* 2026-08-11 definitive type audit: one glyph-aware stack and a consistent information scale. */
+:root {
+    --font-latin: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-cjk: "Helvetica Neue", Helvetica, Arial, SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+    --font-interface: var(--font-cjk);
+}
+
+html body,
+html body *,
+html body *::before,
+html body *::after,
+button,
+input,
+textarea,
+select,
+option,
+optgroup,
+table,
+dialog {
+    font-family: var(--font-interface) !important;
+}
+
+html[lang="en"] body,
+html[lang="en"] body *,
+html[lang="en"] body *::before,
+html[lang="en"] body *::after,
+html[lang="en"] button,
+html[lang="en"] input,
+html[lang="en"] textarea,
+html[lang="en"] select,
+html[lang="en"] option,
+html[lang="en"] optgroup {
+    font-family: var(--font-latin) !important;
+}
+
+input,
+textarea,
+select,
+option,
+optgroup,
+.global-search input,
+.inline-search input,
+.dialog-search input,
+.topbar input {
+    font-size: 13px !important;
+    line-height: 1.45;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #596660;
+    font-family: var(--font-interface) !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    opacity: 1;
+}
+
+html[lang="en"] input::placeholder,
+html[lang="en"] textarea::placeholder {
+    font-family: var(--font-latin) !important;
+}
+
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+    color: #c7d0ca;
+}
+
+.app-shell small,
+dialog small,
+.notification-panel small {
+    font-size: max(11px, .72em) !important;
+    line-height: 1.5;
+}
+
+.search-empty,
+.empty-card,
+.record-history-empty,
+.experiment-usage-empty,
+.month-empty,
+.result-attachment-empty,
+.animal-rack-empty-tabs,
+.animal-cage-empty p,
+.data-table td[colspan] {
+    color: var(--muted);
+    font-size: 14px !important;
+    font-weight: 500;
+    line-height: 1.65;
+}
+
+.global-search kbd {
+    font-size: 10px;
+}
+
+.micro-label,
+.eyebrow,
+.nav-item b,
+.nav-code,
+.breadcrumb,
+.heading-status,
+.status-chip,
+.legend,
+.matrix-hint,
+.drag-hint,
+.calendar-time-label,
+.record-detail-code {
+    font-size: 11px !important;
+    line-height: 1.45;
+}
+
+.metric-trend,
+.metric-value span,
+.mini-metric small,
+.project-progress small,
+.activity-item time,
+.today-item small,
+.schedule-block small,
+.field-note,
+.form-help,
+.dialog-helper,
+.entry-dialog footer p,
+.photo-capture-status,
+.photo-capture-button small,
+.data-table small,
+.amount-meter span {
+    font-size: 11.5px !important;
+    line-height: 1.5;
+}
+
+.filter-tabs button,
+.calendar-modes button,
+.workspace-mode-toggle button,
+.detail-tabs button,
+.protocol-tabs button,
+.button,
+.public-demo-banner,
+.animal-rack-actions > span {
+    font-size: 12.5px !important;
+}
+
+.data-table th {
+    font-size: 11.5px !important;
+    line-height: 1.45;
+}
+
+.data-table td {
+    font-size: 13px !important;
+    line-height: 1.5;
+}
+
+.notification-panel h2 {
+    font-size: 18px;
+}
+
+.notification-item strong {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.notification-item small {
+    margin-top: 4px;
+    font-size: 11.5px !important;
+}
+
+.notification-panel > footer > span,
+.notification-panel > footer button {
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.page-heading.technical-heading .story-quote,
+.page-heading.technical-heading .story-quote cite {
+    font-family: var(--font-interface) !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    line-height: 1.65;
+}
+
+html[lang="en"] .page-heading.technical-heading .story-quote,
+html[lang="en"] .page-heading.technical-heading .story-quote cite {
+    font-family: var(--font-latin) !important;
+}
+
+.brand-lockup {
+    min-height: 84px;
+    gap: 9px;
+    padding: 14px 17px;
+}
+
+.brand-logo {
+    width: 86px;
+    max-height: 55px;
+    object-fit: contain;
+    object-position: center;
+}
+
+.brand-terminal {
+    font-size: 9.5px;
+    line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+    .brand-logo { width: 80px; }
+    .app-shell small,
+    dialog small,
+    .notification-panel small { font-size: 11px !important; }
+    .data-table td { font-size: 12.5px !important; }
+}
