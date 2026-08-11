@@ -7,8 +7,14 @@
     const installButton = document.getElementById('installAppButton');
 
     if (nativeApp) {
-        document.documentElement.classList.add('native-app');
+        document.documentElement.classList.add('native-app', 'native-performance');
         if (installButton) installButton.hidden = true;
+
+        const updateVisibilityClass = function () {
+            document.documentElement.classList.toggle('app-backgrounded', document.hidden);
+        };
+        updateVisibilityClass();
+        document.addEventListener('visibilitychange', updateVisibilityClass, { passive: true });
 
         const plugins = capacitor.Plugins || {};
         if (plugins.StatusBar) {
@@ -46,7 +52,7 @@
 
     if (!nativeApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js?v=28', { updateViaCache: 'none' }).then(function (registration) {
+            navigator.serviceWorker.register('./sw.js?v=29', { updateViaCache: 'none' }).then(function (registration) {
                 return registration.update();
             }).catch(function () {
                 // The site remains usable if service worker registration is unavailable.

@@ -227,8 +227,13 @@
     let freezerScanDetected = new Set();
     let freezerScanPhotoData = '';
     let scheduleDrag = null;
+    let scheduleDragFrame = 0;
+    let scheduleDragPointer = null;
     let toastTimer = null;
     let runInputSaveTimer = null;
+    let greetingTimer = 0;
+    let themeTimer = 0;
+    let runDisplayTimer = 0;
 
     const els = {
         breadcrumb: document.getElementById('breadcrumbLabel'),
@@ -322,19 +327,39 @@
         applySavedTheme();
         applyWorkspaceMode();
         setTodayLabels();
-        window.setInterval(updateTimeGreeting, 60000);
-        window.setInterval(applyTimeThemeIfAutomatic, 60000);
-        window.setInterval(updateRunTimerDisplay, 1000);
+        startUiTimers();
         saveState();
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
         window.addEventListener('focus', applyTimeThemeIfAutomatic);
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) applyTimeThemeIfAutomatic();
+            if (document.hidden) {
+                stopUiTimers();
+                return;
+            }
+            applyTimeThemeIfAutomatic();
+            updateTimeGreeting();
+            updateRunTimerDisplay();
+            startUiTimers();
         });
         window.addEventListener('rhine:languagechange', handleLanguageChange);
         startCloudSync();
+    }
+
+    function startUiTimers() {
+        if (!greetingTimer) greetingTimer = window.setInterval(updateTimeGreeting, 60000);
+        if (!themeTimer) themeTimer = window.setInterval(applyTimeThemeIfAutomatic, 60000);
+        if (!runDisplayTimer) runDisplayTimer = window.setInterval(updateRunTimerDisplay, 1000);
+    }
+
+    function stopUiTimers() {
+        window.clearInterval(greetingTimer);
+        window.clearInterval(themeTimer);
+        window.clearInterval(runDisplayTimer);
+        greetingTimer = 0;
+        themeTimer = 0;
+        runDisplayTimer = 0;
     }
 
     function handleLanguageChange() {
@@ -2124,20 +2149,36 @@
 
     function updateScheduleDrag(event) {
         if (!scheduleDrag) return;
-        const slotIndex = scheduleSlotIndexFromPointer(event);
+        scheduleDragPointer = { target: event.target, clientY: event.clientY };
+        if (scheduleDragFrame) return;
+        scheduleDragFrame = window.requestAnimationFrame(flushScheduleDrag);
+    }
+
+    function flushScheduleDrag() {
+        scheduleDragFrame = 0;
+        if (!scheduleDrag || !scheduleDragPointer) return;
+        const slotIndex = scheduleSlotIndexFromPointer(scheduleDragPointer);
+        scheduleDragPointer = null;
         if (slotIndex < 0) return;
+        if (slotIndex === scheduleDrag.currentIndex) return;
         scheduleDrag.currentIndex = slotIndex;
         highlightScheduleDrag();
     }
 
     function finishScheduleDrag() {
         if (!scheduleDrag) return;
+        if (scheduleDragFrame) {
+            window.cancelAnimationFrame(scheduleDragFrame);
+            scheduleDragFrame = 0;
+            flushScheduleDrag();
+        }
         const first = Math.min(scheduleDrag.startIndex, scheduleDrag.currentIndex);
         const last = Math.max(scheduleDrag.startIndex, scheduleDrag.currentIndex);
         const start = minutesToTime(8 * 60 + first * 30);
         const end = minutesToTime(8 * 60 + (last + 1) * 30);
         pendingTaskDefaults = { date: toIsoDate(calendarDate), time: start, end: end };
         scheduleDrag = null;
+        scheduleDragPointer = null;
         document.getElementById('dayTimeline').classList.remove('dragging');
         document.querySelectorAll('[data-calendar-slot].selecting').forEach(item => item.classList.remove('selecting'));
         window.setTimeout(function () { openEntryDialog('task'); }, 0);

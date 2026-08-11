@@ -9649,3 +9649,90 @@ html[lang="zh-CN"] .page-heading.technical-heading .story-quote cite {
         display: none;
     }
 }
+
+/* Native mobile performance profile: favor stable high-frame-rate scrolling. */
+html.native-performance {
+    scroll-behavior: auto;
+}
+
+html.native-performance body {
+    background-attachment: scroll;
+    transition: none;
+}
+
+html.native-performance *,
+html.native-performance *::before,
+html.native-performance *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+html.native-performance button,
+html.native-performance a,
+html.native-performance input,
+html.native-performance select,
+html.native-performance textarea {
+    touch-action: manipulation;
+}
+
+html.native-performance .table-scroll,
+html.native-performance .freezer-box-tabs,
+html.native-performance .lab-member-list,
+html.native-performance dialog > article {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+html.native-performance .facility-chip i,
+html.native-performance .sync-control[data-sync-state="connecting"] > i,
+html.native-performance .sync-visual > i,
+html.native-performance .run-live-badge i {
+    animation: none !important;
+}
+
+html.native-performance.app-backgrounded *,
+html.native-performance.app-backgrounded *::before,
+html.native-performance.app-backgrounded *::after {
+    animation-play-state: paused !important;
+}
+
+@media (max-width: 900px) {
+    html.native-performance body {
+        background:
+            radial-gradient(ellipse at 54% 108%, rgba(171, 211, 54, .2), transparent 44%),
+            var(--canvas);
+    }
+
+    html.native-performance body::before,
+    html.native-performance body::after {
+        display: none;
+    }
+
+    html.native-performance .topbar {
+        background: rgba(245, 247, 242, .97);
+        box-shadow: 0 2px 10px rgba(48, 60, 53, .07);
+    }
+
+    html.native-performance body.dark-theme .topbar {
+        background: rgba(20, 28, 24, .98);
+    }
+
+    html.native-performance .sidebar {
+        background: var(--surface);
+        box-shadow: 8px 0 24px rgba(45, 58, 50, .1);
+    }
+
+    html.native-performance .view.active {
+        animation-duration: .16s;
+    }
+
+    html.native-performance .panel,
+    html.native-performance .metric-card,
+    html.native-performance .mini-metric,
+    html.native-performance .record-card,
+    html.native-performance .protocol-card,
+    html.native-performance .cell-culture-card {
+        contain: paint;
+        box-shadow: none;
+    }
+}
