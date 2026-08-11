@@ -163,8 +163,12 @@
         return Boolean(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
     }
 
+    function isDesktopApp() {
+        return Boolean(window.RhineLabDesktop && typeof window.RhineLabDesktop.onAuthCallback === 'function');
+    }
+
     function authRedirectUrl() {
-        return isNativeApp() ? NATIVE_AUTH_REDIRECT : location.origin + location.pathname;
+        return isNativeApp() || isDesktopApp() ? NATIVE_AUTH_REDIRECT : location.origin + location.pathname;
     }
 
     function authParameters(url) {
@@ -202,6 +206,13 @@
     }
 
     async function bindNativeAuthCallback() {
+        if (isDesktopApp() && supabase) {
+            window.RhineLabDesktop.onAuthCallback(function (url) {
+                acceptNativeAuthUrl(url).catch(function (error) {
+                    setStatus('error', '登录失败', readableError(error, '无法完成桌面应用登录。'));
+                });
+            });
+        }
         if (!isNativeApp() || !supabase) return;
         const nativeAppPlugin = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
         if (!nativeAppPlugin) return;

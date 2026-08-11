@@ -5,7 +5,7 @@
 
     function startApplication() {
         const script = document.createElement('script');
-        script.src = 'js/rhine-lab.js';
+        script.src = 'js/rhine-lab.js?v=20260811-2';
         script.defer = true;
         document.body.appendChild(script);
     }

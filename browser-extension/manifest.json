@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Rhine Lab Workspace",
+  "version": "0.1.3",
+  "description": "Open the Rhine Lab workspace from Chrome or Microsoft Edge.",
+  "action": {
+    "default_title": "Open Rhine Lab",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "tabs"
+  ],
+  "homepage_url": "https://halleylab.github.io/Rhine_Lab/"
+}

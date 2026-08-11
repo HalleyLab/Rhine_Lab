@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v31';
+const CACHE_NAME = 'rhine-lab-pages-v32';
 const APP_SHELL = [
     './',
     './index.html',
