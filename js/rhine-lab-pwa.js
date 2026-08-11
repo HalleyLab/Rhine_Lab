@@ -5,6 +5,7 @@
     const capacitor = window.Capacitor;
     const nativeApp = Boolean(capacitor && typeof capacitor.isNativePlatform === 'function' && capacitor.isNativePlatform());
     const installButton = document.getElementById('installAppButton');
+    const bootScreen = document.getElementById('appBootScreen');
 
     if (nativeApp) {
         document.documentElement.classList.add('native-app', 'native-performance');
@@ -15,6 +16,21 @@
         };
         updateVisibilityClass();
         document.addEventListener('visibilitychange', updateVisibilityClass, { passive: true });
+
+        let bootFinished = false;
+        const finishBoot = function () {
+            if (bootFinished || !bootScreen) return;
+            bootFinished = true;
+            window.requestAnimationFrame(function () {
+                window.setTimeout(function () {
+                    bootScreen.classList.add('is-hidden');
+                    window.setTimeout(function () { bootScreen.hidden = true; }, 240);
+                }, 120);
+            });
+        };
+
+        window.addEventListener('rhine:ready', finishBoot, { once: true });
+        window.setTimeout(finishBoot, 3500);
 
         const plugins = capacitor.Plugins || {};
         if (plugins.StatusBar) {
@@ -52,7 +68,7 @@
 
     if (!nativeApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js?v=29', { updateViaCache: 'none' }).then(function (registration) {
+            navigator.serviceWorker.register('./sw.js?v=30', { updateViaCache: 'none' }).then(function (registration) {
                 return registration.update();
             }).catch(function () {
                 // The site remains usable if service worker registration is unavailable.

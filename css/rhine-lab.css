@@ -9736,3 +9736,128 @@ html.native-performance.app-backgrounded *::after {
         box-shadow: none;
     }
 }
+
+/* Simplified overview heading and native boot transition. */
+.dashboard-hero {
+    min-height: 0;
+    padding: 30px 36px;
+    background: var(--surface) !important;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--acid-strong);
+    box-shadow: none;
+}
+
+.dashboard-hero::before,
+.dashboard-hero::after,
+.dashboard-hero .hero-atmosphere,
+.dashboard-hero .hero-index {
+    display: none !important;
+}
+
+.app-boot-screen {
+    display: none;
+}
+
+html.native-app .app-boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 12px;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    color: #1f2924;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .78), transparent 42%),
+        #f2f4ed;
+    opacity: 1;
+    transition: opacity .22s ease, visibility .22s ease;
+}
+
+html.native-app .app-boot-screen.is-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.app-boot-screen strong {
+    margin-top: 4px;
+    font: 800 11px/1.2 Helvetica, Arial, sans-serif;
+    letter-spacing: .18em;
+}
+
+.app-boot-screen span {
+    color: #6e7874;
+    font-family: var(--font-cjk);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.boot-loader {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    width: 54px;
+    height: 26px;
+}
+
+.boot-loader i {
+    width: 9px;
+    height: 24px;
+    background: #9bc927;
+    border-radius: 2px;
+    transform: scaleY(.28);
+    transform-origin: center bottom;
+    animation: boot-bar .9s ease-in-out infinite;
+}
+
+.boot-loader i:nth-child(2) { animation-delay: .1s; }
+.boot-loader i:nth-child(3) { animation-delay: .2s; }
+.boot-loader i:nth-child(4) { animation-delay: .3s; }
+
+@keyframes boot-bar {
+    0%, 100% { opacity: .45; transform: scaleY(.28); }
+    48% { opacity: 1; transform: scaleY(1); }
+}
+
+body.dark-theme .app-boot-screen {
+    color: #eef3ef;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 42%),
+        #151c19;
+}
+
+body.dark-theme .app-boot-screen span { color: #aeb8b2; }
+
+@media (prefers-color-scheme: dark) {
+    html.native-app body:not(.dark-theme) .app-boot-screen {
+        color: #eef3ef;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 42%),
+            #151c19;
+    }
+
+    html.native-app body:not(.dark-theme) .app-boot-screen span {
+        color: #aeb8b2;
+    }
+}
+
+@media (max-width: 700px) {
+    .top-actions #themeToggle {
+        display: grid !important;
+        flex: 0 0 34px;
+    }
+
+    .dashboard-hero {
+        min-height: 0;
+        gap: 20px;
+        padding: 24px !important;
+    }
+}
+
+@media (max-width: 430px) {
+    .dashboard-hero {
+        padding: 22px 18px !important;
+    }
+}

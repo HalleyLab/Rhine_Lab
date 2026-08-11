@@ -345,6 +345,7 @@
         });
         window.addEventListener('rhine:languagechange', handleLanguageChange);
         startCloudSync();
+        window.dispatchEvent(new CustomEvent('rhine:ready'));
     }
 
     function startUiTimers() {
