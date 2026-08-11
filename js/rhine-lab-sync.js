@@ -15,6 +15,10 @@
         account: document.getElementById('syncAccount'),
         accountEmail: document.getElementById('syncAccountEmail'),
         accountRole: document.getElementById('syncAccountRole'),
+        memberDirectory: document.getElementById('labMemberDirectory'),
+        memberList: document.getElementById('labMemberList'),
+        memberCount: document.getElementById('labMemberCount'),
+        refreshMembers: document.getElementById('refreshLabMembers'),
         message: document.getElementById('syncMessage'),
         signOut: document.getElementById('syncSignOut'),
         entrySaveStatus: document.getElementById('entrySaveStatus'),
@@ -33,6 +37,7 @@
     let saveTimer = null;
     let applyingRemote = false;
     let started = false;
+    let loadedMemberDirectoryFor = '';
 
     function configured() {
         return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
@@ -63,10 +68,63 @@
             const role = membership && membership.role;
             ui.accountRole.textContent = role === 'owner' ? 'LAB 所有者' : role === 'manager' ? 'LAB 管理员' : role === 'member' ? 'LAB 成员 · 只读共用区' : '仅个人工作区';
         }
+        const canViewMemberDirectory = signedIn && roleCanWriteLab();
+        if (ui.memberDirectory) ui.memberDirectory.hidden = !canViewMemberDirectory;
+        if (!canViewMemberDirectory) loadedMemberDirectoryFor = '';
     }
 
     function roleCanWriteLab() {
         return Boolean(membership && (membership.role === 'owner' || membership.role === 'manager'));
+    }
+    function memberRoleLabel(role) {
+        return role === 'owner' ? 'LAB 所有者' : role === 'manager' ? 'LAB 管理员' : 'LAB 成员';
+    }
+
+    function renderLabMembers(items) {
+        if (!ui.memberList) return;
+        ui.memberList.replaceChildren();
+        if (ui.memberCount) ui.memberCount.textContent = String(items.length);
+        if (!items.length) {
+            const empty = document.createElement('p');
+            empty.textContent = '尚未绑定任何邮箱。';
+            ui.memberList.appendChild(empty);
+            return;
+        }
+        items.forEach(function (member) {
+            const row = document.createElement('article');
+            row.className = 'lab-member-item';
+            const email = document.createElement('strong');
+            email.textContent = member.email || '—';
+            const role = document.createElement('span');
+            role.textContent = memberRoleLabel(member.role);
+            const joined = document.createElement('time');
+            joined.dateTime = member.created_at || '';
+            joined.textContent = member.created_at ? new Date(member.created_at).toLocaleDateString(window.RhineLabI18n ? window.RhineLabI18n.getLocale() : 'zh-CN') : '—';
+            row.append(email, role, joined);
+            ui.memberList.appendChild(row);
+        });
+    }
+
+    async function loadLabMembers(force) {
+        if (!supabase || !membership || !roleCanWriteLab() || !ui.memberDirectory || !ui.memberList) return;
+        const labId = membership.lab_id;
+        if (!force && loadedMemberDirectoryFor === labId) return;
+        ui.memberDirectory.hidden = false;
+        ui.memberList.replaceChildren();
+        const loading = document.createElement('p');
+        loading.textContent = '正在读取 LAB 成员…';
+        ui.memberList.appendChild(loading);
+        if (ui.memberCount) ui.memberCount.textContent = '…';
+        try {
+            const result = await supabase.rpc('list_lab_member_emails', { target_lab_id: labId });
+            if (result.error) throw result.error;
+            loadedMemberDirectoryFor = labId;
+            renderLabMembers(result.data || []);
+        } catch (_error) {
+            loadedMemberDirectoryFor = '';
+            if (ui.memberCount) ui.memberCount.textContent = '!';
+            loading.textContent = '无法读取成员邮箱，请先执行数据库迁移 002_lab_member_directory.sql。';
+        }
     }
 
     function updateAccess() {
@@ -80,7 +138,7 @@
             });
         }
         if (!user) {
-            setStatus('local', '仅此设备', configured() ? '登录后即可在电脑与手机之间同步。' : '云同步尚未配置；页面仍可作为本地工作台使用。');
+            setStatus('local', '登录 / 同步', configured() ? '登录后即可在电脑与手机之间同步。' : '云同步尚未配置；页面仍可作为本地工作台使用。');
         } else if (currentScope === 'lab' && !membership) {
             setStatus('warning', '无 LAB 权限', '此账户尚未加入 LAB；个人工作区仍会正常同步。');
         } else if (labReadOnly) {
@@ -192,6 +250,7 @@
     async function handleSession(session) {
         user = session && session.user ? session.user : null;
         membership = null;
+        loadedMemberDirectoryFor = '';
         await leaveChannel();
         if (!user) {
             updateAccess();
@@ -205,6 +264,7 @@
             if (result.error) throw result.error;
             membership = result.data || null;
             updateAccess();
+            await loadLabMembers();
             await switchScope(currentScope);
         } catch (error) {
             updateAccountUi();
@@ -436,6 +496,11 @@
                 if (ui.dialog && ui.dialog.open) ui.dialog.close();
             });
         }
+        if (ui.refreshMembers) {
+            ui.refreshMembers.addEventListener('click', function () {
+                loadLabMembers(true);
+            });
+        }
         window.addEventListener('online', function () {
             updateAccess();
             flush();
@@ -456,6 +521,7 @@
             ui.description.textContent = '无需设置密码；系统会向邮箱发送一次性登录链接。';
         }
         if (ui.dialog && !ui.dialog.open) ui.dialog.showModal();
+        loadLabMembers();
     }
 
     function readableError(error, fallback) {

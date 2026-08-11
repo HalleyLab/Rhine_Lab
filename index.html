@@ -12,9 +12,14 @@
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-lab-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260810-2">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260811-1">
 </head>
 <body>
+    <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
+        <div class="boot-loader" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <strong>LOADING WORKSPACE</strong>
+        <span>正在准备工作区</span>
+    </div>
     <a class="skip-link" href="#mainContent">跳至主要内容</a>
 
     <div class="app-shell">
@@ -55,8 +60,8 @@
                     <kbd>CTRL K</kbd>
                 </label>
                 <div class="top-actions">
-                    <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="syncDialog" aria-haspopup="dialog">
-                        <i aria-hidden="true"></i><span id="syncStatusLabel">仅此设备</span>
+                    <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="syncDialog" aria-haspopup="dialog" aria-label="登录或管理设备同步" title="登录或管理设备同步">
+                        <i aria-hidden="true"></i><span id="syncStatusLabel">登录 / 同步</span>
                     </button>
                     <div class="workspace-mode-toggle" id="workspaceModeToggle" aria-label="切换工作区范围">
                         <button class="active" type="button" data-workspace-mode="personal">个人</button>
@@ -115,7 +120,6 @@
                             <span class="light-arc arc-one"></span><span class="light-arc arc-two"></span>
                             <i></i><i></i><i></i><i></i><i></i><i></i>
                         </div>
-                        <div class="hero-index" aria-hidden="true"><small>SECTION</small><strong>01</strong><span>RL / OPS</span></div>
                     </div>
 
                     <div class="metrics-grid" id="metricsGrid"></div>
@@ -164,7 +168,7 @@
 
                 <section class="view" id="view-results" data-title="实验结果">
                     <div class="page-heading technical-heading">
-                        <div><p class="eyebrow"><span>EXPERIMENT OUTCOMES</span></p><h1>实验结果</h1><p class="story-quote">“理论上说，这确实是可行的......”<cite>——塞雷娅</cite></p></div>
+                        <div><p class="eyebrow"><span>EXPERIMENT RESULTS</span></p><h1>实验结果</h1><p class="story-quote">“理论上说，这确实是可行的......”<cite>——塞雷娅</cite></p></div>
                         <button class="button primary" type="button" data-add="result"><span>＋</span> 填写实验结果</button>
                         <div class="heading-code">03</div>
                     </div>
@@ -298,7 +302,7 @@
     </div>
 
     <dialog class="entry-dialog" id="entryDialog">
-        <form id="entryForm" method="dialog">
+        <form id="entryForm" method="dialog" novalidate>
             <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭">×</button></header>
             <div class="form-grid" id="dialogFields"></div>
             <footer><p><span class="pulse-dot"></span> <span id="entrySaveStatus">数据将先保存到本机缓存</span></p><div><button class="button ghost" type="button" data-close-dialog>取消</button><button class="button primary" id="entrySubmitButton" type="submit">确认保存</button></div></footer>
@@ -323,6 +327,14 @@
                 <div><small>已登录账户</small><strong id="syncAccountEmail">—</strong></div>
                 <div><small>LAB 权限</small><strong id="syncAccountRole">个人工作区</strong></div>
             </section>
+            <section class="lab-member-directory" id="labMemberDirectory" hidden>
+                <div class="lab-member-directory-head">
+                    <div><small>LAB MEMBER DIRECTORY</small><strong>LAB 绑定邮箱</strong><span>仅 LAB 所有者和管理员可查看</span></div>
+                    <div><b id="labMemberCount">0</b><button class="button ghost compact" id="refreshLabMembers" type="button">刷新</button></div>
+                </div>
+                <div class="lab-member-list" id="labMemberList" aria-label="成员邮箱列表" aria-live="polite"><p>正在读取 LAB 成员…</p></div>
+            </section>
+
             <p class="sync-message" id="syncMessage">云同步尚未配置；页面仍可作为本地工作台使用。</p>
             <footer>
                 <button class="button ghost" id="installAppButton" type="button" hidden>安装到此设备</button>

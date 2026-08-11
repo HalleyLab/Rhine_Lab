@@ -227,8 +227,14 @@
     let freezerScanDetected = new Set();
     let freezerScanPhotoData = '';
     let scheduleDrag = null;
+    let scheduleDragFrame = 0;
+    let scheduleDragPointer = null;
     let toastTimer = null;
     let runInputSaveTimer = null;
+    let greetingTimer = 0;
+    let themeTimer = 0;
+    let runDisplayTimer = 0;
+    let protocolOcrLoader = null;
 
     const els = {
         breadcrumb: document.getElementById('breadcrumbLabel'),
@@ -322,19 +328,40 @@
         applySavedTheme();
         applyWorkspaceMode();
         setTodayLabels();
-        window.setInterval(updateTimeGreeting, 60000);
-        window.setInterval(applyTimeThemeIfAutomatic, 60000);
-        window.setInterval(updateRunTimerDisplay, 1000);
+        startUiTimers();
         saveState();
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
         window.addEventListener('focus', applyTimeThemeIfAutomatic);
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) applyTimeThemeIfAutomatic();
+            if (document.hidden) {
+                stopUiTimers();
+                return;
+            }
+            applyTimeThemeIfAutomatic();
+            updateTimeGreeting();
+            updateRunTimerDisplay();
+            startUiTimers();
         });
         window.addEventListener('rhine:languagechange', handleLanguageChange);
         startCloudSync();
+        window.dispatchEvent(new CustomEvent('rhine:ready'));
+    }
+
+    function startUiTimers() {
+        if (!greetingTimer) greetingTimer = window.setInterval(updateTimeGreeting, 60000);
+        if (!themeTimer) themeTimer = window.setInterval(applyTimeThemeIfAutomatic, 60000);
+        if (!runDisplayTimer) runDisplayTimer = window.setInterval(updateRunTimerDisplay, 1000);
+    }
+
+    function stopUiTimers() {
+        window.clearInterval(greetingTimer);
+        window.clearInterval(themeTimer);
+        window.clearInterval(runDisplayTimer);
+        greetingTimer = 0;
+        themeTimer = 0;
+        runDisplayTimer = 0;
     }
 
     function handleLanguageChange() {
@@ -454,7 +481,9 @@
 
         data.reagents = data.reagents.map(function (reagent) {
             const profile = reagentProfiles[reagent.catalog] || { totalQty: 100, unit: reagent.unit || 'mL' };
-            const totalQty = positiveNumber(reagent.totalQty, profile.totalQty);
+            const parsedTotalQty = Number(reagent.totalQty);
+            const totalQty = reagent.totalQty == null || reagent.totalQty === ''
+                ? profile.totalQty : Math.max(0, Number.isFinite(parsedTotalQty) ? parsedTotalQty : 0);
             const currentQty = reagent.currentQty == null ? roundQuantity(totalQty * number(reagent.amount, 0, 100) / 100) : positiveNumber(reagent.currentQty, 0);
             return Object.assign({}, reagent, {
                 totalQty: totalQty,
@@ -790,7 +819,10 @@
 
             const addReagentRow = event.target.closest('[data-add-reagent-row]');
             if (addReagentRow) {
-                document.getElementById('protocolReagentRows').insertAdjacentHTML('beforeend', reagentUsageRowHtml());
+                const rows = document.getElementById('protocolReagentRows');
+                const empty = rows.querySelector('[data-empty-protocol-reagents]');
+                if (empty) empty.remove();
+                rows.insertAdjacentHTML('beforeend', reagentUsageRowHtml());
                 return;
             }
 
@@ -906,6 +938,16 @@
                 return;
             }
 
+            if (event.target.closest('[data-recognize-protocol-photo]')) {
+                recognizeProtocolPhoto();
+                return;
+            }
+
+            if (event.target.closest('[data-apply-protocol-ocr]')) {
+                applyProtocolOcrText();
+                return;
+            }
+
             const clearPhoto = event.target.closest('[data-clear-photo]');
             if (clearPhoto) {
                 const capture = clearPhoto.closest('.photo-capture');
@@ -914,6 +956,12 @@
                 capture.querySelector('[data-photo-preview]').innerHTML = '<span>尚未选择照片</span>';
                 capture.querySelector('[data-photo-status]').textContent = '照片只在当前设备中压缩保存';
                 pendingPhotoData = '';
+                const recognizeButton = capture.querySelector('[data-recognize-protocol-photo]');
+                const ocrResult = capture.querySelector('[data-protocol-ocr-result]');
+                const ocrText = capture.querySelector('[data-protocol-ocr-text]');
+                if (recognizeButton) recognizeButton.disabled = true;
+                if (ocrResult) ocrResult.hidden = true;
+                if (ocrText) ocrText.value = '';
                 return;
             }
 
@@ -1571,9 +1619,9 @@
         });
         const metrics = [
             { label: '库存品类', value: state.reagents.length, code: 'SKU' },
-            { label: '余量低', value: state.reagents.filter(item => getTheoreticalPercent(item) < 25).length, code: 'LOW' },
+            { label: '余量低', value: state.reagents.filter(item => positiveNumber(item.totalQty, 0) > 0 && getTheoreticalPercent(item) < 25).length, code: 'LOW' },
             { label: '临近效期', value: state.reagents.filter(item => item.status === '临期').length, code: 'EXP' },
-            { label: '存储区域', value: new Set(state.reagents.map(item => item.location.split('/')[0].trim())).size, code: 'LOC' }
+            { label: '存储区域', value: new Set(state.reagents.map(item => String(item.location || '').split('/')[0].trim()).filter(Boolean)).size, code: 'LOC' }
         ];
         document.getElementById('reagentMetrics').innerHTML = miniMetricsHtml(metrics);
         document.getElementById('reagentTable').innerHTML = items.map(function (item) {
@@ -2124,20 +2172,36 @@
 
     function updateScheduleDrag(event) {
         if (!scheduleDrag) return;
-        const slotIndex = scheduleSlotIndexFromPointer(event);
+        scheduleDragPointer = { target: event.target, clientY: event.clientY };
+        if (scheduleDragFrame) return;
+        scheduleDragFrame = window.requestAnimationFrame(flushScheduleDrag);
+    }
+
+    function flushScheduleDrag() {
+        scheduleDragFrame = 0;
+        if (!scheduleDrag || !scheduleDragPointer) return;
+        const slotIndex = scheduleSlotIndexFromPointer(scheduleDragPointer);
+        scheduleDragPointer = null;
         if (slotIndex < 0) return;
+        if (slotIndex === scheduleDrag.currentIndex) return;
         scheduleDrag.currentIndex = slotIndex;
         highlightScheduleDrag();
     }
 
     function finishScheduleDrag() {
         if (!scheduleDrag) return;
+        if (scheduleDragFrame) {
+            window.cancelAnimationFrame(scheduleDragFrame);
+            scheduleDragFrame = 0;
+            flushScheduleDrag();
+        }
         const first = Math.min(scheduleDrag.startIndex, scheduleDrag.currentIndex);
         const last = Math.max(scheduleDrag.startIndex, scheduleDrag.currentIndex);
         const start = minutesToTime(8 * 60 + first * 30);
         const end = minutesToTime(8 * 60 + (last + 1) * 30);
         pendingTaskDefaults = { date: toIsoDate(calendarDate), time: start, end: end };
         scheduleDrag = null;
+        scheduleDragPointer = null;
         document.getElementById('dayTimeline').classList.remove('dragging');
         document.querySelectorAll('[data-calendar-slot].selecting').forEach(item => item.classList.remove('selecting'));
         window.setTimeout(function () { openEntryDialog('task'); }, 0);
@@ -2173,9 +2237,10 @@
             if (!reagent) return '<tr><td>' + esc(usage.catalog) + '</td><td>' + formatQuantity(usage.amount) + ' / 次</td><td>库存未登记</td></tr>';
             return '<tr><td><strong>' + esc(reagent.name) + '</strong><small>' + esc(reagent.catalog) + '</small></td><td>' + formatQuantity(usage.amount) + ' ' + esc(reagent.unit) + ' / 次</td><td>' + formatQuantity(getTheoreticalRemaining(reagent)) + ' ' + esc(reagent.unit) + '</td></tr>';
         }).join('');
+        const protocolPhoto = protocol.photoData ? '<figure class="record-detail-photo protocol-source-photo"><img src="' + esc(protocol.photoData) + '" alt="' + esc(protocol.title) + ' 的原始方案照片"><figcaption>录入 Protocol 时保留的原始照片</figcaption></figure>' : '';
         els.protocolDetailNumber.textContent = protocol.number + ' · ' + protocol.tag + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
-        els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p><section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
+        els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p>' + protocolPhoto + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
         els.protocolDetailUsage.textContent = '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
@@ -2943,6 +3008,7 @@
     }
 
 function getReagentDisplayStatus(reagent) {
+    if (!positiveNumber(reagent.totalQty, 0)) return reagent.status || '待补充';
     if (getTheoreticalPercent(reagent) < 25) return '余量低';
     return reagent.status;
 }
@@ -3358,6 +3424,9 @@ function getReagentDisplayStatus(reagent) {
         els.dialogTitle.textContent = editOptions ? '编辑' + recordTypeLabel(type) + '信息' : schema.title;
         els.entrySubmitButton.textContent = editOptions ? '保存修改' : '确认保存';
         els.dialogFields.innerHTML = schema.fields.map(fieldHtml).join('');
+        if (!editOptions) {
+            els.dialogFields.insertAdjacentHTML('afterbegin', '<p class="entry-optional-note">所有字段均可留空；系统会自动生成内部编号，之后可继续编辑补充。</p>');
+        }
         if (type === 'result') renderPendingResultAttachments();
         if (type === 'task') {
             els.dialogFields.insertAdjacentHTML('afterbegin', '<aside class="schedule-overlap-note"><span>↔</span><div><strong>支持重叠日程</strong><p>同一时间可以安排多个事件；每日视图会自动并排显示。</p></div></aside>');
@@ -3409,7 +3478,7 @@ function getReagentDisplayStatus(reagent) {
 
     function fieldHtml(config) {
         const className = 'form-field' + (config.full ? ' full' : '');
-        const required = config.required ? ' required' : '';
+        const required = '';
         let control = '';
         if (config.type === 'select') {
             const options = config.placeholderOrOptions.map(function (option) {
@@ -3442,9 +3511,12 @@ function getReagentDisplayStatus(reagent) {
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select>';
         } else if (config.type === 'reagent-list') {
-            control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows">' + reagentUsageRowHtml() + '</div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
+            control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
-            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p></div>';
+            const protocolRecognition = activeDialogType === 'protocol'
+                ? '<div class="protocol-photo-recognition"><button type="button" data-recognize-protocol-photo disabled>识别文字并预填</button><small>识别中英文印刷文字；首次使用需联网加载模型。原照片会随 Protocol 一并保留。</small><details class="protocol-ocr-result" data-protocol-ocr-result hidden open><summary>识别文字（可修正后再次预填）</summary><textarea data-protocol-ocr-text aria-label="Protocol 照片识别文字"></textarea><button type="button" data-apply-protocol-ocr>使用修正后的文字预填</button></details></div>'
+                : '';
+            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p>' + protocolRecognition + '</div>';
         } else if (config.type === 'file-attachments') {
             control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
@@ -3463,24 +3535,21 @@ function getReagentDisplayStatus(reagent) {
         if (!input) return;
         const custom = select.value === '__custom__';
         input.hidden = !custom;
-        input.required = custom && select.required;
+        input.required = false;
         if (custom && initialValue) input.value = initialValue;
         if (!custom) input.value = '';
         if (custom && focusInput) window.setTimeout(function () { input.focus(); }, 0);
     }
 
     function resolveCustomSelectValues(data) {
-        let valid = true;
         els.entryForm.querySelectorAll('[data-custom-select]').forEach(function (select) {
             const customName = select.name + 'Custom';
             if (data[select.name] === '__custom__') {
                 data[select.name] = String(data[customName] || '').trim();
-                if (!data[select.name]) valid = false;
             }
             delete data[customName];
         });
-        if (!valid) showToast('请填写自定义选项内容');
-        return valid;
+        return true;
     }
 
     function reagentUsageRowHtml() {
@@ -3560,7 +3629,13 @@ function getReagentDisplayStatus(reagent) {
             pendingPhotoData = dataUrl;
             capture.querySelector('input[type="hidden"]').value = dataUrl;
             preview.innerHTML = '<img src="' + dataUrl + '" alt="待保存的录入照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
-            status.textContent = '照片已附加；文字内容请在保存前核对';
+            if (activeDialogType === 'protocol') {
+                const recognizeButton = capture.querySelector('[data-recognize-protocol-photo]');
+                if (recognizeButton) recognizeButton.disabled = false;
+                status.textContent = '照片已保留；可继续识别文字并预填 Protocol';
+            } else {
+                status.textContent = '照片已附加；文字内容请在保存前核对';
+            }
             if (activeDialogType === 'reagent' && 'BarcodeDetector' in window) {
                 try {
                     const detector = new window.BarcodeDetector();
@@ -3579,6 +3654,90 @@ function getReagentDisplayStatus(reagent) {
         } catch (error) {
             status.textContent = '无法读取这张照片，请换一张图片重试';
         }
+    }
+
+    function loadProtocolOcr() {
+        if (window.Tesseract) return Promise.resolve(window.Tesseract);
+        if (protocolOcrLoader) return protocolOcrLoader;
+        protocolOcrLoader = new Promise(function (resolve, reject) {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
+            script.async = true;
+            script.crossOrigin = 'anonymous';
+            script.onload = function () {
+                if (window.Tesseract) resolve(window.Tesseract);
+                else reject(new Error('OCR runtime unavailable'));
+            };
+            script.onerror = function () { reject(new Error('OCR runtime failed to load')); };
+            document.head.appendChild(script);
+        }).catch(function (error) {
+            protocolOcrLoader = null;
+            throw error;
+        });
+        return protocolOcrLoader;
+    }
+
+    async function recognizeProtocolPhoto() {
+        if (activeDialogType !== 'protocol') return;
+        const capture = els.dialogFields.querySelector('.photo-capture');
+        if (!capture) return;
+        const dataUrl = capture.querySelector('input[type="hidden"]').value;
+        const button = capture.querySelector('[data-recognize-protocol-photo]');
+        const status = capture.querySelector('[data-photo-status]');
+        const resultPanel = capture.querySelector('[data-protocol-ocr-result]');
+        const resultText = capture.querySelector('[data-protocol-ocr-text]');
+        if (!dataUrl) {
+            showToast('请先拍照或选择一张 Protocol 图片');
+            return;
+        }
+        button.disabled = true;
+        button.textContent = '正在识别…';
+        status.textContent = '正在加载中英文文字模型…';
+        try {
+            const tesseract = await loadProtocolOcr();
+            const result = await tesseract.recognize(dataUrl, 'chi_sim+eng', {
+                logger: function (message) {
+                    if (message.status === 'recognizing text') {
+                        status.textContent = '正在识别文字 ' + Math.round((message.progress || 0) * 100) + '%';
+                    }
+                }
+            });
+            const text = String(result && result.data && result.data.text || '').trim();
+            if (!text) {
+                status.textContent = '没有识别到清晰文字；照片仍会保留，可手动录入';
+                return;
+            }
+            resultText.value = text;
+            resultPanel.hidden = false;
+            applyProtocolOcrText(text);
+            status.textContent = '文字已识别并预填空白字段；请核对后保存，原照片会一并保留';
+        } catch (error) {
+            status.textContent = '文字识别暂不可用；照片仍会保留，可手动录入后保存';
+        } finally {
+            button.disabled = false;
+            button.textContent = '重新识别文字';
+        }
+    }
+
+    function applyProtocolOcrText(overrideText) {
+        const source = overrideText || (els.dialogFields.querySelector('[data-protocol-ocr-text]') || {}).value || '';
+        const lines = String(source).split(/\r?\n/).map(function (line) {
+            return line.replace(/^\s*(?:[-•◆◇▪]|\(?\d{1,2}[.)、:]|[一二三四五六七八九十]+[、.])\s*/, '').trim();
+        }).filter(Boolean);
+        if (!lines.length) {
+            showToast('识别文字为空，请先识别或粘贴文字');
+            return;
+        }
+        const titleInput = els.entryForm.elements.namedItem('title');
+        const summaryInput = els.entryForm.elements.namedItem('summary');
+        const stepsInput = els.entryForm.elements.namedItem('stepsText');
+        const titleLine = lines.find(function (line) { return line.length >= 3 && line.length <= 80; }) || lines[0];
+        const remaining = lines.filter(function (line, index) { return index > 0 || line !== titleLine; });
+        const stepLines = remaining.filter(function (line) { return line.length >= 2; }).slice(0, 40);
+        if (titleInput && !titleInput.value.trim()) titleInput.value = titleLine;
+        if (summaryInput && !summaryInput.value.trim()) summaryInput.value = remaining.slice(0, 3).join('；');
+        if (stepsInput && !stepsInput.value.trim()) stepsInput.value = (stepLines.length ? stepLines : lines).join('\n');
+        showToast('识别文字已预填，请核对并按需修改');
     }
 
     function compressPhoto(file, maxSize, quality) {
@@ -3602,6 +3761,31 @@ function getReagentDisplayStatus(reagent) {
         });
     }
 
+    function generatedRecordId(prefix) {
+        return prefix + '-' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(2, 5).toUpperCase();
+    }
+
+    function displayOr(value, fallback) {
+        const text = String(value == null ? '' : value).trim();
+        return text || fallback;
+    }
+
+    function firstAvailableSamplePosition(box) {
+        if (!box) return '';
+        const occupied = new Set(state.samples.filter(function (sample) {
+            return sample.boxId === box.id;
+        }).map(function (sample) {
+            return sample.position || samplePosition(sample.location);
+        }));
+        for (let row = 0; row < box.rows; row += 1) {
+            for (let column = 1; column <= box.columns; column += 1) {
+                const position = String.fromCharCode(65 + row) + column;
+                if (!occupied.has(position)) return position;
+            }
+        }
+        return '';
+    }
+
     function saveEntryFromDialog(event) {
         event.preventDefault();
         if (denyReadOnlyMutation()) return;
@@ -3616,28 +3800,44 @@ function getReagentDisplayStatus(reagent) {
         let activityText = '';
 
         if (activeDialogType === 'experiment') {
-            data.id = 'RL-EXP-' + String(27 + state.experiments.length).padStart(3, '0');
+            data.id = generatedRecordId('RL-EXP');
+            data.title = displayOr(data.title, '未命名实验');
+            data.project = String(data.project || '').trim();
+            data.status = displayOr(data.status, '进行中');
+            data.type = displayOr(data.type, '未分类');
+            data.date = data.date || todayIso();
+            data.description = String(data.description || '').trim();
             data.progress = data.status === '已完成' ? 100 : 12;
             data.reagentUsage = [];
             data.usageOverridden = false;
             state.experiments.unshift(data);
             activityText = '新建实验记录“' + data.title + '”';
         } else if (activeDialogType === 'result') {
-            const experiment = state.experiments.find(item => item.id === data.experimentId);
+            let experiment = state.experiments.find(item => item.id === data.experimentId);
             if (!experiment) {
-                showToast('请选择一条有效的实验记录');
-                return;
+                experiment = {
+                    id: generatedRecordId('RL-EXP'), title: '未命名实验', project: '', status: '进行中', type: '未分类',
+                    date: data.date || todayIso(), protocolId: '', description: '', progress: 0, reagentUsage: [],
+                    usageOverridden: false, photoData: '', createdBy: data.createdBy
+                };
+                state.experiments.unshift(experiment);
+                data.experimentId = experiment.id;
             }
             if (state.results.some(item => item.experimentId === data.experimentId)) {
                 showToast('这条实验记录已经有对应结果，可直接编辑原结果');
                 return;
             }
-            data.id = 'RL-RES-' + Date.now().toString().slice(-8);
+            data.id = generatedRecordId('RL-RES');
+            data.date = data.date || experiment.date || todayIso();
+            data.summary = String(data.summary || '').trim();
+            data.conclusion = String(data.conclusion || '').trim();
+            data.nextStep = String(data.nextStep || '').trim();
             data.attachments = clone(pendingResultAttachments);
             data.history = [createdHistoryEntry()];
             state.results.unshift(data);
             activityText = '填写“' + experiment.title + '”的实验结果';
         } else if (activeDialogType === 'mouse') {
+            data.id = displayOr(data.id, generatedRecordId('ANM'));
             if (state.mice.some(item => item.id === data.id)) {
                 showToast('该动物编号已存在，请使用新的编号');
                 return;
@@ -3646,21 +3846,25 @@ function getReagentDisplayStatus(reagent) {
             state.mice.unshift(data);
             activityText = '登记实验动物 ' + data.id;
         } else if (activeDialogType === 'reagent') {
+            data.catalog = displayOr(data.catalog, generatedRecordId('REAG'));
             if (state.reagents.some(item => item.catalog === data.catalog)) {
                 showToast('该试剂货号已存在，可从详情页编辑原条目');
                 return;
             }
-            data.totalQty = positiveNumber(data.totalQty, 100);
+            data.name = displayOr(data.name, '未命名试剂');
+            data.location = String(data.location || '').trim();
+            data.totalQty = positiveNumber(data.totalQty, 0);
             data.currentQty = number(data.currentQty, 0, data.totalQty);
             data.amount = data.totalQty ? number(data.currentQty / data.totalQty * 100, 0, 100) : 0;
-            data.status = data.amount < 25 ? '余量低' : isExpiringSoon(data.expiry) ? '临期' : '正常';
+            data.status = data.totalQty <= 0 ? '待补充' : data.amount < 25 ? '余量低' : isExpiringSoon(data.expiry) ? '临期' : '正常';
             data.history = [createdHistoryEntry()];
             state.reagents.unshift(data);
             activityText = '录入试剂“' + data.name + '”';
         } else if (activeDialogType === 'sample') {
-            const box = state.freezerBoxes.find(item => item.id === data.boxId);
-            const position = samplePosition(data.position);
-            if (!box || !isValidBoxPosition(box, position)) {
+            data.id = displayOr(data.id, generatedRecordId('SMP'));
+            const box = state.freezerBoxes.find(item => item.id === data.boxId) || state.freezerBoxes[0];
+            const position = samplePosition(data.position) || firstAvailableSamplePosition(box);
+            if (position && (!box || !isValidBoxPosition(box, position))) {
                 showToast('盒内位置格式不正确或超出当前冻存盒范围');
                 return;
             }
@@ -3668,21 +3872,26 @@ function getReagentDisplayStatus(reagent) {
                 showToast('该样本编号已存在，可从详情页编辑原条目');
                 return;
             }
-            const occupied = state.samples.some(item => item.boxId === box.id && item.position === position);
+            const occupied = box && position && state.samples.some(item => item.boxId === box.id && item.position === position);
             if (occupied) {
                 showToast('该冻存盒位置已被占用，请选择其他空位');
                 return;
             }
+            data.type = displayOr(data.type, '未分类');
+            data.date = data.date || todayIso();
+            data.boxId = box ? box.id : '';
             data.position = position;
-            data.location = formatSampleLocation(box, position);
+            data.location = box && position ? formatSampleLocation(box, position) : '未分配位置';
             data.history = [createdHistoryEntry()];
             state.samples.unshift(data);
-            activeFreezerBoxId = box.id;
-            localStorage.setItem('rhineLabActiveFreezerBox', box.id);
+            if (box) {
+                activeFreezerBoxId = box.id;
+                localStorage.setItem('rhineLabActiveFreezerBox', box.id);
+            }
             selectedSampleId = data.id;
             activityText = '样本 ' + data.id + ' 完成入库';
         } else if (activeDialogType === 'protocol') {
-            const code = 'SOP-USR-' + Date.now().toString().slice(-5);
+            const code = generatedRecordId('SOP-USR');
             const catalogs = formData.getAll('reagentCatalog');
             const amounts = formData.getAll('reagentAmount');
             const reagentMap = new Map();
@@ -3691,18 +3900,14 @@ function getReagentDisplayStatus(reagent) {
                 if (catalog && amount > 0) reagentMap.set(catalog, roundQuantity((reagentMap.get(catalog) || 0) + amount));
             });
             const steps = String(data.stepsText || '').split(/\r?\n/).map(item => item.trim()).filter(Boolean);
-            if (!steps.length) {
-                showToast('请至少填写一个实验步骤');
-                return;
-            }
             const protocol = {
                 id: code,
                 number: code + ' · V1.0',
-                title: data.title,
-                summary: data.summary,
+                title: displayOr(data.title, '未命名 Protocol'),
+                summary: String(data.summary || '').trim(),
                 steps: steps,
                 reagents: Array.from(reagentMap, function (entry) { return { catalog: entry[0], amount: entry[1] }; }),
-                tag: data.tag,
+                tag: displayOr(data.tag, '自定义方案'),
                 meta: '本地录入 ' + todayIso(),
                 photoData: data.photoData || '',
                 createdBy: data.createdBy
@@ -3711,10 +3916,12 @@ function getReagentDisplayStatus(reagent) {
             activeProtocolId = protocol.id;
             activityText = '录入 Protocol“' + protocol.title + '”';
         } else if (activeDialogType === 'cell') {
+            data.id = displayOr(data.id, generatedRecordId('CELL'));
             if (state.cellCultures.some(item => item.id === data.id)) {
                 showToast('该培养记录编号已存在，请使用新的编号');
                 return;
             }
+            data.name = displayOr(data.name, '未命名细胞');
             data.vesselCount = Math.max(1, Math.round(positiveNumber(data.vesselCount, 1)));
             data.passage = Math.max(0, Math.round(positiveNumber(data.passage, 0)));
             data.confluence = number(data.confluence, 0, 100);
@@ -3754,28 +3961,34 @@ function getReagentDisplayStatus(reagent) {
             if (log.photoData) culture.photoData = log.photoData;
             activityText = '记录“' + culture.name + '”的' + data.action + '操作';
         } else if (activeDialogType === 'task') {
+            data.date = data.date || todayIso();
+            data.time = data.time || '09:00';
+            data.end = data.end || addMinutes(data.time, 60);
             if (timeToMinutes(data.end) <= timeToMinutes(data.time)) {
                 showToast('结束时间需要晚于开始时间');
                 return;
             }
+            data.title = displayOr(data.title, '未命名日程');
+            data.resource = String(data.resource || '').trim();
+            data.type = displayOr(data.type, 'cell');
             if (data.experimentId) {
                 const linkedExperiment = state.experiments.find(item => item.id === data.experimentId);
                 if (!linkedExperiment) data.experimentId = '';
                 else if (linkedExperiment.protocolId) data.protocolId = linkedExperiment.protocolId;
             }
-            data.id = 'T-' + Date.now().toString().slice(-6);
+            data.id = generatedRecordId('T');
             data.done = false;
             state.schedule.push(data);
             calendarDate = parseLocalDate(data.date);
             activityText = '添加日程“' + data.title + '”';
         } else if (activeDialogType === 'freezer') {
             const box = {
-                id: 'FB-USR-' + Date.now().toString().slice(-6),
-                name: data.name,
-                storageLocation: data.storageLocation,
-                temperature: data.temperature,
-                rows: Math.round(number(data.rows, 4, 12)),
-                columns: Math.round(number(data.columns, 4, 12)),
+                id: generatedRecordId('FB-USR'),
+                name: displayOr(data.name, '未命名冻存盒'),
+                storageLocation: String(data.storageLocation || '').trim(),
+                temperature: displayOr(data.temperature, '-80°C'),
+                rows: Math.round(number(data.rows || 9, 4, 12)),
+                columns: Math.round(number(data.columns || 9, 4, 12)),
                 lastScanPhoto: '',
                 createdBy: data.createdBy
             };
