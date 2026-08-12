@@ -98,8 +98,8 @@ jobs:
       - name: Prepare downloadable package
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Rhine-Lab-0.1.6-internal.apk
-          sha256sum dist/Rhine-Lab-0.1.6-internal.apk > dist/Rhine-Lab-0.1.6-internal.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Rhine-Lab-0.1.7-internal.apk
+          sha256sum dist/Rhine-Lab-0.1.7-internal.apk > dist/Rhine-Lab-0.1.7-internal.apk.sha256
 
       - name: Upload internal test package
         uses: actions/upload-artifact@v4

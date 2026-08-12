@@ -2,6 +2,7 @@
     'use strict';
 
     const STORAGE_KEY = 'rhineLabWorkspaceV1';
+    const INPUT_MEMORY_KEY = 'rhineLabInputMemoryV1';
 
     const defaults = {
         experiments: [
@@ -271,7 +272,6 @@
     let greetingTimer = 0;
     let themeTimer = 0;
     let runDisplayTimer = 0;
-    let protocolOcrLoader = null;
 
     const els = {
         breadcrumb: document.getElementById('breadcrumbLabel'),
@@ -658,8 +658,8 @@
                 id: rack.id || 'RACK-' + String(index + 1).padStart(3, '0'),
                 name: rack.name || '动物笼架 ' + (index + 1),
                 facility: rack.facility || '位置待设置',
-                rows: Math.round(number(rack.rows, 1, 8)) || 4,
-                columns: Math.round(number(rack.columns, 1, 16)) || 8,
+                rows: Math.round(number(rack.rows, 1, 12)) || 4,
+                columns: Math.round(number(rack.columns, 1, 48)) || 8,
                 createdBy: anonymousContributor(rack.createdBy)
             });
         });
@@ -705,7 +705,7 @@
     }
 
     function normalizeAnimalPosition(value) {
-        const match = String(value || '').trim().toUpperCase().match(/^([A-H])[-\s]?(\d{1,2})$/);
+        const match = String(value || '').trim().toUpperCase().match(/^([A-L])[-\s]?(\d{1,2})$/);
         return match ? match[1] + Number(match[2]) : '';
     }
 
@@ -918,7 +918,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1029,6 +1029,24 @@
                 return;
             }
 
+            const deleteRack = event.target.closest('[data-delete-animal-rack]');
+            if (deleteRack) {
+                requestRecordDelete('animalRack', deleteRack.dataset.deleteAnimalRack);
+                return;
+            }
+
+            const deleteCage = event.target.closest('[data-delete-animal-cage]');
+            if (deleteCage) {
+                requestRecordDelete('animalCage', deleteCage.dataset.deleteAnimalCage);
+                return;
+            }
+
+            const deleteTask = event.target.closest('[data-delete-task]');
+            if (deleteTask) {
+                requestRecordDelete('task', deleteTask.dataset.deleteTask);
+                return;
+            }
+
             const animalRack = event.target.closest('[data-animal-rack]');
             if (animalRack) {
                 selectAnimalRack(animalRack.dataset.animalRack);
@@ -1127,16 +1145,6 @@
                 return;
             }
 
-            if (event.target.closest('[data-recognize-protocol-photo]')) {
-                recognizeProtocolPhoto();
-                return;
-            }
-
-            if (event.target.closest('[data-apply-protocol-ocr]')) {
-                applyProtocolOcrText();
-                return;
-            }
-
             const clearPhoto = event.target.closest('[data-clear-photo]');
             if (clearPhoto) {
                 const capture = clearPhoto.closest('.photo-capture');
@@ -1145,12 +1153,6 @@
                 capture.querySelector('[data-photo-preview]').innerHTML = '<span>尚未选择照片</span>';
                 capture.querySelector('[data-photo-status]').textContent = '照片只在当前设备中压缩保存';
                 pendingPhotoData = '';
-                const recognizeButton = capture.querySelector('[data-recognize-protocol-photo]');
-                const ocrResult = capture.querySelector('[data-protocol-ocr-result]');
-                const ocrText = capture.querySelector('[data-protocol-ocr-text]');
-                if (recognizeButton) recognizeButton.disabled = true;
-                if (ocrResult) ocrResult.hidden = true;
-                if (ocrText) ocrText.value = '';
                 return;
             }
 
@@ -1798,7 +1800,7 @@
         tabs.innerHTML = state.animalRacks.map(function (item) {
             const cages = state.animalCages.filter(cage => cage.rackId === item.id);
             const animals = state.mice.filter(animal => cages.some(cage => cage.id === animal.cageId)).length;
-            return '<button class="animal-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-animal-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + cages.length + ' 笼位 · ' + animals + ' 个体</small></button>';
+            return '<div class="animal-rack-tab-wrap"><button class="animal-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-animal-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + cages.length + ' 笼位 · ' + animals + ' 个体</small></button><button class="animal-rack-delete" type="button" data-delete-animal-rack="' + esc(item.id) + '" aria-label="删除笼架" title="删除笼架">×</button></div>';
         }).join('');
         const cages = state.animalCages.filter(item => item.rackId === rack.id);
         const cageByPosition = new Map(cages.map(item => [item.position, item]));
@@ -1834,7 +1836,7 @@
         const animalRows = animals.map(function (animal) {
             return '<button class="animal-cage-animal" type="button" data-mouse-id="' + esc(animal.id) + '"><strong>' + esc(animal.id) + ' · ' + esc(animal.species) + '</strong><small>' + esc(animal.strain || '品系未设置') + ' · ' + esc(animal.status || '在养') + '</small><b>→</b></button>';
         }).join('') || '<p class="search-empty">此笼位尚无动物条目。</p>';
-        inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>建议物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button></div>';
+        inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>建议物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><div class="animal-cage-buttons"><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button><button class="button danger" type="button" data-delete-animal-cage="' + esc(cage.id) + '">删除笼位</button></div></div>';
     }
 
     function selectAnimalRack(id) {
@@ -1878,36 +1880,41 @@
         if (!els.cellCultureGrid) return;
         const search = valueOf('cellSearch').toLowerCase();
         const items = state.cellCultures.filter(function (culture) {
-            return [culture.id, culture.name, culture.species, culture.medium, culture.container, culture.incubator, culture.status].join(' ').toLowerCase().includes(search);
+            return [culture.id, culture.name, culture.species, culture.medium, culture.container, culture.incubator].join(' ').toLowerCase().includes(search);
         });
-        const today = todayIso();
-        const dueCount = state.cellCultures.filter(culture => culture.nextAction && culture.nextAction <= today && culture.status !== '已结束').length;
-        const totalVessels = state.cellCultures.reduce((sum, culture) => sum + positiveNumber(culture.vesselCount, 0), 0);
-        const highConfluence = state.cellCultures.filter(culture => positiveNumber(culture.confluence, 0) >= 80 && culture.status !== '已结束').length;
+        const historyCount = state.cellCultures.reduce(function (sum, culture) {
+            return sum + (Array.isArray(culture.history) ? culture.history.length : 0);
+        }, 0);
+        const locationCount = new Set(state.cellCultures.map(culture => culture.incubator).filter(Boolean)).size;
+        const averageConfluence = state.cellCultures.length
+            ? Math.round(state.cellCultures.reduce((sum, culture) => sum + number(culture.confluence, 0, 100), 0) / state.cellCultures.length)
+            : 0;
         els.cellMaintenanceMetrics.innerHTML = miniMetricsHtml([
-            { label: '培养中细胞', value: state.cellCultures.filter(culture => culture.status !== '已结束').length, code: 'LIVE' },
-            { label: '今日待操作', value: dueCount, code: 'DUE' },
-            { label: '培养容器', value: totalVessels, code: 'VES' },
-            { label: '高汇合度', value: highConfluence, code: 'CNF' }
+            { label: '登记细胞', value: state.cellCultures.length, code: 'CELL' },
+            { label: '培养记录', value: historyCount, code: 'LOG' },
+            { label: '培养位置', value: locationCount, code: 'LOC' },
+            { label: '平均汇合度', value: averageConfluence + '%', code: 'CNF' }
         ]);
         els.cellCultureGrid.innerHTML = items.map(function (culture) {
-            const due = culture.nextAction && culture.nextAction <= today && culture.status !== '已结束';
-            const status = due ? '待操作' : culture.status;
-            return '<button class="cell-culture-card' + (due ? ' due' : '') + '" type="button" data-cell-id="' + esc(culture.id) + '">' +
-                '<div class="cell-culture-main"> <div class="cell-culture-top"><span class="micro-label">' + esc(culture.id) + contributorInline(culture) + '</span><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></div>' +
+            return '<button class="cell-culture-card" type="button" data-cell-id="' + esc(culture.id) + '">' +
+                '<div class="cell-culture-main"><div class="cell-culture-top"><span class="micro-label">' + esc(culture.id) + contributorInline(culture) + '</span></div>' +
                 '<h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · P' + esc(culture.passage) + '</p>' +
-                '<div class="cell-container-line"><span>容器</span><strong>' + esc(culture.vesselCount) + ' × ' + esc(interfaceText(culture.container)) + '</strong></div>' +
+                '<div class="cell-container-line"><span>培养容器</span><strong>' + esc(interfaceText(culture.container || '未填写')) + '</strong></div>' +
+                '<div class="cell-container-line"><span>培养基</span><strong>' + esc(culture.medium || '未填写') + '</strong></div>' +
                 '<div class="cell-confluence"><span><b>汇合度</b><strong>' + esc(culture.confluence) + '%</strong></span><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div></div>' +
-                '<footer><span>下次操作 <b>' + esc(culture.nextAction || '待安排') + '</b></span><strong>查看培养记录 →</strong></footer></div></button>';
+                '<footer><span>' + esc(culture.incubator || '培养条件未填写') + '</span><strong>查看培养记录 →</strong></footer></div></button>';
         }).join('') || '<div class="empty-card cell-empty-card"><strong>尚未登记培养中的细胞</strong><p>点击“登记细胞”记录细胞系、容器、代次与培养条件。</p></div>';
 
-        const queue = state.cellCultures.filter(culture => culture.status !== '已结束').slice().sort(function (a, b) {
-            return String(a.nextAction || '9999').localeCompare(String(b.nextAction || '9999'));
+        const recentLogs = state.cellCultures.flatMap(function (culture) {
+            return (Array.isArray(culture.history) ? culture.history : []).map(function (entry) {
+                return { culture: culture, entry: entry };
+            });
+        }).sort(function (left, right) {
+            return String(right.entry.date || '').localeCompare(String(left.entry.date || ''));
         }).slice(0, 6);
-        els.cellMaintenanceQueue.innerHTML = queue.map(function (culture) {
-            const due = culture.nextAction && culture.nextAction <= today;
-            return '<button class="cell-queue-item' + (due ? ' due' : '') + '" type="button" data-cell-id="' + esc(culture.id) + '"><time>' + esc(shortDate(culture.nextAction)) + '</time><span><strong>' + esc(culture.name) + '</strong><small>P' + esc(culture.passage) + ' · ' + esc(interfaceText(culture.container)) + '</small></span><b>' + (due ? '!' : '→') + '</b></button>';
-        }).join('') || '<p class="search-empty">暂无待处理的培养操作。</p>';
+        els.cellMaintenanceQueue.innerHTML = recentLogs.map(function (item) {
+            return '<button class="cell-queue-item" type="button" data-cell-id="' + esc(item.culture.id) + '"><time>' + esc(shortDate(item.entry.date)) + '</time><span><strong>' + esc(item.culture.name) + '</strong><small>' + esc(item.entry.action || '培养记录') + ' · P' + esc(item.entry.passage) + '</small></span><b>→</b></button>';
+        }).join('') || '<p class="search-empty">暂无培养记录。</p>';
     }
 
     function openCellDetail(id) {
@@ -1915,18 +1922,16 @@
         if (!culture) return;
         activeCellId = culture.id;
         prepareRecordDetail('cell', culture.id);
-        const due = culture.nextAction && culture.nextAction <= todayIso() && culture.status !== '已结束';
-        const status = due ? '待操作' : culture.status;
         const photo = culture.photoData ? '<figure class="record-detail-photo"><img src="' + esc(culture.photoData) + '" alt="' + esc(culture.name) + ' 培养照片"><figcaption>当前培养状态照片</figcaption></figure>' : '';
         const nodeField = workspaceMode === 'lab' ? detailFieldHtml('录入节点', contributorName(culture)) : '';
         els.recordDetailKicker.textContent = 'CELL CULTURE RECORD · ' + culture.id;
         els.recordDetailTitle.textContent = culture.name + ' · P' + culture.passage;
         els.recordDetailBody.innerHTML =
-            '<section class="record-detail-hero cell-detail-hero"><div><span class="record-detail-code">' + esc(culture.id) + '</span><h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · ' + esc(culture.vesselCount) + ' × ' + esc(interfaceText(culture.container)) + '</p></div><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span></section>' +
+            '<section class="record-detail-hero cell-detail-hero"><div><span class="record-detail-code">' + esc(culture.id) + '</span><h3>' + esc(culture.name) + '</h3><p>' + esc(culture.species) + ' · ' + esc(interfaceText(culture.container || '培养容器未填写')) + '</p></div></section>' +
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">CURRENT CULTURE</p><h3>当前培养信息</h3></div><div class="record-detail-grid">' +
                 detailFieldHtml('细胞名称', culture.name, true) + detailFieldHtml('物种 / 来源', culture.species) + detailFieldHtml('当前代次', 'P' + culture.passage) +
-                detailFieldHtml('培养基', culture.medium, true) + detailFieldHtml('培养容器', culture.vesselCount + ' × ' + interfaceText(culture.container)) + detailFieldHtml('培养位置', culture.incubator, true) +
-                detailFieldHtml('当前汇合度', culture.confluence + '%') + detailFieldHtml('下次操作', culture.nextAction) + detailFieldHtml('培养状态', culture.status) + detailFieldHtml('备注', culture.notes, true) + nodeField +
+                detailFieldHtml('培养基', culture.medium, true) + detailFieldHtml('培养容器', interfaceText(culture.container || '未填写')) + detailFieldHtml('培养位置与条件', culture.incubator, true) +
+                detailFieldHtml('当前汇合度', culture.confluence + '%') + detailFieldHtml('备注', culture.notes, true) + nodeField +
             '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>' + esc(interfaceText('汇合度')) + ' ' + esc(culture.confluence) + '%</span></div></section>' +
             '<section class="record-detail-section cell-passage-section"><div class="record-detail-section-title passage-title"><div><p class="micro-label">CULTURE HISTORY</p><h3>传代与培养记录</h3></div><button class="button primary" type="button" data-add-passage>＋ 记录传代 / 操作</button></div>' + cellCultureHistoryHtml(culture) + '</section>' + photo + recordHistoryHtml(culture);
         els.recordDetailDialog.showModal();
@@ -1937,7 +1942,7 @@
         if (!history.length) return '<p class="record-history-empty">暂无培养操作记录。完成第一次传代、换液或观察后，会显示在这里。</p>';
         return '<div class="cell-passage-list">' + history.map(function (entry) {
             const photo = entry.photoData ? '<img src="' + esc(entry.photoData) + '" alt="' + esc(culture.name) + ' ' + esc(entry.action) + '照片">' : '';
-            return '<article class="cell-passage-entry"><div class="cell-passage-date"><time>' + esc(entry.date) + '</time><span>' + esc(entry.action) + '</span></div><div class="cell-passage-content"><header><strong>P' + esc(entry.passage) + '</strong><span>' + esc(entry.vesselCount) + ' × ' + esc(interfaceText(entry.container)) + '</span></header><dl><div><dt>比例 / 接种</dt><dd>' + esc(entry.ratio || '—') + '</dd></div><div><dt>操作后汇合度</dt><dd>' + esc(entry.confluence) + '%</dd></div><div><dt>培养基</dt><dd>' + esc(entry.medium || '—') + '</dd></div></dl><p>' + esc(entry.notes || '未填写备注') + '</p>' + photo + '</div></article>';
+            return '<article class="cell-passage-entry"><div class="cell-passage-date"><time>' + esc(entry.date) + '</time><span>' + esc(entry.action) + '</span></div><div class="cell-passage-content"><header><strong>P' + esc(entry.passage) + '</strong><span>' + esc(interfaceText(entry.container || '培养容器未填写')) + '</span></header><dl><div><dt>比例 / 接种</dt><dd>' + esc(entry.ratio || '—') + '</dd></div><div><dt>操作后汇合度</dt><dd>' + esc(entry.confluence) + '%</dd></div><div><dt>培养基</dt><dd>' + esc(entry.medium || '—') + '</dd></div></dl><p>' + esc(entry.notes || '未填写备注') + '</p>' + photo + '</div></article>';
         }).join('') + '</div>';
     }
 
@@ -2042,7 +2047,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果' }[type] || '记录';
+        return { mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -2051,6 +2056,9 @@
         if (type === 'sample') return state.samples;
         if (type === 'cell') return state.cellCultures;
         if (type === 'result') return state.results;
+        if (type === 'animalRack') return state.animalRacks;
+        if (type === 'animalCage') return state.animalCages;
+        if (type === 'task') return state.schedule;
         return [];
     }
 
@@ -2071,6 +2079,16 @@
         openEntryDialog(target.type, { edit: true, key: target.key, record: record });
     }
 
+    function requestRecordDelete(type, key) {
+        if (denyReadOnlyMutation()) return;
+        const record = findRecord(type, key);
+        if (!record) return;
+        const label = record.name || record.label || record.title || record.id || key;
+        pendingDeleteRecord = { type: type, key: key, label: label };
+        els.deleteRecordName.textContent = interfaceText(recordTypeLabel(type)) + ' “' + label + '”';
+        els.deleteConfirmDialog.showModal();
+    }
+
     function deleteActiveRecord() {
         if (denyReadOnlyMutation() || !activeRecordDetail) return;
         const target = activeRecordDetail;
@@ -2078,7 +2096,7 @@
         const index = collection.findIndex(function (record) { return recordKey(target.type, record) === target.key; });
         if (index < 0) return;
         const record = collection[index];
-        const label = record.name || record.id || record.catalog;
+        const label = record.name || record.label || record.title || record.id || record.catalog;
         pendingDeleteRecord = { type: target.type, key: target.key, label: label };
         els.deleteRecordName.textContent = interfaceText(recordTypeLabel(target.type)) + ' “' + label + '”';
         els.deleteConfirmDialog.showModal();
@@ -2106,6 +2124,29 @@
         if (target.type === 'sample') {
             const nextSample = state.samples.find(item => item.boxId === activeFreezerBoxId) || state.samples[0];
             selectedSampleId = nextSample ? nextSample.id : '';
+        } else if (target.type === 'animalCage') {
+            state.mice.forEach(function (animal) {
+                if (animal.cageId === record.id) {
+                    animal.cageId = '';
+                    animal.cage = '未分配';
+                }
+            });
+            const nextCage = state.animalCages.find(item => item.rackId === record.rackId);
+            selectedAnimalCageId = nextCage ? nextCage.id : '';
+        } else if (target.type === 'animalRack') {
+            const removedCageIds = new Set(state.animalCages.filter(item => item.rackId === record.id).map(item => item.id));
+            state.animalCages = state.animalCages.filter(item => item.rackId !== record.id);
+            state.mice.forEach(function (animal) {
+                if (removedCageIds.has(animal.cageId)) {
+                    animal.cageId = '';
+                    animal.cage = '未分配';
+                }
+            });
+            const nextRack = state.animalRacks[0];
+            activeAnimalRackId = nextRack ? nextRack.id : '';
+            const nextCage = nextRack ? state.animalCages.find(item => item.rackId === nextRack.id) : null;
+            selectedAnimalCageId = nextCage ? nextCage.id : '';
+            localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
         }
         state.activities.unshift({ text: '删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录', time: '刚刚' });
         saveState();
@@ -2250,7 +2291,7 @@
         document.getElementById('protocolGrid').innerHTML = state.protocols.map(function (item) {
             const usageLabel = item.reagents.length ? item.reagents.length + ' 种试剂已关联' : '未关联库存试剂';
             const literatureBadge = item.literatureTitle || item.literatureId || item.literatureUrl ? '<span class="protocol-reference-badge">文献</span>' : '';
-            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><p>' + esc(item.summary) + '</p><div class="protocol-path-preview" aria-label="从准备到归档，共 ' + item.steps.length + ' 个步骤"><span>准备</span><i></i><span>执行</span><i></i><span>质控</span><i></i><span>归档</span><b>' + item.steps.length + ' 步</b></div><footer class="protocol-foot"><span>' + esc(item.tag) + ' · ' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
+            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><p>' + esc(item.summary || '未填写注释') + '</p><div class="protocol-path-preview" aria-label="从准备到归档，共 ' + item.steps.length + ' 个步骤"><span>准备</span><i></i><span>执行</span><i></i><span>质控</span><i></i><span>归档</span><b>' + item.steps.length + ' 步</b></div><footer class="protocol-foot"><span>' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
         }).join('') || '<div class="empty-card">还没有 Protocol，点击“录入 Protocol”开始建立方案库。</div>';
     }
 
@@ -2290,7 +2331,7 @@
             const left = placement.index / placement.count * 100;
             const width = 100 / placement.count;
             const runButton = scheduleRunButtonHtml(item, protocol, true);
-            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
+            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
         });
         document.getElementById('dayTimeline').innerHTML = gridHtml;
 
@@ -2373,7 +2414,7 @@
 
     function scheduleItemHtml(item) {
         const protocol = state.protocols.find(entry => entry.id === item.protocolId);
-        return '<article class="today-item ' + (item.done ? 'done' : '') + '"><time>' + esc(item.time) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
+        return '<article class="today-item ' + (item.done ? 'done' : '') + '"><time>' + esc(item.time) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
     }
 
     function scheduleRunButtonHtml(item, protocol, compact) {
@@ -2413,7 +2454,7 @@
 
     function beginScheduleDrag(event) {
         if (denyReadOnlyMutation(event)) return;
-        if (event.target.closest('[data-task-check], [data-start-scheduled-experiment]') || event.button !== 0 || calendarMode !== 'day') return;
+        if (event.target.closest('[data-task-check], [data-start-scheduled-experiment], [data-delete-task]') || event.button !== 0 || calendarMode !== 'day') return;
         const slotIndex = scheduleSlotIndexFromPointer(event);
         if (slotIndex < 0) return;
         event.preventDefault();
@@ -2504,9 +2545,9 @@
         }).join('');
         const protocolPhoto = protocol.photoData ? '<figure class="record-detail-photo protocol-source-photo"><img src="' + esc(protocol.photoData) + '" alt="' + esc(protocol.title) + ' 的原始方案照片"><figcaption>录入 Protocol 时保留的原始照片</figcaption></figure>' : '';
         const protocolLiterature = protocolLiteratureHtml(protocol);
-        els.protocolDetailNumber.textContent = protocol.number + ' · ' + interfaceText(protocol.tag) + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
+        els.protocolDetailNumber.textContent = protocol.number + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
-        els.protocolDetailBody.innerHTML = '<p class="protocol-detail-summary">' + esc(protocol.summary) + '</p>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
+        els.protocolDetailBody.innerHTML = '<aside class="protocol-note-card"><p class="micro-label">NOTE</p><p>' + esc(protocol.summary || '未填写注释') + '</p></aside>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
         els.protocolDetailUsage.textContent = interfaceLocale() === 'en-US' ? linked.length + ' scheduled ' + (linked.length === 1 ? 'item' : 'items') + ' linked · ' + completed.length + ' completed ' + (completed.length === 1 ? 'run' : 'runs') : '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
@@ -3504,8 +3545,8 @@ function getReagentDisplayStatus(reagent) {
         state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
-        state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number + ' · ' + item.tag, search: [item.number, item.title, item.summary, item.tag, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
-        state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator, item.status].join(' ') }));
+        state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
+        state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
         const results = entries.filter(item => !term || item.search.toLowerCase().includes(term)).slice(0, 12);
         els.searchResults.innerHTML = results.map(function (item) {
             return '<button class="search-result" type="button" data-result-view="' + item.view + '" data-result-title="' + esc(item.title) + '"><span>' + esc(item.category) + '</span><span><strong>' + esc(item.title) + '</strong><small>' + esc(item.detail) + '</small></span><b>→</b></button>';
@@ -3557,8 +3598,8 @@ function getReagentDisplayStatus(reagent) {
             fields: [
                 field('name', '笼架名称', 'text', '例：屏障设施 A 区笼架', true),
                 field('facility', '所在位置', 'text', '例：动物中心 · A 区', true),
-                field('rows', '笼架行数', 'select', ['2', '3', '4', '5', '6', '7', '8'], true),
-                field('columns', '每行笼位数', 'select', ['4', '6', '8', '10', '12', '16'], true)
+                field('rows', '笼架行数（最多 12 行）', 'number', '4', true),
+                field('columns', '每行笼位数', 'number', '8', true)
             ]
         },
         animalCage: {
@@ -3608,14 +3649,11 @@ function getReagentDisplayStatus(reagent) {
                 field('id', '培养记录编号', 'text', 'CELL-BV2-01', true),
                 field('name', '细胞名称 / 细胞系', 'text', '例：BV2', true),
                 field('species', '物种 / 来源', 'text', '例：Mus musculus', true),
-                field('status', '培养状态', 'select', ['培养中', '待传代', '分化中', '冻存', '观察中', '已结束'], true),
-                field('medium', '当前培养基', 'text', '例：DMEM + 10% FBS', true, true),
-                field('container', '培养容器', 'select', ['T25 培养瓶', 'T75 培养瓶', 'T175 培养瓶', '6 孔板', '12 孔板', '24 孔板', '96 孔板', '10 cm 培养皿', '15 cm 培养皿', '低吸附 6 孔板', '悬浮培养瓶', '其他'], true),
-                field('vesselCount', '容器数量', 'number', '1', true),
-                field('incubator', '培养位置与条件', 'text', '37°C / 5% CO₂ · INC-01 / A2', true, true),
+                field('medium', '当前培养基', 'memory-text', '例：DMEM + 10% FBS', true, true),
+                field('container', '培养容器', 'memory-text', '例：T75 培养瓶', true),
+                field('incubator', '培养位置与条件', 'memory-text', '37°C / 5% CO₂ · INC-01 / A2', true, true),
                 field('passage', '当前代次', 'number', '1', true),
                 field('confluence', '当前汇合度（%）', 'number', '50', true),
-                field('nextAction', '下次操作日期', 'date', '', true),
                 field('notes', '培养备注', 'textarea', '记录细胞形态、用途、污染检查或特别培养要求…', false, true),
                 field('photoData', '当前培养照片', 'photo-capture', '拍摄显微视野、培养容器或细胞状态', false, true)
             ]
@@ -3627,11 +3665,9 @@ function getReagentDisplayStatus(reagent) {
                 field('action', '操作类型', 'select', ['传代', '换液', '复苏', '冻存', '观察', '加药处理', '污染处理'], true),
                 field('passage', '操作后代次', 'number', '1', true),
                 field('ratio', '传代比例 / 接种量', 'text', '例：1:4 或 2.0 × 10⁵ cells/well', true),
-                field('container', '操作后容器', 'select', ['T25 培养瓶', 'T75 培养瓶', 'T175 培养瓶', '6 孔板', '12 孔板', '24 孔板', '96 孔板', '10 cm 培养皿', '15 cm 培养皿', '低吸附 6 孔板', '悬浮培养瓶', '其他'], true),
-                field('vesselCount', '操作后容器数量', 'number', '1', true),
+                field('container', '操作后容器', 'memory-text', '例：T75 培养瓶', true),
                 field('confluence', '操作后汇合度（%）', 'number', '25', true),
-                field('medium', '培养基', 'text', '例：DMEM + 10% FBS', true, true),
-                field('nextAction', '下次操作日期', 'date', '', true),
+                field('medium', '培养基', 'memory-text', '例：DMEM + 10% FBS', true, true),
                 field('notes', '操作记录与观察', 'textarea', '记录消化时间、细胞状态、接种密度和异常情况…', false, true),
                 field('photoData', '本次操作照片', 'photo-capture', '拍摄传代前后显微视野或培养容器', false, true)
             ]
@@ -3653,8 +3689,7 @@ function getReagentDisplayStatus(reagent) {
             kicker: 'PROTOCOL BUILDER', title: '录入 Protocol',
             fields: [
                 field('title', 'Protocol 名称', 'text', '例：细胞免疫荧光染色', true),
-                field('tag', '方案分类', 'text', '例：组织学', true),
-                field('summary', '方案说明', 'textarea', '说明用途、关键条件和注意事项…', true, true),
+                field('summary', '注释', 'textarea', '记录用途、关键条件或注意事项…', false, true),
                 field('literatureTitle', '关联文献题目', 'text', '输入与本 Protocol 相关的文献题目', false, true),
                 field('literatureCitation', '作者 / 期刊 / 年份', 'text', '例：Author et al. · Journal · 2025', false, true),
                 field('literatureId', 'DOI / PMID', 'text', '例：10.xxxx/xxxxx 或 PMID 12345678', false),
@@ -3708,7 +3743,7 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'freezer') {
             defaultsForEntry = { rows: '9', columns: '9', temperature: '-80°C' };
         } else if (type === 'cell') {
-            defaultsForEntry = { status: '培养中', vesselCount: 1, passage: 1, confluence: 50, nextAction: todayIso() };
+            defaultsForEntry = { passage: 1, confluence: 50 };
         } else if (type === 'passage') {
             const culture = state.cellCultures.find(item => item.id === activeCellId);
             if (!culture) return;
@@ -3718,10 +3753,8 @@ function getReagentDisplayStatus(reagent) {
                 passage: Math.max(0, positiveNumber(culture.passage, 0) + 1),
                 ratio: '1:3',
                 container: culture.container,
-                vesselCount: culture.vesselCount,
                 confluence: 25,
-                medium: culture.medium,
-                nextAction: toIsoDate(addDays(parseLocalDate(todayIso()), 2))
+                medium: culture.medium
             };
         }
         pendingPhotoData = editOptions && editOptions.record.photoData ? editOptions.record.photoData : '';
@@ -3784,16 +3817,64 @@ function getReagentDisplayStatus(reagent) {
         if (first) first.focus();
     }
 
+    function readInputMemory() {
+        try {
+            const value = JSON.parse(localStorage.getItem(INPUT_MEMORY_KEY) || '{}');
+            return value && typeof value === 'object' ? value : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function rememberedFieldValues(type, name) {
+        const memory = readInputMemory();
+        const key = type + '.' + name;
+        const values = Array.isArray(memory[key]) ? memory[key].slice() : [];
+        if (type === 'cell' || type === 'passage') {
+            state.cellCultures.forEach(function (culture) {
+                if (culture[name]) values.push(String(culture[name]));
+                (Array.isArray(culture.history) ? culture.history : []).forEach(function (entry) {
+                    if (entry[name]) values.push(String(entry[name]));
+                });
+            });
+        }
+        return Array.from(new Set(values.map(value => String(value).trim()).filter(Boolean))).slice(0, 24);
+    }
+
+    function rememberEntryValues(type, data) {
+        const schema = dialogSchemas[type];
+        if (!schema) return;
+        const memory = readInputMemory();
+        schema.fields.forEach(function (config) {
+            if (!['select', 'memory-text'].includes(config.type)) return;
+            const value = String(data[config.name] || '').trim();
+            if (!value) return;
+            const key = type + '.' + config.name;
+            memory[key] = [value].concat(Array.isArray(memory[key]) ? memory[key] : []).filter(function (item, index, list) {
+                return item && list.indexOf(item) === index;
+            }).slice(0, 24);
+        });
+        localStorage.setItem(INPUT_MEMORY_KEY, JSON.stringify(memory));
+    }
+
     function fieldHtml(config) {
         const className = 'form-field' + (config.full ? ' full' : '');
         const required = '';
         let control = '';
         if (config.type === 'select') {
-            const options = config.placeholderOrOptions.map(function (option) {
+            const presetValues = config.placeholderOrOptions.map(function (option) { return String(option).split('|')[0]; });
+            const remembered = rememberedFieldValues(activeDialogType, config.name).filter(value => !presetValues.includes(value));
+            const options = config.placeholderOrOptions.concat(remembered).map(function (option) {
                 const parts = String(option).split('|');
                 return '<option value="' + esc(parts[0]) + '">' + esc(interfaceText(parts[1] || parts[0])) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '" data-custom-select' + required + '>' + options + '<option value="__custom__">自定义…</option></select><input class="custom-select-input" name="' + config.name + 'Custom" type="text" data-custom-input-for="' + config.name + '" placeholder="输入自定义内容" hidden>';
+        } else if (config.type === 'memory-text') {
+            const listId = 'memory-' + activeDialogType + '-' + config.name;
+            const options = rememberedFieldValues(activeDialogType, config.name).map(function (value) {
+                return '<option value="' + esc(value) + '"></option>';
+            }).join('');
+            control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text" list="' + listId + '" autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"><datalist id="' + listId + '">' + options + '</datalist><small class="field-note">可直接输入，也可选择之前保存过的内容。</small>';
         } else if (config.type === 'protocol-select') {
             const options = ['<option value="">不关联 Protocol</option>'].concat(state.protocols.map(function (protocol) {
                 return '<option value="' + esc(protocol.id) + '">' + esc(protocol.title) + ' · ' + esc(protocol.id) + '</option>';
@@ -3832,17 +3913,15 @@ function getReagentDisplayStatus(reagent) {
         } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
-            const protocolRecognition = activeDialogType === 'protocol'
-                ? '<div class="protocol-photo-recognition"><button type="button" data-recognize-protocol-photo disabled>识别文字并预填</button><small>识别中英文印刷文字；首次使用需联网加载模型。原照片会随 Protocol 一并保留。</small><details class="protocol-ocr-result" data-protocol-ocr-result hidden open><summary>识别文字（可修正后再次预填）</summary><textarea data-protocol-ocr-text aria-label="Protocol 照片识别文字"></textarea><button type="button" data-apply-protocol-ocr>使用修正后的文字预填</button></details></div>'
-                : '';
-            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p>' + protocolRecognition + '</div>';
+            const protocolNote = activeDialogType === 'protocol' ? '<small class="field-note">照片作为附件保留，不会自动填写表单。</small>' : '';
+            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p>' + protocolNote + '</div>';
         } else if (config.type === 'file-attachments') {
             control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
             control = '<textarea id="field-' + config.name + '" name="' + config.name + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '></textarea>';
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
-            const minmax = config.type === 'number' ? ' min="0" step="0.01"' : '';
+            const minmax = config.type === 'number' ? (config.name === 'rows' && activeDialogType === 'animalRack' ? ' min="1" max="12" step="1"' : config.name === 'columns' && activeDialogType === 'animalRack' ? ' min="1" max="48" step="1"' : ' min="0" step="0.01"') : '';
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="' + config.type + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + defaultValue + minmax + required + '>';
         }
         return '<div class="' + className + '"><label for="field-' + config.name + '">' + esc(config.label) + '</label>' + control + '</div>';
@@ -3949,9 +4028,7 @@ function getReagentDisplayStatus(reagent) {
             capture.querySelector('input[type="hidden"]').value = dataUrl;
             preview.innerHTML = '<img src="' + dataUrl + '" alt="待保存的录入照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
             if (activeDialogType === 'protocol') {
-                const recognizeButton = capture.querySelector('[data-recognize-protocol-photo]');
-                if (recognizeButton) recognizeButton.disabled = false;
-                status.textContent = '照片已保留；可继续识别文字并预填 Protocol';
+                status.textContent = '照片已作为附件保留；Protocol 内容请手动填写';
             } else {
                 status.textContent = '照片已附加；文字内容请在保存前核对';
             }
@@ -3973,90 +4050,6 @@ function getReagentDisplayStatus(reagent) {
         } catch (error) {
             status.textContent = '无法读取这张照片，请换一张图片重试';
         }
-    }
-
-    function loadProtocolOcr() {
-        if (window.Tesseract) return Promise.resolve(window.Tesseract);
-        if (protocolOcrLoader) return protocolOcrLoader;
-        protocolOcrLoader = new Promise(function (resolve, reject) {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
-            script.async = true;
-            script.crossOrigin = 'anonymous';
-            script.onload = function () {
-                if (window.Tesseract) resolve(window.Tesseract);
-                else reject(new Error('OCR runtime unavailable'));
-            };
-            script.onerror = function () { reject(new Error('OCR runtime failed to load')); };
-            document.head.appendChild(script);
-        }).catch(function (error) {
-            protocolOcrLoader = null;
-            throw error;
-        });
-        return protocolOcrLoader;
-    }
-
-    async function recognizeProtocolPhoto() {
-        if (activeDialogType !== 'protocol') return;
-        const capture = els.dialogFields.querySelector('.photo-capture');
-        if (!capture) return;
-        const dataUrl = capture.querySelector('input[type="hidden"]').value;
-        const button = capture.querySelector('[data-recognize-protocol-photo]');
-        const status = capture.querySelector('[data-photo-status]');
-        const resultPanel = capture.querySelector('[data-protocol-ocr-result]');
-        const resultText = capture.querySelector('[data-protocol-ocr-text]');
-        if (!dataUrl) {
-            showToast('请先拍照或选择一张 Protocol 图片');
-            return;
-        }
-        button.disabled = true;
-        button.textContent = '正在识别…';
-        status.textContent = '正在加载中英文文字模型…';
-        try {
-            const tesseract = await loadProtocolOcr();
-            const result = await tesseract.recognize(dataUrl, 'chi_sim+eng', {
-                logger: function (message) {
-                    if (message.status === 'recognizing text') {
-                        status.textContent = '正在识别文字 ' + Math.round((message.progress || 0) * 100) + '%';
-                    }
-                }
-            });
-            const text = String(result && result.data && result.data.text || '').trim();
-            if (!text) {
-                status.textContent = '没有识别到清晰文字；照片仍会保留，可手动录入';
-                return;
-            }
-            resultText.value = text;
-            resultPanel.hidden = false;
-            applyProtocolOcrText(text);
-            status.textContent = '文字已识别并预填空白字段；请核对后保存，原照片会一并保留';
-        } catch (error) {
-            status.textContent = '文字识别暂不可用；照片仍会保留，可手动录入后保存';
-        } finally {
-            button.disabled = false;
-            button.textContent = '重新识别文字';
-        }
-    }
-
-    function applyProtocolOcrText(overrideText) {
-        const source = overrideText || (els.dialogFields.querySelector('[data-protocol-ocr-text]') || {}).value || '';
-        const lines = String(source).split(/\r?\n/).map(function (line) {
-            return line.replace(/^\s*(?:[-•◆◇▪]|\(?\d{1,2}[.)、:]|[一二三四五六七八九十]+[、.])\s*/, '').trim();
-        }).filter(Boolean);
-        if (!lines.length) {
-            showToast('识别文字为空，请先识别或粘贴文字');
-            return;
-        }
-        const titleInput = els.entryForm.elements.namedItem('title');
-        const summaryInput = els.entryForm.elements.namedItem('summary');
-        const stepsInput = els.entryForm.elements.namedItem('stepsText');
-        const titleLine = lines.find(function (line) { return line.length >= 3 && line.length <= 80; }) || lines[0];
-        const remaining = lines.filter(function (line, index) { return index > 0 || line !== titleLine; });
-        const stepLines = remaining.filter(function (line) { return line.length >= 2; }).slice(0, 40);
-        if (titleInput && !titleInput.value.trim()) titleInput.value = titleLine;
-        if (summaryInput && !summaryInput.value.trim()) summaryInput.value = remaining.slice(0, 3).join('；');
-        if (stepsInput && !stepsInput.value.trim()) stepsInput.value = (stepLines.length ? stepLines : lines).join('\n');
-        showToast('识别文字已预填，请核对并按需修改');
     }
 
     function compressPhoto(file, maxSize, quality) {
@@ -4160,8 +4153,8 @@ function getReagentDisplayStatus(reagent) {
                 id: generatedRecordId('RACK'),
                 name: displayOr(data.name, '未命名笼架'),
                 facility: displayOr(data.facility, '位置待设置'),
-                rows: Math.max(1, Math.round(positiveNumber(data.rows, 4))),
-                columns: Math.max(1, Math.round(positiveNumber(data.columns, 8))),
+                rows: Math.min(12, Math.max(1, Math.round(positiveNumber(data.rows, 4)))),
+                columns: Math.min(48, Math.max(1, Math.round(positiveNumber(data.columns, 8)))),
                 createdBy: data.createdBy
             };
             state.animalRacks.push(rack);
@@ -4180,7 +4173,7 @@ function getReagentDisplayStatus(reagent) {
                 showToast('当前笼架没有可用空位');
                 return;
             }
-            const match = position.match(/^([A-H])(\d{1,2})$/);
+            const match = position.match(/^([A-L])(\d{1,2})$/);
             if (!match || match[1].charCodeAt(0) - 64 > rack.rows || Number(match[2]) > rack.columns) {
                 showToast('笼位位置超出当前笼架范围');
                 return;
@@ -4278,7 +4271,7 @@ function getReagentDisplayStatus(reagent) {
                 summary: String(data.summary || '').trim(),
                 steps: steps,
                 reagents: Array.from(reagentMap, function (entry) { return { catalog: entry[0], amount: entry[1] }; }),
-                tag: displayOr(data.tag, '自定义方案'),
+                tag: '',
                 meta: '本地录入 ' + todayIso(),
                 literatureTitle: String(data.literatureTitle || '').trim(),
                 literatureCitation: String(data.literatureCitation || '').trim(),
@@ -4297,7 +4290,9 @@ function getReagentDisplayStatus(reagent) {
                 return;
             }
             data.name = displayOr(data.name, '未命名细胞');
-            data.vesselCount = Math.max(1, Math.round(positiveNumber(data.vesselCount, 1)));
+            data.status = '培养中';
+            data.vesselCount = 1;
+            data.nextAction = '';
             data.passage = Math.max(0, Math.round(positiveNumber(data.passage, 0)));
             data.confluence = number(data.confluence, 0, 100);
             data.history = [];
@@ -4318,7 +4313,6 @@ function getReagentDisplayStatus(reagent) {
                 passage: Math.max(0, Math.round(positiveNumber(data.passage, culture.passage))),
                 ratio: data.ratio,
                 container: data.container,
-                vesselCount: Math.max(1, Math.round(positiveNumber(data.vesselCount, culture.vesselCount))),
                 confluence: number(data.confluence, 0, 100),
                 medium: data.medium,
                 notes: data.notes || '',
@@ -4328,11 +4322,8 @@ function getReagentDisplayStatus(reagent) {
             culture.history.unshift(log);
             culture.passage = log.passage;
             culture.container = log.container;
-            culture.vesselCount = log.vesselCount;
             culture.confluence = log.confluence;
             culture.medium = log.medium;
-            culture.nextAction = data.nextAction;
-            culture.status = data.action === '冻存' ? '冻存' : data.action === '污染处理' ? '观察中' : '培养中';
             if (log.photoData) culture.photoData = log.photoData;
             activityText = '记录“' + culture.name + '”的' + data.action + '操作';
         } else if (activeDialogType === 'task') {
@@ -4374,6 +4365,7 @@ function getReagentDisplayStatus(reagent) {
             activityText = '新增冻存盒“' + box.name + '”';
         }
 
+        rememberEntryValues(activeDialogType, data);
         if (activityText) state.activities.unshift({ text: activityText, time: '刚刚' });
         saveState();
         renderAll();
@@ -4421,7 +4413,6 @@ function getReagentDisplayStatus(reagent) {
             updated.species = displayOr(data.species, '未设置物种');
         } else if (target.type === 'cell') {
             updated.id = current.id;
-            updated.vesselCount = Math.max(1, Math.round(positiveNumber(data.vesselCount, current.vesselCount || 1)));
             updated.passage = Math.max(0, Math.round(positiveNumber(data.passage, current.passage || 0)));
             updated.confluence = number(data.confluence, 0, 100);
         } else if (target.type === 'reagent') {

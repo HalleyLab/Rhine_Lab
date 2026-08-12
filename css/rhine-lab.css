@@ -5506,10 +5506,6 @@ body.dark-theme {
     font-size: 17px;
 }
 
-.lab-workspace .page-heading.technical-heading::before {
-    background: var(--cyan);
-}
-
 .lab-workspace .freezer-box-tab.active {
     border-color: var(--cyan);
     box-shadow: inset 4px 0 0 var(--cyan);
@@ -10900,4 +10896,132 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
 /* Rhine Lab 0.1.5 thumbnail-free culture cards. */
 .cell-culture-card {
     grid-template-columns: minmax(0, 1fr);
+}
+
+/* Rhine Lab 0.1.7 housing, schedule, typography and shared-workspace alignment. */
+.animal-rack-tab-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.animal-rack-tab-wrap .animal-rack-tab {
+    width: 100%;
+    padding-right: 38px;
+}
+
+.animal-rack-delete,
+.schedule-delete-button {
+    display: inline-grid;
+    place-items: center;
+    color: #a83b2f;
+    background: rgba(255, 244, 240, .94);
+    border: 1px solid rgba(219, 103, 83, .34);
+    border-radius: 999px;
+    font-family: Helvetica, Arial, sans-serif !important;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.animal-rack-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+}
+
+.animal-cage-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.animal-cage-buttons .button.primary {
+    flex: 1 1 190px;
+}
+
+.schedule-delete-button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    font-size: 15px !important;
+}
+
+.schedule-block-actions,
+.today-item-actions {
+    gap: 6px;
+}
+
+.protocol-note-card {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    background: var(--acid-soft);
+    border-left: 4px solid var(--acid-strong);
+    border-radius: 3px 15px 3px 15px;
+}
+
+.protocol-note-card > p:last-child {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+html[lang="en"] .page-heading.technical-heading .story-quote,
+html[lang="en"] .page-heading.technical-heading .story-quote *,
+html[lang="en"] .page-heading.technical-heading .story-quote cite {
+    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+}
+
+html[lang="en"] .nav-item {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding-inline: 38px !important;
+    text-align: center;
+}
+
+html[lang="en"] .nav-item .nav-code {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+html[lang="en"] .nav-item > span:not(.nav-code) {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.cell-culture-card {
+    min-height: 0;
+    padding: 11px 12px;
+}
+
+.cell-culture-main h3 {
+    margin-top: 4px;
+}
+
+.cell-culture-main footer {
+    align-items: center;
+}
+
+.dark-theme .animal-rack-delete,
+.dark-theme .schedule-delete-button {
+    color: #ff9b8b;
+    background: #2b2421;
+    border-color: rgba(255, 155, 139, .34);
+}
+
+@media (max-width: 700px) {
+    html[lang="en"] .nav-item {
+        padding-inline: 36px !important;
+    }
+
+    .animal-rack-tab-wrap {
+        min-width: 168px;
+    }
 }

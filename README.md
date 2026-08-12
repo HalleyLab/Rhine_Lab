@@ -42,6 +42,15 @@ Rhine Lab 是一个面向生命科学研究的个人与实验室协作工作台�
 - 将“实验结果”合并进“实验记录”，每条记录下直接维护一一对应的结果、结论、附件与下一步计划
 - Protocol 新增关联文献字段，并支持通过 DOI 或 PMID 自动生成原文入口
 
+## 2026-08-12 · 0.1.7
+
+- 动物笼架支持直接输入 1–12 行和每行笼位数，并可删除笼架或单个笼位；删除后原动物条目保留为“未分配”
+- 日程条目可从每日视图、月视图日程列表和总览中删除
+- 细胞维持表单移除培养状态、容器数量和下次操作日期，培养基、容器与培养条件支持历史输入记忆
+- Protocol 移除方案分类，将方案说明简化为可选注释；照片仅作为附件保留，不再自动识别填表
+- LAB 共用工作区与个人工作区使用相同的标题背景；英文引用统一使用黑体，英文侧栏标题居中
+- Web、Android、Windows 与浏览器扩展恢复绿底 Rhine Lab 图标，并统一版本为 0.1.7
+
 ## 本地预览
 
 直接打开 `file://` 会限制 PWA 与部分浏览器能力，请使用静态服务器：
@@ -84,7 +93,7 @@ GitHub Pages 地址未登录时只能浏览示例和已有数据。点击顶栏�
 
 ## Windows 独立应用
 
-`.github/workflows/desktop-distributions.yml` 会生成 `Rhine-Lab-0.1.6-Windows.exe` 便携版。用户下载后可直接运行，不需要安装或解压；首次打开为空工作区。未签名的内部测试包可能触发 Windows SmartScreen 提示。
+`.github/workflows/desktop-distributions.yml` 会生成 `Rhine-Lab-0.1.7-Windows.exe` 便携版。用户下载后可直接运行，不需要安装或解压；首次打开为空工作区。未签名的内部测试包可能触发 Windows SmartScreen 提示。
 
 本地开发运行：
 
@@ -95,6 +104,6 @@ pnpm desktop:start
 
 ## Chrome / Microsoft Edge 插件
 
-同一工作流会生成 `Rhine-Lab-Browser-Extension-0.1.6.zip`。该插件在浏览器工具栏提供 Rhine Lab 快捷入口，并沿用 GitHub Pages 的登录和同步状态。
+同一工作流会生成 `Rhine-Lab-Browser-Extension-0.1.7.zip`。该插件在浏览器工具栏提供 Rhine Lab 快捷入口，并沿用 GitHub Pages 的登录和同步状态。
 
 解压后在浏览器扩展管理页开启“开发者模式”，选择“加载已解压的扩展程序”，指向 `browser-extension` 目录。正式商店发布仍需分别提交 Chrome Web Store 和 Microsoft Edge Add-ons 审核。
