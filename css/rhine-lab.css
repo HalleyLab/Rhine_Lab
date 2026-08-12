@@ -10980,7 +10980,7 @@ html[lang="en"] .nav-item {
     position: relative;
     grid-template-columns: minmax(0, 1fr) !important;
     padding-inline: 38px !important;
-    text-align: center;
+    text-align: left;
 }
 
 html[lang="en"] .nav-item .nav-code {
@@ -10993,7 +10993,7 @@ html[lang="en"] .nav-item .nav-code {
 html[lang="en"] .nav-item > span:not(.nav-code) {
     display: block;
     width: 100%;
-    text-align: center;
+    text-align: left;
 }
 
 .cell-culture-card {
