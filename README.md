@@ -1,109 +1,76 @@
 # Rhine Lab
 
-Rhine Lab 是一个面向生命科学研究的个人与实验室协作工作台，采用响应式 PWA 设计，并提供 Android、Windows 和 Chrome/Edge 入口。
+[中文](#中文) · [English](#english)
 
-## 功能
+Rhine Lab 是一款面向生命科学研究的个人与实验室协作工作台，支持网页、Android、Windows 和浏览器扩展。
 
-- 按日期归档实验记录，并在每条记录下直接填写、编辑或删除实验结果与附件
-- 实验记录中的实际试剂用量与可保存照片的同步实验步骤
-- 步骤计时、科学计算器与 96 孔板等装置标注
-- 从日程事件开始或继续实验，并同步关联 Protocol 的执行步骤
-- 多物种动物管理：先建立笼架与笼位，再向笼位添加动物条目；旧动物记录会自动迁移
-- 细胞维持、培养容器、汇合度与传代/换液历史
-- 试剂库存、低余量提醒与试剂详情
-- 9×9 冻存盒、冻存样本与拍照辅助录入
-- Protocol 流程图、试剂用量、原始照片与文献（题目、引文、DOI/PMID、链接）关联
-- 日程管理与实验执行
-- 输入 `CLEAR` 后清空当前个人工作区的全部信息
-- 顶栏中英文切换，语言选择会在刷新和跨页面导航后保留
-- 未手动选择主题时，按设备本地时间在 06:00–18:00 使用日间模式，其余时间使用夜间模式
-- 夜间模式为表单、下拉选项与功能标签提供完整的高对比度反色
-- 个人工作区与 LAB 共用只读/管理权限
-- Supabase 登录、跨设备同步、Realtime 和私有照片存储
-- LAB 所有者与管理员可在设备同步面板查看当前 LAB 绑定邮箱
+[在线体验](https://halleylab.github.io/Rhine_Lab/) · [下载应用](https://github.com/HalleyLab/Rhine_Lab/releases/tag/v0.1.7)
 
-## 2026-08-10 更新
+---
 
-- GitHub Pages 未登录时为只读展示；登录后才可新增、编辑、删除、拖动日程或清空工作区
-- 新安装的 Android、Windows 或 PWA 首次打开为空工作区，不预置实验条目
+<a id="中文"></a>
 
-## 2026-08-11 更新
+## 中文
 
-- GitHub Pages 改为公开只读展示模式，登录状态会即时控制完整写入权限
-- 动物管理升级为“笼架 → 笼位 → 多物种动物条目”，支持小鼠、大鼠、兔、斑马鱼及自定义物种
-- 新增 Chrome / Microsoft Edge 快捷插件和 Windows 便携应用构建
-- 已安装应用首次启动默认空数据；公开展示页继续保留示例数据
-- 更新静态缓存版本，确保 GitHub Pages 及时加载本次改动
-- 加入 Capacitor 8 Android 内部测试版、莱茵生命风格图标与日间/夜间启动页
-- 配置 Supabase 邮箱登录、个人/LAB 权限、跨设备同步及原生回调
-- 工作区标题只保留英文技术标签，统一引用正文与署名字号
-- 统一指标栏、筛选栏和搜索提示字体，并适当缩小数据条目行文字
-- 彻底统一 Unicode 字体映射：中文使用黑体，拉丁字符使用 Helvetica，覆盖动态卡片、输入值、占位符和下拉选项
-- 将“实验结果”合并进“实验记录”，每条记录下直接维护一一对应的结果、结论、附件与下一步计划
-- Protocol 新增关联文献字段，并支持通过 DOI 或 PMID 自动生成原文入口
+### 基本功能
 
-## 2026-08-12 · 0.1.7
+- 实验记录与结果：按日期记录实验、实际试剂用量、照片、文件和结果。
+- Protocol：编辑实验流程、试剂用量、计时步骤、孔板标注，并关联 DOI、PMID 或文献链接。
+- 日程排班：日历与每日视图、拖动创建日程、重叠事件，以及从日程开始实验。
+- 动物管理：使用“笼架—笼位—动物”结构管理多种实验动物。
+- 试剂库存：记录库存、位置、批次和有效期，并在余量不足时提醒。
+- 细胞维持：记录细胞、培养基、培养条件、容器及传代历史。
+- 冻存样本：使用 9×9 冻存盒管理位置、样本信息和照片。
+- 多端同步：登录后可在手机、电脑和网页之间同步个人数据；LAB 管理者可管理共用工作区。
+- 中英双语、日间/夜间模式，以及拍照辅助录入。
 
-- 动物笼架支持直接输入 1–12 行和每行笼位数，并可删除笼架或单个笼位；删除后原动物条目保留为“未分配”
-- 日程条目可从每日视图、月视图日程列表和总览中删除
-- 细胞维持表单移除培养状态、容器数量和下次操作日期，培养基、容器与培养条件支持历史输入记忆
-- Protocol 移除方案分类，将方案说明简化为可选注释；照片仅作为附件保留，不再自动识别填表
-- LAB 共用工作区与个人工作区使用相同的标题背景；英文引用统一使用黑体，英文侧栏标题居中
-- Web、Android、Windows 与浏览器扩展恢复绿底 Rhine Lab 图标，并统一版本为 0.1.7
+### 使用方式
 
-## 本地预览
+- **网页展示版：** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/)；未登录时为只读，登录后可编辑和同步。
+- **Android：** 下载 `Rhine-Lab-0.1.7-internal.apk` 后直接安装。
+- **Windows：** 下载 `Rhine-Lab-0.1.7-Windows.exe` 后直接运行，无需解压。
+- **浏览器扩展：** 下载 ZIP，解压后通过 Chrome/Edge 的“加载已解压的扩展程序”安装。
 
-直接打开 `file://` 会限制 PWA 与部分浏览器能力，请使用静态服务器：
+新安装的应用默认使用空工作区。数据优先保存在当前设备；登录并启用云同步后，可在不同设备之间同步。
 
-```bash
-python -m http.server 4173
-```
+---
 
-然后访问 `http://127.0.0.1:4173/`。
+<a id="english"></a>
 
-## 示例数据
+## English
 
-初始演示记录位于 `data/seed.json`。它只用于普通浏览器中的展示页；Android、Windows、浏览器安装的 PWA 等已安装版本首次启动时会创建空工作区。已经存在的本地数据不会被示例数据覆盖。
+Rhine Lab is a personal and collaborative laboratory workspace for life-science research. It is available for the web, Android, Windows, and Chromium-based browsers.
 
-GitHub Pages 地址未登录时只能浏览示例和已有数据。点击顶栏“登录 / 同步”并完成邮箱验证后，个人工作区才会解锁编辑；退出登录后立即恢复只读。
+### Core features
 
-## 启用云同步
+- Experiment records and results, organized by date with reagent usage, photos, files, and conclusions.
+- Protocol workflows with reagent quantities, timers, plate annotations, and DOI, PMID, or literature links.
+- Daily and calendar scheduling with drag-to-create, overlapping events, and experiment launch from scheduled tasks.
+- Multi-species animal management using a rack–cage–animal structure.
+- Reagent inventory with storage locations, lot numbers, expiry dates, and low-stock alerts.
+- Cell-culture maintenance with media, culture conditions, vessels, and passage history.
+- Frozen-sample storage using configurable 9×9 cryoboxes.
+- Account-based synchronization across mobile, desktop, and web, plus managed LAB shared workspaces.
+- Chinese/English interface, automatic light/dark themes, and photo-assisted data entry.
 
-1. 创建 Supabase 项目。
-2. 在 SQL Editor 按编号顺序执行 `supabase/migrations/` 中的迁移文件。
-3. 注册管理账户，并创建第一条 `labs` 记录。
-4. 将 Project URL、publishable key 和 LAB ID 填入 `js/rhine-lab-config.js`。
-5. 在 Supabase Authentication 中将 GitHub Pages 地址加入 Redirect URLs。
+### Get started
 
-`publishable`/`anon` key 可以用于浏览器，但必须配合 RLS。绝对不要把 `service_role` key、数据库密码或个人访问令牌提交到仓库。
+- **Web demo:** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/). The public site is read-only until you sign in.
+- **Android:** Download and install `Rhine-Lab-0.1.7-internal.apk`.
+- **Windows:** Download and run `Rhine-Lab-0.1.7-Windows.exe`; no extraction is required.
+- **Browser extension:** Download the ZIP, extract it, then load the folder as an unpacked extension in Chrome or Edge.
 
-## GitHub Pages
+New installations start with an empty workspace. Data is stored locally first and can be synchronized across devices after sign-in.
 
-`.github/workflows/pages.yml` 会在 `main` 更新后部署静态站点。仓库需要在 **Settings → Pages → Build and deployment** 中选择 **GitHub Actions**。
-
-## 内部测试应用
-
-项目使用 Capacitor 8 封装 Android 内部测试版。GitHub Actions 会自动构建可直接分享的 APK，并将构建产物保留 30 天。
-
-安装方法、Supabase 移动端回调配置以及 iOS/TestFlight 准备说明请查看 [MOBILE_TESTING.md](MOBILE_TESTING.md)。
-
-## 声明
-
-这是非官方、非商业的同人风格研究工具原型，与《明日方舟》及其权利方无隶属或授权关系。相关名称与视觉标识归各自权利方所有。
-
-## Windows 独立应用
-
-`.github/workflows/desktop-distributions.yml` 会生成 `Rhine-Lab-0.1.7-Windows.exe` 便携版。用户下载后可直接运行，不需要安装或解压；首次打开为空工作区。未签名的内部测试包可能触发 Windows SmartScreen 提示。
-
-本地开发运行：
+## Development
 
 ```bash
 pnpm install
-pnpm desktop:start
+python -m http.server 4173
 ```
 
-## Chrome / Microsoft Edge 插件
+Open `http://127.0.0.1:4173/` in a browser.
 
-同一工作流会生成 `Rhine-Lab-Browser-Extension-0.1.7.zip`。该插件在浏览器工具栏提供 Rhine Lab 快捷入口，并沿用 GitHub Pages 的登录和同步状态。
+## Disclaimer
 
-解压后在浏览器扩展管理页开启“开发者模式”，选择“加载已解压的扩展程序”，指向 `browser-extension` 目录。正式商店发布仍需分别提交 Chrome Web Store 和 Microsoft Edge Add-ons 审核。
+Rhine Lab is an unofficial, non-commercial fan-style research-tool prototype. It is not affiliated with or endorsed by *Arknights* or its rights holders. Related names and visual identities belong to their respective owners.
