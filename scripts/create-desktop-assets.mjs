@@ -1,25 +1,12 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(scriptDirectory, '..');
-const source = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
-const output = path.join(projectRoot, 'images', 'rhine-lab-desktop-icon.png');
-const webOutput = path.join(projectRoot, 'images', 'rhine-life-app-icon.png');
-const extensionDirectory = path.join(projectRoot, 'browser-extension', 'icons');
-
-const icon = await sharp(source).resize(512, 512).png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
-
-await mkdir(extensionDirectory, { recursive: true });
-await Promise.all([
-  sharp(icon).toFile(output),
-  sharp(icon).toFile(webOutput),
-  ...[16, 32, 48, 128].map((size) => sharp(icon)
-    .resize(size, size)
-    .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(path.join(extensionDirectory, `icon-${size}.png`)))
-]);
-
-console.log('Created green Rhine Lab icons for web, desktop and browser extensions.');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const logo = await sharp(path.join(root, 'images', 'rhine-life-logo.png')).trim().resize({ width: 390, height: 300, fit: 'inside' }).png().toBuffer();
+const background = Buffer.from('<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="104" fill="#d2e7a0"/></svg>');
+const icon = await sharp({ create: { width: 512, height: 512, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([{ input: background }, { input: logo, gravity: 'centre' }]).png({ compressionLevel: 9 }).toBuffer();
+const ext = path.join(root, 'browser-extension', 'icons');
+await mkdir(ext, { recursive: true });
+await Promise.all([sharp(icon).toFile(path.join(root, 'images', 'rhine-lab-desktop-icon.png')), sharp(icon).toFile(path.join(root, 'images', 'rhine-life-app-icon.png')), ...[16, 32, 48, 128].map((size) => sharp(icon).resize(size, size).png().toFile(path.join(ext, `icon-${size}.png`)))]);
+console.log('Created green full-logo Rhine Lab icons.');
