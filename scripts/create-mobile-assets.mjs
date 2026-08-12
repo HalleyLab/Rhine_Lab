@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -6,34 +6,32 @@ import sharp from 'sharp';
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, '..');
 const assetDirectory = path.join(projectRoot, 'assets');
-const iconSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
-const markSource = await readFile(path.join(projectRoot, 'images', 'rhine-lab-mark.svg'));
+const source = await readFile(path.join(projectRoot, 'images', 'rhine-lab-icon.svg'));
 
 await mkdir(assetDirectory, { recursive: true });
 
-await sharp(iconSource).resize(1024, 1024).png().toFile(path.join(assetDirectory, 'icon-only.png'));
-
-const foregroundMark = await sharp(markSource)
-  .resize({ width: 760, height: 760, fit: 'inside', withoutEnlargement: false })
-  .ensureAlpha()
+const icon = await sharp(source)
+  .resize(1024, 1024)
   .png()
   .toBuffer();
 
-await sharp({
-  create: { width: 1024, height: 1024, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
-})
-  .composite([{ input: foregroundMark, gravity: 'centre' }])
-  .png()
-  .toFile(path.join(assetDirectory, 'icon-foreground.png'));
+await sharp(icon).toFile(path.join(assetDirectory, 'icon-only.png'));
 
-await sharp({
-  create: { width: 1024, height: 1024, channels: 4, background: '#d8ff45' }
-})
-  .png()
-  .toFile(path.join(assetDirectory, 'icon-background.png'));
+// Derive all Android launcher variants from the complete 0.1.0 icon.
+await Promise.allSettled([
+  unlink(path.join(assetDirectory, 'icon-foreground.png')),
+  unlink(path.join(assetDirectory, 'icon-background.png'))
+]);
 
 async function createSplash(filename, background) {
-  return sharp({ create: { width: 2732, height: 2732, channels: 4, background } })
+  return sharp({
+    create: {
+      width: 2732,
+      height: 2732,
+      channels: 4,
+      background
+    }
+  })
     .png()
     .toFile(path.join(assetDirectory, filename));
 }
@@ -43,4 +41,4 @@ await Promise.all([
   createSplash('splash-dark.png', '#151c19')
 ]);
 
-console.log('Generated green Rhine Lab launcher icons and plain splash backgrounds.');
+console.log('Generated the Rhine Lab 0.1.0 icon with plain splash backgrounds.');
