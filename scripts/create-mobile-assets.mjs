@@ -2,14 +2,35 @@ import { mkdir, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const assets = path.join(root, 'assets');
 await mkdir(assets, { recursive: true });
-const logo = await sharp(path.join(root, 'images', 'rhine-life-logo.png')).trim().resize({ width: 780, height: 600, fit: 'inside' }).png().toBuffer();
-const background = Buffer.from(`<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3f8df"/><stop offset=".58" stop-color="#dceca8"/><stop offset="1" stop-color="#c9e27f"/></linearGradient><radialGradient id="acid" cx="45%" cy="118%" r="68%"><stop stop-color="#a8d52d" stop-opacity=".78"/><stop offset=".72" stop-color="#a8d52d" stop-opacity="0"/></radialGradient><radialGradient id="shine" cx="84%" cy="20%" r="58%"><stop stop-color="#ffffff" stop-opacity=".96"/><stop offset=".68" stop-color="#ffffff" stop-opacity="0"/></radialGradient><pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0V56" fill="none" stroke="#48544c" stroke-opacity=".04"/></pattern></defs><rect width="1024" height="1024" fill="url(#base)"/><rect width="1024" height="1024" fill="url(#acid)"/><rect width="1024" height="1024" fill="url(#shine)"/><rect width="1024" height="1024" fill="url(#grid)"/><rect y="1012" width="1024" height="12" fill="#91bd18" fill-opacity=".9"/></svg>`);
-const icon = await sharp(background).composite([{ input: logo, gravity: 'centre' }]).png().toBuffer();
+
+// Android, the web manifest and Electron all derive from this exact artwork.
+const icon = await sharp(path.join(root, 'images', 'rhine-life-app-icon.png'))
+  .resize(1024, 1024, { fit: 'fill' })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
+
 await sharp(icon).toFile(path.join(assets, 'icon-only.png'));
-await Promise.allSettled([unlink(path.join(assets, 'icon-foreground.png')), unlink(path.join(assets, 'icon-background.png'))]);
-const splash = (name, color) => sharp({ create: { width: 2732, height: 2732, channels: 4, background: color } }).png().toFile(path.join(assets, name));
-await Promise.all([splash('splash.png', '#f2f4ed'), splash('splash-dark.png', '#151c19')]);
-console.log('Created Rhine Lab saturated hero-style mobile icon.');
+await Promise.allSettled([
+  unlink(path.join(assets, 'icon-foreground.png')),
+  unlink(path.join(assets, 'icon-background.png'))
+]);
+
+const splash = (name, color) => sharp({
+  create: {
+    width: 2732,
+    height: 2732,
+    channels: 4,
+    background: color
+  }
+}).png().toFile(path.join(assets, name));
+
+await Promise.all([
+  splash('splash.png', '#f2f4ed'),
+  splash('splash-dark.png', '#151c19')
+]);
+
+console.log('Created Android assets from the shared Rhine Lab app icon.');

@@ -12,10 +12,10 @@
   "theme_color": "#d8ff45",
   "icons": [
     {
-      "src": "images/rhine-life-app-icon.png",
+      "src": "images/rhine-life-app-icon.png?v=0.1.7-unified",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "shortcuts": [

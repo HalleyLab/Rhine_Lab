@@ -81,11 +81,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Rhine Lab mobile assets
-        run: |
-          pnpm mobile:assets
-          pnpm exec capacitor-assets generate --android
-
       - name: Synchronize Capacitor
         run: pnpm mobile:sync
 

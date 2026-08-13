@@ -8,7 +8,8 @@
   "scripts": {
     "mobile:prepare": "node scripts/prepare-mobile.mjs",
     "mobile:assets": "node scripts/create-mobile-assets.mjs",
-    "mobile:sync": "pnpm mobile:prepare && cap sync android",
+    "mobile:icons": "pnpm exec capacitor-assets generate --android && node scripts/sync-android-icons.mjs && node scripts/verify-icons.mjs",
+    "mobile:sync": "pnpm mobile:prepare && pnpm mobile:assets && cap sync android && pnpm mobile:icons",
     "android:debug": "pnpm mobile:sync && cd android && gradlew.bat assembleDebug",
     "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease",
     "desktop:start": "electron .",
