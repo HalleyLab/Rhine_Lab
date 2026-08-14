@@ -71,6 +71,10 @@ python -m http.server 4173
 
 Open `http://127.0.0.1:4173/` in a browser.
 
+## Open-source acknowledgements / 开源致谢
+
+Dashboard pattern attribution and license details are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Disclaimer
 
 Rhine Lab is an unofficial, non-commercial fan-style research-tool prototype. It is not affiliated with or endorsed by *Arknights* or its rights holders. Related names and visual identities belong to their respective owners.

@@ -349,7 +349,6 @@
         freezerScanSummary: document.getElementById('freezerScanSummary'),
         freezerScanGrid: document.getElementById('freezerScanGrid'),
         freezerScanStart: document.getElementById('freezerScanStart'),
-        cellMaintenanceMetrics: document.getElementById('cellMaintenanceMetrics'),
         cellCultureGrid: document.getElementById('cellCultureGrid'),
         cellMaintenanceQueue: document.getElementById('cellMaintenanceQueue'),
         clearWorkspaceDialog: document.getElementById('clearWorkspaceDialog'),
@@ -870,7 +869,7 @@
             items.forEach(item => members.add(contributorName(item)));
         });
         const totalRecords = collections.reduce((sum, items) => sum + items.length, 0);
-        els.workspaceScopeStats.innerHTML = '<div><small>录入成员</small><strong>' + members.size + '</strong></div><div><small>整合记录</small><strong>' + totalRecords + '</strong></div><div><small>共享 Protocol</small><strong>' + state.protocols.length + '</strong></div>';
+        els.workspaceScopeStats.innerHTML = '<span><strong>' + members.size + '</strong><small>录入成员</small></span><span><strong>' + totalRecords + '</strong><small>整合记录</small></span><span><strong>' + state.protocols.length + '</strong><small>共享 Protocol</small></span>';
     }
 
     function contributorName(item) {
@@ -1644,21 +1643,6 @@
     }
 
     function renderDashboard() {
-        const activeExperiments = state.experiments.filter(item => item.status !== '已完成').length;
-        const activeMice = state.mice.filter(item => item.status === '实验中').length;
-        const lowReagents = state.reagents.filter(item => getTheoreticalPercent(item) < 25 || item.status !== '正常').length;
-        const sampleCount = state.samples.length;
-        const metrics = [
-            { label: '进行中实验', value: activeExperiments, unit: '项', trend: state.experiments.length ? '+2 本周' : '暂无记录', code: 'EXP' },
-            { label: '在管实验动物', value: state.mice.length, unit: '个体', trend: activeMice + ' 个体实验中', code: 'ANI' },
-            { label: '登记生物样本', value: sampleCount, unit: '份', trend: state.samples.length ? '+8 本周' : '暂无记录', code: 'BIO' },
-            { label: '试剂预警', value: lowReagents, unit: '项', trend: lowReagents ? '需处理' : '状态良好', code: 'CHM' }
-        ];
-        const metricViews = ['experiments', 'mice', 'samples', 'reagents'];
-        document.getElementById('metricsGrid').innerHTML = metrics.map(function (metric, index) {
-            return '<button class="metric-card metric-link-card" type="button" data-index="0' + (index + 1) + '" data-view-target="' + metricViews[index] + '" aria-label="打开' + esc(metric.label) + '"><div class="metric-top"><span class="metric-icon">' + metric.code + '</span><span class="metric-trend">' + esc(metric.trend) + '</span></div><div class="metric-value"><strong>' + metric.value + '</strong><span>' + metric.unit + ' · ' + metric.label + '</span></div><span class="metric-link-arrow" aria-hidden="true">→</span></button>';
-        }).join('');
-
         const projects = state.experiments.filter(item => item.status !== '已完成').slice(0, 4);
         document.getElementById('dashboardProjects').innerHTML = projects.map(function (item, index) {
             return '<article class="project-row" data-view-target="experiments"><span class="project-code">P' + String(index + 1).padStart(2, '0') + '</span><div><h3>' + esc(item.title) + '</h3><p>' + esc(item.project) + contributorInline(item) + '</p></div><div class="project-progress"><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><small>最近更新 ' + esc(shortDate(item.date)) + '</small></div><span class="project-percent">' + number(item.progress, 0, 100) + '%</span></article>';
@@ -1765,14 +1749,6 @@
     function renderMice() {
         const search = valueOf('mouseSearch').toLowerCase();
         const items = state.mice.filter(item => [item.id, item.species, item.strain, item.genotype, item.cage, item.status, item.ethics].join(' ').toLowerCase().includes(search));
-        const speciesCount = new Set(state.mice.map(item => item.species).filter(Boolean)).size;
-        const metrics = [
-            { label: '动物个体', value: state.mice.length, code: 'ANI' },
-            { label: '动物物种', value: speciesCount, code: 'SPC' },
-            { label: '笼架数量', value: state.animalRacks.length, code: 'RCK' },
-            { label: '已建笼位', value: state.animalCages.length, code: 'CGE' }
-        ];
-        document.getElementById('mouseMetrics').innerHTML = miniMetricsHtml(metrics);
         renderAnimalHousing();
         document.getElementById('mouseTable').innerHTML = items.map(function (item) {
             return '<tr class="clickable-data-row" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>ANIMAL RECORD' + contributorInline(item) + '</small></td><td><strong>' + esc(item.species || '未设置') + '</strong></td><td><strong>' + esc(item.strain || '未设置') + '</strong><small>' + esc(item.genotype || '基因型未填写') + '</small></td><td>' + esc(item.sex || '未确认') + '</td><td>' + esc(item.birth || '未填写') + '</td><td><strong>' + esc(item.cage || '未分配') + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在养') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
@@ -1862,13 +1838,6 @@
             const matchesFilter = reagentFilter === '全部' || item.category === reagentFilter;
             return matchesFilter && [item.name, item.category, item.catalog, item.lot, item.location, item.status].join(' ').toLowerCase().includes(search);
         });
-        const metrics = [
-            { label: '库存品类', value: state.reagents.length, code: 'SKU' },
-            { label: '余量低', value: state.reagents.filter(item => positiveNumber(item.totalQty, 0) > 0 && getTheoreticalPercent(item) < 25).length, code: 'LOW' },
-            { label: '临近效期', value: state.reagents.filter(item => item.status === '临期').length, code: 'EXP' },
-            { label: '存储区域', value: new Set(state.reagents.map(item => String(item.location || '').split('/')[0].trim()).filter(Boolean)).size, code: 'LOC' }
-        ];
-        document.getElementById('reagentMetrics').innerHTML = miniMetricsHtml(metrics);
         document.getElementById('reagentTable').innerHTML = items.map(function (item) {
             const low = item.amount < 25 ? ' low' : '';
             const displayStatus = getReagentDisplayStatus(item);
@@ -1882,19 +1851,6 @@
         const items = state.cellCultures.filter(function (culture) {
             return [culture.id, culture.name, culture.species, culture.medium, culture.container, culture.incubator].join(' ').toLowerCase().includes(search);
         });
-        const historyCount = state.cellCultures.reduce(function (sum, culture) {
-            return sum + (Array.isArray(culture.history) ? culture.history.length : 0);
-        }, 0);
-        const locationCount = new Set(state.cellCultures.map(culture => culture.incubator).filter(Boolean)).size;
-        const averageConfluence = state.cellCultures.length
-            ? Math.round(state.cellCultures.reduce((sum, culture) => sum + number(culture.confluence, 0, 100), 0) / state.cellCultures.length)
-            : 0;
-        els.cellMaintenanceMetrics.innerHTML = miniMetricsHtml([
-            { label: '登记细胞', value: state.cellCultures.length, code: 'CELL' },
-            { label: '培养记录', value: historyCount, code: 'LOG' },
-            { label: '培养位置', value: locationCount, code: 'LOC' },
-            { label: '平均汇合度', value: averageConfluence + '%', code: 'CNF' }
-        ]);
         els.cellCultureGrid.innerHTML = items.map(function (culture) {
             return '<button class="cell-culture-card" type="button" data-cell-id="' + esc(culture.id) + '">' +
                 '<div class="cell-culture-main"><div class="cell-culture-top"><span class="micro-label">' + esc(culture.id) + contributorInline(culture) + '</span></div>' +
@@ -2404,12 +2360,6 @@
         const selectedTasks = state.schedule.filter(item => item.date === selectedIso).sort(byTime);
         els.monthAgendaTitle.textContent = formatShortDate(calendarDate) + ' · ' + selectedTasks.length + ' 项日程';
         els.monthAgendaList.innerHTML = selectedTasks.map(scheduleItemHtml).join('') || '<p class="month-empty">这一天还没有安排。</p>';
-    }
-
-    function miniMetricsHtml(metrics) {
-        return metrics.map(function (item) {
-            return '<article class="mini-metric"><div><small>' + esc(item.label) + '</small><strong>' + item.value + '</strong></div><i>' + esc(item.code) + '</i></article>';
-        }).join('');
     }
 
     function scheduleItemHtml(item) {

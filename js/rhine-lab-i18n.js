@@ -1018,6 +1018,7 @@
         [/^(.+) 的录入照片$/, function (m) { return 'Intake photo for ' + m[1]; }],
         [/^(\d{4}) 年 (\d{1,2}) 月 (\d{1,2}) 日$/, function (m) { return m[2] + '/' + m[3] + '/' + m[1]; }],
         [/^(\d+) 只实验中$/, function (m) { return m[1] + ' in experiments'; }],
+        [/^(\d+) 个体$/, function (m) { return countLabel(m[1], 'animal', 'animals'); }],
         [/^(\d+) 个体实验中$/, function (m) { return m[1] + ' assigned to active studies'; }],
         [/^(\d+) 项$/, function (m) { return countLabel(m[1], 'item', 'items'); }],
         [/^(\d+) 只$/, function (m) { return countLabel(m[1], 'animal', 'animals'); }],

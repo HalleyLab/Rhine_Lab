@@ -1,0 +1,160 @@
+/*
+ * Rhine Lab dashboard visual substrate.
+ * The masked grid treatment is adapted from Magic UI's Grid Pattern component.
+ * Source and MIT license notice: ../THIRD_PARTY_NOTICES.md
+ */
+
+#view-dashboard {
+    position: relative;
+}
+
+#view-dashboard .dashboard-hero {
+    isolation: isolate;
+    margin-bottom: 22px;
+}
+
+#view-dashboard .hero-copy {
+    position: relative;
+    z-index: 2;
+}
+
+#view-dashboard .hero-atmosphere::before {
+    content: "";
+    position: absolute;
+    inset: -28% -7% -32% 47%;
+    color: rgba(92, 112, 101, .2);
+    background-image:
+        linear-gradient(currentColor 1px, transparent 1px),
+        linear-gradient(90deg, currentColor 1px, transparent 1px);
+    background-size: 34px 34px;
+    transform: skewX(-9deg);
+    opacity: .52;
+    -webkit-mask-image: linear-gradient(105deg, transparent 4%, #000 35%, #000 76%, transparent 96%);
+    mask-image: linear-gradient(105deg, transparent 4%, #000 35%, #000 76%, transparent 96%);
+}
+
+#view-dashboard .hero-atmosphere::after {
+    content: "";
+    position: absolute;
+    right: 42px;
+    bottom: 17px;
+    width: min(260px, 30vw);
+    height: 11px;
+    border-top: 1px solid rgba(70, 88, 78, .28);
+    background: repeating-linear-gradient(90deg, rgba(70, 88, 78, .34) 0 1px, transparent 1px 16px);
+    opacity: .58;
+}
+
+#view-dashboard .hero-atmosphere i {
+    opacity: .72;
+}
+
+#view-dashboard .hero-atmosphere i:nth-of-type(2),
+#view-dashboard .hero-atmosphere i:nth-of-type(4) {
+    background: rgba(182, 219, 58, .15);
+    border-color: rgba(139, 174, 48, .24);
+}
+
+#view-dashboard .dashboard-grid {
+    gap: 16px;
+}
+
+#view-dashboard .dashboard-grid > .panel {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(132deg, rgba(255, 255, 255, .22), transparent 38%),
+        var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px 3px 16px 3px;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+#view-dashboard .dashboard-grid > .panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 22px;
+    z-index: 2;
+    width: 66px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--acid));
+}
+
+#view-dashboard .dashboard-grid > .panel::after {
+    content: "";
+    position: absolute;
+    top: 13px;
+    right: 13px;
+    width: 13px;
+    height: 13px;
+    border-top: 1px solid rgba(87, 104, 95, .28);
+    border-right: 1px solid rgba(87, 104, 95, .28);
+    pointer-events: none;
+}
+
+#view-dashboard .today-panel::before {
+    background: linear-gradient(90deg, var(--cyan), var(--acid));
+}
+
+#view-dashboard .alert-panel::before {
+    background: linear-gradient(90deg, var(--orange), #f2c467);
+}
+
+#view-dashboard .activity-panel::before {
+    background: linear-gradient(90deg, var(--acid-strong), var(--cyan));
+}
+
+#view-dashboard .panel-head {
+    position: relative;
+}
+
+#view-dashboard .panel-head::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 88px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(145, 187, 40, .48), transparent);
+}
+
+.dark-theme #view-dashboard .hero-atmosphere::before {
+    color: rgba(219, 232, 221, .16);
+    opacity: .34;
+}
+
+.dark-theme #view-dashboard .hero-atmosphere::after {
+    border-top-color: rgba(223, 234, 225, .24);
+    background: repeating-linear-gradient(90deg, rgba(223, 234, 225, .3) 0 1px, transparent 1px 16px);
+}
+
+.dark-theme #view-dashboard .dashboard-grid > .panel {
+    color: #edf2ec;
+}
+
+.dark-theme #view-dashboard .dashboard-grid > .panel::after {
+    border-color: rgba(232, 241, 234, .22);
+}
+
+@media (max-width: 700px) {
+    #view-dashboard .dashboard-hero {
+        margin-bottom: 16px;
+    }
+
+    #view-dashboard .hero-atmosphere::before {
+        inset: -15% -36% -22% 28%;
+        background-size: 28px 28px;
+        opacity: .36;
+    }
+
+    #view-dashboard .hero-atmosphere::after {
+        right: 18px;
+        width: 132px;
+    }
+
+    #view-dashboard .dashboard-grid > .panel {
+        border-radius: 13px 3px 13px 3px;
+    }
+}
