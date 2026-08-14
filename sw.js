@@ -1,12 +1,12 @@
-const CACHE_NAME = 'rhine-lab-pages-v45';
+const CACHE_NAME = 'rhine-lab-pages-v47';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
-    './css/rhine-lab.css?v=20260812-2',
+    './css/rhine-lab.css?v=20260814-1',
     './js/rhine-lab-config.js',
-    './js/rhine-lab-i18n.js?v=20260812-1',
-    './js/rhine-lab-sync.js',
+    './js/rhine-lab-i18n.js?v=20260813-1',
+    './js/rhine-lab-sync.js?v=20260813-1',
     './js/rhine-lab-pwa.js',
     './js/rhine-lab-bootstrap.js?v=20260812-1',
     './js/rhine-lab.js?v=20260812-1',

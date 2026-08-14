@@ -4609,6 +4609,10 @@ body.dark-theme {
     border-color: rgba(255, 255, 255, .08);
 }
 
+.dark-theme .hero-progress {
+    color: rgba(238, 243, 237, .72);
+}
+
 .dark-theme .hero-copy h1,
 .dark-theme .page-heading.technical-heading h1 {
     color: #eef3ed;
@@ -5738,6 +5742,10 @@ body.dark-theme {
     align-items: end;
     gap: 10px;
     padding: 0 22px 18px;
+}
+
+.sync-otp-form {
+    padding-top: 0;
 }
 
 .sync-login-form label,

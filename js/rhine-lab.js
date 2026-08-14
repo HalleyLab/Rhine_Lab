@@ -3618,7 +3618,7 @@ function getReagentDisplayStatus(reagent) {
             kicker: 'INVENTORY INTAKE', title: '录入新试剂',
             fields: [
                 field('name', '试剂名称', 'text', '例：Anti-NeuN antibody', true),
-                field('category', '试剂类别', 'select', ['抗体', '培养基', '化学试剂', '染料', '酶'], true),
+                field('category', '试剂类别', 'select', ['抗体', '培养基', '化学试剂', '实验耗材', '染料', '酶'], true),
                 field('catalog', '品牌货号', 'text', 'CATALOG NO.', true),
                 field('lot', '批次号', 'text', 'LOT NO.', true),
                 field('location', '存储位置', 'text', '-20°C / R2-C1', true),

@@ -12,6 +12,8 @@
         description: document.getElementById('syncDialogDescription'),
         loginForm: document.getElementById('syncLoginForm'),
         email: document.getElementById('syncEmail'),
+        otpForm: document.getElementById('syncOtpForm'),
+        otp: document.getElementById('syncOtp'),
         account: document.getElementById('syncAccount'),
         accountEmail: document.getElementById('syncAccountEmail'),
         accountRole: document.getElementById('syncAccountRole'),
@@ -38,6 +40,7 @@
     let applyingRemote = false;
     let started = false;
     let loadedMemberDirectoryFor = '';
+    let loginEmail = '';
 
     function configured() {
         return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
@@ -61,6 +64,7 @@
     function updateAccountUi() {
         const signedIn = Boolean(user);
         if (ui.loginForm) ui.loginForm.hidden = signedIn;
+        if (ui.otpForm) ui.otpForm.hidden = signedIn || !loginEmail;
         if (ui.account) ui.account.hidden = !signedIn;
         if (ui.signOut) ui.signOut.hidden = !signedIn;
         if (ui.accountEmail) ui.accountEmail.textContent = signedIn ? (user.email || '已验证账户') : '—';
@@ -168,7 +172,8 @@
     }
 
     function authRedirectUrl() {
-        return isNativeApp() || isDesktopApp() ? NATIVE_AUTH_REDIRECT : location.origin + location.pathname;
+        if (isNativeApp() || isDesktopApp()) return NATIVE_AUTH_REDIRECT;
+        return new URL('.', location.href).href;
     }
 
     function authParameters(url) {
@@ -219,7 +224,7 @@
 
         await nativeAppPlugin.addListener('appUrlOpen', function (event) {
             acceptNativeAuthUrl(event && event.url).catch(function (error) {
-                setStatus('error', '????', readableError(error, '????????????'));
+                setStatus('error', '登录失败', readableError(error, '无法完成移动端登录。'));
             });
         });
 
@@ -230,7 +235,7 @@
     async function importClient() {
         const library = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
         return library.createClient(config.supabaseUrl.replace(/\/$/, ''), config.supabasePublishableKey, {
-            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' }
         });
     }
 
@@ -245,6 +250,7 @@
 
         setStatus('connecting', '正在连接', '正在连接 Rhine Lab 云端…');
         try {
+            const initialAuthError = authParameters(location.href).get('error_description');
             supabase = await importClient();
             supabase.auth.onAuthStateChange(function (_event, session) {
                 window.setTimeout(function () { handleSession(session); }, 0);
@@ -253,6 +259,9 @@
             const result = await supabase.auth.getSession();
             if (result.error) throw result.error;
             await handleSession(result.data.session);
+            if (!user && initialAuthError) {
+                setStatus('error', '登录失败', '登录链接已失效或已被使用，请重新发送链接或使用验证码。');
+            }
         } catch (error) {
             setStatus('error', '连接失败', readableError(error, '无法连接云端，请检查配置或网络。'));
         }
@@ -498,12 +507,32 @@
                     setStatus('error', '发送失败', readableError(result.error, '登录链接发送失败。'));
                     return;
                 }
-                setStatus('local', '检查邮箱', '登录链接已发送；请在此设备打开邮件完成登录。');
+                loginEmail = email;
+                if (ui.otpForm) ui.otpForm.hidden = false;
+                setStatus('local', '检查邮箱', '登录链接已发送；请在发起登录的设备打开邮件。若邮件包含 6 位验证码，也可在这里输入。');
+            });
+        }
+        if (ui.otpForm) {
+            ui.otpForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const email = loginEmail || String(ui.email && ui.email.value || '').trim();
+                const token = String(ui.otp && ui.otp.value || '').replace(/\s+/g, '');
+                if (!supabase || !email || !/^\d{6}$/.test(token)) return;
+                setStatus('connecting', '正在验证', '正在验证一次性验证码…');
+                const result = await supabase.auth.verifyOtp({ email: email, token: token, type: 'email' });
+                if (result.error) {
+                    setStatus('error', '验证失败', readableError(result.error, '验证码无效或已过期。'));
+                    return;
+                }
+                setStatus('connecting', '验证成功', '验证码已通过，正在载入工作区…');
             });
         }
         if (ui.signOut) {
             ui.signOut.addEventListener('click', async function () {
                 if (supabase) await supabase.auth.signOut();
+                loginEmail = '';
+                if (ui.otp) ui.otp.value = '';
+                updateAccountUi();
                 if (ui.dialog && ui.dialog.open) ui.dialog.close();
             });
         }
