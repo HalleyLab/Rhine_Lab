@@ -4,7 +4,7 @@
 
 Rhine Lab 是一款面向生命科学研究的个人与实验室协作工作台，支持网页、Android、Windows 和浏览器扩展。
 
-[在线体验](https://halleylab.github.io/Rhine_Lab/) · [下载应用](https://github.com/HalleyLab/Rhine_Lab/releases/tag/v0.1.7)
+[在线体验](https://halleylab.github.io/Rhine_Lab/) · [下载应用](https://github.com/HalleyLab/Rhine_Lab/releases/tag/v0.1.8)
 
 ---
 
@@ -27,8 +27,8 @@ Rhine Lab 是一款面向生命科学研究的个人与实验室协作工作台�
 ### 使用方式
 
 - **网页展示版：** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/)；未登录时为只读，登录后可编辑和同步。
-- **Android：** 下载 `Rhine-Lab-0.1.7-internal.apk` 后直接安装。
-- **Windows：** 下载 `Rhine-Lab-0.1.7-Windows.exe` 后直接运行，无需解压。
+- **Android：** 下载 `Rhine-Lab-0.1.8-internal.apk` 后直接安装。
+- **Windows：** 下载 `Rhine-Lab-0.1.8-Windows.exe` 后直接运行，无需解压。
 - **浏览器扩展：** 下载 ZIP，解压后通过 Chrome/Edge 的“加载已解压的扩展程序”安装。
 
 新安装的应用默认使用空工作区。数据优先保存在当前设备；登录并启用云同步后，可在不同设备之间同步。
@@ -56,8 +56,8 @@ Rhine Lab is a personal and collaborative laboratory workspace for life-science 
 ### Get started
 
 - **Web demo:** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/). The public site is read-only until you sign in.
-- **Android:** Download and install `Rhine-Lab-0.1.7-internal.apk`.
-- **Windows:** Download and run `Rhine-Lab-0.1.7-Windows.exe`; no extraction is required.
+- **Android:** Download and install `Rhine-Lab-0.1.8-internal.apk`.
+- **Windows:** Download and run `Rhine-Lab-0.1.8-Windows.exe`; no extraction is required.
 - **Browser extension:** Download the ZIP, extract it, then load the folder as an unpacked extension in Chrome or Edge.
 
 New installations start with an empty workspace. Data is stored locally first and can be synchronized across devices after sign-in.

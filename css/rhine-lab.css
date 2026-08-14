@@ -10906,7 +10906,7 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     grid-template-columns: minmax(0, 1fr);
 }
 
-/* Rhine Lab 0.1.7 housing, schedule, typography and shared-workspace alignment. */
+/* Rhine Lab 0.1.8 housing, schedule, typography and shared-workspace alignment. */
 .animal-rack-tab-wrap {
     position: relative;
     flex: 0 0 auto;
@@ -11173,3 +11173,26 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
         padding: 2px 10px;
     }
 }
+
+
+/* v0.1.8 explicit editing and history controls */
+.schedule-edit-button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    font: 700 15px/1 Helvetica, Arial, sans-serif;
+}
+.schedule-edit-button:hover { border-color: var(--lime-strong); color: var(--lime-deep); }
+.entry-edit-history { grid-column: 1 / -1; }
+.entry-edit-history .record-detail-section { margin: 8px 0 0; }
+.experiment-history-section:empty { display: none; }
+.protocol-detail-dialog footer > div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 720px) {
+    .protocol-detail-dialog footer > div { width: 100%; }
+    .protocol-detail-dialog footer > div .button { flex: 1; }
+}
+.dark-theme .schedule-edit-button { background: var(--surface); color: var(--ink); }

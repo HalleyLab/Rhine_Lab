@@ -321,6 +321,7 @@
         protocolDetailBody: document.getElementById('protocolDetailBody'),
         protocolDetailUsage: document.getElementById('protocolDetailUsage'),
         scheduleProtocolButton: document.getElementById('scheduleProtocolButton'),
+        editProtocolButton: document.getElementById('editProtocolButton'),
         experimentDetailDialog: document.getElementById('experimentDetailDialog'),
         experimentDetailForm: document.getElementById('experimentDetailForm'),
         experimentDetailNumber: document.getElementById('experimentDetailNumber'),
@@ -333,6 +334,9 @@
         experimentUsageImpact: document.getElementById('experimentUsageImpact'),
         experimentPhotoPanel: document.getElementById('experimentPhotoPanel'),
         experimentResultSection: document.getElementById('experimentResultSection'),
+        experimentHistorySection: document.getElementById('experimentHistorySection'),
+        editExperimentButton: document.getElementById('editExperimentButton'),
+        experimentDetailSubmitButton: document.getElementById('experimentDetailSubmitButton'),
         experimentRunDialog: document.getElementById('experimentRunDialog'),
         experimentRunKicker: document.getElementById('experimentRunKicker'),
         experimentRunTitle: document.getElementById('experimentRunTitle'),
@@ -917,7 +921,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1037,6 +1041,13 @@
             const deleteCage = event.target.closest('[data-delete-animal-cage]');
             if (deleteCage) {
                 requestRecordDelete('animalCage', deleteCage.dataset.deleteAnimalCage);
+                return;
+            }
+
+            const editTask = event.target.closest('[data-edit-task]');
+            if (editTask) {
+                const task = state.schedule.find(item => item.id === editTask.dataset.editTask);
+                if (task) openEntryDialog('task', { edit: true, key: task.id, record: task });
                 return;
             }
 
@@ -1440,7 +1451,8 @@
             renderReagents();
         });
 
-        els.entryForm.addEventListener('submit', saveEntryFromDialog);
+        els.entryForm.addEventListener('submit', function (event) { event.preventDefault(); });
+        els.entrySubmitButton.addEventListener('click', saveEntryFromDialog);
         els.entryForm.addEventListener('change', function (event) {
             if (event.target.matches('[data-result-attachments]')) {
                 prepareResultAttachments(event.target);
@@ -1473,7 +1485,8 @@
                 if (protocolInput && experiment.protocolId) protocolInput.value = experiment.protocolId;
             }
         });
-        els.experimentDetailForm.addEventListener('submit', saveExperimentDetail);
+        els.experimentDetailForm.addEventListener('submit', function (event) { event.preventDefault(); });
+        els.experimentDetailSubmitButton.addEventListener('click', saveExperimentDetail);
         els.experimentDetailProtocol.addEventListener('change', function () {
             applyProtocolDefaultsToExperimentEditor(els.experimentDetailProtocol.value);
         });
@@ -1491,6 +1504,20 @@
             if (denyReadOnlyMutation()) return;
             pendingTaskDefaults = { date: toIsoDate(calendarDate), time: '09:00', end: '10:00' };
             openEntryDialog('task');
+        });
+        els.editProtocolButton.addEventListener('click', function () {
+            if (denyReadOnlyMutation()) return;
+            const protocol = state.protocols.find(item => item.id === activeProtocolId);
+            if (!protocol) return;
+            els.protocolDetailDialog.close();
+            openEntryDialog('protocol', { edit: true, key: protocol.id, record: protocol });
+        });
+        els.editExperimentButton.addEventListener('click', function () {
+            if (denyReadOnlyMutation()) return;
+            const experiment = state.experiments.find(item => item.id === activeExperimentId);
+            if (!experiment) return;
+            els.experimentDetailDialog.close();
+            openEntryDialog('experiment', { edit: true, key: experiment.id, record: experiment });
         });
         els.scheduleProtocolButton.addEventListener('click', function () {
             if (denyReadOnlyMutation()) return;
@@ -1929,22 +1956,17 @@
         prepareRecordDetail('reagent', reagent.catalog);
         const displayStatus = getReagentDisplayStatus(reagent);
         const recordedConsumption = getProtocolConsumption(reagent.catalog);
-        const linkedProtocols = state.protocols.filter(protocol => (protocol.reagents || []).some(usage => usage.catalog === reagent.catalog)).length;
-        const linkedProtocolsLabel = interfaceLocale() === 'en-US' ? linkedProtocols + ' ' + (linkedProtocols === 1 ? 'item' : 'items') : linkedProtocols + ' 项';
         const photo = reagent.photoData ? '<figure class="record-detail-photo"><img src="' + esc(reagent.photoData) + '" alt="' + esc(reagent.name) + ' 录入照片"><figcaption>录入时附加的试剂标签照片</figcaption></figure>' : '';
-        const warning = displayStatus === '余量低' ? '<aside class="record-detail-alert"><span>!</span><div><strong>余量低</strong><p>根据已完成日程和实验记录触发低余量提醒，请核对实际库存并考虑补充。</p></div></aside>' : '';
         const nodeField = workspaceMode === 'lab' ? detailFieldHtml('录入节点', contributorName(reagent)) : '';
         els.recordDetailKicker.textContent = 'REAGENT RECORD · ' + reagent.catalog;
         els.recordDetailTitle.textContent = reagent.name;
         els.recordDetailBody.innerHTML =
             '<section class="record-detail-hero reagent-detail-hero"><div><span class="record-detail-code">' + esc(reagent.catalog) + '</span><h3>' + esc(reagent.name) + '</h3><p>' + esc(interfaceText(reagent.category)) + ' · LOT ' + esc(reagent.lot) + '</p></div><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></section>' +
-            warning +
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">INVENTORY PROFILE</p><h3>库存详细信息</h3></div><div class="record-detail-grid">' +
                 detailFieldHtml('试剂名称', reagent.name, true) + detailFieldHtml('类别', reagent.category) + detailFieldHtml('品牌货号', reagent.catalog) + detailFieldHtml('批次号', reagent.lot) +
                 detailFieldHtml('存储位置', reagent.location, true) + detailFieldHtml('当前实际库存', formatQuantity(reagent.currentQty) + ' / ' + formatQuantity(reagent.totalQty) + ' ' + reagent.unit) +
-                detailFieldHtml('实际库存比例', formatQuantity(reagent.amount) + '%') + detailFieldHtml('有效期', reagent.expiry) + detailFieldHtml('当前状态', displayStatus) + nodeField +
-            '</div><div class="detail-stock-meter"><div><i style="width:' + number(reagent.amount, 0, 100) + '%"></i></div><span>' + esc(interfaceText('实际库存')) + ' ' + formatQuantity(reagent.amount) + '%</span></div></section>' +
-            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">USAGE TRACE</p><h3>使用关联</h3></div><div class="record-detail-grid compact">' + detailFieldHtml('关联 Protocol', linkedProtocolsLabel) + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + '</div></section>' + photo + recordHistoryHtml(reagent);
+                detailFieldHtml('实际库存比例', formatQuantity(reagent.amount) + '%') + detailFieldHtml('有效期', reagent.expiry) + detailFieldHtml('当前状态', displayStatus) + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + nodeField +
+            '</div><div class="detail-stock-meter"><div><i style="width:' + number(reagent.amount, 0, 100) + '%"></i></div><span>' + esc(interfaceText('实际库存')) + ' ' + formatQuantity(reagent.amount) + '%</span></div></section>' + photo + recordHistoryHtml(reagent);
         els.recordDetailDialog.showModal();
     }
 
@@ -2003,10 +2025,12 @@
     }
 
     function recordTypeLabel(type) {
-        return { mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
+        if (type === 'experiment') return state.experiments;
+        if (type === 'protocol') return state.protocols;
         if (type === 'mouse') return state.mice;
         if (type === 'reagent') return state.reagents;
         if (type === 'sample') return state.samples;
@@ -2287,7 +2311,7 @@
             const left = placement.index / placement.count * 100;
             const width = 100 / placement.count;
             const runButton = scheduleRunButtonHtml(item, protocol, true);
-            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
+            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
         });
         document.getElementById('dayTimeline').innerHTML = gridHtml;
 
@@ -2364,7 +2388,7 @@
 
     function scheduleItemHtml(item) {
         const protocol = state.protocols.find(entry => entry.id === item.protocolId);
-        return '<article class="today-item ' + (item.done ? 'done' : '') + '"><time>' + esc(item.time) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
+        return '<article class="today-item ' + (item.done ? 'done' : '') + '"><time>' + esc(item.time) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
     }
 
     function scheduleRunButtonHtml(item, protocol, compact) {
@@ -2404,7 +2428,7 @@
 
     function beginScheduleDrag(event) {
         if (denyReadOnlyMutation(event)) return;
-        if (event.target.closest('[data-task-check], [data-start-scheduled-experiment], [data-delete-task]') || event.button !== 0 || calendarMode !== 'day') return;
+        if (event.target.closest('[data-task-check], [data-start-scheduled-experiment], [data-edit-task], [data-delete-task]') || event.button !== 0 || calendarMode !== 'day') return;
         const slotIndex = scheduleSlotIndexFromPointer(event);
         if (slotIndex < 0) return;
         event.preventDefault();
@@ -2497,7 +2521,7 @@
         const protocolLiterature = protocolLiteratureHtml(protocol);
         els.protocolDetailNumber.textContent = protocol.number + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
-        els.protocolDetailBody.innerHTML = '<aside class="protocol-note-card"><p class="micro-label">NOTE</p><p>' + esc(protocol.summary || '未填写注释') + '</p></aside>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>';
+        els.protocolDetailBody.innerHTML = '<aside class="protocol-note-card"><p class="micro-label">NOTE</p><p>' + esc(protocol.summary || '未填写注释') + '</p></aside>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>' + recordHistoryHtml(protocol);
         els.protocolDetailUsage.textContent = interfaceLocale() === 'en-US' ? linked.length + ' scheduled ' + (linked.length === 1 ? 'item' : 'items') + ' linked · ' + completed.length + ' completed ' + (completed.length === 1 ? 'run' : 'runs') : '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
@@ -2552,6 +2576,7 @@
             els.experimentPhotoPanel.innerHTML = '';
         }
         renderExperimentResultSection(experiment);
+        els.experimentHistorySection.innerHTML = recordHistoryHtml(experiment);
         updateExperimentUsageSource();
         updateExperimentUsageImpact();
         if (!els.experimentDetailDialog.open) els.experimentDetailDialog.showModal();
@@ -2633,6 +2658,7 @@
         if (denyReadOnlyMutation()) return;
         const experiment = state.experiments.find(item => item.id === activeExperimentId);
         if (!experiment) return;
+        const before = clone(experiment);
         const usage = readExperimentUsageRows();
         const defaults = getProtocolDefaultUsage(els.experimentDetailProtocol.value);
         experiment.status = els.experimentDetailStatus.value === '__custom__'
@@ -2647,6 +2673,19 @@
         experiment.description = els.experimentDetailDescription.value.trim();
         experiment.reagentUsage = usage;
         experiment.usageOverridden = !usageSetsEqual(usage, defaults);
+        const detailChanges = [
+            { field: 'status', label: '记录状态', from: before.status, to: experiment.status },
+            { field: 'protocolId', label: '关联 Protocol', from: before.protocolId, to: experiment.protocolId },
+            { field: 'description', label: '本次记录与备注', from: before.description, to: experiment.description },
+            { field: 'reagentUsage', label: '本次试剂用量', from: historyFieldValue('reagents', before.reagentUsage), to: historyFieldValue('reagents', experiment.reagentUsage) }
+        ].filter(change => String(change.from || '') !== String(change.to || ''));
+        if (!detailChanges.length) {
+            showToast('没有检测到需要保存的修改');
+            return;
+        }
+        experiment.history = Array.isArray(experiment.history) ? experiment.history : [];
+        experiment.history.push({ at: new Date().toISOString(), action: 'updated', changes: detailChanges });
+        appendAuditLog({ action: 'updated', recordType: 'experiment', recordId: experiment.id, changes: clone(detailChanges) });
         state.activities.unshift({ text: '更新实验“' + experiment.title + '”的本次试剂用量', time: '刚刚' });
         saveState();
         renderAll();
@@ -3673,6 +3712,7 @@ function getReagentDisplayStatus(reagent) {
         let defaultsForEntry = null;
         if (editOptions) {
             defaultsForEntry = clone(editOptions.record);
+            if (type === 'protocol') defaultsForEntry.stepsText = (editOptions.record.steps || []).join('\n');
         } else if (type === 'result') {
             const preferred = state.experiments.find(item => item.id === pendingResultExperimentId) || state.experiments.find(function (experiment) {
                 return !state.results.some(result => result.experimentId === experiment.id);
@@ -3714,10 +3754,8 @@ function getReagentDisplayStatus(reagent) {
         els.dialogTitle.textContent = editOptions ? '编辑' + recordTypeLabel(type) + '信息' : schema.title;
         els.entrySubmitButton.textContent = editOptions ? '保存修改' : '确认保存';
         els.dialogFields.innerHTML = schema.fields.map(fieldHtml).join('');
-        if (!editOptions) {
-            els.dialogFields.insertAdjacentHTML('afterbegin', '<p class="entry-optional-note">所有字段均可留空；系统会自动生成内部编号，之后可继续编辑补充。</p>');
-        }
         if (type === 'result') renderPendingResultAttachments();
+        if (type === 'protocol' && editOptions) renderProtocolReagentEditor(editOptions.record.reagents || []);
         if (type === 'task') {
             els.dialogFields.insertAdjacentHTML('afterbegin', '<aside class="schedule-overlap-note"><span>↔</span><div><strong>支持重叠日程</strong><p>同一时间可以安排多个事件；每日视图会自动并排显示。</p></div></aside>');
         }
@@ -3747,6 +3785,7 @@ function getReagentDisplayStatus(reagent) {
                     wrapper.insertAdjacentHTML('beforeend', '<small class="field-note" id="record-key-lock-note">关联标识不可修改，其他信息均可更新。</small>');
                 }
             }
+            els.dialogFields.insertAdjacentHTML('beforeend', '<div class="entry-edit-history full">' + recordHistoryHtml(editOptions.record) + '</div>');
             if (pendingPhotoData) {
                 const capture = els.dialogFields.querySelector('.photo-capture');
                 if (capture) {
@@ -3780,6 +3819,9 @@ function getReagentDisplayStatus(reagent) {
         const memory = readInputMemory();
         const key = type + '.' + name;
         const values = Array.isArray(memory[key]) ? memory[key].slice() : [];
+        recordCollection(type).forEach(function (record) {
+            if (record && record[name] != null && !Array.isArray(record[name])) values.push(String(record[name]));
+        });
         if (type === 'cell' || type === 'passage') {
             state.cellCultures.forEach(function (culture) {
                 if (culture[name]) values.push(String(culture[name]));
@@ -3796,7 +3838,7 @@ function getReagentDisplayStatus(reagent) {
         if (!schema) return;
         const memory = readInputMemory();
         schema.fields.forEach(function (config) {
-            if (!['select', 'memory-text'].includes(config.type)) return;
+            if (!['select', 'memory-text', 'text'].includes(config.type)) return;
             const value = String(data[config.name] || '').trim();
             if (!value) return;
             const key = type + '.' + config.name;
@@ -3824,7 +3866,7 @@ function getReagentDisplayStatus(reagent) {
             const options = rememberedFieldValues(activeDialogType, config.name).map(function (value) {
                 return '<option value="' + esc(value) + '"></option>';
             }).join('');
-            control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text" list="' + listId + '" autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"><datalist id="' + listId + '">' + options + '</datalist><small class="field-note">可直接输入，也可选择之前保存过的内容。</small>';
+            control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text" list="' + listId + '" autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"><datalist id="' + listId + '">' + options + '</datalist>';
         } else if (config.type === 'protocol-select') {
             const options = ['<option value="">不关联 Protocol</option>'].concat(state.protocols.map(function (protocol) {
                 return '<option value="' + esc(protocol.id) + '">' + esc(protocol.title) + ' · ' + esc(protocol.id) + '</option>';
@@ -3869,6 +3911,10 @@ function getReagentDisplayStatus(reagent) {
             control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
             control = '<textarea id="field-' + config.name + '" name="' + config.name + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '></textarea>';
+        } else if (config.type === 'text') {
+            const listId = 'smart-' + activeDialogType + '-' + config.name;
+            const options = rememberedFieldValues(activeDialogType, config.name).map(function (value) { return '<option value="' + esc(value) + '"></option>'; }).join('');
+            control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text"' + (options ? ' list="' + listId + '"' : '') + ' autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '>' + (options ? '<datalist id="' + listId + '">' + options + '</datalist>' : '');
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
             const minmax = config.type === 'number' ? (config.name === 'rows' && activeDialogType === 'animalRack' ? ' min="1" max="12" step="1"' : config.name === 'columns' && activeDialogType === 'animalRack' ? ' min="1" max="48" step="1"' : ' min="0" step="0.01"') : '';
@@ -3900,12 +3946,20 @@ function getReagentDisplayStatus(reagent) {
         return true;
     }
 
-    function reagentUsageRowHtml() {
+    function reagentUsageRowHtml(usage) {
+        const selectedCatalog = usage && usage.catalog ? usage.catalog : (state.reagents[0] ? state.reagents[0].catalog : '');
+        const amount = usage && usage.amount != null ? usage.amount : 1;
         const options = state.reagents.map(function (reagent) {
-            return '<option value="' + esc(reagent.catalog) + '">' + esc(reagent.name) + ' · ' + esc(reagent.unit) + '</option>';
+            return '<option value="' + esc(reagent.catalog) + '"' + (reagent.catalog === selectedCatalog ? ' selected' : '') + '>' + esc(reagent.name) + ' · ' + esc(reagent.unit) + '</option>';
         }).join('');
         if (!options) return '<p class="field-note">请先在试剂库存中录入试剂。</p>';
-        return '<div class="protocol-reagent-row"><select name="reagentCatalog">' + options + '</select><input name="reagentAmount" type="number" min="0.001" step="0.001" value="1" aria-label="单次用量"><span>库存单位 / 次</span><button type="button" data-remove-reagent-row aria-label="移除此试剂">×</button></div>';
+        return '<div class="protocol-reagent-row"><select name="reagentCatalog">' + options + '</select><input name="reagentAmount" type="number" min="0.001" step="0.001" value="' + esc(amount) + '" aria-label="单次用量"><span>库存单位 / 次</span><button type="button" data-remove-reagent-row aria-label="移除此试剂">×</button></div>';
+    }
+
+    function renderProtocolReagentEditor(usages) {
+        const rows = document.getElementById('protocolReagentRows');
+        if (!rows) return;
+        rows.innerHTML = (usages || []).map(reagentUsageRowHtml).join('') || '<p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p>';
     }
 
     async function prepareResultAttachments(input) {
@@ -4055,7 +4109,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
+        if (editingRecord && ['experiment', 'protocol', 'task', 'mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -4072,6 +4126,7 @@ function getReagentDisplayStatus(reagent) {
             data.progress = data.status === '已完成' ? 100 : 12;
             data.reagentUsage = [];
             data.usageOverridden = false;
+            data.history = [createdHistoryEntry()];
             state.experiments.unshift(data);
             activityText = '新建实验记录“' + data.title + '”';
         } else if (activeDialogType === 'result') {
@@ -4080,7 +4135,7 @@ function getReagentDisplayStatus(reagent) {
                 experiment = {
                     id: generatedRecordId('RL-EXP'), title: '未命名实验', project: '', status: '进行中', type: '未分类',
                     date: data.date || todayIso(), protocolId: '', description: '', progress: 0, reagentUsage: [],
-                    usageOverridden: false, photoData: '', createdBy: data.createdBy
+                    usageOverridden: false, photoData: '', createdBy: data.createdBy, history: [createdHistoryEntry()]
                 };
                 state.experiments.unshift(experiment);
                 data.experimentId = experiment.id;
@@ -4228,7 +4283,8 @@ function getReagentDisplayStatus(reagent) {
                 literatureId: String(data.literatureId || '').trim(),
                 literatureUrl: String(data.literatureUrl || '').trim(),
                 photoData: data.photoData || '',
-                createdBy: data.createdBy
+                createdBy: data.createdBy,
+                history: [createdHistoryEntry()]
             };
             state.protocols.unshift(protocol);
             activeProtocolId = protocol.id;
@@ -4294,6 +4350,7 @@ function getReagentDisplayStatus(reagent) {
             }
             data.id = generatedRecordId('T');
             data.done = false;
+            data.history = [createdHistoryEntry()];
             state.schedule.push(data);
             calendarDate = parseLocalDate(data.date);
             activityText = '添加日程“' + data.title + '”';
@@ -4355,7 +4412,41 @@ function getReagentDisplayStatus(reagent) {
             changeHistory: Array.isArray(current.changeHistory) ? current.changeHistory.slice() : undefined
         });
 
-        if (target.type === 'mouse') {
+        if (target.type === 'experiment') {
+            updated.id = current.id;
+            updated.title = displayOr(data.title, '未命名实验');
+            updated.date = data.date || current.date || todayIso();
+            updated.status = displayOr(data.status, current.status || '进行中');
+            updated.progress = updated.status === '已完成' ? 100 : updated.status === '待分析' ? Math.max(80, current.progress || 0) : Math.min(79, current.progress || 40);
+        } else if (target.type === 'protocol') {
+            updated.id = current.id;
+            updated.number = current.number;
+            updated.steps = String(data.stepsText || '').split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+            const catalogs = Array.from(els.entryForm.querySelectorAll('[name="reagentCatalog"]')).map(input => input.value);
+            const amounts = Array.from(els.entryForm.querySelectorAll('[name="reagentAmount"]')).map(input => input.value);
+            const reagentMap = new Map();
+            catalogs.forEach(function (catalog, index) {
+                const amount = positiveNumber(amounts[index], 0);
+                if (catalog && amount > 0) reagentMap.set(catalog, roundQuantity((reagentMap.get(catalog) || 0) + amount));
+            });
+            updated.reagents = Array.from(reagentMap, entry => ({ catalog: entry[0], amount: entry[1] }));
+            delete updated.stepsText;
+        } else if (target.type === 'task') {
+            updated.id = current.id;
+            updated.done = current.done;
+            updated.date = data.date || current.date || todayIso();
+            updated.time = data.time || current.time || '09:00';
+            updated.end = data.end || current.end || addMinutes(updated.time, 60);
+            if (timeToMinutes(updated.end) <= timeToMinutes(updated.time)) {
+                showToast('结束时间需要晚于开始时间');
+                return;
+            }
+            if (updated.experimentId) {
+                const linkedExperiment = state.experiments.find(item => item.id === updated.experimentId);
+                if (!linkedExperiment) updated.experimentId = '';
+                else if (linkedExperiment.protocolId) updated.protocolId = linkedExperiment.protocolId;
+            }
+        } else if (target.type === 'mouse') {
             updated.id = current.id;
             const cage = state.animalCages.find(item => item.id === data.cageId);
             updated.cageId = cage ? cage.id : '';
@@ -4409,8 +4500,8 @@ function getReagentDisplayStatus(reagent) {
             return {
                 field: config.name,
                 label: config.label,
-                from: historyFieldValue(config.name, current[config.name]),
-                to: historyFieldValue(config.name, updated[config.name])
+                from: historyFieldValue(config.name, schemaRecordValue(target.type, current, config.name)),
+                to: historyFieldValue(config.name, schemaRecordValue(target.type, updated, config.name))
             };
         }).filter(function (change) {
             return String(change.from == null ? '' : change.from) !== String(change.to == null ? '' : change.to);
@@ -4445,11 +4536,18 @@ function getReagentDisplayStatus(reagent) {
         pendingResultExperimentId = '';
         pendingResultAttachments = [];
         showToast('修改已保存，并写入变更记录');
-        window.setTimeout(function () { openRecordDetail(target.type, target.key); }, 100);
+    }
+
+    function schemaRecordValue(type, record, fieldName) {
+        if (type === 'protocol' && fieldName === 'stepsText') return (record.steps || []).join('\n');
+        return record[fieldName];
     }
 
     function historyFieldValue(fieldName, value) {
         if (fieldName === 'photoData') return value ? '已附照片' : '未附照片';
+        if (fieldName === 'reagents' || fieldName === 'reagentUsage') {
+            return (Array.isArray(value) ? value : []).map(function (item) { return item.catalog + ' × ' + formatQuantity(item.amount); }).join('、');
+        }
         if (fieldName === 'attachments') {
             const attachments = Array.isArray(value) ? value : [];
             return attachments.length + ' 个附件' + (attachments.length ? ' · ' + attachments.map(item => item.name).join('、') : '');
