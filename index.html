@@ -13,7 +13,7 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.1.8-unified" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.1.8-unified">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260814-4">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260814-6">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
 </head>
 <body>
@@ -149,7 +149,7 @@
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>EXPERIMENT RECORDS &amp; RESULTS</span></p><h1>实验记录</h1><p class="story-quote">“可科学本该是理性的。”<cite>——塞雷娅</cite></p></div>
                         <button class="button primary" type="button" data-add="experiment"><span>＋</span> 新建记录</button>
-                        <div class="heading-code">02</div>
+                        <div class="heading-visual heading-visual-02" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>RECORDS / DATA</b><small>RHINE LAB · ANALYSIS</small></span><span class="heading-monogram">REC</span></div>
                     </div>
                     <div class="module-toolbar">
                         <div class="filter-tabs" id="experimentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="进行中">进行中</button><button data-filter="待分析">待分析</button><button data-filter="已完成">已完成</button><button data-filter="有结果">有结果</button><button data-filter="待填写结果">待填写结果</button></div>
@@ -162,13 +162,13 @@
                 <section class="view" id="view-mice" data-title="动物管理">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>ANIMAL FACILITY</span></p><h1>动物管理</h1><p class="story-quote">“可我从来都无法赞同理所当然的牺牲。”<cite>——塞雷娅</cite></p></div>
-                        <div class="heading-actions animal-heading-actions"><button class="button ghost" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button><button class="button primary" type="button" data-add="mouse"><span>＋</span> 添加动物</button></div>
-                        <div class="heading-code">03</div>
+                        <div class="heading-actions animal-heading-actions"><button class="button primary" type="button" data-add="mouse"><span>＋</span> 添加动物</button></div>
+                        <div class="heading-visual heading-visual-03" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>VIVARIUM / ETHICS</b><small>RHINE LAB · HOUSING</small></span><span class="heading-monogram">VIV</span></div>
                     </div>
                     <section class="panel animal-rack-manager">
                         <div class="module-toolbar in-panel animal-rack-toolbar">
                             <div class="section-title"><span class="section-index">A</span><div><p class="micro-label">HOUSING MAP</p><h2>笼架与笼位</h2></div></div>
-                            <div class="animal-rack-actions"><span>点击空位新建笼位</span><button class="button ghost compact" type="button" data-add="animalCage">＋ 新建笼位</button></div>
+                            <div class="animal-rack-actions"><button class="button ghost compact" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button></div>
                         </div>
                         <div class="animal-rack-tabs" id="animalRackTabs" aria-label="动物笼架"></div>
                         <div class="animal-housing-layout">
@@ -191,7 +191,7 @@
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>CHEMICAL INVENTORY</span></p><h1>试剂库存</h1><p class="story-quote">“递质的数据分析结果怎么样？”<cite>——克丽斯腾</cite></p></div>
                         <button class="button primary" type="button" data-add="reagent"><span>＋</span> 录入试剂</button>
-                        <div class="heading-code">04</div>
+                        <div class="heading-visual heading-visual-04" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>CHEMICAL / INVENTORY</b><small>RHINE LAB · STORAGE</small></span><span class="heading-monogram">CHM</span></div>
                     </div>
                     <section class="panel table-panel">
                         <div class="module-toolbar in-panel"><div class="filter-tabs" id="reagentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="抗体">抗体</button><button data-filter="培养基">培养基</button><button data-filter="化学试剂">化学试剂</button><button data-filter="实验耗材">实验耗材</button></div><label class="inline-search"><span>⌕</span><input id="reagentSearch" type="search" placeholder="搜索名称、货号或位置"></label></div>
@@ -203,7 +203,7 @@
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>FROZEN SAMPLE ARCHIVE</span></p><h1>冻存样本</h1><p class="story-quote">“我会留下你的研究记录。”<cite>——克丽斯腾</cite></p></div>
                         <button class="button primary" type="button" data-add="sample"><span>＋</span> 登记样本</button>
-                        <div class="heading-code">06</div>
+                        <div class="heading-visual heading-visual-06" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>FROZEN SAMPLE / ARCHIVE</b><small>RHINE LAB · BIOBANK</small></span><span class="heading-monogram">CRYO</span></div>
                     </div>
                     <section class="freezer-manager panel" aria-label="冻存盒管理">
                         <div class="freezer-box-tabs" id="freezerBoxTabs"></div>
@@ -228,8 +228,8 @@
                 <section class="view" id="view-protocols" data-title="实验方案">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>PROTOCOL LIBRARY</span></p><h1>实验方案</h1><p class="story-quote">“理论上说，这确实是可行的......”<cite>——塞雷娅</cite></p></div>
-                        <div class="heading-actions"><span class="heading-status"><i></i> <b id="protocolCount">6</b> 份 SOP 已同步</span><button class="button primary" type="button" data-add="protocol"><span>＋</span> 录入 Protocol</button></div>
-                        <div class="heading-code">07</div>
+                        <div class="heading-actions"><button class="button primary" type="button" data-add="protocol"><span>＋</span> 录入 Protocol</button></div>
+                        <div class="heading-visual heading-visual-07" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>PROCEDURE / CONTROL</b><small>RHINE LAB · METHODS</small></span><span class="heading-monogram">SOP</span></div>
                     </div>
                     <div class="protocol-grid" id="protocolGrid"></div>
                 </section>
@@ -238,7 +238,7 @@
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>OPERATIONS SCHEDULE</span></p><h1>日程排班</h1><p class="story-quote">“时间有限，但应该能有些帮助。”<cite>——塞雷娅</cite></p></div>
                         <button class="button primary" type="button" data-add="task"><span>＋</span> 添加日程</button>
-                        <div class="heading-code">08</div>
+                        <div class="heading-visual heading-visual-08" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>OPERATIONS / TIMELINE</b><small>RHINE LAB · SCHEDULE</small></span><span class="heading-monogram">TIME</span></div>
                     </div>
                     <div class="calendar-toolbar">
                         <div class="calendar-modes" role="group" aria-label="日程显示方式"><button class="active" type="button" data-calendar-mode="day">每日</button><button type="button" data-calendar-mode="month">日历</button></div>
@@ -265,7 +265,7 @@
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>CELL CULTURE MAINTENANCE</span></p><h1>细胞维持</h1><p class="story-quote">“然而，遥不可及的东西时而会成为你的道标。”<cite>——克丽斯腾</cite></p></div>
                         <button class="button primary" type="button" data-add="cell"><span>＋</span> 登记细胞</button>
-                        <div class="heading-code">05</div>
+                        <div class="heading-visual heading-visual-05" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>CULTURE / MAINTENANCE</b><small>RHINE LAB · BIOLOGY</small></span><span class="heading-monogram">CELL</span></div>
                     </div>
                     <div class="cell-maintenance-layout">
                         <section class="panel cell-culture-panel">
@@ -475,6 +475,6 @@
     <script src="js/rhine-lab-config.js"></script>
     <script src="js/rhine-lab-sync.js?v=20260813-1"></script>
     <script src="js/rhine-lab-pwa.js"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=20260814-3"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=20260814-5"></script>
 </body>
 </html>
