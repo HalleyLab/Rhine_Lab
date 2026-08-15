@@ -11196,3 +11196,212 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     .protocol-detail-dialog footer > div .button { flex: 1; }
 }
 .dark-theme .schedule-edit-button { background: var(--surface); color: var(--ink); }
+
+
+/* Rhine Lab technical title atmosphere and compact scientific detail flows. */
+.page-heading.technical-heading {
+    isolation: isolate;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 78% 33%, rgba(145, 187, 40, .16) 0 4px, transparent 5px),
+        radial-gradient(circle at 84% 52%, rgba(68, 169, 164, .14) 0 5px, transparent 6px),
+        radial-gradient(circle at 91% 27%, rgba(232, 155, 58, .14) 0 3px, transparent 4px),
+        linear-gradient(114deg, rgba(255, 255, 255, .88), rgba(236, 239, 232, .84) 57%, rgba(230, 224, 210, .78)),
+        var(--surface);
+}
+
+.page-heading.technical-heading::before {
+    width: 52%;
+    background:
+        radial-gradient(circle at 72% 46%, transparent 0 56px, rgba(114, 143, 73, .11) 57px 58px, transparent 59px),
+        radial-gradient(circle at 72% 46%, transparent 0 92px, rgba(114, 143, 73, .08) 93px 94px, transparent 95px),
+        linear-gradient(126deg, transparent 0 47%, rgba(232, 155, 58, .11) 47.5% 59%, transparent 59.5%),
+        linear-gradient(rgba(72, 84, 76, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(72, 84, 76, .025) 1px, transparent 1px);
+    background-size: auto, auto, auto, 28px 28px, 28px 28px;
+}
+
+.page-heading.technical-heading .heading-code::before {
+    content: "RHINE / LIFE SCIENCE";
+    position: absolute;
+    right: 2px;
+    bottom: 100%;
+    width: max-content;
+    color: rgba(93, 119, 74, .28);
+    font: 800 9px/1 var(--font-interface);
+    letter-spacing: .16em;
+}
+
+.dark-theme .page-heading.technical-heading {
+    background:
+        radial-gradient(circle at 78% 33%, rgba(174, 224, 52, .2) 0 4px, transparent 5px),
+        radial-gradient(circle at 84% 52%, rgba(96, 195, 188, .17) 0 5px, transparent 6px),
+        radial-gradient(circle at 91% 27%, rgba(238, 167, 71, .17) 0 3px, transparent 4px),
+        linear-gradient(114deg, rgba(31, 41, 36, .98), rgba(38, 53, 44, .95) 58%, rgba(46, 50, 40, .94)),
+        var(--surface);
+}
+
+.reagent-profile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.protocol-step-path {
+    position: relative;
+    display: grid;
+    gap: 0;
+    margin: 8px 0 4px 10px;
+    padding-left: 24px;
+    border-left: 1px solid rgba(145, 187, 40, .52);
+}
+
+.protocol-step-item {
+    position: relative;
+    min-width: 0;
+    padding: 11px 14px 12px;
+    border-bottom: 1px dashed var(--line-dark);
+}
+
+.protocol-step-item:last-child { border-bottom: 0; }
+
+.protocol-step-item i {
+    position: absolute;
+    top: 16px;
+    left: -29px;
+    width: 9px;
+    height: 9px;
+    background: var(--acid-strong);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--acid-strong);
+    transform: rotate(45deg);
+}
+
+.protocol-step-item p {
+    margin: 0;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.dark-theme .protocol-step-item { border-bottom-color: rgba(255, 255, 255, .1); }
+
+@media (max-width: 700px) {
+    .reagent-profile-grid { grid-template-columns: 1fr; }
+    .reagent-profile-grid .record-detail-field.wide { grid-column: auto; }
+    .page-heading.technical-heading .heading-code::before { display: none; }
+    .protocol-step-path { margin-left: 5px; padding-left: 19px; }
+    .protocol-step-item { padding: 9px 10px 10px; }
+    .protocol-step-item i { left: -24px; }
+    .protocol-step-item p { font-size: 14px; }
+}
+
+
+/* Workspace-specific Rhine Lab research motifs. */
+#view-experiments .technical-heading::before {
+    background:
+        radial-gradient(circle at 78% 47%, transparent 0 37px, rgba(68, 169, 164, .16) 38px 39px, transparent 40px),
+        radial-gradient(circle at 78% 47%, rgba(68, 169, 164, .12) 0 3px, transparent 4px),
+        linear-gradient(164deg, transparent 0 42%, rgba(232, 155, 58, .16) 42.5% 44%, transparent 44.5%),
+        repeating-linear-gradient(90deg, transparent 0 21px, rgba(72, 84, 76, .04) 21px 22px),
+        repeating-linear-gradient(0deg, transparent 0 21px, rgba(72, 84, 76, .04) 21px 22px);
+}
+
+#view-experiments .heading-code::before { content: "RHINE / IMAGING + DATA"; }
+
+#view-mice .technical-heading::before {
+    background:
+        repeating-linear-gradient(90deg, transparent 0 44px, rgba(112, 137, 93, .10) 44px 45px),
+        repeating-linear-gradient(0deg, transparent 0 32px, rgba(112, 137, 93, .10) 32px 33px),
+        radial-gradient(circle at 76% 34%, rgba(145, 187, 40, .17) 0 4px, transparent 5px),
+        radial-gradient(circle at 86% 66%, rgba(68, 169, 164, .15) 0 4px, transparent 5px),
+        linear-gradient(32deg, transparent 0 48%, rgba(145, 187, 40, .12) 48.5% 49.5%, transparent 50%);
+    background-size: 220px 130px, 220px 130px, auto, auto, auto;
+    background-position: 76% 50%, 76% 50%, center, center, center;
+}
+
+#view-mice .heading-code::before { content: "RHINE / VIVARIUM NODE"; }
+
+#view-reagents .technical-heading::before {
+    background:
+        radial-gradient(circle at 68% 38%, rgba(145, 187, 40, .19) 0 6px, transparent 7px),
+        radial-gradient(circle at 82% 26%, rgba(68, 169, 164, .17) 0 5px, transparent 6px),
+        radial-gradient(circle at 88% 61%, rgba(232, 155, 58, .18) 0 5px, transparent 6px),
+        radial-gradient(circle at 73% 72%, rgba(145, 187, 40, .13) 0 4px, transparent 5px),
+        linear-gradient(28deg, transparent 0 48%, rgba(98, 122, 84, .13) 48.5% 49.5%, transparent 50%),
+        linear-gradient(148deg, transparent 0 48%, rgba(98, 122, 84, .10) 48.5% 49.5%, transparent 50%);
+}
+
+#view-reagents .heading-code::before { content: "RHINE / CHEMICAL STORAGE"; }
+
+#view-cells .technical-heading::before {
+    background:
+        radial-gradient(circle at 70% 38%, rgba(145, 187, 40, .14) 0 19px, rgba(145, 187, 40, .07) 20px 27px, transparent 28px),
+        radial-gradient(circle at 82% 58%, rgba(68, 169, 164, .14) 0 14px, rgba(68, 169, 164, .06) 15px 23px, transparent 24px),
+        radial-gradient(circle at 91% 31%, rgba(232, 155, 58, .13) 0 11px, rgba(232, 155, 58, .05) 12px 18px, transparent 19px),
+        radial-gradient(circle at 64% 73%, rgba(145, 187, 40, .11) 0 9px, transparent 10px),
+        radial-gradient(circle at 70% 38%, rgba(93, 119, 74, .22) 0 3px, transparent 4px),
+        radial-gradient(circle at 82% 58%, rgba(68, 169, 164, .20) 0 3px, transparent 4px);
+}
+
+#view-cells .heading-code::before { content: "RHINE / CULTURE DECK"; }
+
+#view-samples .technical-heading::before {
+    background:
+        repeating-linear-gradient(90deg, transparent 0 19px, rgba(68, 169, 164, .09) 19px 20px),
+        repeating-linear-gradient(0deg, transparent 0 19px, rgba(68, 169, 164, .09) 19px 20px),
+        linear-gradient(45deg, transparent 0 47%, rgba(255, 255, 255, .52) 47.5% 48.5%, transparent 49%),
+        linear-gradient(135deg, transparent 0 47%, rgba(255, 255, 255, .42) 47.5% 48.5%, transparent 49%);
+    background-size: 180px 180px, 180px 180px, 92px 92px, 92px 92px;
+    background-position: 78% 50%, 78% 50%, 91% 23%, 91% 23%;
+}
+
+#view-samples .heading-code::before { content: "RHINE / CRYO ARCHIVE"; }
+
+#view-protocols .technical-heading::before {
+    background:
+        radial-gradient(circle at 62% 50%, rgba(145, 187, 40, .19) 0 6px, transparent 7px),
+        radial-gradient(circle at 75% 50%, rgba(68, 169, 164, .18) 0 6px, transparent 7px),
+        radial-gradient(circle at 88% 50%, rgba(232, 155, 58, .18) 0 6px, transparent 7px),
+        linear-gradient(90deg, transparent 0 61%, rgba(99, 123, 84, .14) 61.5% 88%, transparent 88.5%),
+        repeating-linear-gradient(0deg, transparent 0 27px, rgba(72, 84, 76, .035) 27px 28px);
+}
+
+#view-protocols .heading-code::before { content: "RHINE / PROCEDURE NETWORK"; }
+
+#view-schedule .technical-heading::before {
+    background:
+        linear-gradient(90deg, transparent 0 65%, rgba(145, 187, 40, .18) 65% 72%, transparent 72%),
+        linear-gradient(90deg, transparent 0 77%, rgba(68, 169, 164, .16) 77% 88%, transparent 88%),
+        linear-gradient(90deg, transparent 0 70%, rgba(232, 155, 58, .16) 70% 82%, transparent 82%),
+        repeating-linear-gradient(90deg, transparent 0 39px, rgba(72, 84, 76, .05) 39px 40px),
+        repeating-linear-gradient(0deg, transparent 0 27px, rgba(72, 84, 76, .05) 27px 28px);
+    background-size: auto 13px, auto 13px, auto 13px, auto, auto;
+    background-position: 0 30%, 0 52%, 0 74%, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+}
+
+#view-schedule .heading-code::before { content: "RHINE / OPERATIONS TIMELINE"; }
+
+.dark-theme #view-experiments .technical-heading::before,
+.dark-theme #view-mice .technical-heading::before,
+.dark-theme #view-reagents .technical-heading::before,
+.dark-theme #view-cells .technical-heading::before,
+.dark-theme #view-samples .technical-heading::before,
+.dark-theme #view-protocols .technical-heading::before,
+.dark-theme #view-schedule .technical-heading::before {
+    filter: brightness(1.35) saturate(1.08);
+    opacity: .9;
+}
+
+@media (max-width: 700px) {
+    #view-experiments .technical-heading::before,
+    #view-mice .technical-heading::before,
+    #view-reagents .technical-heading::before,
+    #view-cells .technical-heading::before,
+    #view-samples .technical-heading::before,
+    #view-protocols .technical-heading::before,
+    #view-schedule .technical-heading::before {
+        width: 64%;
+        opacity: .68;
+    }
+}

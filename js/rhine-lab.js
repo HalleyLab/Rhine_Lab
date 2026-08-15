@@ -1962,10 +1962,10 @@
         els.recordDetailTitle.textContent = reagent.name;
         els.recordDetailBody.innerHTML =
             '<section class="record-detail-hero reagent-detail-hero"><div><span class="record-detail-code">' + esc(reagent.catalog) + '</span><h3>' + esc(reagent.name) + '</h3><p>' + esc(interfaceText(reagent.category)) + ' · LOT ' + esc(reagent.lot) + '</p></div><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></section>' +
-            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">INVENTORY PROFILE</p><h3>库存详细信息</h3></div><div class="record-detail-grid">' +
-                detailFieldHtml('试剂名称', reagent.name, true) + detailFieldHtml('类别', reagent.category) + detailFieldHtml('品牌货号', reagent.catalog) + detailFieldHtml('批次号', reagent.lot) +
-                detailFieldHtml('存储位置', reagent.location, true) + detailFieldHtml('当前实际库存', formatQuantity(reagent.currentQty) + ' / ' + formatQuantity(reagent.totalQty) + ' ' + reagent.unit) +
-                detailFieldHtml('实际库存比例', formatQuantity(reagent.amount) + '%') + detailFieldHtml('有效期', reagent.expiry) + detailFieldHtml('当前状态', displayStatus) + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + nodeField +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">INVENTORY PROFILE</p><h3>库存详细信息</h3></div><div class="record-detail-grid reagent-profile-grid">' +
+                detailFieldHtml('试剂名称', reagent.name, true) + detailFieldHtml('类别', reagent.category) +
+                detailFieldHtml('品牌货号', reagent.catalog) + detailFieldHtml('批次号', reagent.lot) + detailFieldHtml('有效期', reagent.expiry) +
+                detailFieldHtml('存储位置', reagent.location) + detailFieldHtml('当前实际库存', formatQuantity(reagent.currentQty) + ' / ' + formatQuantity(reagent.totalQty) + ' ' + reagent.unit) + detailFieldHtml('已记录实验消耗', formatQuantity(recordedConsumption) + ' ' + reagent.unit) + nodeField +
             '</div><div class="detail-stock-meter"><div><i style="width:' + number(reagent.amount, 0, 100) + '%"></i></div><span>' + esc(interfaceText('实际库存')) + ' ' + formatQuantity(reagent.amount) + '%</span></div></section>' + photo + recordHistoryHtml(reagent);
         els.recordDetailDialog.showModal();
     }
@@ -2521,7 +2521,7 @@
         const protocolLiterature = protocolLiteratureHtml(protocol);
         els.protocolDetailNumber.textContent = protocol.number + (workspaceMode === 'lab' ? ' · 录入 ' + contributorName(protocol) : '');
         els.protocolDetailTitle.textContent = protocol.title;
-        els.protocolDetailBody.innerHTML = '<aside class="protocol-note-card"><p class="micro-label">NOTE</p><p>' + esc(protocol.summary || '未填写注释') + '</p></aside>' + protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT CONSUMPTION / RUN</p><h3>单次试剂理论用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>每次用量</th><th>当前理论余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>' + recordHistoryHtml(protocol);
+        els.protocolDetailBody.innerHTML = protocolPhoto + protocolLiterature + '<section><p class="micro-label">PROCEDURE MAP</p><h3>实验流程图</h3>' + protocolFlowHtml(protocol.steps) + '</section><section><p class="micro-label">REAGENT USAGE</p><h3>试剂用量</h3>' + (reagentRows ? '<div class="protocol-usage-table"><table><thead><tr><th>试剂</th><th>试剂用量</th><th>库存余量</th></tr></thead><tbody>' + reagentRows + '</tbody></table></div>' : '<p class="protocol-no-reagent">此 Protocol 尚未关联库存试剂。</p>') + '</section>' + recordHistoryHtml(protocol);
         els.protocolDetailUsage.textContent = interfaceLocale() === 'en-US' ? linked.length + ' scheduled ' + (linked.length === 1 ? 'item' : 'items') + ' linked · ' + completed.length + ' completed ' + (completed.length === 1 ? 'run' : 'runs') : '已关联 ' + linked.length + ' 项日程 · 已完成 ' + completed.length + ' 次';
         els.protocolDetailDialog.showModal();
     }
@@ -2530,27 +2530,8 @@
         const items = Array.isArray(steps) ? steps.filter(Boolean) : [];
         if (!items.length) return '<p class="protocol-no-reagent">此 Protocol 尚未录入实验步骤。</p>';
 
-        const phaseCount = items.length === 1 ? 1 : Math.min(6, Math.max(2, Math.ceil(items.length / 3)));
-        const phaseNames = {
-            1: [['执行与记录', 'PROCEDURE']],
-            2: [['准备与核对', 'PREPARE'], ['结果与收尾', 'FINISH']],
-            3: [['准备与核对', 'PREPARE'], ['关键操作', 'PROCESS'], ['结果与收尾', 'FINISH']],
-            4: [['准备与核对', 'PREPARE'], ['样本处理', 'TREAT'], ['关键操作', 'PROCESS'], ['结果与收尾', 'FINISH']],
-            5: [['准备与核对', 'PREPARE'], ['样本处理', 'TREAT'], ['关键操作', 'PROCESS'], ['反应与观察', 'OBSERVE'], ['结果与收尾', 'FINISH']],
-            6: [['准备与核对', 'PREPARE'], ['样本处理', 'TREAT'], ['关键操作', 'PROCESS'], ['反应与观察', 'OBSERVE'], ['采集与质控', 'QUALITY'], ['结果与收尾', 'FINISH']]
-        };
-        const labels = phaseNames[phaseCount];
-        const baseSize = Math.floor(items.length / phaseCount);
-        const remainder = items.length % phaseCount;
-        let cursor = 0;
-
-        return '<div class="protocol-flow-map">' + labels.map(function (label, phaseIndex) {
-            const phaseSize = baseSize + (phaseIndex < remainder ? 1 : 0);
-            const phaseSteps = items.slice(cursor, cursor + phaseSize);
-            cursor += phaseSize;
-            return '<section class="protocol-flow-phase"><header><span class="flow-phase-dot" aria-hidden="true"></span><div><strong>' + esc(interfaceText(label[0])) + '</strong><small>' + label[1] + '</small></div></header><div class="protocol-flow-steps">' + phaseSteps.map(function (step) {
-                return '<article class="protocol-flow-node"><i aria-hidden="true"></i><p>' + esc(step) + '</p></article>';
-            }).join('') + '</div></section>';
+        return '<div class="protocol-step-path">' + items.map(function (step) {
+            return '<article class="protocol-step-item"><i aria-hidden="true"></i><p>' + esc(step) + '</p></article>';
         }).join('') + '</div>';
     }
 
@@ -3756,9 +3737,6 @@ function getReagentDisplayStatus(reagent) {
         els.dialogFields.innerHTML = schema.fields.map(fieldHtml).join('');
         if (type === 'result') renderPendingResultAttachments();
         if (type === 'protocol' && editOptions) renderProtocolReagentEditor(editOptions.record.reagents || []);
-        if (type === 'task') {
-            els.dialogFields.insertAdjacentHTML('afterbegin', '<aside class="schedule-overlap-note"><span>↔</span><div><strong>支持重叠日程</strong><p>同一时间可以安排多个事件；每日视图会自动并排显示。</p></div></aside>');
-        }
         if (defaultsForEntry) {
             Object.keys(defaultsForEntry).forEach(function (name) {
                 const control = els.entryForm.elements.namedItem(name);
