@@ -37,8 +37,6 @@
         '切换工作区范围': 'Switch workspace scope',
         '切换夜间模式': 'Toggle dark mode',
         '切换日间模式': 'Toggle light mode',
-        '关闭界面音效': 'Mute interface sounds',
-        '开启界面音效': 'Enable interface sounds',
         '通知': 'Notifications',
         '语言切换': 'Language switch',
         '通知中心': 'Notification Center',

@@ -11406,44 +11406,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     }
 }
 
-/* Rhine Lab video-reference editorial headings and interface sound control. */
-.sound-toggle,
-#soundToggle {
-    display: grid;
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
-    min-height: 38px;
-    flex: 0 0 38px;
-    padding: 0;
-    place-items: center;
-}
-
-.sound-toggle svg {
-    width: 18px;
-    height: 18px;
-    overflow: visible;
-    fill: currentColor;
-}
-
-.sound-toggle svg path:not(:first-child) {
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-width: 1.6;
-}
-
-.sound-toggle[data-sound-enabled="false"] .sound-wave { opacity: .16; }
-.sound-toggle[data-sound-enabled="false"] .sound-wave-two { display: none; }
-.sound-toggle.is-sounding .sound-wave-one { animation: rhineSoundWave .2s ease-out; }
-.sound-toggle.is-sounding .sound-wave-two { animation: rhineSoundWave .2s .025s ease-out; }
-
-@keyframes rhineSoundWave {
-    0% { opacity: .15; transform: translateX(-1px) scale(.7); }
-    70% { opacity: 1; transform: none; }
-    100% { opacity: .4; transform: translateX(1px) scale(1.05); }
-}
-
+/* Rhine Lab video-reference editorial headings. */
 .page-heading.technical-heading {
     --heading-signal: #8fbd25;
     --heading-signal-soft: rgba(143, 189, 37, .16);
@@ -11514,8 +11477,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     pointer-events: none;
 }
 
-.heading-visual::before,
-.heading-visual::after {
+.heading-visual::before {
     content: "";
     position: absolute;
     pointer-events: none;
@@ -11529,15 +11491,6 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
         radial-gradient(circle at 73% 48%, transparent 0 95px, rgba(61, 76, 67, .08) 96px 97px, transparent 98px);
 }
 
-.heading-visual::after {
-    left: 5%;
-    top: 26%;
-    width: 82%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(49, 62, 55, .38) 18%, rgba(49, 62, 55, .18) 86%, transparent);
-    transform: rotate(-13deg);
-    transform-origin: center;
-}
 
 .heading-monogram {
     position: absolute;
@@ -11717,7 +11670,6 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
 .dark-theme .heading-axis { border-color: rgba(225, 234, 228, .34); }
 .dark-theme .heading-axis i { background: #dfe7e1; }
 .dark-theme .heading-visual::before { filter: brightness(1.4) saturate(1.05); }
-.dark-theme .heading-visual::after { background: linear-gradient(90deg, transparent, rgba(229, 238, 232, .42) 18%, rgba(229, 238, 232, .2) 86%, transparent); }
 
 @media (max-width: 1000px) {
     .page-heading.technical-heading { padding-right: 250px; }
@@ -11744,12 +11696,10 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     .heading-visual { width: 58%; opacity: .48; }
     .heading-monogram { top: 20px; right: 18px; width: 58px; height: 58px; font-size: 13px; }
     .heading-axis { display: none; }
-    #soundToggle { width: 36px; min-width: 36px; height: 36px; min-height: 36px; flex-basis: 36px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .view.active .heading-visual-label,
     .view.active .heading-monogram,
-    .view.active .heading-axis,
-    .sound-toggle.is-sounding .sound-wave { animation: none !important; }
+    .view.active .heading-axis { animation: none !important; }
 }

@@ -1574,7 +1574,6 @@
         els.endDayDialog.showModal();
         void els.endDayDialog.offsetWidth;
         els.endDayDialog.classList.add('celebrate');
-        if (window.RhineLabSound) window.RhineLabSound.play('end-day');
     }
 
     function openNotifications() {
