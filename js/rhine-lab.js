@@ -370,7 +370,7 @@
         applyWorkspaceMode();
         setTodayLabels();
         startUiTimers();
-        saveState();
+        if (!(publicDemoMode && !publicDemoUnlocked)) saveState();
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
@@ -427,12 +427,14 @@
     function loadState(mode) {
         try {
             if (isPublicDemoRuntime() && !publicDemoUnlocked) return normalizeStateShape(clone(defaults));
-            const raw = localStorage.getItem(scopeStorageKey(mode));
-            if (!raw) {
+            const storageKey = scopeStorageKey(mode);
+            const secureValue = window.RhineLabCrypto ? window.RhineLabCrypto.readLocal(storageKey) : null;
+            const raw = secureValue == null ? localStorage.getItem(storageKey) : null;
+            if (secureValue == null && !raw) {
                 const emptyFirstRun = isInstalledAppRuntime() || (isPublicDemoRuntime() && publicDemoUnlocked);
                 return normalizeStateShape(emptyFirstRun ? emptyWorkspaceState() : clone(defaults));
             }
-            const stored = JSON.parse(raw);
+            const stored = secureValue == null ? JSON.parse(raw) : secureValue;
             return normalizeStateShape(stored);
         } catch (error) {
             return normalizeStateShape(isInstalledAppRuntime() ? emptyWorkspaceState() : clone(defaults));
@@ -467,6 +469,7 @@
             protocols: Array.isArray(stored.protocols) ? stored.protocols : clone(defaults.protocols),
             activities: Array.isArray(stored.activities) ? stored.activities : clone(defaults.activities),
             auditLog: Array.isArray(stored.auditLog) ? stored.auditLog : [],
+            security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
             exampleSeedVersion: Number(stored.exampleSeedVersion) || 0
         };
     }
@@ -649,9 +652,12 @@
                 experimentId: task.experimentId || experimentByTaskTitle[task.title] || '',
                 protocolId: task.protocolId == null ? (protocolByTitle[task.title] || '') : task.protocolId,
                 done: Boolean(task.done),
+                shareWithLab: task.shareWithLab !== false,
                 createdBy: anonymousContributor(task.createdBy)
             });
         });
+        data.security = data.security && typeof data.security === 'object' ? data.security : { labKeys: {} };
+        data.security.labKeys = data.security.labKeys && typeof data.security.labKeys === 'object' ? data.security.labKeys : {};
         return data;
     }
 
@@ -735,7 +741,9 @@
     }
 
     function saveState(options) {
-        localStorage.setItem(scopeStorageKey(workspaceMode), JSON.stringify(state));
+        const storageKey = scopeStorageKey(workspaceMode);
+        if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(storageKey, state).catch(function () { showToast('本机加密保存失败，请勿关闭页面'); });
+        else localStorage.setItem(storageKey, JSON.stringify(state));
         if (!(options && options.remote) && window.RhineLabSync) {
             window.RhineLabSync.queueState(state, workspaceMode);
         }
@@ -747,8 +755,59 @@
             getState: function () { return clone(state); },
             getScope: function () { return workspaceMode; },
             applyState: applyCloudState,
-            setAccess: setWorkspaceAccess
+            setAccess: setWorkspaceAccess,
+            getLabKey: getLabKey,
+            setLabKey: setLabKey,
+            buildSharedProjection: buildSharedProjection,
+            getPersonalState: function () { return clone(personalStateSnapshot()); },
+            setPersonalState: setPersonalState
         });
+    }
+
+    function personalStateSnapshot() {
+        return workspaceMode === 'personal' ? state : migrateState(loadState('personal'));
+    }
+
+    function setPersonalState(payload) {
+        const personal = migrateState(normalizeStateShape(payload));
+        if (workspaceMode === 'personal') {
+            applyCloudState(personal, 'personal');
+            return;
+        }
+        if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(scopeStorageKey('personal'), personal);
+        else localStorage.setItem(scopeStorageKey('personal'), JSON.stringify(personal));
+    }
+
+    function getLabKey(labId) {
+        const personal = personalStateSnapshot();
+        return personal.security && personal.security.labKeys ? String(personal.security.labKeys[labId] || '') : '';
+    }
+
+    function setLabKey(labId, keyValue) {
+        if (!labId || !keyValue) return;
+        const personal = personalStateSnapshot();
+        personal.security = personal.security || { labKeys: {} };
+        personal.security.labKeys = personal.security.labKeys || {};
+        personal.security.labKeys[labId] = keyValue;
+        if (workspaceMode === 'personal') state = personal;
+        if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(scopeStorageKey('personal'), personal);
+        else localStorage.setItem(scopeStorageKey('personal'), JSON.stringify(personal));
+        if (window.RhineLabSync) window.RhineLabSync.queueState(personal, 'personal');
+    }
+
+    function buildSharedProjection() {
+        const projection = clone(personalStateSnapshot());
+        delete projection.security;
+        delete projection.auditLog;
+        projection.schedule = (projection.schedule || []).filter(function (task) { return task.shareWithLab !== false; });
+        ['experiments', 'reagents', 'samples', 'protocols', 'cellCultures'].forEach(function (collectionName) {
+            (projection[collectionName] || []).forEach(function (record) { delete record.photoData; delete record.photoPath; delete record.photoEncryption; });
+        });
+        (projection.freezerBoxes || []).forEach(function (record) { delete record.lastScanPhoto; delete record.lastScanPhotoPath; delete record.lastScanPhotoEncryption; });
+        (projection.results || []).forEach(function (record) {
+            record.attachments = (record.attachments || []).map(function (attachment) { return { id: attachment.id, name: attachment.name, type: attachment.type, size: attachment.size }; });
+        });
+        return projection;
     }
 
     function applyCloudState(payload, scope) {
@@ -788,7 +847,7 @@
 
     function computeWorkspaceReadOnly() {
         if (publicDemoMode && !workspaceAccess.authenticated) return true;
-        return workspaceMode === 'lab' && workspaceAccess.labReadOnly;
+        return workspaceMode === 'lab';
     }
 
     function getInitialView() {
@@ -844,7 +903,7 @@
         els.workspaceScopeBanner.hidden = workspaceMode !== 'lab';
         if (workspaceMode === 'lab') {
             const description = els.workspaceScopeBanner.querySelector('div:first-child > span');
-            if (description) description.textContent = workspaceReadOnly ? '集中查看所有成员录入的信息；当前账户对共用数据为只读。' : '集中管理所有成员录入的实验、Protocol、库存、动物、样本与细胞信息。';
+            if (description) description.textContent = '集中查看成员主动共享的信息；共用页面始终为只读。';
         }
     }
 
@@ -2174,6 +2233,7 @@
             protocols: [],
             activities: [],
             auditLog: [],
+            security: { labKeys: {} },
             exampleSeedVersion: 999
         };
     }
@@ -3653,7 +3713,8 @@ function getReagentDisplayStatus(reagent) {
                 field('resource', '地点 / 仪器', 'text', '细胞房 · BSC-01', true),
                 field('type', '任务类型', 'select', ['cell|细胞 / 成像', 'animal|动物操作', 'analysis|数据分析', 'meeting|会议'], true),
                 field('experimentId', '关联实验（用于开始与继续）', 'experiment-select', '', false, true),
-                field('protocolId', '关联 Protocol（用于理论耗量）', 'protocol-select', '', false, true)
+                field('protocolId', '关联 Protocol（用于理论耗量）', 'protocol-select', '', false, true),
+                field('shareWithLab', 'LAB 日程可见性', 'select', ['yes|在 LAB 共用日程显示', 'no|仅个人可见'], true, true)
             ]
         },
         protocol: {
@@ -3701,7 +3762,7 @@ function getReagentDisplayStatus(reagent) {
             });
             defaultsForEntry = { experimentId: preferred ? preferred.id : '', date: preferred ? preferred.date : todayIso() };
         } else if (type === 'task') {
-            defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '09:00', end: '10:00', experimentId: '', protocolId: '' }, pendingTaskDefaults || {});
+            defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '09:00', end: '10:00', experimentId: '', protocolId: '', shareWithLab: 'yes' }, pendingTaskDefaults || {});
         } else if (type === 'sample') {
             defaultsForEntry = Object.assign({ boxId: activeFreezerBoxId, date: todayIso(), status: '在库' }, pendingSampleDefaults || {});
         } else if (type === 'mouse') {
@@ -3834,7 +3895,7 @@ function getReagentDisplayStatus(reagent) {
         let control = '';
         if (config.type === 'select') {
             const presetValues = config.placeholderOrOptions.map(function (option) { return String(option).split('|')[0]; });
-            const remembered = rememberedFieldValues(activeDialogType, config.name).filter(value => !presetValues.includes(value));
+            const remembered = config.name === 'shareWithLab' ? [] : rememberedFieldValues(activeDialogType, config.name).filter(value => !presetValues.includes(value));
             const options = config.placeholderOrOptions.concat(remembered).map(function (option) {
                 const parts = String(option).split('|');
                 return '<option value="' + esc(parts[0]) + '">' + esc(interfaceText(parts[1] || parts[0])) + '</option>';
@@ -4322,6 +4383,7 @@ function getReagentDisplayStatus(reagent) {
             data.title = displayOr(data.title, '未命名日程');
             data.resource = String(data.resource || '').trim();
             data.type = displayOr(data.type, 'cell');
+            data.shareWithLab = data.shareWithLab !== 'no';
             if (data.experimentId) {
                 const linkedExperiment = state.experiments.find(item => item.id === data.experimentId);
                 if (!linkedExperiment) data.experimentId = '';
@@ -4416,6 +4478,7 @@ function getReagentDisplayStatus(reagent) {
             updated.date = data.date || current.date || todayIso();
             updated.time = data.time || current.time || '09:00';
             updated.end = data.end || current.end || addMinutes(updated.time, 60);
+            updated.shareWithLab = data.shareWithLab !== 'no';
             if (timeToMinutes(updated.end) <= timeToMinutes(updated.time)) {
                 showToast('结束时间需要晚于开始时间');
                 return;
@@ -4519,6 +4582,7 @@ function getReagentDisplayStatus(reagent) {
 
     function schemaRecordValue(type, record, fieldName) {
         if (type === 'protocol' && fieldName === 'stepsText') return (record.steps || []).join('\n');
+        if (type === 'task' && fieldName === 'shareWithLab') return record.shareWithLab === false ? 'no' : 'yes';
         return record[fieldName];
     }
 

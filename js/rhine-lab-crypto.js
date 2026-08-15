@@ -1,0 +1,246 @@
+(function () {
+    'use strict';
+
+    const DB_NAME = 'rhine-lab-secure-store';
+    const STORE_NAME = 'keys';
+    const DEVICE_KEY_ID = 'device-aes-gcm-v1';
+    const ENVELOPE_VERSION = 1;
+    const PBKDF2_ITERATIONS = 600000;
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const localCache = new Map();
+    const localWrites = new Map();
+    let deviceKey = null;
+    let accountKey = null;
+    let accountId = '';
+
+    function toBase64(bytes) {
+        let binary = '';
+        const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+        for (let offset = 0; offset < view.length; offset += 0x8000) {
+            binary += String.fromCharCode.apply(null, view.subarray(offset, offset + 0x8000));
+        }
+        return btoa(binary);
+    }
+
+    function fromBase64(value) {
+        const binary = atob(String(value || ''));
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return bytes;
+    }
+
+    function toBase64Url(bytes) {
+        return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function fromBase64Url(value) {
+        const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+        return fromBase64(normalized + '='.repeat((4 - normalized.length % 4) % 4));
+    }
+
+    function isEnvelope(value, purpose) {
+        return Boolean(value && typeof value === 'object' && value.v === ENVELOPE_VERSION && value.alg === 'A256GCM' && value.iv && value.ciphertext && (!purpose || value.purpose === purpose));
+    }
+
+    function openDatabase() {
+        return new Promise(function (resolve, reject) {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = function () {
+                if (!request.result.objectStoreNames.contains(STORE_NAME)) request.result.createObjectStore(STORE_NAME);
+            };
+            request.onsuccess = function () { resolve(request.result); };
+            request.onerror = function () { reject(request.error || new Error('无法打开设备安全存储')); };
+        });
+    }
+
+    async function getDeviceKey() {
+        if (deviceKey) return deviceKey;
+        const database = await openDatabase();
+        deviceKey = await new Promise(function (resolve, reject) {
+            const transaction = database.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(DEVICE_KEY_ID);
+            request.onsuccess = async function () {
+                try {
+                    if (request.result) {
+                        resolve(request.result);
+                        return;
+                    }
+                    const generated = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+                    store.put(generated, DEVICE_KEY_ID);
+                    resolve(generated);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            request.onerror = function () { reject(request.error || new Error('无法读取设备密钥')); };
+            transaction.oncomplete = function () { database.close(); };
+        });
+        return deviceKey;
+    }
+
+    async function encryptJson(value, key, purpose, additionalData) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const options = { name: 'AES-GCM', iv: iv };
+        if (additionalData) options.additionalData = encoder.encode(additionalData);
+        const ciphertext = await crypto.subtle.encrypt(options, key, encoder.encode(JSON.stringify(value)));
+        return { v: ENVELOPE_VERSION, alg: 'A256GCM', purpose: purpose, iv: toBase64(iv), ciphertext: toBase64(ciphertext) };
+    }
+
+    async function decryptJson(envelope, key, additionalData) {
+        const options = { name: 'AES-GCM', iv: fromBase64(envelope.iv) };
+        if (additionalData) options.additionalData = encoder.encode(additionalData);
+        const plaintext = await crypto.subtle.decrypt(options, key, fromBase64(envelope.ciphertext));
+        return JSON.parse(decoder.decode(plaintext));
+    }
+
+    async function prepareLocalStorage(keys) {
+        const key = await getDeviceKey();
+        for (const storageKey of keys || []) {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) {
+                localCache.set(storageKey, null);
+                continue;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                if (isEnvelope(parsed, 'local-workspace')) {
+                    localCache.set(storageKey, await decryptJson(parsed, key, storageKey));
+                } else {
+                    localCache.set(storageKey, parsed);
+                    await writeLocal(storageKey, parsed);
+                }
+            } catch (error) {
+                localStorage.setItem(storageKey + ':recovery:' + Date.now(), raw);
+                localCache.set(storageKey, null);
+                window.dispatchEvent(new CustomEvent('rhine:crypto-error', { detail: { storageKey: storageKey, error: error } }));
+                throw error;
+            }
+        }
+    }
+
+    function readLocal(storageKey) {
+        const value = localCache.get(storageKey);
+        return value == null ? null : JSON.parse(JSON.stringify(value));
+    }
+
+    function writeLocal(storageKey, value) {
+        localCache.set(storageKey, JSON.parse(JSON.stringify(value)));
+        const previous = localWrites.get(storageKey) || Promise.resolve();
+        const next = previous.then(async function () {
+            const envelope = await encryptJson(value, await getDeviceKey(), 'local-workspace', storageKey);
+            localStorage.setItem(storageKey, JSON.stringify(envelope));
+        });
+        localWrites.set(storageKey, next.catch(function () {}));
+        return next;
+    }
+
+    function removeLocal(storageKey) {
+        localCache.delete(storageKey);
+        localStorage.removeItem(storageKey);
+    }
+
+    function encryptedAuthStorage(prefix) {
+        return {
+            getItem: function (key) {
+                const value = readLocal(prefix + key);
+                return value == null ? null : String(value);
+            },
+            setItem: function (key, value) {
+                return writeLocal(prefix + key, String(value));
+            },
+            removeItem: function (key) {
+                removeLocal(prefix + key);
+            }
+        };
+    }
+
+    async function deriveAccountKey(userId, passphrase) {
+        const material = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        const digest = await crypto.subtle.digest('SHA-256', encoder.encode('Rhine Lab account vault v1|' + userId));
+        return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: digest, iterations: PBKDF2_ITERATIONS }, material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+
+    async function unlockAccount(userId, passphrase) {
+        if (!userId || String(passphrase || '').length < 10) throw new Error('数据密码至少需要 10 个字符');
+        accountKey = await deriveAccountKey(userId, passphrase);
+        accountId = userId;
+        return true;
+    }
+
+    function lockAccount() {
+        accountKey = null;
+        accountId = '';
+    }
+
+    function accountUnlocked(userId) {
+        return Boolean(accountKey && accountId === userId);
+    }
+
+    async function encryptCloud(value) {
+        if (!accountKey || !accountId) throw new Error('请先解锁数据保险库');
+        const envelope = await encryptJson(value, accountKey, 'account-workspace', 'user:' + accountId);
+        envelope.kdf = { name: 'PBKDF2-SHA256', iterations: PBKDF2_ITERATIONS, salt: 'account-id-derived' };
+        return envelope;
+    }
+
+    async function decryptCloud(value) {
+        if (!isEnvelope(value, 'account-workspace')) return value;
+        if (!accountKey || !accountId) throw new Error('请先解锁数据保险库');
+        return decryptJson(value, accountKey, 'user:' + accountId);
+    }
+
+    async function generateLabKey() {
+        const raw = crypto.getRandomValues(new Uint8Array(32));
+        return toBase64Url(raw);
+    }
+
+    async function importLabKey(rawValue) {
+        const raw = fromBase64Url(rawValue);
+        if (raw.byteLength !== 32) throw new Error('LAB 邀请密钥无效');
+        return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    }
+
+    async function encryptLab(value, rawKey, labId) {
+        return encryptJson(value, await importLabKey(rawKey), 'lab-publication', 'lab:' + labId);
+    }
+
+    async function decryptLab(value, rawKey, labId) {
+        if (!isEnvelope(value, 'lab-publication')) return value;
+        return decryptJson(value, await importLabKey(rawKey), 'lab:' + labId);
+    }
+
+    async function encryptBinary(arrayBuffer, rawLabKey) {
+        const key = rawLabKey ? await importLabKey(rawLabKey) : accountKey;
+        if (!key) throw new Error('加密密钥尚未解锁');
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, arrayBuffer);
+        return { bytes: new Uint8Array(ciphertext), iv: toBase64(iv) };
+    }
+
+    async function decryptBinary(arrayBuffer, ivValue, rawLabKey) {
+        const key = rawLabKey ? await importLabKey(rawLabKey) : accountKey;
+        if (!key) throw new Error('解密密钥尚未解锁');
+        return crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64(ivValue) }, key, arrayBuffer);
+    }
+
+    window.RhineLabCrypto = {
+        prepareLocalStorage: prepareLocalStorage,
+        readLocal: readLocal,
+        writeLocal: writeLocal,
+        removeLocal: removeLocal,
+        unlockAccount: unlockAccount,
+        lockAccount: lockAccount,
+        accountUnlocked: accountUnlocked,
+        encryptCloud: encryptCloud,
+        decryptCloud: decryptCloud,
+        generateLabKey: generateLabKey,
+        encryptLab: encryptLab,
+        decryptLab: decryptLab,
+        encryptBinary: encryptBinary,
+        decryptBinary: decryptBinary,
+        encryptedAuthStorage: encryptedAuthStorage,
+        isEnvelope: isEnvelope
+    };
+}());

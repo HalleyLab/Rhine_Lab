@@ -1,66 +1,38 @@
 # Rhine Lab
 
-[中文](#中文) · [English](#english)
-
-Rhine Lab 是一款面向生命科学研究的个人与实验室协作工作台，支持网页、Android、Windows 和浏览器扩展。
-
-[在线体验](https://halleylab.github.io/Rhine_Lab/) · [下载应用](https://github.com/HalleyLab/Rhine_Lab/releases/tag/v0.1.8)
-
----
+[中文](#中文) · [English](#english) · [在线体验](https://halleylab.github.io/Rhine_Lab/) · [下载 v0.1.9](https://github.com/HalleyLab/Rhine_Lab/releases/tag/v0.1.9)
 
 <a id="中文"></a>
 
 ## 中文
 
-### 基本功能
+Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与结果、Protocol 与文献关联、日程、动物笼架、试剂/耗材、细胞维持和冻存样本管理。
 
-- 实验记录与结果：按日期记录实验、实际试剂用量、照片、文件和结果。
-- Protocol：编辑实验流程、试剂用量、计时步骤、孔板标注，并关联 DOI、PMID 或文献链接。
-- 日程排班：日历与每日视图、拖动创建日程、重叠事件，以及从日程开始实验。
-- 动物管理：使用“笼架—笼位—动物”结构管理多种实验动物。
-- 试剂库存：记录库存、位置、批次和有效期，并在余量不足时提醒。
-- 细胞维持：记录细胞、培养基、培养条件、容器及传代历史。
-- 冻存样本：使用 9×9 冻存盒管理位置、样本信息和照片。
-- 多端同步：登录后可在手机、电脑和网页之间同步个人数据；LAB 管理者可管理共用工作区。
-- 中英双语、日间/夜间模式，以及拍照辅助录入。
+- 支持网页、Android、Windows 与 Chrome/Edge 扩展。
+- 新安装默认是空工作区；GitHub Pages 未登录时只读展示。
+- 本机数据使用设备级 AES‑256‑GCM 加密；登录后，个人快照和附件使用独立数据密码端到端加密同步。
+- 一个创建者账户可创建一个 LAB，并通过邮箱邀请链接加入成员。LAB 共用页始终只读，由成员主动共享的个人数据投影组成。
+- 每条日程可选择“在 LAB 显示”或“仅个人可见”。
 
-### 使用方式
+下载：Android 使用 `Rhine-Lab-0.1.9-internal.apk`；Windows 使用 `Rhine-Lab-0.1.9-Windows.exe`；浏览器扩展解压 ZIP 后在扩展管理页选择“加载已解压的扩展程序”。
 
-- **网页展示版：** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/)；未登录时为只读，登录后可编辑和同步。
-- **Android：** 下载 `Rhine-Lab-0.1.8-internal.apk` 后直接安装。
-- **Windows：** 下载 `Rhine-Lab-0.1.8-Windows.exe` 后直接运行，无需解压。
-- **浏览器扩展：** 下载 ZIP，解压后通过 Chrome/Edge 的“加载已解压的扩展程序”安装。
-
-新安装的应用默认使用空工作区。数据优先保存在当前设备；登录并启用云同步后，可在不同设备之间同步。
-
----
+云端配置需依次执行 `supabase/migrations/001_rhine_lab_sync.sql`、`002_lab_member_directory.sql` 和 `003_secure_lab_sharing.sql`。数据密码不会发送到服务器；忘记后无法恢复既有密文。
 
 <a id="english"></a>
 
 ## English
 
-Rhine Lab is a personal and collaborative laboratory workspace for life-science research. It is available for the web, Android, Windows, and Chromium-based browsers.
+Rhine Lab is a personal life-science workspace for experiment records and results, literature-linked protocols, schedules, animal housing, reagent and consumable inventory, cell maintenance, and frozen samples.
 
-### Core features
+- Available on the web, Android, Windows, and Chrome/Edge.
+- New installations start empty; the unsigned GitHub Pages site is read-only.
+- Local data is protected with device-bound AES‑256‑GCM. Signed-in personal snapshots and attachments use end-to-end encryption derived from a separate data-vault password.
+- One creator account can create a LAB and invite members by an email-bound link. The shared LAB view is always read-only and is assembled from member-controlled personal projections.
+- Each schedule item can be shared with the LAB or kept private.
 
-- Experiment records and results, organized by date with reagent usage, photos, files, and conclusions.
-- Protocol workflows with reagent quantities, timers, plate annotations, and DOI, PMID, or literature links.
-- Daily and calendar scheduling with drag-to-create, overlapping events, and experiment launch from scheduled tasks.
-- Multi-species animal management using a rack–cage–animal structure.
-- Reagent inventory with storage locations, lot numbers, expiry dates, and low-stock alerts.
-- Cell-culture maintenance with media, culture conditions, vessels, and passage history.
-- Frozen-sample storage using configurable 9×9 cryoboxes.
-- Account-based synchronization across mobile, desktop, and web, plus managed LAB shared workspaces.
-- Chinese/English interface, automatic light/dark themes, and photo-assisted data entry.
+Downloads: `Rhine-Lab-0.1.9-internal.apk` for Android, `Rhine-Lab-0.1.9-Windows.exe` for Windows, or the unpacked browser-extension ZIP for Chrome/Edge.
 
-### Get started
-
-- **Web demo:** [GitHub Pages](https://halleylab.github.io/Rhine_Lab/). The public site is read-only until you sign in.
-- **Android:** Download and install `Rhine-Lab-0.1.8-internal.apk`.
-- **Windows:** Download and run `Rhine-Lab-0.1.8-Windows.exe`; no extraction is required.
-- **Browser extension:** Download the ZIP, extract it, then load the folder as an unpacked extension in Chrome or Edge.
-
-New installations start with an empty workspace. Data is stored locally first and can be synchronized across devices after sign-in.
+For cloud setup, apply migrations `001`, `002`, then `003_secure_lab_sharing.sql`. The data-vault password is never sent to the server and cannot be recovered if lost.
 
 ## Development
 
@@ -69,12 +41,4 @@ pnpm install
 python -m http.server 4173
 ```
 
-Open `http://127.0.0.1:4173/` in a browser.
-
-## Open-source acknowledgements / 开源致谢
-
-Dashboard pattern attribution and license details are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-## Disclaimer
-
-Rhine Lab is an unofficial, non-commercial fan-style research-tool prototype. It is not affiliated with or endorsed by *Arknights* or its rights holders. Related names and visual identities belong to their respective owners.
+Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Rhine Lab is an unofficial, non-commercial fan-style prototype and is not affiliated with or endorsed by *Arknights* or its rights holders.

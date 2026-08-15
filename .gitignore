@@ -440,6 +440,8 @@ FodyWeavers.xsd
 # Rhine Lab generated mobile build inputs and outputs
 www/
 assets/
+.build-tools/
+.build-verify-*/
 android/.gradle/
 android/local.properties
 android/app/build/

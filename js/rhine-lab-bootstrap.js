@@ -3,9 +3,25 @@
 
     const config = window.RHINE_LAB_CONFIG || {};
 
-    function startApplication() {
+    async function startApplication() {
+        try {
+            if (window.RhineLabCrypto) {
+                const secureStorageKeys = ['rhineLabWorkspaceV1', 'rhineLabWorkspaceV1:lab', 'rhineLabPendingInvite'];
+                for (let index = 0; index < localStorage.length; index += 1) {
+                    const storageKey = localStorage.key(index);
+                    if (storageKey && storageKey.startsWith('rhineLabSecureAuth:')) secureStorageKeys.push(storageKey);
+                }
+                await window.RhineLabCrypto.prepareLocalStorage(Array.from(new Set(secureStorageKeys)));
+            }
+        } catch (error) {
+            console.error('Secure local workspace initialization failed.', error);
+            document.body.dataset.cryptoError = 'true';
+            const boot = document.getElementById('appBootScreen');
+            if (boot) { boot.querySelector('strong').textContent = 'SECURE STORAGE ERROR'; boot.querySelector('span').textContent = '无法解锁本机加密数据，请重新载入或恢复备份'; }
+            return;
+        }
         const script = document.createElement('script');
-        script.src = 'js/rhine-lab.js?v=20260814-5';
+        script.src = 'js/rhine-lab.js?v=20260815-1';
         script.defer = true;
         document.body.appendChild(script);
     }

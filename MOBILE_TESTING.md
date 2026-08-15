@@ -7,7 +7,7 @@
 1. 打开仓库的 Actions 页面。
 2. 选择最新成功的 Build Android internal APK 任务。
 3. 下载 Rhine-Lab-Android-Internal 构建产物。
-4. 解压 ZIP，得到 Rhine-Lab-0.1.0-internal.apk。
+4. 解压 ZIP，得到 Rhine-Lab-0.1.9-internal.apk。
 5. 将 APK 发送到 Android 手机并安装。
 6. 如果系统阻止安装，请只对当前文件管理器临时允许“安装未知应用”。
 
@@ -33,11 +33,13 @@
 
 ## 数据与权限
 
-- 应用继续使用本机缓存，因此离线时仍可查看和编辑。
-- 登录 Supabase 后，允许同步的数据会在手机、电脑和网页端合并。
-- LAB 共用数据仍按 owner、manager、member 权限控制。
+- 本机工作区由设备 AES-256-GCM 密钥加密，因此离线时仍可查看和编辑。
+- 登录后需输入独立的数据密码；云端仅保存加密快照和加密附件，其他设备使用同一密码解锁。
+- 一个账户可创建一个 LAB，其他账户通过创建者发出的邮箱邀请链接加入。
+- LAB 共用页面始终只读；每位成员只会发布个人工作区的共享投影。
+- 日程可逐条设为“仅个人可见”，不会进入 LAB 投影。
 - Android 已禁用明文 HTTP 和系统备份；应用仅允许 HTTPS 网络请求。
-- 清除 App 数据或卸载前，请先确认待同步记录已经上传。
+- 数据密码无法由服务器找回；清除 App 数据或卸载前，请确认加密同步已完成。
 
 ## 应用标识与本地构建
 
@@ -58,7 +60,7 @@
     pnpm exec capacitor-assets generate --android
     pnpm mobile:sync
 
-Windows 构建：
+Android 构建：
 
     cd android
     .\gradlew.bat assembleDebug

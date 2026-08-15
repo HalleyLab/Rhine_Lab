@@ -1,0 +1,117 @@
+.sync-security-panel,
+.sync-lab-panel {
+    display: grid;
+    gap: 14px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
+}
+
+.sync-security-panel > div:first-child,
+.sync-lab-panel > div:first-child {
+    display: grid;
+    gap: 4px;
+}
+
+.sync-security-panel small,
+.sync-lab-panel small {
+    color: var(--accent-deep);
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.sync-security-panel strong,
+.sync-lab-panel strong {
+    font-size: 17px;
+}
+
+.sync-security-panel span,
+.sync-lab-panel span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.sync-vault-form,
+.sync-inline-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.sync-vault-form label {
+    display: grid;
+    gap: 6px;
+}
+
+.sync-vault-form label > span {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.sync-vault-form input,
+.sync-inline-form input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 13px;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    color: var(--text);
+    background: var(--card);
+    font: inherit;
+}
+
+.lab-invite-result {
+    display: grid;
+    gap: 10px;
+    padding-top: 2px;
+}
+
+.lab-invite-result code {
+    display: block;
+    max-height: 72px;
+    overflow: auto;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: var(--text);
+    background: var(--surface);
+    font: 11px/1.45 Helvetica, Arial, sans-serif;
+    overflow-wrap: anywhere;
+}
+
+.lab-invite-result > div {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.sync-control[data-sync-state="locked"]::before {
+    background: #f0ad32;
+}
+
+.schedule-privacy-note {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.dark-theme .sync-security-panel,
+.dark-theme .sync-lab-panel {
+    background: color-mix(in srgb, var(--card) 95%, var(--accent) 5%);
+}
+
+@media (max-width: 640px) {
+    .sync-vault-form,
+    .sync-inline-form {
+        grid-template-columns: 1fr;
+    }
+
+    .sync-security-panel,
+    .sync-lab-panel {
+        padding: 15px;
+    }
+}
