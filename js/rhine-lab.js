@@ -1574,6 +1574,7 @@
         els.endDayDialog.showModal();
         void els.endDayDialog.offsetWidth;
         els.endDayDialog.classList.add('celebrate');
+        if (window.RhineLabSound) window.RhineLabSound.play('end-day');
     }
 
     function openNotifications() {
@@ -2267,7 +2268,8 @@
     }
 
     function renderProtocols() {
-        document.getElementById('protocolCount').textContent = state.protocols.length;
+        const protocolCount = document.getElementById('protocolCount');
+        if (protocolCount) protocolCount.textContent = state.protocols.length;
         document.getElementById('protocolGrid').innerHTML = state.protocols.map(function (item) {
             const usageLabel = item.reagents.length ? item.reagents.length + ' 种试剂已关联' : '未关联库存试剂';
             const literatureBadge = item.literatureTitle || item.literatureId || item.literatureUrl ? '<span class="protocol-reference-badge">文献</span>' : '';
