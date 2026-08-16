@@ -1,7 +1,8 @@
 -- Rhine Lab 0.1.9: encrypted member publications, owner-created LABs and email-bound invitations.
 -- Apply after 001_rhine_lab_sync.sql and 002_lab_member_directory.sql.
 
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.lab_invites (
     id uuid primary key default gen_random_uuid(),
@@ -177,7 +178,7 @@ create or replace function public.create_lab_invite(target_lab_id uuid, target_e
 returns text
 language plpgsql
 security definer
-set search_path = public, auth
+set search_path = public, auth, extensions
 as $$
 declare
     caller uuid := auth.uid();
@@ -202,7 +203,7 @@ create or replace function public.accept_lab_invite(raw_token text)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, auth
+set search_path = public, auth, extensions
 as $$
 declare
     caller uuid := auth.uid();

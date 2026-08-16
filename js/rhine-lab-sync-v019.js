@@ -11,7 +11,7 @@
         ['control', 'syncControl'], ['label', 'syncStatusLabel'], ['dialog', 'syncDialog'], ['title', 'syncDialogTitle'], ['description', 'syncDialogDescription'],
         ['loginForm', 'syncLoginForm'], ['email', 'syncEmail'], ['otpForm', 'syncOtpForm'], ['otp', 'syncOtp'], ['account', 'syncAccount'],
         ['accountEmail', 'syncAccountEmail'], ['accountRole', 'syncAccountRole'], ['vaultForm', 'syncVaultForm'], ['vaultPassword', 'syncVaultPassword'],
-        ['vaultState', 'syncVaultState'], ['labCreate', 'labCreateSection'], ['labCreateForm', 'labCreateForm'], ['labName', 'labName'],
+        ['securityPanel', 'syncSecurityPanel'], ['labCreate', 'labCreateForm'], ['labCreateForm', 'labCreateForm'], ['labName', 'labName'],
         ['labInvite', 'labInviteSection'], ['labInviteForm', 'labInviteForm'], ['inviteEmail', 'labInviteEmail'], ['inviteResult', 'labInviteResult'],
         ['copyInvite', 'copyLabInvite'], ['emailInvite', 'emailLabInvite'], ['memberDirectory', 'labMemberDirectory'], ['memberList', 'labMemberList'],
         ['memberCount', 'labMemberCount'], ['refreshMembers', 'refreshLabMembers'], ['message', 'syncMessage'], ['signOut', 'syncSignOut'],
@@ -54,9 +54,9 @@
     function setStatus(state, label, message) {
         if (ui.control) ui.control.dataset.syncState = state;
         if (ui.label) ui.label.textContent = label;
-        if (ui.message && message) ui.message.textContent = message;
+        if (ui.message) ui.message.textContent = message || '';
         if (ui.entrySaveStatus) ui.entrySaveStatus.textContent = user && vaultUnlocked() ? '保存后将加密同步到已登录设备' : '数据使用设备密钥加密保存在本机';
-        if (ui.systemConnection) ui.systemConnection.textContent = user ? (state === 'offline' ? '云端等待中' : '加密云端已连接') : '加密本地模式';
+        if (ui.systemConnection) ui.systemConnection.textContent = user ? (state === 'offline' ? '云端等待中' : '加密云端已连接') : '本地模式';
         if (ui.systemSync) ui.systemSync.textContent = user ? (state === 'synced' || state === 'readonly' ? '端到端加密数据已同步' : state === 'offline' ? '修改将在联网后加密上传' : '正在处理加密同步') : '云同步未连接';
         if (ui.systemBadge) ui.systemBadge.textContent = user ? (state === 'synced' || state === 'readonly' ? 'E2EE' : 'WAIT') : 'LOCAL';
     }
@@ -67,11 +67,11 @@
         if (ui.loginForm) ui.loginForm.hidden = signedIn;
         if (ui.otpForm) ui.otpForm.hidden = signedIn || !loginEmail;
         if (ui.account) ui.account.hidden = !signedIn;
+        if (ui.securityPanel) ui.securityPanel.hidden = !signedIn;
         if (ui.signOut) ui.signOut.hidden = !signedIn;
         if (ui.accountEmail) ui.accountEmail.textContent = signedIn ? (user.email || '已验证账户') : '—';
         if (ui.accountRole) ui.accountRole.textContent = roleLabel(membership && membership.role);
         if (ui.vaultForm) ui.vaultForm.hidden = !signedIn || unlocked;
-        if (ui.vaultState) ui.vaultState.textContent = unlocked ? 'AES‑256‑GCM 已解锁；数据密码仅保留在本次会话内。' : '输入至少 10 位数据密码。首次使用即创建保险库；其他设备需输入同一密码。';
         if (ui.labCreate) ui.labCreate.hidden = !signedIn || !unlocked || Boolean(membership) || Boolean(pendingInvite);
         if (ui.labInvite) ui.labInvite.hidden = !(signedIn && unlocked && membership && membership.role === 'owner');
         const canViewDirectory = signedIn && unlocked && membership && membership.role === 'owner';
@@ -81,9 +81,9 @@
 
     function updateAccess() {
         if (adapter && adapter.setAccess) adapter.setAccess({ authenticated: Boolean(user), readOnly: currentScope === 'lab', role: membership ? membership.role : '', labId: membership ? membership.lab_id : '' });
-        if (!user) setStatus('local', '登录 / 同步', configured() ? '登录后可启用端到端加密的跨设备同步。' : '云同步未配置；本机缓存仍使用设备密钥加密。');
-        else if (!vaultUnlocked()) setStatus('locked', '保险库已锁定', '登录身份已验证；输入数据密码后才能读取或同步云端内容。');
-        else if (currentScope === 'lab' && !membership) setStatus('warning', '尚未加入 LAB', pendingInvite ? '解锁后将验证邀请并加入 LAB。' : '可创建一个 LAB，或通过创建者发送的邀请链接加入。');
+        if (!user) setStatus('local', '登录 / 同步', configured() ? '' : '云同步未配置；本机缓存仍使用设备密钥加密。');
+        else if (!vaultUnlocked()) setStatus('locked', 'LAB 已锁定', '登录身份已验证；输入数据密码后才能读取或同步云端内容。');
+        else if (currentScope === 'lab' && !membership) setStatus('warning', '尚未加入 LAB', pendingInvite ? '解锁后将验证邀请并加入 LAB。' : '');
         else if (currentScope === 'lab') setStatus('readonly', 'LAB 只读', '共用页面由成员个人工作区的共享投影组成，任何账户都不能直接修改。');
         else setStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? '已加密同步' : '等待网络', navigator.onLine ? '个人数据以 AES‑256‑GCM 加密后同步。' : '修改已加密保存在本机，联网后继续同步。');
         updateAccountUi();
@@ -467,10 +467,10 @@
             event.preventDefault();
             const email = String(ui.email.value || '').trim();
             if (!supabase || !email) return;
-            setStatus('connecting', '发送中', '正在发送 PKCE 安全登录链接…');
-            const result = await supabase.auth.signInWithOtp({ email: email, options: { emailRedirectTo: authRedirectUrl() } });
-            if (result.error) { setStatus('error', '发送失败', readableError(result.error, '登录链接发送失败。')); return; }
-            loginEmail = email; updateAccountUi(); setStatus('local', '检查邮箱', '请在发起登录的设备打开邮件，或输入邮件中的 6 位验证码。');
+            setStatus('connecting', '发送中', '正在发送验证码…');
+            const result = await supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
+            if (result.error) { setStatus('error', '发送失败', readableError(result.error, '验证码发送失败。')); return; }
+            loginEmail = email; updateAccountUi(); setStatus('local', '输入验证码', '验证码已发送至邮箱。');
         });
         if (ui.otpForm) ui.otpForm.addEventListener('submit', async function (event) {
             event.preventDefault();
@@ -507,8 +507,8 @@
         updateAccountUi();
         if (!configured()) { ui.title.textContent = '当前使用设备加密存储'; ui.description.textContent = '配置云项目并登录后，可启用端到端加密的跨设备同步。'; }
         else if (user && vaultUnlocked()) { ui.title.textContent = '加密同步已连接'; ui.description.textContent = '云端只保存密文；其他设备需登录并输入相同数据密码。'; }
-        else if (user) { ui.title.textContent = '解锁数据保险库'; ui.description.textContent = '身份登录与数据解密分离，服务器不会收到数据密码。'; }
-        else { ui.title.textContent = '登录以启用加密同步'; ui.description.textContent = '登录采用 PKCE；登录后还需输入独立的数据密码。'; }
+        else if (user) { ui.title.textContent = '解锁 LAB'; ui.description.textContent = '身份登录与数据解密分离，服务器不会收到数据密码。'; }
+        else { ui.title.textContent = '登录以同步'; ui.description.textContent = ''; }
         if (ui.dialog && !ui.dialog.open) ui.dialog.showModal();
     }
 

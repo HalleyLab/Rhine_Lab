@@ -29,7 +29,7 @@
 
 缺少对应回调时，邮件登录链接无法返回当前 Rhine Lab 客户端。
 
-若邮件服务会扫描或改写一次性链接，请在 Authentication → Email Templates 的 Magic Link 模板中同时保留 `{{ .ConfirmationURL }}` 并加入 `{{ .Token }}`。应用支持输入邮件中的 6 位验证码作为回退。使用自定义 SMTP 时应关闭邮件链接跟踪。
+若邮件服务会扫描或改写一次性链接，请在 Authentication → Email Templates 的 Magic Link 模板中同时保留 `{{ .ConfirmationURL }}` 并加入 `{{ .Token }}`。应用支持输入邮件中的 8 位验证码作为回退。使用自定义 SMTP 时应关闭邮件链接跟踪。
 
 ## 数据与权限
 

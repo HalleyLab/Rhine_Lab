@@ -16,7 +16,7 @@ Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与�
 
 下载：Android 使用 `Rhine-Lab-0.1.9-internal.apk`；Windows 使用 `Rhine-Lab-0.1.9-Windows.exe`；浏览器扩展解压 ZIP 后在扩展管理页选择“加载已解压的扩展程序”。
 
-云端配置需依次执行 `supabase/migrations/001_rhine_lab_sync.sql`、`002_lab_member_directory.sql` 和 `003_secure_lab_sharing.sql`。数据密码不会发送到服务器；忘记后无法恢复既有密文。
+云端配置需依次执行 `supabase/migrations/001_rhine_lab_sync.sql`、`002_lab_member_directory.sql`、`003_secure_lab_sharing.sql` 和 `004_fix_lab_invite_pgcrypto_path.sql`。数据密码不会发送到服务器；忘记后无法恢复既有密文。
 
 <a id="english"></a>
 
@@ -32,7 +32,7 @@ Rhine Lab is a personal life-science workspace for experiment records and result
 
 Downloads: `Rhine-Lab-0.1.9-internal.apk` for Android, `Rhine-Lab-0.1.9-Windows.exe` for Windows, or the unpacked browser-extension ZIP for Chrome/Edge.
 
-For cloud setup, apply migrations `001`, `002`, then `003_secure_lab_sharing.sql`. The data-vault password is never sent to the server and cannot be recovered if lost.
+For cloud setup, apply migrations `001`, `002`, `003_secure_lab_sharing.sql`, then `004_fix_lab_invite_pgcrypto_path.sql`. The data-vault password is never sent to the server and cannot be recovered if lost.
 
 ## Development
 

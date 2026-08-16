@@ -8,6 +8,12 @@
     background: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
 }
 
+.sync-security-panel[hidden],
+.sync-vault-form[hidden],
+.sync-inline-form[hidden] {
+    display: none !important;
+}
+
 .sync-security-panel > div:first-child,
 .sync-lab-panel > div:first-child {
     display: grid;

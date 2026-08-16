@@ -179,7 +179,7 @@
     }
 
     async function encryptCloud(value) {
-        if (!accountKey || !accountId) throw new Error('请先解锁数据保险库');
+        if (!accountKey || !accountId) throw new Error('请先解锁 LAB');
         const envelope = await encryptJson(value, accountKey, 'account-workspace', 'user:' + accountId);
         envelope.kdf = { name: 'PBKDF2-SHA256', iterations: PBKDF2_ITERATIONS, salt: 'account-id-derived' };
         return envelope;
@@ -187,7 +187,7 @@
 
     async function decryptCloud(value) {
         if (!isEnvelope(value, 'account-workspace')) return value;
-        if (!accountKey || !accountId) throw new Error('请先解锁数据保险库');
+        if (!accountKey || !accountId) throw new Error('请先解锁 LAB');
         return decryptJson(value, accountKey, 'user:' + accountId);
     }
 

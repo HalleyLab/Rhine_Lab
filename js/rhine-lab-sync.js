@@ -509,7 +509,7 @@
                 }
                 loginEmail = email;
                 if (ui.otpForm) ui.otpForm.hidden = false;
-                setStatus('local', '检查邮箱', '登录链接已发送；请在发起登录的设备打开邮件。若邮件包含 6 位验证码，也可在这里输入。');
+                setStatus('local', '检查邮箱', '登录链接已发送；请在发起登录的设备打开邮件。若邮件包含 8 位验证码，也可在这里输入。');
             });
         }
         if (ui.otpForm) {
@@ -517,7 +517,7 @@
                 event.preventDefault();
                 const email = loginEmail || String(ui.email && ui.email.value || '').trim();
                 const token = String(ui.otp && ui.otp.value || '').replace(/\s+/g, '');
-                if (!supabase || !email || !/^\d{6}$/.test(token)) return;
+                if (!supabase || !email || !/^\d{8}$/.test(token)) return;
                 setStatus('connecting', '正在验证', '正在验证一次性验证码…');
                 const result = await supabase.auth.verifyOtp({ email: email, token: token, type: 'email' });
                 if (result.error) {
