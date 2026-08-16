@@ -9,6 +9,7 @@
 }
 
 .sync-security-panel[hidden],
+.sync-lab-panel[hidden],
 .sync-vault-form[hidden],
 .sync-inline-form[hidden] {
     display: none !important;

@@ -6,6 +6,7 @@
     window.RHINE_LAB_CONFIG = Object.assign({
         supabaseUrl: 'https://tyjaprmkrjxgccsnqwog.supabase.co',
         supabasePublishableKey: 'sb_publishable_7OQarZUrwQw9UdqTfGFaQw_vO5AqAQa',
+        publicAppUrl: 'https://halleylab.github.io/Rhine_Lab/',
         seedUrl: './data/seed.json'
     }, window.RHINE_LAB_CONFIG || {});
 }());

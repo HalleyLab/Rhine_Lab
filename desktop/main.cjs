@@ -7,11 +7,11 @@ let mainWindow = null;
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-smooth-scrolling');
 
-function authUrlFromArguments(argumentsList) {
-    return (argumentsList || []).find(function (value) { return String(value).startsWith('rhinelab://auth/callback'); }) || '';
+function appUrlFromArguments(argumentsList) {
+    return (argumentsList || []).find(function (value) { return String(value).startsWith('rhinelab://'); }) || '';
 }
 
-function sendAuthCallback(url) {
+function sendAppUrl(url) {
     if (!url || !mainWindow || mainWindow.isDestroyed()) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
@@ -46,7 +46,7 @@ function createWindow() {
     });
     window.once('ready-to-show', function () { window.show(); });
     window.webContents.once('did-finish-load', function () {
-        sendAuthCallback(authUrlFromArguments(process.argv));
+        sendAppUrl(appUrlFromArguments(process.argv));
     });
     window.on('closed', function () { if (mainWindow === window) mainWindow = null; });
     window.loadFile(path.join(__dirname, '..', 'index.html'));
@@ -77,12 +77,12 @@ const singleInstance = app.requestSingleInstanceLock();
 if (!singleInstance) app.quit();
 
 app.on('second-instance', function (_event, commandLine) {
-    sendAuthCallback(authUrlFromArguments(commandLine));
+    sendAppUrl(appUrlFromArguments(commandLine));
 });
 
 app.on('open-url', function (event, url) {
     event.preventDefault();
-    sendAuthCallback(url);
+    sendAppUrl(url);
 });
 
 app.whenReady().then(function () {
