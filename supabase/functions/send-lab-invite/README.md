@@ -5,8 +5,10 @@ This function sends LAB confirmation links through Resend using the already veri
 Deploy after applying `005_lab_password_and_email_invites.sql`:
 
 ```powershell
-supabase functions deploy send-lab-invite --project-ref tyjaprmkrjxgccsnqwog --use-api
+supabase functions deploy send-lab-invite --project-ref tyjaprmkrjxgccsnqwog --use-api --no-verify-jwt
 supabase secrets set RESEND_API_KEY=... LAB_INVITE_FROM="Rhine Lab <invite@auth.rh1nelab.com>" PUBLIC_APP_URL=https://halleylab.github.io/Rhine_Lab/
 ```
 
 The Resend API key is separate from the SMTP password already configured in Supabase Auth. Never place either secret in browser configuration or GitHub source files.
+
+JWT verification is intentionally performed inside the function with `auth.getUser()`, followed by an owner-membership check. The gateway's legacy JWT verifier is disabled for compatibility with Supabase publishable keys.
