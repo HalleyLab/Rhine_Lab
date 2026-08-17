@@ -391,7 +391,7 @@
         '至少 10 位': 'At least 10 characters',
         '新账号 / 验证码注册': 'New account / Register with code',
         '验证并创建账户': 'Verify and create account',
-        '已有历史记录的账户首次设置密码时，请继续使用原来的加密密码，以便解密既有记录。': 'When setting a password for an account with existing records, reuse the previous encryption password so those records remain decryptable.',
+
         '选择当前 LAB，或创建、加入另一个 LAB。': 'Select the active LAB, or create or join another LAB.',
         '尚未加入 LAB。': 'No LAB memberships yet.',
         'LAB 操作': 'LAB actions',
