@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.1.9">
     <link rel="stylesheet" href="css/rhine-lab.css?v=20260815-1">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
-    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-portable-sync">
+    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-local-transfer">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -48,7 +48,7 @@
             </nav>
 
             <div class="sidebar-foot">
-                <div class="system-status"><span class="pulse-dot"></span><div><strong id="systemConnectionLabel">本地模式</strong><small id="systemSyncLabel">云同步未连接</small></div><b id="systemSyncBadge">LOCAL</b></div>
+                <div class="system-status"><span class="pulse-dot"></span><div><strong id="systemConnectionLabel">本地模式</strong><small id="systemSyncLabel">云同步未连接</small><button class="local-transfer-control" id="localTransferControl" type="button" aria-controls="portableSyncDialog" aria-haspopup="dialog">点击以同步</button></div><b id="systemSyncBadge">LOCAL</b></div>
                 <button class="clear-workspace-button" type="button" data-open-clear-workspace><span>⌫</span><span><strong>清空当前工作区</strong><small>删除本工作区的全部记录</small></span></button>
             </div>
         </aside>
@@ -303,19 +303,16 @@
         </form>
     </dialog>
 
-    <dialog class="sync-dialog" id="syncDialog">
+
+    <dialog class="sync-dialog portable-sync-dialog" id="portableSyncDialog">
         <article>
             <header>
-                <div><p class="micro-label">CROSS-DEVICE SYNC</p><h2>设备同步</h2></div>
-                <button class="dialog-close" type="button" data-close-sync aria-label="关闭">×</button>
+                <div><p class="micro-label">OFFLINE TRANSFER</p><h2>本地数据同步</h2></div>
+                <button class="dialog-close" type="button" data-close-portable-sync aria-label="关闭">×</button>
             </header>
-            <section class="sync-intro">
-                <span class="sync-orbit" aria-hidden="true"><i></i></span>
-                <div><strong id="syncDialogTitle">当前仅保存在这台设备</strong><p id="syncDialogDescription">连接云数据库并登录后，电脑与手机会使用同一份数据。</p></div>
-            </section>
             <section class="sync-transfer-panel" aria-labelledby="syncTransferTitle">
                 <div class="sync-transfer-head">
-                    <div><small>OFFLINE TRANSFER</small><strong id="syncTransferTitle">无账号设备同步</strong><span>导出加密文件，再通过数据线、隔空投送、附近分享或网盘传到另一台设备。</span></div>
+                    <div><small>DEVICE TO DEVICE</small><strong id="syncTransferTitle">无账号设备同步</strong><span>导出加密文件，再通过数据线、隔空投送、附近分享或网盘传到另一台设备。</span></div>
                     <b aria-hidden="true">↔</b>
                 </div>
                 <label class="sync-transfer-password"><span>传输密码</span><input id="syncTransferPassword" type="password" minlength="10" autocomplete="off" placeholder="至少 10 位"></label>
@@ -328,6 +325,20 @@
                 <p class="sync-transfer-file"><span id="syncTransferFileName">尚未选择文件</span></p>
                 <p class="sync-transfer-message" id="syncTransferMessage">传输文件采用 AES‑256‑GCM 加密，不包含登录信息。</p>
             </section>
+            <footer><span></span><button class="button primary" type="button" data-close-portable-sync>完成</button></footer>
+        </article>
+    </dialog>
+    <dialog class="sync-dialog" id="syncDialog">
+        <article>
+            <header>
+                <div><p class="micro-label">CROSS-DEVICE SYNC</p><h2>设备同步</h2></div>
+                <button class="dialog-close" type="button" data-close-sync aria-label="关闭">×</button>
+            </header>
+            <section class="sync-intro">
+                <span class="sync-orbit" aria-hidden="true"><i></i></span>
+                <div><strong id="syncDialogTitle">当前仅保存在这台设备</strong><p id="syncDialogDescription">连接云数据库并登录后，电脑与手机会使用同一份数据。</p></div>
+            </section>
+
             <div class="sync-auth-mode-actions" id="syncAuthModes" role="tablist" aria-label="登录方式">
                 <button class="button ghost compact" type="button" data-auth-mode="password" aria-selected="true">密码登录</button>
                 <button class="button ghost compact" type="button" data-auth-mode="code" aria-selected="false">验证码登录</button>
@@ -517,11 +528,11 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=20260817-2"></script>
+    <script src="js/rhine-lab-i18n.js?v=20260817-3"></script>
     <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
     <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-portable-sync"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-portable-sync"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-local-transfer"></script>
     <script src="js/rhine-lab-pwa.js?v=0.1.9"></script>
     <script src="js/rhine-lab-bootstrap.js?v=0.1.9"></script>
 </body>

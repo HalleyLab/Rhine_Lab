@@ -352,3 +352,23 @@
     .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
     .sync-transfer-actions .button { width: 100%; }
 }
+.local-transfer-control {
+    display: inline-flex;
+    margin-top: 5px;
+    padding: 0;
+    border: 0;
+    color: #698f15;
+    background: transparent;
+    font: 800 10px/1.25 var(--font-body);
+    cursor: pointer;
+}
+
+.local-transfer-control:hover { text-decoration: underline; }
+.local-transfer-control[hidden] { display: none !important; }
+.portable-sync-dialog article { width: min(620px, calc(100vw - 32px)); }
+.portable-sync-dialog .sync-transfer-panel { margin-bottom: 18px; }
+.dark-theme .local-transfer-control { color: var(--accent); }
+
+@media (max-width: 640px) {
+    .portable-sync-dialog article { width: min(100%, calc(100vw - 18px)); }
+}
