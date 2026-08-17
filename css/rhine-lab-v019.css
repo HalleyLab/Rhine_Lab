@@ -291,3 +291,64 @@
         grid-template-columns: 1fr;
     }
 }
+
+.sync-transfer-panel {
+    display: grid;
+    gap: 12px;
+    margin: 0 22px 16px;
+    padding: 16px 18px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+    border-radius: 16px;
+    background: linear-gradient(125deg, color-mix(in srgb, var(--card) 93%, var(--accent) 7%), var(--card));
+}
+
+.sync-transfer-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+}
+
+.sync-transfer-head > div { display: grid; gap: 3px; }
+.sync-transfer-head small { color: var(--accent-deep); font: 800 10px/1.2 Helvetica, Arial, sans-serif; letter-spacing: .12em; }
+.sync-transfer-head strong { color: var(--text); font-size: 16px; }
+.sync-transfer-head span,
+.sync-transfer-message,
+.sync-transfer-file { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+.sync-transfer-head > b {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--text);
+    background: var(--card);
+    font: 700 18px/1 Helvetica, Arial, sans-serif;
+}
+
+.sync-transfer-password { display: grid; gap: 5px; }
+.sync-transfer-password > span { color: var(--text); font-size: 12px; font-weight: 700; }
+.sync-transfer-password input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 11px;
+    color: var(--text);
+    background: var(--card);
+    font: inherit;
+}
+
+.sync-transfer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sync-transfer-file,
+.sync-transfer-message { margin: 0; }
+.sync-transfer-file { overflow-wrap: anywhere; }
+.sync-transfer-message[data-state="error"] { color: var(--danger, #cf4e38); }
+
+@media (max-width: 640px) {
+    .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
+    .sync-transfer-actions .button { width: 100%; }
+}

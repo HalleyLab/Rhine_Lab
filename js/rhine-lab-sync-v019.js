@@ -12,6 +12,9 @@
         ['codeLoginForm', 'syncCodeLoginForm'], ['codeEmail', 'syncCodeEmail'], ['codeSend', 'syncCodeSend'], ['codeOtpForm', 'syncCodeOtpForm'], ['codeOtp', 'syncCodeOtp'],
         ['registrationForm', 'syncRegistrationForm'], ['registrationEmail', 'syncRegistrationEmail'], ['registrationPassword', 'syncRegistrationPassword'], ['registrationStart', 'syncRegistrationStart'],
         ['otpForm', 'syncOtpForm'], ['otp', 'syncOtp'], ['account', 'syncAccount'], ['accountEmail', 'syncAccountEmail'],
+        ['transferPassword', 'syncTransferPassword'], ['transferExport', 'syncTransferExport'], ['transferChoose', 'syncTransferChoose'],
+        ['transferFile', 'syncTransferFile'], ['transferImport', 'syncTransferImport'], ['transferFileName', 'syncTransferFileName'],
+        ['transferMessage', 'syncTransferMessage'],
         ['labWorkspace', 'labWorkspaceSection'], ['membershipList', 'labMembershipList'], ['membershipCount', 'labMembershipCount'],
         ['showLabCreate', 'showLabCreate'], ['showLabJoin', 'showLabJoin'],
         ['labCreateForm', 'labCreateForm'], ['labName', 'labName'], ['labCreatePassword', 'labCreatePassword'],
@@ -38,6 +41,7 @@
     let registrationPassword = '';
     let authMode = 'password';
     let loadedMemberDirectoryFor = '';
+    let selectedTransferFile = null;
 
     function configured() {
         return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
@@ -566,9 +570,132 @@
         if (!(result.data || []).length) ui.memberList.textContent = '尚未绑定任何邮箱。';
     }
 
+    function transferText(value) {
+        return window.RhineLabI18n && window.RhineLabI18n.t ? window.RhineLabI18n.t(value) : value;
+    }
+
+    function setTransferMessage(message, error) {
+        if (!ui.transferMessage) return;
+        ui.transferMessage.textContent = transferText(message);
+        ui.transferMessage.dataset.state = error ? 'error' : 'ready';
+    }
+
+    function blobToDataUrl(blob) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.onload = function () { resolve(String(reader.result || '')); };
+            reader.onerror = function () { reject(reader.error || new Error('无法读取附件')); };
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function materializeAttachment(record, field) {
+        const value = record && record[field];
+        if (!value || !/^(?:blob:|https?:)/i.test(String(value))) return;
+        try {
+            const response = await fetch(value);
+            if (!response.ok) throw new Error('附件读取失败');
+            record[field] = await blobToDataUrl(await response.blob());
+        } catch (_error) {
+            delete record[field];
+        }
+    }
+
+    async function preparePortableWorkspace() {
+        const source = adapter.getPersonalState ? adapter.getPersonalState() : adapter.getState();
+        const copy = JSON.parse(JSON.stringify(source || {}));
+        delete copy.security;
+        const jobs = [];
+        ['experiments', 'reagents', 'samples', 'protocols'].forEach(function (name) {
+            (copy[name] || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'photoData')); });
+        });
+        (copy.freezerBoxes || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'lastScanPhoto')); });
+        (copy.results || []).forEach(function (result) {
+            (result.attachments || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'data')); });
+        });
+        await Promise.all(jobs);
+        return copy;
+    }
+
+    function downloadTransferFile(file) {
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = file.name;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+    }
+
+    async function exportPortableWorkspace() {
+        const password = String(ui.transferPassword && ui.transferPassword.value || '');
+        if (password.length < 10) { setTransferMessage('传输密码至少需要 10 个字符', true); return; }
+        setTransferMessage('正在生成加密同步文件…');
+        const workspace = await preparePortableWorkspace();
+        const payload = await secure.encryptPortable({ workspace: workspace, exportedAt: new Date().toISOString() }, password);
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const file = new File([JSON.stringify(payload)], 'Rhine-Lab-' + stamp + '.rhinelab', { type: 'application/vnd.rhinelab.encrypted+json' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'Rhine Lab', text: transferText('加密工作区同步文件') });
+                setTransferMessage('加密同步文件已交给系统分享。');
+                return;
+            } catch (error) {
+                if (error && error.name === 'AbortError') { setTransferMessage('已取消分享。'); return; }
+            }
+        }
+        downloadTransferFile(file);
+        setTransferMessage('加密同步文件已下载，可用数据线或其他方式传到另一台设备。');
+    }
+
+    async function importPortableWorkspace() {
+        const password = String(ui.transferPassword && ui.transferPassword.value || '');
+        if (password.length < 10) { setTransferMessage('传输密码至少需要 10 个字符', true); return; }
+        if (!selectedTransferFile) { setTransferMessage('请先选择 .rhinelab 同步文件。', true); return; }
+        if (selectedTransferFile.size > 200 * 1024 * 1024) { setTransferMessage('同步文件超过 200 MB，无法在当前设备导入。', true); return; }
+        setTransferMessage('正在解密并验证同步文件…');
+        let unpacked;
+        try {
+            const packed = JSON.parse(await selectedTransferFile.text());
+            unpacked = await secure.decryptPortable(packed, password);
+        } catch (_error) {
+            throw new Error('同步文件或传输密码不正确');
+        }
+        if (!unpacked || !unpacked.workspace || typeof unpacked.workspace !== 'object') throw new Error('同步文件缺少工作区数据');
+        if (!window.confirm(transferText('导入会替换当前设备的个人工作区。确定继续吗？'))) {
+            setTransferMessage('已取消导入。');
+            return;
+        }
+        if (adapter.setPersonalState) adapter.setPersonalState(unpacked.workspace);
+        else adapter.applyState(unpacked.workspace, 'personal');
+        queueState(unpacked.workspace, 'personal');
+        setTransferMessage('导入完成；个人工作区已在本机加密保存。');
+        selectedTransferFile = null;
+        if (ui.transferFile) ui.transferFile.value = '';
+        if (ui.transferFileName) ui.transferFileName.textContent = transferText('尚未选择文件');
+        if (ui.transferImport) ui.transferImport.disabled = true;
+    }
     function bindUi() {
         if (ui.control) ui.control.addEventListener('click', openDialog);
         document.addEventListener('click', function (event) { if (event.target.closest('[data-close-sync]') && ui.dialog && ui.dialog.open) ui.dialog.close(); });
+        if (ui.transferExport) ui.transferExport.addEventListener('click', function () {
+            exportPortableWorkspace().catch(function (error) { setTransferMessage(error && error.message ? error.message : '无法导出同步文件。', true); });
+        });
+        if (ui.transferChoose) ui.transferChoose.addEventListener('click', function () {
+            if (ui.transferFile) ui.transferFile.click();
+        });
+        if (ui.transferFile) ui.transferFile.addEventListener('change', function () {
+            selectedTransferFile = ui.transferFile.files && ui.transferFile.files[0] ? ui.transferFile.files[0] : null;
+            if (ui.transferFileName) ui.transferFileName.textContent = selectedTransferFile ? selectedTransferFile.name : transferText('尚未选择文件');
+            if (ui.transferImport) ui.transferImport.disabled = !selectedTransferFile;
+            if (selectedTransferFile) setTransferMessage('同步文件已选择；输入传输密码后导入。');
+        });
+        if (ui.transferImport) ui.transferImport.addEventListener('click', function () {
+            importPortableWorkspace().catch(function (error) {
+                setTransferMessage(error && error.message ? error.message : '无法导入同步文件，请检查文件和密码。', true);
+            });
+        });
         if (ui.authModes) ui.authModes.addEventListener('click', function (event) {
             const button = event.target.closest('[data-auth-mode]');
             if (!button) return;

@@ -294,6 +294,41 @@
         return crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64(ivValue) }, key, arrayBuffer);
     }
 
+    async function derivePortableKey(passphrase, salt) {
+        if (String(passphrase || '').length < 10) throw new Error('传输密码至少需要 10 个字符');
+        const material = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        return crypto.subtle.deriveKey(
+            { name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: PBKDF2_ITERATIONS },
+            material,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    async function encryptPortable(value, passphrase) {
+        const salt = crypto.getRandomValues(new Uint8Array(32));
+        const envelope = await encryptJson(value, await derivePortableKey(passphrase, salt), 'portable-workspace', 'rhine-lab-transfer-v1');
+        return {
+            format: 'rhine-lab-transfer',
+            version: 1,
+            createdAt: new Date().toISOString(),
+            kdf: { name: 'PBKDF2-SHA256', iterations: PBKDF2_ITERATIONS, salt: toBase64(salt) },
+            envelope: envelope
+        };
+    }
+
+    async function decryptPortable(value, passphrase) {
+        if (!value || value.format !== 'rhine-lab-transfer' || value.version !== 1 || !value.kdf || !value.envelope) {
+            throw new Error('不是有效的 Rhine Lab 同步文件');
+        }
+        if (value.kdf.name !== 'PBKDF2-SHA256' || value.kdf.iterations !== PBKDF2_ITERATIONS || !value.kdf.salt) {
+            throw new Error('同步文件使用了不受支持的加密参数');
+        }
+        if (!isEnvelope(value.envelope, 'portable-workspace')) throw new Error('同步文件的加密封装无效');
+        return decryptJson(value.envelope, await derivePortableKey(passphrase, fromBase64(value.kdf.salt)), 'rhine-lab-transfer-v1');
+    }
+
     window.RhineLabCrypto = {
         prepareLocalStorage: prepareLocalStorage,
         readLocal: readLocal,
@@ -314,6 +349,8 @@
         decryptLab: decryptLab,
         encryptBinary: encryptBinary,
         decryptBinary: decryptBinary,
+        encryptPortable: encryptPortable,
+        decryptPortable: decryptPortable,
         encryptedAuthStorage: encryptedAuthStorage,
         isEnvelope: isEnvelope
     };
