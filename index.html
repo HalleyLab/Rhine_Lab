@@ -313,13 +313,28 @@
                 <span class="sync-orbit" aria-hidden="true"><i></i></span>
                 <div><strong id="syncDialogTitle">当前仅保存在这台设备</strong><p id="syncDialogDescription">连接云数据库并登录后，电脑与手机会使用同一份数据。</p></div>
             </section>
+            <div class="sync-auth-mode-actions" id="syncAuthModes" role="tablist" aria-label="登录方式">
+                <button class="button ghost compact" type="button" data-auth-mode="password" aria-selected="true">密码登录</button>
+                <button class="button ghost compact" type="button" data-auth-mode="code" aria-selected="false">验证码登录</button>
+                <button class="button ghost compact" type="button" data-auth-mode="register" aria-selected="false">创建账号</button>
+            </div>
             <form id="syncLoginForm" class="sync-login-form">
                 <label><span>登录邮箱</span><input id="syncEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
                 <label><span>账户密码</span><input id="syncPassword" name="password" type="password" minlength="10" autocomplete="current-password" placeholder="至少 10 位" required></label>
-                <div class="sync-auth-actions">
-                    <button class="button primary" type="submit">密码登录</button>
-                    <button class="button ghost" id="syncRegistrationStart" type="button">新账号 / 验证码注册</button>
-                </div>
+                <div class="sync-auth-actions"><button class="button primary" type="submit">密码登录</button></div>
+            </form>
+            <form id="syncCodeLoginForm" class="sync-login-form" hidden>
+                <label><span>登录邮箱</span><input id="syncCodeEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+                <div class="sync-auth-actions"><button class="button primary" id="syncCodeSend" type="submit">发送登录验证码</button></div>
+            </form>
+            <form id="syncCodeOtpForm" class="sync-login-form sync-otp-form" hidden>
+                <label><span>8 位验证码</span><input id="syncCodeOtp" name="token" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" maxlength="8" placeholder="00000000" required></label>
+                <button class="button primary" type="submit">验证码登录</button>
+            </form>
+            <form id="syncRegistrationForm" class="sync-login-form" hidden>
+                <label><span>注册邮箱</span><input id="syncRegistrationEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+                <label><span>设置账户密码</span><input id="syncRegistrationPassword" name="password" type="password" minlength="10" autocomplete="new-password" placeholder="至少 10 位" required></label>
+                <div class="sync-auth-actions"><button class="button primary" id="syncRegistrationStart" type="submit">发送注册验证码</button></div>
             </form>
             <p class="sync-auth-note">已有历史记录的账户首次设置密码时，请继续使用原来的加密密码，以便解密既有记录。</p>
             <form id="syncOtpForm" class="sync-login-form sync-otp-form" hidden>
@@ -331,17 +346,13 @@
             </section>
             <section class="sync-lab-panel lab-workspace-panel" id="labWorkspaceSection" hidden>
                 <div class="lab-workspace-head"><div><strong>LAB</strong><span>选择当前 LAB，或创建、加入另一个 LAB。</span></div><b id="labMembershipCount">0</b></div>
-                <div class="lab-membership-list" id="labMembershipList" aria-live="polite"><p>尚未加入 LAB。</p></div>
+                <div class="lab-membership-list" id="labMembershipList" aria-live="polite"><p>当前未选择 LAB。</p></div>
                 <div class="lab-mode-actions" role="tablist" aria-label="LAB 操作">
                     <button class="button ghost compact" id="showLabCreate" type="button" aria-selected="false">创建 LAB</button>
                     <button class="button ghost compact" id="showLabJoin" type="button" aria-selected="false">加入 LAB</button>
                 </div>
                 <form class="sync-inline-form multi-field" id="labCreateForm" hidden><input id="labName" type="text" maxlength="80" placeholder="LAB 名称" required><input id="labCreatePassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" placeholder="设置 LAB 密码（至少 10 位）" required><button class="button primary" type="submit">创建 LAB</button></form>
                 <form class="sync-inline-form multi-field" id="labJoinForm" hidden><input id="labJoinName" type="text" maxlength="80" placeholder="LAB 名称" required><input id="labJoinPassword" type="password" minlength="10" maxlength="128" autocomplete="current-password" placeholder="输入 LAB 密码" required><button class="button primary" type="submit">加入 LAB</button></form>
-                <section class="lab-email-invite" id="labInviteSection" hidden>
-                    <div><small>EMAIL INVITATION</small><strong>通过邮件邀请</strong><span>创建者可向指定邮箱发送免输 LAB 密码的确认链接。</span></div>
-                    <form class="sync-inline-form multi-field" id="labInviteForm"><input id="labInviteEmail" type="email" autocomplete="email" placeholder="member@example.com" required><input id="labInvitePassword" type="password" minlength="10" maxlength="128" autocomplete="current-password" placeholder="输入 LAB 密码" required><button class="button primary" type="submit">发送确认邮件</button></form>
-                </section>
             </section>
             <section class="lab-member-directory" id="labMemberDirectory" hidden>
                 <div class="lab-member-directory-head">
@@ -495,7 +506,7 @@
     <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
     <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-account-password"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-multi-lab"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-auth-modes"></script>
     <script src="js/rhine-lab-pwa.js?v=0.1.9"></script>
     <script src="js/rhine-lab-bootstrap.js?v=0.1.9"></script>
 </body>

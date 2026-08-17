@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v62';
+const CACHE_NAME = 'rhine-lab-pages-v63';
 const APP_SHELL = [
     './',
     './index.html',
@@ -10,7 +10,7 @@ const APP_SHELL = [
     './js/rhine-lab-i18n.js?v=20260817-1',
     './js/vendor/supabase.min.js?v=2.112.3',
     './js/rhine-lab-crypto.js?v=0.1.9-account-password',
-    './js/rhine-lab-sync-v019.js?v=0.1.9-multi-lab',
+    './js/rhine-lab-sync-v019.js?v=0.1.9-auth-modes',
     './js/rhine-lab-pwa.js?v=0.1.9',
     './js/rhine-lab-bootstrap.js?v=0.1.9',
     './js/rhine-lab.js?v=20260816-2',

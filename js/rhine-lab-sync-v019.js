@@ -5,17 +5,17 @@
     const secure = window.RhineLabCrypto;
     const ATTACHMENT_BUCKET = 'rhine-lab-attachments';
     const NATIVE_AUTH_REDIRECT = 'rhinelab://auth/callback';
-    const PENDING_INVITE_KEY = 'rhineLabPendingInvite';
     const COLLECTIONS = ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'activities'];
     const ui = Object.fromEntries([
         ['control', 'syncControl'], ['label', 'syncStatusLabel'], ['dialog', 'syncDialog'], ['title', 'syncDialogTitle'], ['description', 'syncDialogDescription'],
-        ['loginForm', 'syncLoginForm'], ['email', 'syncEmail'], ['password', 'syncPassword'], ['registrationStart', 'syncRegistrationStart'],
+        ['authModes', 'syncAuthModes'], ['loginForm', 'syncLoginForm'], ['email', 'syncEmail'], ['password', 'syncPassword'],
+        ['codeLoginForm', 'syncCodeLoginForm'], ['codeEmail', 'syncCodeEmail'], ['codeSend', 'syncCodeSend'], ['codeOtpForm', 'syncCodeOtpForm'], ['codeOtp', 'syncCodeOtp'],
+        ['registrationForm', 'syncRegistrationForm'], ['registrationEmail', 'syncRegistrationEmail'], ['registrationPassword', 'syncRegistrationPassword'], ['registrationStart', 'syncRegistrationStart'],
         ['otpForm', 'syncOtpForm'], ['otp', 'syncOtp'], ['account', 'syncAccount'], ['accountEmail', 'syncAccountEmail'],
         ['labWorkspace', 'labWorkspaceSection'], ['membershipList', 'labMembershipList'], ['membershipCount', 'labMembershipCount'],
         ['showLabCreate', 'showLabCreate'], ['showLabJoin', 'showLabJoin'],
         ['labCreateForm', 'labCreateForm'], ['labName', 'labName'], ['labCreatePassword', 'labCreatePassword'],
         ['labJoinForm', 'labJoinForm'], ['labJoinName', 'labJoinName'], ['labJoinPassword', 'labJoinPassword'],
-        ['labInvite', 'labInviteSection'], ['labInviteForm', 'labInviteForm'], ['inviteEmail', 'labInviteEmail'], ['invitePassword', 'labInvitePassword'],
         ['memberDirectory', 'labMemberDirectory'], ['memberList', 'labMemberList'],
         ['memberCount', 'labMemberCount'], ['refreshMembers', 'refreshLabMembers'], ['message', 'syncMessage'], ['signOut', 'syncSignOut'],
         ['entrySaveStatus', 'entrySaveStatus'], ['systemConnection', 'systemConnectionLabel'], ['systemSync', 'systemSyncLabel'], ['systemBadge', 'systemSyncBadge']
@@ -33,46 +33,18 @@
     let applyingRemote = false;
     let started = false;
     let loginEmail = '';
+    let codeLoginEmail = '';
+    let registrationEmail = '';
     let registrationPassword = '';
+    let authMode = 'password';
     let loadedMemberDirectoryFor = '';
-    let pendingInvite = parseInvite(location.href);
 
     function configured() {
         return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
     }
 
-    function parseInvite(value) {
-        let candidate = String(value || '').trim();
-        try { candidate = decodeURIComponent(candidate); } catch (_error) { /* keep the original input */ }
-        const match = candidate.match(/([a-f0-9]{64})\.([A-Za-z0-9_-]{40,50})/i);
-        return match ? { token: match[1], key: match[2] } : null;
-    }
-
-    function inviteCode(invite) {
-        return invite ? invite.token + '.' + invite.key : '';
-    }
-
-    function publicInviteUrl(invite) {
-        const base = String(config.publicAppUrl || 'https://halleylab.github.io/Rhine_Lab/');
-        const url = new URL(base, location.href);
-        url.hash = 'lab-invite=' + inviteCode(invite);
-        return url.href;
-    }
-
-    async function rememberInvite(value) {
-        const invite = parseInvite(value);
-        if (!invite) return null;
-        pendingInvite = invite;
-        await secure.writeLocal(PENDING_INVITE_KEY, invite);
-        return invite;
-    }
-
     function vaultUnlocked() {
         return Boolean(user && secure && secure.accountUnlocked(user.id));
-    }
-
-    function activeLabStorageKey() {
-        return user ? 'rhineLabActiveLab:' + user.id : 'rhineLabActiveLab';
     }
 
     function roleLabel(role) {
@@ -93,6 +65,15 @@
             ui.membershipList.appendChild(empty);
             return;
         }
+        const none = document.createElement('button');
+        none.type = 'button';
+        none.className = 'lab-membership-button no-lab' + (!membership ? ' active' : '');
+        none.dataset.clearLab = 'true';
+        none.setAttribute('aria-pressed', String(!membership));
+        const noneName = document.createElement('strong'); noneName.textContent = '不选择 LAB';
+        const noneHint = document.createElement('span'); noneHint.textContent = '仅使用个人工作区';
+        none.append(noneName, noneHint);
+        ui.membershipList.appendChild(none);
         memberships.forEach(function (item) {
             const button = document.createElement('button');
             button.type = 'button';
@@ -104,6 +85,14 @@
             button.append(name, role);
             ui.membershipList.appendChild(button);
         });
+    }
+
+    function showAuthMode(mode) {
+        authMode = mode === 'code' || mode === 'register' ? mode : 'password';
+        if (ui.authModes) ui.authModes.querySelectorAll('[data-auth-mode]').forEach(function (button) {
+            button.setAttribute('aria-selected', String(button.dataset.authMode === authMode));
+        });
+        updateAccountUi();
     }
 
     function showLabForm(mode) {
@@ -118,9 +107,12 @@
     async function selectLab(labId) {
         const next = memberships.find(function (item) { return item.lab_id === labId; }) || null;
         if (!next) return;
+        if (membership && membership.lab_id === next.lab_id) {
+            await clearLabSelection();
+            return;
+        }
         const changed = !membership || membership.lab_id !== next.lab_id;
         membership = next;
-        localStorage.setItem(activeLabStorageKey(), next.lab_id);
         loadedMemberDirectoryFor = '';
         renderMemberships();
         updateAccess();
@@ -129,6 +121,18 @@
             await loadLabWorkspace();
         }
         await loadLabMembers(true);
+    }
+
+    async function clearLabSelection() {
+        const changed = Boolean(membership);
+        membership = null;
+        loadedMemberDirectoryFor = '';
+        renderMemberships();
+        updateAccess();
+        if (changed && currentScope === 'lab' && vaultUnlocked()) {
+            await leaveChannel();
+            await applyRemote(mergePublications([]), 'lab');
+        }
     }
 
     function setStatus(state, label, message) {
@@ -144,14 +148,19 @@
     function updateAccountUi() {
         const signedIn = Boolean(user);
         const unlocked = vaultUnlocked();
-        if (ui.loginForm) ui.loginForm.hidden = (signedIn && unlocked) || (!signedIn && Boolean(loginEmail));
-        if (ui.otpForm) ui.otpForm.hidden = signedIn || !loginEmail;
+        const showSignedOutAuth = !signedIn;
+        const needsPasswordUnlock = signedIn && !unlocked;
+        if (ui.authModes) ui.authModes.hidden = !showSignedOutAuth;
+        if (ui.loginForm) ui.loginForm.hidden = !(needsPasswordUnlock || (showSignedOutAuth && authMode === 'password'));
+        if (ui.codeLoginForm) ui.codeLoginForm.hidden = !(showSignedOutAuth && authMode === 'code' && !codeLoginEmail);
+        if (ui.codeOtpForm) ui.codeOtpForm.hidden = !(showSignedOutAuth && authMode === 'code' && Boolean(codeLoginEmail));
+        if (ui.registrationForm) ui.registrationForm.hidden = !(showSignedOutAuth && authMode === 'register' && !registrationEmail);
+        if (ui.otpForm) ui.otpForm.hidden = !(showSignedOutAuth && authMode === 'register' && Boolean(registrationEmail));
         if (ui.account) ui.account.hidden = !signedIn;
         if (ui.signOut) ui.signOut.hidden = !signedIn;
         if (ui.accountEmail) ui.accountEmail.textContent = signedIn ? (user.email || '已验证账户') : '—';
         if (signedIn && ui.email && !ui.email.value) ui.email.value = user.email || '';
         if (ui.labWorkspace) ui.labWorkspace.hidden = !(signedIn && unlocked);
-        if (ui.labInvite) ui.labInvite.hidden = !(signedIn && unlocked && membership && membership.role === 'owner');
         const canViewDirectory = signedIn && unlocked && Boolean(membership);
         if (ui.memberDirectory) ui.memberDirectory.hidden = !canViewDirectory;
         if (!canViewDirectory) loadedMemberDirectoryFor = '';
@@ -162,7 +171,7 @@
         if (adapter && adapter.setAccess) adapter.setAccess({ authenticated: Boolean(user), readOnly: currentScope === 'lab', role: membership ? membership.role : '', labId: membership ? membership.lab_id : '' });
         if (!user) setStatus('local', '登录 / 同步', configured() ? '' : '云同步未配置；本机缓存仍使用设备密钥加密。');
         else if (!vaultUnlocked()) setStatus('locked', '账户数据已锁定', '请输入账户密码以读取并同步数据。');
-        else if (currentScope === 'lab' && !membership) setStatus('warning', '尚未加入 LAB', pendingInvite ? '解锁后将验证邀请并加入 LAB。' : '');
+        else if (currentScope === 'lab' && !membership) setStatus('warning', '未选择 LAB', '请在同步面板中选择一个 LAB。');
         else if (currentScope === 'lab') setStatus('readonly', 'LAB 只读', '共用页面由成员个人工作区的共享投影组成，任何账户都不能直接修改。');
         else setStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? '已加密同步' : '等待网络', navigator.onLine ? '个人数据以 AES‑256‑GCM 加密后同步。' : '修改已加密保存在本机，联网后继续同步。');
         updateAccountUi();
@@ -183,16 +192,6 @@
 
     async function acceptNativeAuthUrl(url) {
         if (!url) return;
-        const invite = await rememberInvite(url);
-        if (invite) {
-            updateAccountUi();
-            if (ui.dialog && !ui.dialog.open) ui.dialog.showModal();
-            if (user && vaultUnlocked()) {
-                await acceptPendingInvite();
-                updateAccess();
-            }
-            return;
-        }
         if (!supabase || !String(url).startsWith(NATIVE_AUTH_REDIRECT)) return;
         const values = authParameters(url);
         if (values.get('error_description')) throw new Error(values.get('error_description'));
@@ -223,9 +222,6 @@
         started = true;
         adapter = nextAdapter;
         currentScope = adapter && adapter.getScope ? adapter.getScope() : 'personal';
-        const inviteFromUrl = parseInvite(location.href);
-        pendingInvite = inviteFromUrl || secure.readLocal(PENDING_INVITE_KEY);
-        if (inviteFromUrl) await rememberInvite(inviteCode(inviteFromUrl));
         bindUi();
         updateAccess();
         if (!configured()) return;
@@ -237,7 +233,6 @@
             const result = await supabase.auth.getSession();
             if (result.error) throw result.error;
             await handleSession(result.data.session);
-            if (pendingInvite && ui.dialog && !ui.dialog.open) openDialog();
         } catch (error) {
             setStatus('error', '连接失败', readableError(error, '无法连接云端。'));
         }
@@ -250,12 +245,9 @@
         const result = await supabase.from('lab_members').select('lab_id, role, created_at, labs(name)').eq('user_id', user.id).order('created_at', { ascending: true });
         if (result.error) throw result.error;
         memberships = result.data || [];
-        const stored = localStorage.getItem(activeLabStorageKey());
-        membership = memberships.find(function (item) { return item.lab_id === preferredLabId; })
-            || memberships.find(function (item) { return item.lab_id === stored; })
-            || memberships[0]
-            || null;
-        if (membership) localStorage.setItem(activeLabStorageKey(), membership.lab_id);
+        membership = preferredLabId
+            ? memberships.find(function (item) { return item.lab_id === preferredLabId; }) || null
+            : null;
         renderMemberships();
     }
 
@@ -304,7 +296,6 @@
         try {
             const requestedScope = currentScope;
             await loadPersonalForUnlock();
-            await acceptPendingInvite();
             await switchScope(requestedScope);
             updateAccess();
             try {
@@ -395,7 +386,7 @@
     async function loadLabWorkspace() {
         const labKey = adapter.getLabKey && adapter.getLabKey(membership.lab_id);
         if (!labKey) {
-            setStatus('locked', '缺少 LAB 密钥', '请重新打开创建者发送的邀请链接；链接中的密钥不会保存在服务器。');
+            setStatus('locked', '缺少 LAB 密钥', '请使用 LAB 名称和密码重新加入。');
             return;
         }
         if (!currentChannel) await subscribeLab();
@@ -557,47 +548,6 @@
         await loadLabMembers(true);
     }
 
-    async function createInvite(email, password) {
-        const labKey = adapter.getLabKey(membership.lab_id);
-        if (!labKey) throw new Error('当前设备缺少 LAB 密钥，请先通过有效邀请链接重新加入');
-        const envelope = await secure.wrapLabKey(membership.lab_id, password, labKey);
-        const configuredLab = await supabase.rpc('set_lab_key_envelope', { target_lab_id: membership.lab_id, lab_password: password, lab_key_envelope: envelope });
-        if (configuredLab.error) throw configuredLab.error;
-        const effectiveLabKey = configuredLab.data ? await secure.unwrapLabKey(membership.lab_id, password, configuredLab.data) : labKey;
-        adapter.setLabKey(membership.lab_id, effectiveLabKey);
-        const result = await supabase.rpc('create_lab_invite', { target_lab_id: membership.lab_id, target_email: email, lab_password: password });
-        if (result.error) throw result.error;
-        const token = typeof result.data === 'string' ? result.data : result.data && result.data.token;
-        if (!token || !effectiveLabKey) throw new Error('邀请邮件生成失败');
-        const invitationUrl = publicInviteUrl({ token: token, key: effectiveLabKey });
-        const mail = await supabase.functions.invoke('send-lab-invite', {
-            body: {
-                labId: membership.lab_id,
-                email: email,
-                labName: membership.labs && membership.labs.name ? membership.labs.name : 'Rhine Lab',
-                invitationUrl: invitationUrl
-            }
-        });
-        if (mail.error) throw mail.error;
-        if (mail.data && mail.data.error) throw new Error(mail.data.error);
-    }
-
-    async function acceptPendingInvite() {
-        if (!pendingInvite) return;
-        const result = await supabase.rpc('accept_lab_invite', { raw_token: pendingInvite.token });
-        if (result.error) throw result.error;
-        const labId = typeof result.data === 'string' ? result.data : result.data && result.data.lab_id;
-        if (!labId) throw new Error('LAB 绑定失败：服务器未返回 LAB ID');
-        adapter.setLabKey(labId, pendingInvite.key);
-        secure.removeLocal(PENDING_INVITE_KEY);
-        pendingInvite = null;
-        await loadMemberships(labId);
-        await persistPersonal(adapter.getPersonalState ? adapter.getPersonalState() : adapter.getState());
-        const cleanUrl = new URL(location.href);
-        cleanUrl.hash = 'dashboard';
-        history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-    }
-
     async function loadLabMembers(force) {
         if (!supabase || !membership || !vaultUnlocked() || !ui.memberList) return;
         if (!force && loadedMemberDirectoryFor === membership.lab_id) return;
@@ -619,6 +569,15 @@
     function bindUi() {
         if (ui.control) ui.control.addEventListener('click', openDialog);
         document.addEventListener('click', function (event) { if (event.target.closest('[data-close-sync]') && ui.dialog && ui.dialog.open) ui.dialog.close(); });
+        if (ui.authModes) ui.authModes.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-auth-mode]');
+            if (!button) return;
+            loginEmail = '';
+            codeLoginEmail = '';
+            registrationEmail = '';
+            registrationPassword = '';
+            showAuthMode(button.dataset.authMode);
+        });
         if (ui.loginForm) ui.loginForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const email = String(ui.email.value || '').trim();
@@ -631,34 +590,62 @@
             await handleSession(result.data.session, password);
             ui.password.value = '';
         });
-        if (ui.registrationStart) ui.registrationStart.addEventListener('click', async function () {
-            const email = String(ui.email.value || '').trim();
-            const password = String(ui.password.value || '');
-            if (!ui.loginForm.reportValidity() || !supabase || !email || password.length < 10) return;
+        if (ui.codeLoginForm) ui.codeLoginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const email = String(ui.codeEmail.value || '').trim();
+            if (!ui.codeLoginForm.reportValidity() || !supabase || !email) return;
             setStatus('connecting', '发送中', '正在发送验证码…');
-            const result = await supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
+            const result = await supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
             if (result.error) { setStatus('error', '发送失败', readableError(result.error, '验证码发送失败。')); return; }
-            loginEmail = email;
+            codeLoginEmail = email;
+            updateAccountUi();
+            setStatus('local', '输入验证码', '验证码已发送至邮箱。');
+        });
+        if (ui.codeOtpForm) ui.codeOtpForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const token = String(ui.codeOtp.value || '').replace(/\s+/g, '');
+            const result = await supabase.auth.verifyOtp({ email: codeLoginEmail, token: token, type: 'email' });
+            if (result.error) { setStatus('error', '验证失败', readableError(result.error, '验证码无效或已过期。')); return; }
+            codeLoginEmail = '';
+            ui.codeOtp.value = '';
+            await handleSession(result.data.session);
+        });
+        if (ui.registrationForm) ui.registrationForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const email = String(ui.registrationEmail.value || '').trim();
+            const password = String(ui.registrationPassword.value || '');
+            if (!ui.registrationForm.reportValidity() || !supabase || !email || password.length < 10) return;
+            setStatus('connecting', '发送中', '正在发送验证码…');
+            const result = await supabase.auth.signUp({ email: email, password: password });
+            if (result.error) { setStatus('error', '发送失败', readableError(result.error, '验证码发送失败。')); return; }
+            if (result.data && result.data.user && Array.isArray(result.data.user.identities) && !result.data.user.identities.length) {
+                setStatus('error', '账号已存在', '该邮箱已注册，请使用密码或验证码登录。');
+                return;
+            }
+            registrationEmail = email;
             registrationPassword = password;
             updateAccountUi();
-            setStatus('local', '输入验证码', '验证码已发送；验证后将使用当前密码创建或恢复账户。');
+            setStatus('local', '输入验证码', '验证码已发送；验证后将创建账户。');
         });
         if (ui.otpForm) ui.otpForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const token = String(ui.otp.value || '').replace(/\s+/g, '');
-            const result = await supabase.auth.verifyOtp({ email: loginEmail || ui.email.value.trim(), token: token, type: 'email' });
+            const result = await supabase.auth.verifyOtp({ email: registrationEmail, token: token, type: 'signup' });
             if (result.error) { setStatus('error', '验证失败', readableError(result.error, '验证码无效或已过期。')); return; }
-            const passwordResult = await supabase.auth.updateUser({ password: registrationPassword });
-            if (passwordResult.error) { setStatus('error', '设置密码失败', readableError(passwordResult.error, '无法设置账户密码。')); return; }
             await handleSession(result.data.session, registrationPassword);
-            loginEmail = '';
+            registrationEmail = '';
             registrationPassword = '';
             ui.otp.value = '';
+            ui.registrationPassword.value = '';
             ui.password.value = '';
         });
         if (ui.showLabCreate) ui.showLabCreate.addEventListener('click', function () { showLabForm(ui.labCreateForm && !ui.labCreateForm.hidden ? '' : 'create'); });
         if (ui.showLabJoin) ui.showLabJoin.addEventListener('click', function () { showLabForm(ui.labJoinForm && !ui.labJoinForm.hidden ? '' : 'join'); });
         if (ui.membershipList) ui.membershipList.addEventListener('click', function (event) {
+            if (event.target.closest('[data-clear-lab]')) {
+                clearLabSelection().catch(function (error) { setStatus('error', '取消失败', readableError(error, '无法取消 LAB 选择。')); });
+                return;
+            }
             const button = event.target.closest('[data-lab-id]');
             if (button) selectLab(button.dataset.labId).catch(function (error) { setStatus('error', '切换失败', readableError(error, '无法切换 LAB。')); });
         });
@@ -667,7 +654,7 @@
             try {
                 await createLab(String(ui.labName.value || '').trim(), String(ui.labCreatePassword.value || ''));
                 ui.labCreatePassword.value = '';
-                setStatus('synced', 'LAB 已创建', '现在可以通过确认邮件邀请成员。');
+                setStatus('synced', 'LAB 已创建', '当前已选择新创建的 LAB。');
             } catch (error) { setStatus('error', '创建失败', readableError(error, '无法创建 LAB。')); }
         });
         if (ui.labJoinForm) ui.labJoinForm.addEventListener('submit', async function (event) {
@@ -681,19 +668,13 @@
                 setStatus('error', '加入失败', readableError(error, 'LAB 名称或密码不正确。'));
             }
         });
-        if (ui.labInviteForm) ui.labInviteForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            try {
-                await createInvite(String(ui.inviteEmail.value || '').trim(), String(ui.invitePassword.value || ''));
-                ui.invitePassword.value = '';
-                setStatus('synced', '邀请邮件已发送', '接收者点击邮件中的确认按钮即可绑定 LAB。');
-            } catch (error) { setStatus('error', '邀请失败', readableError(error, '无法发送邀请邮件。')); }
-        });
         if (ui.refreshMembers) ui.refreshMembers.addEventListener('click', function () { loadLabMembers(true).catch(function (error) { setStatus('error', '读取失败', error.message); }); });
         if (ui.signOut) ui.signOut.addEventListener('click', async function () {
             const signedOutUserId = user && user.id;
             await secure.forgetAccount(signedOutUserId);
             loginEmail = '';
+            codeLoginEmail = '';
+            registrationEmail = '';
             registrationPassword = '';
             await supabase.auth.signOut();
             if (ui.dialog && ui.dialog.open) ui.dialog.close();

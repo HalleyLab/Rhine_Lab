@@ -127,9 +127,26 @@
     }
 }
 
+.sync-login-form[hidden],
+.sync-auth-mode-actions[hidden] {
+    display: none !important;
+}
+
 .sync-login-form {
     align-items: end;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sync-auth-mode-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0 22px 14px;
+}
+
+.sync-auth-mode-actions button[aria-selected="true"] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 18%, var(--card));
 }
 
 .sync-account {
@@ -226,6 +243,10 @@
     background: color-mix(in srgb, var(--card) 88%, var(--accent) 12%);
 }
 
+.lab-membership-button.no-lab {
+    border-style: dashed;
+}
+
 .lab-mode-actions {
     display: flex;
     flex-wrap: wrap;
@@ -259,6 +280,11 @@
     .lab-mode-actions,
     .lab-mode-actions .button {
         width: 100%;
+    }
+
+    .sync-auth-mode-actions {
+        grid-template-columns: 1fr;
+        margin-inline: 15px;
     }
 
     .lab-membership-list {
