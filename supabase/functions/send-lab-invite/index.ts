@@ -28,12 +28,11 @@ Deno.serve(async (request) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const resendKey = Deno.env.get('RESEND_API_KEY') || '';
     const fromAddress = Deno.env.get('LAB_INVITE_FROM') || 'Rhine Lab <invite@auth.rh1nelab.com>';
     const publicAppUrl = Deno.env.get('PUBLIC_APP_URL') || 'https://halleylab.github.io/Rhine_Lab/';
 
-    if (!supabaseUrl || !anonKey || !serviceRoleKey) return response({ error: 'Supabase function secrets are incomplete' }, 500);
+    if (!supabaseUrl || !anonKey) return response({ error: 'Supabase function authentication configuration is incomplete' }, 500);
     if (!resendKey) return response({ error: 'RESEND_API_KEY is not configured' }, 503);
 
     const authenticated = createClient(supabaseUrl, anonKey, {
@@ -58,8 +57,7 @@ Deno.serve(async (request) => {
       return response({ error: 'Invalid invitation URL' }, 400);
     }
 
-    const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    const membershipResult = await admin
+    const membershipResult = await authenticated
       .from('lab_members')
       .select('role, labs(name)')
       .eq('lab_id', labId)
