@@ -192,7 +192,7 @@
     }
 
     async function unlockAccount(userId, passphrase) {
-        if (!userId || String(passphrase || '').length < 10) throw new Error('数据密码至少需要 10 个字符');
+        if (!userId || String(passphrase || '').length < 10) throw new Error('账户密码至少需要 10 个字符');
         accountKey = await deriveAccountKey(userId, passphrase);
         accountId = userId;
         return true;
@@ -250,6 +250,27 @@
         return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
     }
 
+    async function deriveLabPasswordKey(labId, passphrase) {
+        if (!labId || String(passphrase || '').length < 10) throw new Error('LAB 密码至少需要 10 个字符');
+        const material = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        const salt = await crypto.subtle.digest('SHA-256', encoder.encode('Rhine Lab shared key v1|' + labId));
+        return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: PBKDF2_ITERATIONS }, material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+
+    async function wrapLabKey(labId, passphrase, rawLabKey) {
+        await importLabKey(rawLabKey);
+        const envelope = await encryptJson({ key: rawLabKey }, await deriveLabPasswordKey(labId, passphrase), 'lab-key-wrap', 'lab-key:' + labId);
+        envelope.kdf = { name: 'PBKDF2-SHA256', iterations: PBKDF2_ITERATIONS, salt: 'lab-id-derived' };
+        return envelope;
+    }
+
+    async function unwrapLabKey(labId, passphrase, envelope) {
+        if (!isEnvelope(envelope, 'lab-key-wrap')) throw new Error('该 LAB 尚未启用密码加入，请联系创建者发送邀请链接');
+        const result = await decryptJson(envelope, await deriveLabPasswordKey(labId, passphrase), 'lab-key:' + labId);
+        await importLabKey(result && result.key);
+        return result.key;
+    }
+
     async function encryptLab(value, rawKey, labId) {
         return encryptJson(value, await importLabKey(rawKey), 'lab-publication', 'lab:' + labId);
     }
@@ -287,6 +308,8 @@
         encryptCloud: encryptCloud,
         decryptCloud: decryptCloud,
         generateLabKey: generateLabKey,
+        wrapLabKey: wrapLabKey,
+        unwrapLabKey: unwrapLabKey,
         encryptLab: encryptLab,
         decryptLab: decryptLab,
         encryptBinary: encryptBinary,

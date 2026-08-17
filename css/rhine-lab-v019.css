@@ -126,3 +126,142 @@
         padding: 15px;
     }
 }
+
+.sync-login-form {
+    align-items: end;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sync-account {
+    grid-template-columns: 1fr;
+}
+
+.sync-login-form > label {
+    min-width: 0;
+}
+
+.sync-auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    grid-column: 1 / -1;
+}
+
+.sync-auth-note {
+    margin: -8px 22px 18px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.lab-workspace-panel[hidden],
+.lab-email-invite[hidden],
+.sync-inline-form[hidden] {
+    display: none !important;
+}
+
+.lab-workspace-head {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+}
+
+.lab-workspace-head > div {
+    display: grid;
+    gap: 4px;
+}
+
+.lab-workspace-head > b {
+    display: grid;
+    min-width: 38px;
+    min-height: 38px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 15%, var(--card));
+    color: var(--text);
+}
+
+.lab-membership-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+}
+
+.lab-membership-list > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.lab-membership-button {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--card);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.lab-membership-button strong {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lab-membership-button span {
+    font-size: 11px;
+}
+
+.lab-membership-button.active {
+    border-color: var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
+    background: color-mix(in srgb, var(--card) 88%, var(--accent) 12%);
+}
+
+.lab-mode-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.lab-mode-actions button[aria-selected="true"] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 18%, var(--card));
+}
+
+.lab-email-invite {
+    display: grid;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+}
+
+.lab-email-invite > div {
+    display: grid;
+    gap: 3px;
+}
+
+@media (max-width: 640px) {
+    .sync-login-form {
+        grid-template-columns: 1fr;
+    }
+
+    .sync-auth-actions,
+    .sync-auth-actions .button,
+    .lab-mode-actions,
+    .lab-mode-actions .button {
+        width: 100%;
+    }
+
+    .lab-membership-list {
+        grid-template-columns: 1fr;
+    }
+}
