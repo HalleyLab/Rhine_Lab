@@ -442,8 +442,9 @@
     }
 
     function isPublicDemoRuntime() {
-        const hostedShowcase = /(^|\.)github\.io$/i.test(location.hostname) && /\/Rhine_Lab(?:\/|$)/i.test(location.pathname);
-        return hostedShowcase && !isInstalledAppRuntime();
+        const githubPages = /(^|\.)github\.io$/i.test(location.hostname) && /\/Rhine_Lab(?:\/|$)/i.test(location.pathname);
+        const customDomain = /^(?:www\.)?rh1nelab\.com$/i.test(location.hostname);
+        return (githubPages || customDomain) && !isInstalledAppRuntime();
     }
 
     function isInstalledAppRuntime() {
@@ -760,7 +761,9 @@
             setLabKey: setLabKey,
             buildSharedProjection: buildSharedProjection,
             getPersonalState: function () { return clone(personalStateSnapshot()); },
-            setPersonalState: setPersonalState
+            setPersonalState: setPersonalState,
+            getEmptyState: function () { return clone(emptyWorkspaceState()); },
+            isPublicShowcase: isPublicDemoRuntime
         });
     }
 

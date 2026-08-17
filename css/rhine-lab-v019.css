@@ -50,6 +50,10 @@
     align-items: end;
 }
 
+.sync-inline-form.multi-field {
+    grid-template-columns: minmax(0, 1.1fr) minmax(190px, .9fr) auto;
+}
+
 .sync-vault-form label {
     display: grid;
     gap: 6px;

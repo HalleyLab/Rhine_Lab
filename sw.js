@@ -1,19 +1,19 @@
-const CACHE_NAME = 'rhine-lab-pages-v60';
+const CACHE_NAME = 'rhine-lab-pages-v61';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
     './css/rhine-lab.css?v=20260815-1',
-    './css/rhine-lab-v019.css?v=0.1.9-account-lab',
+    './css/rhine-lab-v019.css?v=0.1.9-email-invite',
     './css/rhine-dashboard-refresh.css?v=20260814-1',
     './js/rhine-lab-config.js?v=0.1.9-invite-url',
-    './js/rhine-lab-i18n.js?v=20260816-1',
+    './js/rhine-lab-i18n.js?v=20260816-2',
     './js/vendor/supabase.min.js?v=2.112.3',
-    './js/rhine-lab-crypto.js?v=0.1.9-otp',
-    './js/rhine-lab-sync-v019.js?v=0.1.9-account-lab',
+    './js/rhine-lab-crypto.js?v=0.1.9-remembered-vault',
+    './js/rhine-lab-sync-v019.js?v=0.1.9-email-invite',
     './js/rhine-lab-pwa.js?v=0.1.9',
     './js/rhine-lab-bootstrap.js?v=0.1.9',
-    './js/rhine-lab.js?v=20260815-1',
+    './js/rhine-lab.js?v=20260816-2',
     './data/seed.json',
     './images/rhine-life-logo.png',
     './images/rhine-life-app-icon.png?v=0.1.9'

@@ -4,6 +4,7 @@
     const DB_NAME = 'rhine-lab-secure-store';
     const STORE_NAME = 'keys';
     const DEVICE_KEY_ID = 'device-aes-gcm-v1';
+    const ACCOUNT_KEY_PREFIX = 'account-aes-gcm-v1:';
     const ENVELOPE_VERSION = 1;
     const PBKDF2_ITERATIONS = 600000;
     const encoder = new TextEncoder();
@@ -162,11 +163,58 @@
         return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: digest, iterations: PBKDF2_ITERATIONS }, material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     }
 
+    async function storeAccountKey(userId, key) {
+        const database = await openDatabase();
+        await new Promise(function (resolve, reject) {
+            const transaction = database.transaction(STORE_NAME, 'readwrite');
+            transaction.objectStore(STORE_NAME).put(key, ACCOUNT_KEY_PREFIX + userId);
+            transaction.oncomplete = resolve;
+            transaction.onerror = function () { reject(transaction.error || new Error('无法保存账户密钥')); };
+            transaction.onabort = function () { reject(transaction.error || new Error('账户密钥保存已中止')); };
+        });
+        database.close();
+    }
+
+    async function restoreAccount(userId) {
+        if (!userId) return false;
+        const database = await openDatabase();
+        const storedKey = await new Promise(function (resolve, reject) {
+            const transaction = database.transaction(STORE_NAME, 'readonly');
+            const request = transaction.objectStore(STORE_NAME).get(ACCOUNT_KEY_PREFIX + userId);
+            request.onsuccess = function () { resolve(request.result || null); };
+            request.onerror = function () { reject(request.error || new Error('无法读取账户密钥')); };
+            transaction.oncomplete = function () { database.close(); };
+        });
+        if (!storedKey) return false;
+        accountKey = storedKey;
+        accountId = userId;
+        return true;
+    }
+
     async function unlockAccount(userId, passphrase) {
         if (!userId || String(passphrase || '').length < 10) throw new Error('数据密码至少需要 10 个字符');
         accountKey = await deriveAccountKey(userId, passphrase);
         accountId = userId;
         return true;
+    }
+
+    async function rememberAccount(userId) {
+        if (!accountKey || accountId !== userId) throw new Error('账户尚未解锁');
+        await storeAccountKey(userId, accountKey);
+    }
+
+    async function forgetAccount(userId) {
+        if (userId) {
+            const database = await openDatabase();
+            await new Promise(function (resolve, reject) {
+                const transaction = database.transaction(STORE_NAME, 'readwrite');
+                transaction.objectStore(STORE_NAME).delete(ACCOUNT_KEY_PREFIX + userId);
+                transaction.oncomplete = resolve;
+                transaction.onerror = function () { reject(transaction.error || new Error('无法清除账户密钥')); };
+            });
+            database.close();
+        }
+        lockAccount();
     }
 
     function lockAccount() {
@@ -231,6 +279,9 @@
         writeLocal: writeLocal,
         removeLocal: removeLocal,
         unlockAccount: unlockAccount,
+        rememberAccount: rememberAccount,
+        restoreAccount: restoreAccount,
+        forgetAccount: forgetAccount,
         lockAccount: lockAccount,
         accountUnlocked: accountUnlocked,
         encryptCloud: encryptCloud,

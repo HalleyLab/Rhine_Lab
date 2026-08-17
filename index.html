@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.1.9">
     <link rel="stylesheet" href="css/rhine-lab.css?v=20260815-1">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
-    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-account-lab">
+    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-email-invite">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -328,26 +328,24 @@
             <section class="sync-security-panel personal-security-panel" id="syncSecurityPanel" hidden>
                 <div><strong>个人数据密码</strong></div>
                 <form class="sync-vault-form" id="syncVaultForm" hidden>
-                    <label><span>数据密码</span><input id="syncVaultPassword" type="password" minlength="10" autocomplete="current-password" placeholder="至少 10 位；所有设备保持一致" required></label>
+                    <label><input id="syncVaultPassword" type="password" minlength="10" autocomplete="current-password" aria-label="个人数据密码" placeholder="至少 10 位；所有设备保持一致" required></label>
                     <button class="button primary" type="submit">密码登录</button>
                 </form>
             </section>
             <section class="sync-lab-panel" id="labBindingSection" hidden>
-                <div><strong>LAB</strong><span>绑定现有 LAB</span></div>
-                <form class="sync-inline-form" id="labBindingForm"><input id="labBindingCode" type="text" autocomplete="off" placeholder="粘贴邀请链接或绑定码" required><button class="button primary" type="submit">绑定 LAB</button></form>
+                <div><strong>绑定现有 LAB</strong><span>请打开创建者发送到你邮箱的邀请邮件，点击“确认加入 LAB”完成绑定。</span></div>
             </section>
             <section class="sync-lab-panel" id="labCreateSection" hidden>
                 <div><strong>创建新 LAB</strong></div>
-                <form class="sync-inline-form" id="labCreateForm"><input id="labName" type="text" maxlength="80" placeholder="LAB 名称" required><button class="button primary" type="submit">创建 LAB</button></form>
+                <form class="sync-inline-form multi-field" id="labCreateForm"><input id="labName" type="text" maxlength="80" placeholder="LAB 名称" required><input id="labCreatePassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" placeholder="设置 LAB 密码（至少 10 位）" required><button class="button primary" type="submit">创建 LAB</button></form>
             </section>
             <section class="sync-lab-panel" id="labInviteSection" hidden>
                 <div><small>EMAIL INVITATION</small><strong>邀请成员加入</strong><span>仅创建者可生成邀请；接收邮箱必须与登录邮箱一致。</span></div>
-                <form class="sync-inline-form" id="labInviteForm"><input id="labInviteEmail" type="email" autocomplete="email" placeholder="member@example.com" required><button class="button primary" type="submit">生成邀请</button></form>
-                <div class="lab-invite-result" id="labInviteResult" hidden><code></code><div><button class="button ghost compact" id="copyLabInvite" type="button" disabled>复制链接</button><button class="button ghost compact" id="emailLabInvite" type="button" disabled>用邮箱发送</button></div></div>
+                <form class="sync-inline-form multi-field" id="labInviteForm"><input id="labInviteEmail" type="email" autocomplete="email" placeholder="member@example.com" required><input id="labInvitePassword" type="password" minlength="10" maxlength="128" autocomplete="current-password" placeholder="输入 LAB 密码" required><button class="button primary" type="submit">发送确认邮件</button></form>
             </section>
             <section class="lab-member-directory" id="labMemberDirectory" hidden>
                 <div class="lab-member-directory-head">
-                    <div><small>LAB MEMBER DIRECTORY</small><strong>LAB 绑定邮箱</strong><span>仅 LAB 创建者可查看</span></div>
+                    <div><small>LAB MEMBER DIRECTORY</small><strong>LAB 绑定邮箱</strong><span>所有 LAB 成员均可查看</span></div>
                     <div><b id="labMemberCount">0</b><button class="button ghost compact" id="refreshLabMembers" type="button">刷新</button></div>
                 </div>
                 <div class="lab-member-list" id="labMemberList" aria-label="成员邮箱列表" aria-live="polite"><p>正在读取 LAB 成员…</p></div>
@@ -493,11 +491,11 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=20260816-1"></script>
+    <script src="js/rhine-lab-i18n.js?v=20260816-2"></script>
     <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
     <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
-    <script src="js/rhine-lab-crypto.js?v=0.1.9-otp"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-account-lab"></script>
+    <script src="js/rhine-lab-crypto.js?v=0.1.9-remembered-vault"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-email-invite"></script>
     <script src="js/rhine-lab-pwa.js?v=0.1.9"></script>
     <script src="js/rhine-lab-bootstrap.js?v=0.1.9"></script>
 </body>
