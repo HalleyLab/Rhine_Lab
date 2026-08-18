@@ -98,6 +98,7 @@
 
     async function prepareLocalStorage(keys) {
         const key = await getDeviceKey();
+        const recoveredKeys = [];
         for (const storageKey of keys || []) {
             const raw = localStorage.getItem(storageKey);
             if (!raw) {
@@ -113,12 +114,15 @@
                     await writeLocal(storageKey, parsed);
                 }
             } catch (error) {
-                localStorage.setItem(storageKey + ':recovery:' + Date.now(), raw);
+                const recoveryKey = storageKey + ':recovery';
+                try { if (!localStorage.getItem(recoveryKey)) localStorage.setItem(recoveryKey, raw); } catch (recoveryError) { console.error('Unable to preserve an additional recovery copy.', recoveryError); }
                 localCache.set(storageKey, null);
+                recoveredKeys.push(storageKey);
                 window.dispatchEvent(new CustomEvent('rhine:crypto-error', { detail: { storageKey: storageKey, error: error } }));
-                throw error;
+                console.warn('An unreadable local record was skipped so Rhine Lab could continue loading.', storageKey, error);
             }
         }
+        return { recoveredKeys: recoveredKeys };
     }
 
     function readLocal(storageKey) {

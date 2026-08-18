@@ -9,7 +9,7 @@
                 const secureStorageKeys = ['rhineLabWorkspaceV1', 'rhineLabWorkspaceV1:lab', 'rhineLabPendingInvite'];
                 for (let index = 0; index < localStorage.length; index += 1) {
                     const storageKey = localStorage.key(index);
-                    if (storageKey && storageKey.startsWith('rhineLabSecureAuth:')) secureStorageKeys.push(storageKey);
+                    if (storageKey && storageKey.startsWith('rhineLabSecureAuth:') && !storageKey.includes(':recovery')) secureStorageKeys.push(storageKey);
                 }
                 await window.RhineLabCrypto.prepareLocalStorage(Array.from(new Set(secureStorageKeys)));
             }
