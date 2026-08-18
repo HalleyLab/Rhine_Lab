@@ -352,28 +352,60 @@
     .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
     .sync-transfer-actions .button { width: 100%; }
 }
+.system-status {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.system-sync-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 3px;
+}
+
+.system-status .system-sync-row small { margin-top: 0; }
+
 .local-transfer-control {
     display: inline-flex;
-    margin-top: 4px;
-    padding: 0 0 1px;
-    border: 0;
-    border-bottom: 1px solid rgba(105, 143, 21, .24);
-    color: #6f7c75;
-    background: transparent;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: fit-content;
+    margin: 0;
+    padding: 4px 8px;
+    border: 1px solid rgba(105, 143, 21, .28);
+    border-radius: 999px;
+    color: #303a35;
+    background: rgba(184, 218, 79, .14);
     font-family: "SimHei", "Heiti SC", "Microsoft YaHei", sans-serif;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1;
     letter-spacing: .02em;
     cursor: pointer;
+    transition: color .16s ease, border-color .16s ease, background-color .16s ease;
 }
 
 html[lang="en"] .local-transfer-control { font-family: Helvetica, Arial, sans-serif; }
-.local-transfer-control:hover { color: #698f15; border-bottom-color: currentColor; }
+.local-transfer-control:hover {
+    color: #4f6f0d;
+    border-color: rgba(105, 143, 21, .56);
+    background: rgba(184, 218, 79, .24);
+}
 .local-transfer-control[hidden] { display: none !important; }
 .portable-sync-dialog article { width: min(620px, calc(100vw - 32px)); }
 .portable-sync-dialog .sync-transfer-panel { margin-bottom: 18px; }
-.dark-theme .local-transfer-control { color: var(--accent); }
+.dark-theme .local-transfer-control {
+    color: #e4edcb;
+    border-color: rgba(184, 218, 79, .36);
+    background: rgba(184, 218, 79, .1);
+}
+
+.dark-theme .local-transfer-control:hover {
+    color: #f1f7df;
+    border-color: rgba(184, 218, 79, .62);
+    background: rgba(184, 218, 79, .18);
+}
 
 @media (max-width: 640px) {
     .portable-sync-dialog article { width: min(100%, calc(100vw - 18px)); }
