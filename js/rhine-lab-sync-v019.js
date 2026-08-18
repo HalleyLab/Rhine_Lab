@@ -43,6 +43,7 @@
     let authMode = 'password';
     let loadedMemberDirectoryFor = '';
     let selectedTransferFile = null;
+    let returnToAccountAfterTransfer = false;
 
     function configured() {
         return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
@@ -680,11 +681,22 @@
     function bindUi() {
         if (ui.control) ui.control.addEventListener('click', openDialog);
         if (ui.transferControl) ui.transferControl.addEventListener('click', function () {
-            if (ui.transferDialog && !ui.transferDialog.open) ui.transferDialog.showModal();
+            returnToAccountAfterTransfer = Boolean(ui.dialog && ui.dialog.open);
+            if (returnToAccountAfterTransfer) ui.dialog.close();
+            window.setTimeout(function () {
+                if (ui.transferDialog && !ui.transferDialog.open) ui.transferDialog.showModal();
+            }, 0);
+        });
+        if (ui.transferDialog) ui.transferDialog.addEventListener('close', function () {
+            if (!returnToAccountAfterTransfer) return;
+            returnToAccountAfterTransfer = false;
+            window.setTimeout(openDialog, 0);
         });
         document.addEventListener('click', function (event) {
-            if (event.target.closest('[data-close-sync]') && ui.dialog && ui.dialog.open) ui.dialog.close();
-            if (event.target.closest('[data-close-portable-sync]') && ui.transferDialog && ui.transferDialog.open) ui.transferDialog.close();
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target) return;
+            if (target.closest('[data-close-sync]') && ui.dialog && ui.dialog.open) ui.dialog.close();
+            if (target.closest('[data-close-portable-sync]') && ui.transferDialog && ui.transferDialog.open) ui.transferDialog.close();
         });
         if (ui.transferExport) ui.transferExport.addEventListener('click', function () {
             exportPortableWorkspace().catch(function (error) { setTransferMessage(error && error.message ? error.message : '无法导出同步文件。', true); });
