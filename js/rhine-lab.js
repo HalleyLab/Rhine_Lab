@@ -367,6 +367,7 @@
 
     function init() {
         applySavedTheme();
+        applySavedBackground();
         applyWorkspaceMode();
         setTodayLabels();
         startUiTimers();
@@ -408,6 +409,7 @@
     function handleLanguageChange() {
         setTodayLabels();
         updateThemeToggleLabel();
+        updateBackgroundToggleLabel();
         applyNotificationState();
         switchView(activeView, false);
     }
@@ -862,6 +864,35 @@
     function applySavedTheme() {
         const theme = localStorage.getItem('rhineLabTheme');
         applyTheme(theme === 'dark' || theme === 'light' ? theme : themeFromSystemTime());
+    }
+
+    function applySavedBackground() {
+        const saved = localStorage.getItem('rhineLabBackground');
+        const background = saved === 'all-lives' ? saved : 'default';
+        if (saved === 'black-current') localStorage.setItem('rhineLabBackground', 'default');
+        applyBackground(background);
+    }
+
+    function applyBackground(background) {
+        const allLives = background === 'all-lives';
+        document.body.classList.toggle('background-all-lives', allLives);
+        document.body.classList.remove('background-black-current');
+        updateBackgroundToggleLabel();
+    }
+
+    function currentBackground() {
+        if (document.body.classList.contains('background-all-lives')) return 'all-lives';
+        return 'default';
+    }
+
+    function updateBackgroundToggleLabel() {
+        const toggle = document.getElementById('backgroundToggle');
+        if (!toggle) return;
+        const current = currentBackground();
+        toggle.dataset.backgroundMode = current;
+        toggle.setAttribute('aria-pressed', String(current !== 'default'));
+        toggle.setAttribute('aria-label', interfaceText('切换背景'));
+        toggle.setAttribute('title', interfaceText('切换背景'));
     }
 
     function themeFromSystemTime(date) {
@@ -1432,6 +1463,14 @@
             const nextTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
             localStorage.setItem('rhineLabTheme', nextTheme);
             applyTheme(nextTheme);
+        });
+
+        const backgroundToggle = document.getElementById('backgroundToggle');
+        if (backgroundToggle) backgroundToggle.addEventListener('click', function () {
+            const current = currentBackground();
+            const next = current === 'default' ? 'all-lives' : 'default';
+            localStorage.setItem('rhineLabBackground', next);
+            applyBackground(next);
         });
 
         els.menuToggle.addEventListener('click', function () {
