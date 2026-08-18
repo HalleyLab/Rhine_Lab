@@ -867,10 +867,8 @@
     }
 
     function applySavedBackground() {
-        const saved = localStorage.getItem('rhineLabBackground');
-        const background = saved === 'all-lives' ? saved : 'default';
-        if (saved === 'black-current') localStorage.setItem('rhineLabBackground', 'default');
-        applyBackground(background);
+        localStorage.removeItem('rhineLabBackground');
+        applyBackground('default');
     }
 
     function applyBackground(background) {
@@ -1469,7 +1467,6 @@
         if (backgroundToggle) backgroundToggle.addEventListener('click', function () {
             const current = currentBackground();
             const next = current === 'default' ? 'all-lives' : 'default';
-            localStorage.setItem('rhineLabBackground', next);
             applyBackground(next);
         });
 
