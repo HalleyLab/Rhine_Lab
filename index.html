@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="css/rhine-lab.css?v=20260815-1">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry">
+    <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
+    <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260818-6">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -82,6 +84,11 @@
                             <span data-language-option="en" data-i18n-skip>EN</span>
                         </button>
                     </div>
+                    <button class="icon-button background-toggle" id="backgroundToggle" type="button" aria-label="切换背景" title="切换背景" aria-pressed="false" data-background-mode="default">
+                        <span class="background-toggle-glyph" aria-hidden="true">
+                            <i></i><i></i><i></i>
+                        </span>
+                    </button>
                     <button class="icon-button" id="themeToggle" type="button" aria-label="切换夜间模式" title="切换夜间模式">◐</button>
                     <button class="icon-button notice-button is-read" id="notificationToggle" type="button" aria-label="打开通知，没有未读消息" aria-controls="notificationPanel" aria-expanded="false" title="通知">!<span id="noticeCount"></span></button>
                 </div>
@@ -537,6 +544,6 @@
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
     <script src="js/rhine-lab-sync-v019.js?v=0.1.9-account-transfer-modal-fix"></script>
     <script src="js/rhine-lab-pwa.js?v=0.1.9"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.1.9-storage-recovery"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=20260818-2"></script>
 </body>
 </html>

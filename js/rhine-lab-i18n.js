@@ -37,6 +37,7 @@
         '切换工作区范围': 'Switch workspace scope',
         '切换夜间模式': 'Toggle dark mode',
         '切换日间模式': 'Toggle light mode',
+        '切换背景': 'Switch background',
         '通知': 'Notifications',
         '语言切换': 'Language switch',
         '通知中心': 'Notification Center',
