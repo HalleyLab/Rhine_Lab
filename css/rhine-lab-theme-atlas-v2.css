@@ -732,15 +732,15 @@ body.background-all-lives #view-mice .heading-visual {
 }
 body.background-all-lives #view-cells .heading-visual {
     --page-collage-accent: #2457c6;
-    background-image: url("../images/theme-atlas/all-lives-collage-fragments-v2.png") !important;
-    background-size: 184% auto !important;
-    background-position: 100% 52% !important;
+    background-image: url("../images/theme-atlas/all-lives-cells-t25-collage-v2.png") !important;
+    background-size: auto 210% !important;
+    background-position: 66% 51% !important;
 }
 body.background-all-lives #view-reagents .heading-visual {
     --page-collage-accent: #df6658;
-    background-image: url("../images/theme-atlas/all-lives-reagents-collage-v1.png") !important;
-    background-size: auto 188% !important;
-    background-position: 54% 50% !important;
+    background-image: url("../images/theme-atlas/all-lives-cells-collage-v1.png") !important;
+    background-size: auto 220% !important;
+    background-position: 64% 52% !important;
 }
 body.background-all-lives #view-samples .heading-visual {
     --page-collage-accent: #75bfc9;
@@ -776,6 +776,7 @@ body.dark-theme.background-all-lives :is(.hero-atmosphere,.heading-visual) {
 }
 
 @media (max-width:700px) {
+    body.background-all-lives #view-cells .heading-visual,
     body.background-all-lives #view-reagents .heading-visual,
     body.background-all-lives #view-samples .heading-visual,
     body.background-all-lives #view-protocols .heading-visual,

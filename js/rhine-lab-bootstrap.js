@@ -21,7 +21,7 @@
             return;
         }
         const script = document.createElement('script');
-        script.src = 'js/rhine-lab.js?v=20260818-3';
+        script.src = 'js/rhine-lab.js?v=20260818-4';
         script.defer = true;
         document.body.appendChild(script);
     }
