@@ -352,29 +352,25 @@
     .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
     .sync-transfer-actions .button { width: 100%; }
 }
-.local-transfer-control {
-    display: inline-flex;
-    margin-top: 4px;
-    padding: 0 0 1px;
-    border: 0;
-    border-bottom: 1px solid rgba(105, 143, 21, .24);
-    color: #6f7c75;
-    background: transparent;
-    font-family: "SimHei", "Heiti SC", "Microsoft YaHei", sans-serif;
-    font-size: 8px;
-    font-weight: 400;
-    line-height: 1.2;
-    letter-spacing: .02em;
-    cursor: pointer;
+.sync-local-transfer-entry {
+    display: flex;
+    padding: 0 22px 14px;
 }
 
-html[lang="en"] .local-transfer-control { font-family: Helvetica, Arial, sans-serif; }
-.local-transfer-control:hover { color: #698f15; border-bottom-color: currentColor; }
-.local-transfer-control[hidden] { display: none !important; }
+.sync-local-transfer-entry .local-transfer-control {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-family: "SimHei", "Heiti SC", "Microsoft YaHei", sans-serif;
+}
+
+html[lang="en"] .sync-local-transfer-entry .local-transfer-control {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
 .portable-sync-dialog article { width: min(620px, calc(100vw - 32px)); }
 .portable-sync-dialog .sync-transfer-panel { margin-bottom: 18px; }
-.dark-theme .local-transfer-control { color: var(--accent); }
 
 @media (max-width: 640px) {
+    .sync-local-transfer-entry { padding-inline: 15px; }
     .portable-sync-dialog article { width: min(100%, calc(100vw - 18px)); }
 }

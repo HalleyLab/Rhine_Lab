@@ -148,7 +148,6 @@
         if (ui.systemConnection) ui.systemConnection.textContent = user ? (state === 'offline' ? '云端等待中' : '加密云端已连接') : '本地模式';
         if (ui.systemSync) ui.systemSync.textContent = user ? (state === 'synced' || state === 'readonly' ? '端到端加密数据已同步' : state === 'offline' ? '修改将在联网后加密上传' : '正在处理加密同步') : '云同步未连接';
         if (ui.systemBadge) ui.systemBadge.textContent = user ? (state === 'synced' || state === 'readonly' ? 'E2EE' : 'WAIT') : 'LOCAL';
-        if (ui.transferControl) ui.transferControl.hidden = Boolean(user);
     }
 
     function updateAccountUi() {
@@ -170,7 +169,6 @@
         const canViewDirectory = signedIn && unlocked && Boolean(membership);
         if (ui.memberDirectory) ui.memberDirectory.hidden = !canViewDirectory;
         if (!canViewDirectory) loadedMemberDirectoryFor = '';
-        if (signedIn && ui.transferDialog && ui.transferDialog.open) ui.transferDialog.close();
         renderMemberships();
     }
 
@@ -682,7 +680,7 @@
     function bindUi() {
         if (ui.control) ui.control.addEventListener('click', openDialog);
         if (ui.transferControl) ui.transferControl.addEventListener('click', function () {
-            if (!user && ui.transferDialog && !ui.transferDialog.open) ui.transferDialog.showModal();
+            if (ui.transferDialog && !ui.transferDialog.open) ui.transferDialog.showModal();
         });
         document.addEventListener('click', function (event) {
             if (event.target.closest('[data-close-sync]') && ui.dialog && ui.dialog.open) ui.dialog.close();

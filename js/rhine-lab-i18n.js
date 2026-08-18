@@ -500,7 +500,6 @@
         '连接云数据库并登录后，电脑与手机会使用同一份数据。': 'Connect a cloud database and sign in to share the same data across desktop and mobile.',
         '无账号设备同步': 'Account-free device sync',
         '本地数据同步': 'Local data sync',
-        '点击以同步': 'Tap to sync',
         '导出加密文件，再通过数据线、隔空投送、附近分享或网盘传到另一台设备。': 'Export an encrypted file, then move it to another device by USB cable, AirDrop, Nearby Share or cloud drive.',
         '传输密码': 'Transfer password',
         '导出加密文件': 'Export encrypted file',
