@@ -7,6 +7,7 @@
 ## 中文
 
 Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与结果、Protocol 与文献关联、日程、动物笼架、试剂/耗材、细胞维持和冻存样本管理。
+科研工具工作区可建立“动物/细胞来源 → 样本 → 实验 → 结果”谱系，并提供稀释、摩尔溶液、细胞铺板、Master Mix 计算和 6–384 孔实验布局。
 
 - 支持网页、Android、Windows 与 Chrome/Edge 扩展。
 - 新安装默认是空工作区；GitHub Pages 未登录时只读展示。
@@ -26,6 +27,7 @@ Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与�
 ## English
 
 Rhine Lab is a personal life-science workspace for experiment records and results, literature-linked protocols, schedules, animal housing, reagent and consumable inventory, cell maintenance, and frozen samples.
+The Research Tools workspace connects animal/cell sources to samples, experiments, and results, and includes dilution, molar-solution, cell-seeding, master-mix, and 6–384-well layout tools.
 
 - Available on the web, Android, Windows, and Chrome/Edge.
 - New installations start empty; the unsigned GitHub Pages site is read-only.

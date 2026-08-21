@@ -5,7 +5,7 @@
     const secure = window.RhineLabCrypto;
     const ATTACHMENT_BUCKET = 'rhine-lab-attachments';
     const NATIVE_AUTH_REDIRECT = 'rhinelab://auth/callback';
-    const COLLECTIONS = ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'activities'];
+    const COLLECTIONS = ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'activities', 'lineageLinks', 'plateLayouts'];
     const ui = Object.fromEntries([
         ['control', 'syncControl'], ['label', 'syncStatusLabel'], ['dialog', 'syncDialog'], ['title', 'syncDialogTitle'], ['description', 'syncDialogDescription'],
         ['transferControl', 'localTransferControl'], ['transferDialog', 'portableSyncDialog'],

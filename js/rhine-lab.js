@@ -56,7 +56,7 @@
             { id: 'RL-S-0861', type: '脑组织', source: 'M-24071 / 海马', processing: 'PFA 固定', location: 'FZ-03/B2 · A2', date: '2026-08-08', status: '在库' },
             { id: 'RL-S-0860', type: '脑组织', source: 'M-24072 / 海马', processing: '液氮速冻', location: 'FZ-03/B2 · A5', date: '2026-08-08', status: '在库' },
             { id: 'RL-S-0858', type: '细胞沉淀', source: 'BV2 / LPS-500', processing: 'PBS 清洗', location: 'FZ-03/B2 · B3', date: '2026-08-07', status: '在库' },
-            { id: 'RL-S-0856', type: 'RNA', source: 'BV2 / Vehicle', processing: 'TRIzol 提取', location: 'FZ-03/B2 · C4', date: '2026-08-07', status: '质控中' },
+            { id: 'RL-S-0856', type: 'RNA', source: 'BV2 / Vehicle', processing: 'TRIzol 提取', location: 'FZ-03/B2 · C4', date: '2026-08-07', status: '在库' },
             { id: 'RL-S-0849', type: '血清', source: 'M-23991', processing: '2000g / 10min', location: 'FZ-03/B2 · D1', date: '2026-08-05', status: '在库' },
             { id: 'RL-S-0842', type: 'DNA', source: 'M-24088 / 耳样', processing: 'Proteinase K', location: 'FZ-03/B2 · E6', date: '2026-08-04', status: '在库' },
             { id: 'RL-S-0837', type: '蛋白裂解液', source: 'HEK293T / A17', processing: 'RIPA 裂解', location: 'FZ-03/B2 · F2', date: '2026-08-03', status: '剩余少' },
@@ -129,7 +129,7 @@
             { name: 'Agarose, molecular biology grade', category: '化学试剂', catalog: 'A9539', lot: 'BCBW9214', location: 'RT / S1-15', totalQty: 100, currentQty: 64, unit: 'g', expiry: '2029-01-30', status: '正常', createdBy: 'NODE-03' }
         ],
         samples: [
-            { id: 'RL-S-0869', type: 'RNA', source: 'M-24121 / 视觉皮层', processing: 'TRIzol 提取', location: 'FZ-03/C1 · A1', date: '2026-08-08', status: '质控中', createdBy: 'NODE-05' },
+            { id: 'RL-S-0869', type: 'RNA', source: 'M-24121 / 视觉皮层', processing: 'TRIzol 提取', location: 'FZ-03/C1 · A1', date: '2026-08-08', status: '在库', createdBy: 'NODE-05' },
             { id: 'RL-S-0868', type: '脑组织', source: 'M-24119 / 纹状体', processing: '液氮速冻', location: 'FZ-03/C1 · A4', date: '2026-08-08', status: '在库', createdBy: 'NODE-04' },
             { id: 'RL-S-0867', type: '细胞沉淀', source: '类器官 / H2O2-200', processing: 'PBS 清洗', location: 'FZ-03/C1 · B2', date: '2026-08-07', status: '在库', createdBy: 'NODE-04' },
             { id: 'RL-S-0866', type: 'DNA', source: 'M-24120 / 耳样', processing: 'Proteinase K', location: 'FZ-03/C1 · C7', date: '2026-08-07', status: '在库', createdBy: 'NODE-03' },
@@ -165,6 +165,7 @@
     const apparatusDefinitions = {
         plate96: { label: '96 孔板', rows: 8, columns: 12, shape: 'round' },
         plate24: { label: '24 孔板', rows: 4, columns: 6, shape: 'round' },
+        plate12: { label: '12 孔板', rows: 3, columns: 4, shape: 'round' },
         plate6: { label: '6 孔板', rows: 2, columns: 3, shape: 'round' },
         tubeRack: { label: '离心管架', rows: 6, columns: 8, shape: 'round' },
         slides: { label: '载玻片架', rows: 2, columns: 5, shape: 'slot' },
@@ -183,6 +184,23 @@
     defaults.protocols = clone(protocols);
     defaults.exampleSeedVersion = 4;
     defaults.auditLog = [];
+    defaults.lineageLinks = [
+        { id: 'LIN-DEMO-001', sourceType: 'animal', sourceId: 'M-24121', targetType: 'sample', targetId: 'RL-S-0869', relation: '取材', quantity: 1, unit: '份', notes: '视觉皮层取材后立即低温处理。', date: '2026-08-08' },
+        { id: 'LIN-DEMO-002', sourceType: 'sample', sourceId: 'RL-S-0869', targetType: 'experiment', targetId: 'RL-EXP-027', relation: '用于实验', quantity: 1, unit: '份', notes: '用于 RNA 完整性评估。', date: '2026-08-08' },
+        { id: 'LIN-DEMO-003', sourceType: 'cell', sourceId: 'CELL-BV2-01', targetType: 'sample', targetId: 'RL-S-0858', relation: '收集', quantity: 1, unit: '份', notes: 'LPS 处理后收集细胞沉淀。', date: '2026-08-07' },
+        { id: 'LIN-DEMO-004', sourceType: 'sample', sourceId: 'RL-S-0858', targetType: 'experiment', targetId: 'RL-EXP-028', relation: '用于实验', quantity: 1, unit: '份', notes: '用于炎症刺激后的代谢追踪。', date: '2026-08-07' },
+        { id: 'LIN-DEMO-005', sourceType: 'cell', sourceId: 'CELL-ORG-03', targetType: 'sample', targetId: 'RL-S-0867', relation: '收集', quantity: 1, unit: '份', notes: '氧化应激处理后收集。', date: '2026-08-07' },
+        { id: 'LIN-DEMO-006', sourceType: 'sample', sourceId: 'RL-S-0867', targetType: 'experiment', targetId: 'RL-EXP-030', relation: '用于实验', quantity: 1, unit: '份', notes: '关联类器官氧化应激成像。', date: '2026-08-08' }
+    ];
+    defaults.plateLayouts = [{
+        id: 'PLATE-DEMO-001', name: 'BV2 剂量响应', format: 96, experimentId: 'RL-EXP-028', protocolId: 'SOP-CC-029', updatedAt: '2026-08-08T09:00:00.000Z',
+        wells: {
+            A1: { sample: 'Vehicle', treatment: 'Vehicle', concentration: 0, unit: 'ng/mL', color: '#c9d5d0' }, A2: { sample: 'Vehicle', treatment: 'Vehicle', concentration: 0, unit: 'ng/mL', color: '#c9d5d0' }, A3: { sample: 'Vehicle', treatment: 'Vehicle', concentration: 0, unit: 'ng/mL', color: '#c9d5d0' },
+            B1: { sample: 'LPS-low', treatment: 'LPS', concentration: 10, unit: 'ng/mL', color: '#d8ef8f' }, B2: { sample: 'LPS-low', treatment: 'LPS', concentration: 10, unit: 'ng/mL', color: '#d8ef8f' }, B3: { sample: 'LPS-low', treatment: 'LPS', concentration: 10, unit: 'ng/mL', color: '#d8ef8f' },
+            C1: { sample: 'LPS-mid', treatment: 'LPS', concentration: 100, unit: 'ng/mL', color: '#b7d948' }, C2: { sample: 'LPS-mid', treatment: 'LPS', concentration: 100, unit: 'ng/mL', color: '#b7d948' }, C3: { sample: 'LPS-mid', treatment: 'LPS', concentration: 100, unit: 'ng/mL', color: '#b7d948' },
+            D1: { sample: 'LPS-high', treatment: 'LPS', concentration: 1000, unit: 'ng/mL', color: '#f0b04a' }, D2: { sample: 'LPS-high', treatment: 'LPS', concentration: 1000, unit: 'ng/mL', color: '#f0b04a' }, D3: { sample: 'LPS-high', treatment: 'LPS', concentration: 1000, unit: 'ng/mL', color: '#f0b04a' }
+        }
+    }];
 
     applyConfiguredSeed(window.RHINE_LAB_SEED);
     seedDefaultAnimalHousing();
@@ -220,7 +238,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -272,6 +290,12 @@
     let greetingTimer = 0;
     let themeTimer = 0;
     let runDisplayTimer = 0;
+    let activeToolsTab = 'lineage';
+    let activeLineageFocus = 'all';
+    let activePlateLayoutId = state.plateLayouts[0] ? state.plateLayouts[0].id : '';
+    let plateDraft = activePlateLayoutId ? clone(state.plateLayouts[0]) : createBlankPlateLayout();
+    let selectedPlateWells = new Set();
+    let platePointerDown = false;
 
     const els = {
         breadcrumb: document.getElementById('breadcrumbLabel'),
@@ -361,6 +385,25 @@
         endDayButton: document.getElementById('endDayButton'),
         endDayDialog: document.getElementById('endDayDialog'),
         endDaySummary: document.getElementById('endDaySummary')
+        ,lineageFocus: document.getElementById('lineageFocus')
+        ,lineageMap: document.getElementById('lineageMap')
+        ,lineageSource: document.getElementById('lineageSource')
+        ,lineageTarget: document.getElementById('lineageTarget')
+        ,lineageRelation: document.getElementById('lineageRelation')
+        ,lineageQuantity: document.getElementById('lineageQuantity')
+        ,lineageUnit: document.getElementById('lineageUnit')
+        ,lineageNotes: document.getElementById('lineageNotes')
+        ,saveLineageLink: document.getElementById('saveLineageLink')
+        ,lineageLinkList: document.getElementById('lineageLinkList')
+        ,mastermixRows: document.getElementById('mastermixRows')
+        ,plateLayoutList: document.getElementById('plateLayoutList')
+        ,plateMap: document.getElementById('plateMap')
+        ,plateLayoutName: document.getElementById('plateLayoutName')
+        ,plateFormat: document.getElementById('plateFormat')
+        ,plateExperiment: document.getElementById('plateExperiment')
+        ,plateProtocol: document.getElementById('plateProtocol')
+        ,plateLayoutStatus: document.getElementById('plateLayoutStatus')
+        ,selectedWellCount: document.getElementById('selectedWellCount')
     };
 
     init();
@@ -375,6 +418,7 @@
         applyNotificationState();
         switchView(activeView, false);
         bindEvents();
+        bindResearchToolsEvents();
         window.addEventListener('focus', applyTimeThemeIfAutomatic);
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
@@ -466,12 +510,17 @@
             animalCages: Array.isArray(stored.animalCages) ? stored.animalCages : [],
             cellCultures: Array.isArray(stored.cellCultures) ? stored.cellCultures : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.cellCultures)),
             reagents: Array.isArray(stored.reagents) ? stored.reagents : clone(defaults.reagents),
-            samples: Array.isArray(stored.samples) ? stored.samples : clone(defaults.samples),
+            samples: (Array.isArray(stored.samples) ? stored.samples : clone(defaults.samples)).map(function (sample) {
+                if (!sample || sample.status !== '质控中') return sample;
+                return Object.assign({}, sample, { status: '在库' });
+            }),
             freezerBoxes: Array.isArray(stored.freezerBoxes) ? stored.freezerBoxes : clone(defaults.freezerBoxes),
             schedule: Array.isArray(stored.schedule) ? stored.schedule : clone(defaults.schedule),
             protocols: Array.isArray(stored.protocols) ? stored.protocols : clone(defaults.protocols),
             activities: Array.isArray(stored.activities) ? stored.activities : clone(defaults.activities),
             auditLog: Array.isArray(stored.auditLog) ? stored.auditLog : [],
+            lineageLinks: Array.isArray(stored.lineageLinks) ? stored.lineageLinks : [],
+            plateLayouts: Array.isArray(stored.plateLayouts) ? stored.plateLayouts : [],
             security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
             exampleSeedVersion: Number(stored.exampleSeedVersion) || 0
         };
@@ -661,6 +710,16 @@
         });
         data.security = data.security && typeof data.security === 'object' ? data.security : { labKeys: {} };
         data.security.labKeys = data.security.labKeys && typeof data.security.labKeys === 'object' ? data.security.labKeys : {};
+        data.lineageLinks = (Array.isArray(data.lineageLinks) ? data.lineageLinks : []).map(function (link, index) {
+            return {
+                id: link.id || 'LIN-' + Date.now() + '-' + index,
+                sourceType: String(link.sourceType || ''), sourceId: String(link.sourceId || ''),
+                targetType: String(link.targetType || ''), targetId: String(link.targetId || ''),
+                relation: String(link.relation || '衍生'), quantity: link.quantity === '' || link.quantity == null ? '' : positiveNumber(link.quantity, 0),
+                unit: String(link.unit || ''), notes: String(link.notes || ''), date: link.date || todayIso()
+            };
+        }).filter(function (link) { return link.sourceType && link.sourceId && link.targetType && link.targetId; });
+        data.plateLayouts = (Array.isArray(data.plateLayouts) ? data.plateLayouts : []).map(normalizePlateLayout);
         return data;
     }
 
@@ -745,8 +804,10 @@
 
     function saveState(options) {
         const storageKey = scopeStorageKey(workspaceMode);
-        if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(storageKey, state).catch(function () { showToast('本机加密保存失败，请勿关闭页面'); });
-        else localStorage.setItem(storageKey, JSON.stringify(state));
+        if (!window.RHINE_LAB_STORAGE_LOCKED) {
+            if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(storageKey, state).catch(function () { showToast('本机加密保存失败，请勿关闭页面'); });
+            else localStorage.setItem(storageKey, JSON.stringify(state));
+        }
         if (!(options && options.remote) && window.RhineLabSync) {
             window.RhineLabSync.queueState(state, workspaceMode);
         }
@@ -1012,7 +1073,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-apparatus-cell], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1341,6 +1402,14 @@
                 return;
             }
 
+            if (event.target.closest('[data-toggle-run-calculator]')) {
+                const context = currentRunContext();
+                if (context) context.stepState.calculator.visible = !context.stepState.calculator.visible;
+                saveState();
+                renderExperimentRun();
+                return;
+            }
+
             if (event.target.closest('[data-run-calculate]')) {
                 calculateRunExpression();
                 return;
@@ -1361,12 +1430,6 @@
             const removeRunPhoto = event.target.closest('[data-remove-run-photo]');
             if (removeRunPhoto) {
                 removeRunStepPhoto(removeRunPhoto.dataset.removeRunPhoto);
-                return;
-            }
-
-            const apparatusCell = event.target.closest('[data-apparatus-cell]');
-            if (apparatusCell) {
-                cycleApparatusCell(apparatusCell.dataset.apparatusCell);
                 return;
             }
 
@@ -1841,7 +1904,7 @@
     function experimentResultInlineHtml(experiment, detailed) {
         const result = state.results.find(item => item.experimentId === experiment.id);
         if (!result) {
-            return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><p>在这条实验记录下补充主要结果、结论、下一步计划以及照片或文件。</p><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
+            return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
         }
         const attachments = result.attachments.slice(0, detailed ? 6 : 3).map(resultAttachmentLinkHtml).join('');
         return '<section class="experiment-inline-result completed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><p class="result-summary">' + esc(result.summary || '尚未填写主要结果。') + '</p><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '尚未填写结论。') + '</strong></div>' + (result.nextStep ? '<p class="experiment-result-next"><strong>下一步：</strong>' + esc(result.nextStep) + '</p>' : '') + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '<p class="result-no-attachments">尚未上传附件</p>') + '<footer><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></section>';
@@ -1937,7 +2000,7 @@
         const animalRows = animals.map(function (animal) {
             return '<button class="animal-cage-animal" type="button" data-mouse-id="' + esc(animal.id) + '"><strong>' + esc(animal.id) + ' · ' + esc(animal.species) + '</strong><small>' + esc(animal.strain || '品系未设置') + ' · ' + esc(animal.status || '在养') + '</small><b>→</b></button>';
         }).join('') || '<p class="search-empty">此笼位尚无动物条目。</p>';
-        inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>建议物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><div class="animal-cage-buttons"><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button><button class="button danger" type="button" data-delete-animal-cage="' + esc(cage.id) + '">删除笼位</button></div></div>';
+        inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><div class="animal-cage-buttons"><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button><button class="button danger" type="button" data-delete-animal-cage="' + esc(cage.id) + '">删除笼位</button></div></div>';
     }
 
     function selectAnimalRack(id) {
@@ -1986,16 +2049,7 @@
                 '<footer><span>' + esc(culture.incubator || '培养条件未填写') + '</span><strong>查看培养记录 →</strong></footer></div></button>';
         }).join('') || '<div class="empty-card cell-empty-card"><strong>尚未登记培养中的细胞</strong><p>点击“登记细胞”记录细胞系、容器、代次与培养条件。</p></div>';
 
-        const recentLogs = state.cellCultures.flatMap(function (culture) {
-            return (Array.isArray(culture.history) ? culture.history : []).map(function (entry) {
-                return { culture: culture, entry: entry };
-            });
-        }).sort(function (left, right) {
-            return String(right.entry.date || '').localeCompare(String(left.entry.date || ''));
-        }).slice(0, 6);
-        els.cellMaintenanceQueue.innerHTML = recentLogs.map(function (item) {
-            return '<button class="cell-queue-item" type="button" data-cell-id="' + esc(item.culture.id) + '"><time>' + esc(shortDate(item.entry.date)) + '</time><span><strong>' + esc(item.culture.name) + '</strong><small>' + esc(item.entry.action || '培养记录') + ' · P' + esc(item.entry.passage) + '</small></span><b>→</b></button>';
-        }).join('') || '<p class="search-empty">暂无培养记录。</p>';
+        if (els.cellMaintenanceQueue) els.cellMaintenanceQueue.innerHTML = '';
     }
 
     function openCellDetail(id) {
@@ -2013,9 +2067,9 @@
                 detailFieldHtml('细胞名称', culture.name, true) + detailFieldHtml('物种 / 来源', culture.species) + detailFieldHtml('当前代次', 'P' + culture.passage) +
                 detailFieldHtml('培养基', culture.medium, true) + detailFieldHtml('培养容器', interfaceText(culture.container || '未填写')) + detailFieldHtml('培养位置与条件', culture.incubator, true) +
                 detailFieldHtml('当前汇合度', culture.confluence + '%') + detailFieldHtml('备注', culture.notes, true) + nodeField +
-            '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>' + esc(interfaceText('汇合度')) + ' ' + esc(culture.confluence) + '%</span></div></section>' +
+            '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>' + esc(interfaceText('汇合度')) + ' ' + esc(culture.confluence) + '%</span></div></section>' + embeddedLineageHtml('cell', culture.id) +
             '<section class="record-detail-section cell-passage-section"><div class="record-detail-section-title passage-title"><div><p class="micro-label">CULTURE HISTORY</p><h3>传代与培养记录</h3></div><button class="button primary" type="button" data-add-passage>＋ 记录传代 / 操作</button></div>' + cellCultureHistoryHtml(culture) + '</section>' + photo + recordHistoryHtml(culture);
-        els.recordDetailDialog.showModal();
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
     }
 
     function cellCultureHistoryHtml(culture) {
@@ -2042,10 +2096,10 @@
                 detailFieldHtml('动物编号', animal.id) + detailFieldHtml('物种', animal.species) + detailFieldHtml('品种 / 品系', animal.strain) + detailFieldHtml('基因型', animal.genotype) + detailFieldHtml('性别', animal.sex) +
                 detailFieldHtml('出生 / 孵化日期', animal.birth) + detailFieldHtml('当前年龄', animalAgeLabel(animal.birth)) + detailFieldHtml('笼位', animal.cage) + detailFieldHtml('所属笼架', rack ? rack.name : '未分配') + detailFieldHtml('状态', animal.status) +
                 detailFieldHtml('伦理审批编号', animal.ethics, true) + detailFieldHtml('备注', animal.notes, true) + nodeField +
-            '</div></section>' +
+            '</div></section>' + embeddedLineageHtml('animal', animal.id) +
             '<section class="record-detail-section animal-track"><div class="record-detail-section-title"><p class="micro-label">LIFECYCLE TRACE</p><h3>动物状态轨迹</h3></div><div class="record-timeline"><article><i></i><div><small>出生 / 孵化</small><strong>' + esc(animal.birth || '未填写') + '</strong></div></article><article><i></i><div><small>当前笼位</small><strong>' + esc(animal.cage || '未分配') + '</strong></div></article><article class="active"><i></i><div><small>当前阶段</small><strong>' + esc(animal.status || '在养') + '</strong></div></article></div></section>' +
             recordHistoryHtml(animal);
-        els.recordDetailDialog.showModal();
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
     }
 
     function openReagentDetail(catalog) {
@@ -2084,8 +2138,8 @@
                 detailFieldHtml('样本来源', sample.source, true) + detailFieldHtml('处理方式', sample.processing, true) +
                 detailFieldHtml('冻存盒', box ? box.name : sample.boxId) + detailFieldHtml('盒内位置', sample.position) + detailFieldHtml('入库日期', sample.date) +
                 detailFieldHtml('设备 / 层架', box ? box.storageLocation : sample.location, true) + nodeField +
-            '</div></section>' + photo + recordHistoryHtml(sample);
-        els.recordDetailDialog.showModal();
+            '</div></section>' + embeddedLineageHtml('sample', sample.id) + photo + recordHistoryHtml(sample);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
     }
 
     function prepareRecordDetail(type, key) {
@@ -2272,6 +2326,8 @@
             protocols: [],
             activities: [],
             auditLog: [],
+            lineageLinks: [],
+            plateLayouts: [],
             security: { labKeys: {} },
             exampleSeedVersion: 999
         };
@@ -2371,8 +2427,491 @@
         document.getElementById('protocolGrid').innerHTML = state.protocols.map(function (item) {
             const usageLabel = item.reagents.length ? item.reagents.length + ' 种试剂已关联' : '未关联库存试剂';
             const literatureBadge = item.literatureTitle || item.literatureId || item.literatureUrl ? '<span class="protocol-reference-badge">文献</span>' : '';
-            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><p>' + esc(item.summary || '未填写注释') + '</p><div class="protocol-path-preview" aria-label="从准备到归档，共 ' + item.steps.length + ' 个步骤"><span>准备</span><i></i><span>执行</span><i></i><span>质控</span><i></i><span>归档</span><b>' + item.steps.length + ' 步</b></div><footer class="protocol-foot"><span>' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
+            return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><footer class="protocol-foot"><span>' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
         }).join('') || '<div class="empty-card">还没有 Protocol，点击“录入 Protocol”开始建立方案库。</div>';
+    }
+
+    function createBlankPlateLayout() {
+        return {
+            id: '',
+            name: '',
+            format: 96,
+            experimentId: '',
+            protocolId: '',
+            wells: {},
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    function normalizePlateLayout(layout, index) {
+        const source = layout && typeof layout === 'object' ? layout : {};
+        const allowedFormats = [6, 12, 24, 48, 96, 384];
+        const format = allowedFormats.includes(Number(source.format)) ? Number(source.format) : 96;
+        return {
+            id: String(source.id || 'PLATE-' + String(index + 1).padStart(3, '0')),
+            name: String(source.name || '未命名布局'),
+            format: format,
+            experimentId: String(source.experimentId || ''),
+            protocolId: String(source.protocolId || ''),
+            wells: source.wells && typeof source.wells === 'object' ? clone(source.wells) : {},
+            updatedAt: source.updatedAt || new Date().toISOString()
+        };
+    }
+
+    function renderResearchTools() {
+        if (els.lineageFocus && !els.lineageFocus.options.length) {
+            els.lineageFocus.innerHTML = '<option value="all">全部链路</option>';
+        }
+        if (els.lineageMap && !els.lineageMap.innerHTML.trim()) {
+            els.lineageMap.innerHTML = '<div class="tools-empty-state">科研工具正在载入。</div>';
+        }
+    }
+    function toolsEntityKey(type, id) {
+        return type + '::' + id;
+    }
+
+    function parseToolsEntityKey(value) {
+        const split = String(value || '').indexOf('::');
+        return split < 0 ? { type: '', id: '' } : { type: value.slice(0, split), id: value.slice(split + 2) };
+    }
+
+    function toolsEntityCatalog() {
+        const items = [];
+        function add(type, id, label, stage, meta) {
+            if (!id) return;
+            items.push({ key: toolsEntityKey(type, id), type: type, id: String(id), label: String(label || id), stage: stage, meta: String(meta || '') });
+        }
+        state.mice.forEach(function (item) { add('animal', item.id, item.id, 'origin', [item.species, item.cage].filter(Boolean).join(' · ')); });
+        state.cellCultures.forEach(function (item) { add('cell', item.id, item.name || item.id, 'origin', [item.species, item.passage != null ? 'P' + item.passage : ''].filter(Boolean).join(' · ')); });
+        state.samples.forEach(function (item) { add('sample', item.id, item.id, 'sample', [item.type, item.source].filter(Boolean).join(' · ')); });
+        state.experiments.forEach(function (item) { add('experiment', item.id, item.title || item.id, 'experiment', [item.id, item.date].filter(Boolean).join(' · ')); });
+        state.results.forEach(function (item) {
+            const experiment = state.experiments.find(function (entry) { return entry.id === item.experimentId; });
+            add('result', item.id, (experiment ? experiment.title : item.id) + ' · 结果', 'result', item.date || '');
+        });
+        return items;
+    }
+
+    function toolsEntityTypeLabel(type) {
+        return ({ animal: '动物', cell: '细胞', sample: '样本', experiment: '实验', result: '结果' })[type] || type;
+    }
+
+    function lineageEdges(catalog) {
+        const valid = new Set(catalog.map(function (item) { return item.key; }));
+        const edges = state.lineageLinks.map(function (link) {
+            return {
+                id: link.id,
+                source: toolsEntityKey(link.sourceType, link.sourceId),
+                target: toolsEntityKey(link.targetType, link.targetId),
+                relation: link.relation || '衍生',
+                quantity: link.quantity,
+                unit: link.unit || '',
+                notes: link.notes || '',
+                manual: true
+            };
+        }).filter(function (edge) { return valid.has(edge.source) && valid.has(edge.target); });
+        state.results.forEach(function (result) {
+            const source = toolsEntityKey('experiment', result.experimentId);
+            const target = toolsEntityKey('result', result.id);
+            if (valid.has(source) && valid.has(target) && !edges.some(function (edge) { return edge.source === source && edge.target === target; })) {
+                edges.push({ id: 'AUTO-' + result.id, source: source, target: target, relation: '产生结果', manual: false });
+            }
+        });
+        return edges;
+    }
+
+    function embeddedLineageHtml(type, id) {
+        const currentKey = toolsEntityKey(type, id);
+        const catalog = toolsEntityCatalog();
+        const entityMap = new Map(catalog.map(function (item) { return [item.key, item]; }));
+        const current = entityMap.get(currentKey);
+        if (!current) return '';
+        const connected = lineageEdges(catalog).filter(function (edge) { return edge.source === currentKey || edge.target === currentKey; });
+        const incoming = connected.filter(function (edge) { return edge.target === currentKey; });
+        const outgoing = connected.filter(function (edge) { return edge.source === currentKey; });
+        function relatedNode(edge, direction) {
+            const key = direction === 'incoming' ? edge.source : edge.target;
+            const entity = entityMap.get(key);
+            if (!entity) return '';
+            const remove = edge.manual ? '<button class="embedded-lineage-remove" type="button" data-delete-embedded-lineage="' + esc(edge.id) + '" aria-label="删除谱系关系">×</button>' : '';
+            return '<div class="embedded-lineage-branch ' + direction + '"><button class="embedded-lineage-node" type="button" data-lineage-entity="' + esc(key) + '"><small>' + esc(toolsEntityTypeLabel(entity.type)) + '</small><strong>' + esc(entity.label) + '</strong><span>' + esc(entity.meta || edge.relation) + '</span></button><i aria-hidden="true"></i><em>' + esc(edge.relation) + '</em>' + remove + '</div>';
+        }
+        const incomingHtml = incoming.slice(0, 3).map(function (edge) { return relatedNode(edge, 'incoming'); }).join('');
+        const outgoingHtml = outgoing.slice(0, 3).map(function (edge) { return relatedNode(edge, 'outgoing'); }).join('');
+        const targetOptions = catalog.filter(function (item) { return item.key !== currentKey; }).map(function (item) {
+            return '<option value="' + esc(item.key) + '">' + esc(toolsEntityTypeLabel(item.type) + ' · ' + item.label) + '</option>';
+        }).join('');
+        const editor = workspaceReadOnly ? '' : '<div class="embedded-lineage-editor"><label><span>关联条目</span><select data-lineage-target><option value="">选择已有记录</option>' + targetOptions + '</select></label><label><span>关系</span><select data-lineage-relation><option>取材</option><option>分装</option><option>衍生</option><option>用于实验</option><option>产生结果</option><option>其他</option></select></label><button class="button ghost compact" type="button" data-save-lineage-from="' + esc(currentKey) + '">＋ 添加关联</button></div>';
+        return '<section class="record-detail-section embedded-lineage-section"><div class="record-detail-section-title"><p class="micro-label">SAMPLE LINEAGE</p><h3>样本谱系</h3></div><div class="embedded-lineage-flow"><div class="embedded-lineage-side incoming-side">' + incomingHtml + '</div><div class="embedded-lineage-current"><small>' + esc(toolsEntityTypeLabel(current.type)) + '</small><strong>' + esc(current.label) + '</strong><span>' + esc(current.meta || current.id) + '</span></div><div class="embedded-lineage-side outgoing-side">' + outgoingHtml + '</div></div>' + (!connected.length ? '<p class="embedded-lineage-empty">暂无关联链路。</p>' : '') + editor + '</section>';
+    }
+
+    function saveEmbeddedLineage(sourceKey, button) {
+        if (denyReadOnlyMutation()) return;
+        const section = button.closest('.embedded-lineage-section');
+        const source = parseToolsEntityKey(sourceKey);
+        const target = parseToolsEntityKey(section.querySelector('[data-lineage-target]').value);
+        const relation = section.querySelector('[data-lineage-relation]').value || '衍生';
+        if (!source.id || !target.id) {
+            showToast('请选择需要关联的记录');
+            return;
+        }
+        const duplicate = state.lineageLinks.some(function (item) {
+            return item.sourceType === source.type && item.sourceId === source.id && item.targetType === target.type && item.targetId === target.id;
+        });
+        if (duplicate) {
+            showToast('这条谱系关系已经存在');
+            return;
+        }
+        const link = { id: 'LIN-' + Date.now(), sourceType: source.type, sourceId: source.id, targetType: target.type, targetId: target.id, relation: relation, quantity: '', unit: '', notes: '', date: todayIso() };
+        state.lineageLinks.push(link);
+        appendAuditLog({ action: 'created', recordType: 'lineage', recordId: link.id, changes: clone(link) });
+        saveState();
+        refreshActiveRecordDetail();
+        showToast('样本谱系关系已保存');
+    }
+
+    function deleteEmbeddedLineage(id) {
+        if (denyReadOnlyMutation()) return;
+        state.lineageLinks = state.lineageLinks.filter(function (item) { return item.id !== id; });
+        appendAuditLog({ action: 'deleted', recordType: 'lineage', recordId: id, changes: [] });
+        saveState();
+        refreshActiveRecordDetail();
+        showToast('谱系关系已删除');
+    }
+
+    function refreshActiveRecordDetail() {
+        if (!activeRecordDetail) return;
+        openRecordDetail(activeRecordDetail.type, activeRecordDetail.key);
+    }
+
+    function focusedLineageKeys(catalog, edges) {
+        if (activeLineageFocus === 'all') return new Set(catalog.map(function (item) { return item.key; }));
+        const visible = new Set([activeLineageFocus]);
+        let changed = true;
+        while (changed) {
+            changed = false;
+            edges.forEach(function (edge) {
+                if (visible.has(edge.source) && !visible.has(edge.target)) { visible.add(edge.target); changed = true; }
+                if (visible.has(edge.target) && !visible.has(edge.source)) { visible.add(edge.source); changed = true; }
+            });
+        }
+        return visible;
+    }
+
+    function lineageOptionsHtml(catalog, includeAll) {
+        const groups = [
+            { stage: 'origin', label: '来源：动物与细胞' },
+            { stage: 'sample', label: '冻存样本' },
+            { stage: 'experiment', label: '实验记录' },
+            { stage: 'result', label: '实验结果' }
+        ];
+        let html = includeAll ? '<option value="all">全部链路</option>' : '<option value="">请选择条目</option>';
+        groups.forEach(function (group) {
+            const members = catalog.filter(function (item) { return item.stage === group.stage; });
+            if (!members.length) return;
+            html += '<optgroup label="' + esc(group.label) + '">' + members.map(function (item) {
+                return '<option value="' + esc(item.key) + '">' + esc(item.label + (item.meta ? ' · ' + item.meta : '')) + '</option>';
+            }).join('') + '</optgroup>';
+        });
+        return html;
+    }
+
+    function renderLineageWorkspace() {
+        if (!els.lineageMap) return;
+        const catalog = toolsEntityCatalog();
+        const edges = lineageEdges(catalog);
+        const currentFocus = activeLineageFocus;
+        els.lineageFocus.innerHTML = lineageOptionsHtml(catalog, true);
+        els.lineageFocus.value = catalog.some(function (item) { return item.key === currentFocus; }) ? currentFocus : 'all';
+        activeLineageFocus = els.lineageFocus.value;
+        const sourceValue = els.lineageSource.value;
+        const targetValue = els.lineageTarget.value;
+        const entityOptions = lineageOptionsHtml(catalog, false);
+        els.lineageSource.innerHTML = entityOptions;
+        els.lineageTarget.innerHTML = entityOptions;
+        if (catalog.some(function (item) { return item.key === sourceValue; })) els.lineageSource.value = sourceValue;
+        if (catalog.some(function (item) { return item.key === targetValue; })) els.lineageTarget.value = targetValue;
+
+        const visibleKeys = focusedLineageKeys(catalog, edges);
+        const connectedKeys = new Set();
+        edges.forEach(function (edge) { connectedKeys.add(edge.source); connectedKeys.add(edge.target); });
+        const visible = catalog.filter(function (item) {
+            return visibleKeys.has(item.key) && (activeLineageFocus !== 'all' || connectedKeys.has(item.key));
+        });
+        if (!visible.length) {
+            els.lineageMap.innerHTML = '<div class="tools-empty-state"><strong>尚未建立样本谱系</strong><span>在右侧选择来源与目标条目，保存第一条关系。</span></div>';
+        } else {
+            const stageOrder = ['origin', 'sample', 'experiment', 'result'];
+            const stageLabels = { origin: '来源', sample: '样本', experiment: '实验', result: '结果' };
+            const positions = new Map();
+            const columns = { origin: 130, sample: 405, experiment: 690, result: 965 };
+            let maxRows = 1;
+            stageOrder.forEach(function (stage) {
+                const members = visible.filter(function (item) { return item.stage === stage; });
+                maxRows = Math.max(maxRows, members.length);
+                members.forEach(function (item, index) { positions.set(item.key, { x: columns[stage], y: 105 + index * 100 }); });
+            });
+            const height = Math.max(290, 150 + maxRows * 100);
+            const visibleEdges = edges.filter(function (edge) { return positions.has(edge.source) && positions.has(edge.target); });
+            let svg = '<svg viewBox="0 0 1100 ' + height + '" role="img" aria-label="样本谱系图"><defs><marker id="lineageArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>';
+            stageOrder.forEach(function (stage) { svg += '<text class="lineage-stage-title" x="' + columns[stage] + '" y="35">' + stageLabels[stage] + '</text>'; });
+            visibleEdges.forEach(function (edge) {
+                const from = positions.get(edge.source); const to = positions.get(edge.target); const mid = (from.x + to.x) / 2;
+                svg += '<path class="lineage-edge" d="M ' + (from.x + 92) + ' ' + from.y + ' C ' + mid + ' ' + from.y + ', ' + mid + ' ' + to.y + ', ' + (to.x - 92) + ' ' + to.y + '" marker-end="url(#lineageArrow)"></path>';
+                svg += '<text class="lineage-edge-label" x="' + mid + '" y="' + ((from.y + to.y) / 2 - 7) + '">' + esc(edge.relation) + '</text>';
+            });
+            visible.forEach(function (item) {
+                const point = positions.get(item.key);
+                svg += '<g class="lineage-node" data-stage="' + item.stage + '" data-lineage-entity="' + esc(item.key) + '" transform="translate(' + (point.x - 92) + ' ' + (point.y - 34) + ')" tabindex="0" role="button"><rect width="184" height="68" rx="8"></rect><text class="lineage-node-type" x="14" y="20">' + esc(toolsEntityTypeLabel(item.type)) + '</text><text class="lineage-node-title" x="14" y="42">' + esc(item.label.slice(0, 20)) + '</text><text class="lineage-node-meta" x="14" y="57">' + esc(item.meta.slice(0, 26)) + '</text><title>' + esc(item.label + ' ' + item.meta) + '</title></g>';
+            });
+            svg += '</svg>';
+            els.lineageMap.innerHTML = svg;
+        }
+        els.lineageLinkList.innerHTML = state.lineageLinks.slice().reverse().map(function (link) {
+            const source = catalog.find(function (item) { return item.key === toolsEntityKey(link.sourceType, link.sourceId); });
+            const target = catalog.find(function (item) { return item.key === toolsEntityKey(link.targetType, link.targetId); });
+            return '<article><div><strong>' + esc(source ? source.label : link.sourceId) + ' → ' + esc(target ? target.label : link.targetId) + '</strong><span>' + esc(link.relation) + (link.quantity !== '' && link.quantity != null ? ' · ' + formatQuantity(link.quantity) + ' ' + esc(link.unit) : '') + '</span></div><button type="button" data-delete-lineage-link="' + esc(link.id) + '" aria-label="删除关系">×</button></article>';
+        }).join('') || '<p class="tools-empty-copy">还没有手动建立的关系。</p>';
+    }
+
+    function saveLineageRelationship() {
+        if (denyReadOnlyMutation()) return;
+        const source = parseToolsEntityKey(els.lineageSource.value);
+        const target = parseToolsEntityKey(els.lineageTarget.value);
+        if (!source.id || !target.id) { showToast('请选择来源条目和目标条目'); return; }
+        if (source.type === target.type && source.id === target.id) { showToast('来源与目标不能是同一条记录'); return; }
+        if (state.lineageLinks.some(function (item) { return item.sourceType === source.type && item.sourceId === source.id && item.targetType === target.type && item.targetId === target.id; })) { showToast('这条谱系关系已经存在'); return; }
+        const link = { id: 'LIN-' + Date.now(), sourceType: source.type, sourceId: source.id, targetType: target.type, targetId: target.id, relation: els.lineageRelation.value || '衍生', quantity: els.lineageQuantity.value === '' ? '' : positiveNumber(els.lineageQuantity.value, 0), unit: els.lineageUnit.value.trim(), notes: els.lineageNotes.value.trim(), date: todayIso() };
+        state.lineageLinks.push(link);
+        appendAuditLog({ action: 'created', recordType: 'lineage', recordId: link.id, changes: clone(link) });
+        saveState();
+        els.lineageQuantity.value = ''; els.lineageUnit.value = ''; els.lineageNotes.value = '';
+        renderLineageWorkspace();
+        showToast('样本谱系关系已保存');
+    }
+
+    function openLineageEntity(key) {
+        const entity = parseToolsEntityKey(key);
+        if (entity.type === 'animal') openAnimalDetail(entity.id);
+        else if (entity.type === 'cell') openCellDetail(entity.id);
+        else if (entity.type === 'sample') openSampleDetail(entity.id);
+        else if (entity.type === 'experiment') openExperimentDetail(entity.id);
+        else if (entity.type === 'result') {
+            const result = state.results.find(function (item) { return item.id === entity.id; });
+            if (result) openExperimentDetail(result.experimentId);
+        }
+    }
+
+    function setToolsTab(tab) {
+        activeToolsTab = ['lineage', 'calculators', 'layout'].includes(tab) ? tab : 'lineage';
+        document.querySelectorAll('[data-tools-tab]').forEach(function (button) {
+            const active = button.dataset.toolsTab === activeToolsTab;
+            button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('[data-tools-panel]').forEach(function (panel) {
+            const active = panel.dataset.toolsPanel === activeToolsTab;
+            panel.hidden = !active; panel.classList.toggle('active', active);
+        });
+        if (activeToolsTab === 'lineage') renderLineageWorkspace();
+        if (activeToolsTab === 'calculators') renderCalculatorWorkspace();
+        if (activeToolsTab === 'layout') renderPlateWorkspace();
+    }
+
+    function calculatorValue(id) {
+        const input = document.getElementById(id);
+        return input ? positiveNumber(input.value, 0) : 0;
+    }
+
+    function compactNumber(value, digits) {
+        return Number(value || 0).toLocaleString(interfaceLocale(), { maximumFractionDigits: digits == null ? 4 : digits });
+    }
+
+    function renderCalculatorWorkspace() {
+        if (!els.mastermixRows) return;
+        if (!els.mastermixRows.children.length) {
+            els.mastermixRows.innerHTML = masterMixRowHtml('2× Master Mix', 10, 'µL') + masterMixRowHtml('Primer mix', 1, 'µL') + masterMixRowHtml('Template', 2, 'µL');
+        }
+        recalculateResearchTools();
+    }
+
+    function masterMixRowHtml(name, amount, unit) {
+        return '<div class="mastermix-row"><input data-mix-name type="text" value="' + esc(name || '') + '" placeholder="组分名称"><input data-mix-amount type="number" min="0" step="any" value="' + esc(amount == null ? '' : amount) + '" aria-label="单个反应用量"><input data-mix-unit type="text" value="' + esc(unit || 'µL') + '" aria-label="单位"><button type="button" data-remove-mix-component aria-label="删除组分">×</button></div>';
+    }
+
+    function recalculateResearchTools() {
+        const c1 = calculatorValue('dilutionC1'); const c2 = calculatorValue('dilutionC2'); const v2 = calculatorValue('dilutionV2');
+        const volumeUnit = valueOf('dilutionUnit') || 'mL'; const v1 = c1 > 0 ? c2 * v2 / c1 : 0; const diluent = Math.max(0, v2 - v1);
+        const dilutionOutput = document.getElementById('dilutionResult');
+        if (dilutionOutput) dilutionOutput.innerHTML = c1 > 0 && c2 <= c1 ? '<strong>母液 ' + compactNumber(v1) + ' ' + esc(volumeUnit) + '</strong><span>加入稀释液 ' + compactNumber(diluent) + ' ' + esc(volumeUnit) + '</span>' : '<strong>请检查浓度</strong><span>C1 必须大于或等于 C2</span>';
+
+        const mw = calculatorValue('molarMw'); const concentration = calculatorValue('molarConcentration'); const volume = calculatorValue('molarVolume');
+        const concentrationFactors = { M: 1, mM: 0.001, 'µM': 0.000001 }; const volumeFactors = { L: 1, mL: 0.001, 'µL': 0.000001 };
+        const massMg = mw * concentration * (concentrationFactors[valueOf('molarConcentrationUnit')] || 1) * volume * (volumeFactors[valueOf('molarVolumeUnit')] || 1) * 1000;
+        const molarityOutput = document.getElementById('molarityResult');
+        if (molarityOutput) molarityOutput.innerHTML = '<strong>需要 ' + compactNumber(massMg) + ' mg</strong><span>按纯度 100% 计算</span>';
+
+        const perWell = calculatorValue('seedingPerWell'); const wells = Math.max(1, Math.round(calculatorValue('seedingWells'))); const cellConcentration = calculatorValue('seedingConcentration'); const overage = calculatorValue('seedingOverage');
+        const totalCells = perWell * wells * (1 + overage / 100); const suspension = cellConcentration > 0 ? totalCells / cellConcentration : 0;
+        const seedingOutput = document.getElementById('seedingResult');
+        if (seedingOutput) seedingOutput.innerHTML = '<strong>需要 ' + totalCells.toLocaleString(interfaceLocale(), { maximumFractionDigits: 0 }) + ' 个细胞</strong><span>取 ' + compactNumber(suspension) + ' mL 细胞悬液（含 ' + compactNumber(overage, 1) + '% 余量）</span>';
+
+        const reactions = Math.max(1, Math.round(calculatorValue('mixReactionCount'))); const mixOverage = calculatorValue('mixOverage'); const multiplier = reactions * (1 + mixOverage / 100);
+        const mixRows = Array.from(document.querySelectorAll('#mastermixRows .mastermix-row'));
+        const mixOutput = document.getElementById('mastermixResult');
+        if (mixOutput) mixOutput.innerHTML = '<div class="mastermix-result-head"><strong>按 ' + reactions + ' 个反应配制</strong><span>含 ' + compactNumber(mixOverage, 1) + '% 余量</span></div>' + mixRows.map(function (row) {
+            const name = row.querySelector('[data-mix-name]').value.trim() || '未命名组分'; const amount = positiveNumber(row.querySelector('[data-mix-amount]').value, 0); const unit = row.querySelector('[data-mix-unit]').value.trim() || 'µL';
+            return '<div><span>' + esc(name) + '</span><strong>' + compactNumber(amount * multiplier) + ' ' + esc(unit) + '</strong></div>';
+        }).join('');
+    }
+
+    function plateDimensions(format) {
+        return ({ 6: [2, 3], 12: [3, 4], 24: [4, 6], 48: [6, 8], 96: [8, 12], 384: [16, 24] })[Number(format)] || [8, 12];
+    }
+
+    function plateWellIds(format) {
+        const dimensions = plateDimensions(format); const ids = [];
+        for (let row = 0; row < dimensions[0]; row += 1) for (let column = 1; column <= dimensions[1]; column += 1) ids.push(String.fromCharCode(65 + row) + column);
+        return ids;
+    }
+
+    function readPlateMetadata() {
+        if (!plateDraft) plateDraft = createBlankPlateLayout();
+        plateDraft.name = els.plateLayoutName ? els.plateLayoutName.value.trim() : plateDraft.name;
+        plateDraft.experimentId = els.plateExperiment ? els.plateExperiment.value : '';
+        plateDraft.protocolId = els.plateProtocol ? els.plateProtocol.value : '';
+    }
+
+    function renderPlateWorkspace() {
+        if (!els.plateMap) return;
+        if (activePlateLayoutId) {
+            const saved = state.plateLayouts.find(function (item) { return item.id === activePlateLayoutId; });
+            if (saved && (!plateDraft || plateDraft.id !== saved.id)) plateDraft = clone(saved);
+        }
+        if (!plateDraft) plateDraft = createBlankPlateLayout();
+        els.plateLayoutList.innerHTML = state.plateLayouts.map(function (layout) {
+            const filled = Object.keys(layout.wells || {}).length;
+            return '<button type="button" class="plate-layout-item' + (layout.id === activePlateLayoutId ? ' active' : '') + '" data-plate-layout="' + esc(layout.id) + '"><strong>' + esc(layout.name || '未命名布局') + '</strong><span>' + layout.format + ' 孔板 · ' + filled + ' 个已标注孔</span></button>';
+        }).join('') || '<p class="tools-empty-copy">还没有保存布局。</p>';
+        els.plateLayoutName.value = plateDraft.name || '';
+        els.plateFormat.value = String(plateDraft.format || 96);
+        els.plateExperiment.innerHTML = '<option value="">不关联实验</option>' + state.experiments.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.title) + '</option>'; }).join('');
+        els.plateProtocol.innerHTML = '<option value="">不关联 Protocol</option>' + state.protocols.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.title) + '</option>'; }).join('');
+        els.plateExperiment.value = plateDraft.experimentId || '';
+        els.plateProtocol.value = plateDraft.protocolId || '';
+        renderPlateMap();
+        updatePlateMemory();
+        els.plateLayoutStatus.textContent = activePlateLayoutId ? '已保存 · ' + new Date(plateDraft.updatedAt).toLocaleString(interfaceLocale()) : '尚未保存';
+    }
+
+    function renderPlateMap() {
+        const dimensions = plateDimensions(plateDraft.format); const wellIds = plateWellIds(plateDraft.format);
+        els.plateMap.style.setProperty('--plate-columns', dimensions[1]);
+        els.plateMap.classList.toggle('dense', Number(plateDraft.format) >= 96);
+        els.plateMap.innerHTML = wellIds.map(function (id) {
+            const data = plateDraft.wells[id] || {}; const selected = selectedPlateWells.has(id);
+            const title = [id, data.sample, data.treatment, data.concentration !== '' && data.concentration != null ? data.concentration + ' ' + (data.unit || '') : ''].filter(Boolean).join(' · ');
+            return '<button type="button" class="plate-well' + (selected ? ' selected' : '') + (data.sample || data.treatment ? ' assigned' : '') + '" data-plate-well="' + id + '" style="--well-color:' + esc(data.color || '#dce4df') + '" aria-pressed="' + selected + '" title="' + esc(title || id) + '"><span>' + id + '</span><i></i></button>';
+        }).join('');
+        els.selectedWellCount.textContent = selectedPlateWells.size ? '已选择 ' + selectedPlateWells.size + ' 个孔位' : '未选择孔位';
+    }
+
+    function updatePlateMemory() {
+        const wells = Object.values(plateDraft.wells || {});
+        const samples = Array.from(new Set(wells.map(function (item) { return item.sample; }).filter(Boolean)));
+        const treatments = Array.from(new Set(wells.map(function (item) { return item.treatment; }).filter(Boolean)));
+        const sampleMemory = document.getElementById('wellSampleMemory'); const treatmentMemory = document.getElementById('wellTreatmentMemory');
+        if (sampleMemory) sampleMemory.innerHTML = samples.map(function (value) { return '<option value="' + esc(value) + '">'; }).join('');
+        if (treatmentMemory) treatmentMemory.innerHTML = treatments.map(function (value) { return '<option value="' + esc(value) + '">'; }).join('');
+    }
+
+    function applyPlateBrush(clear) {
+        if (denyReadOnlyMutation()) return;
+        if (!selectedPlateWells.size) { showToast('请先选择孔位'); return; }
+        selectedPlateWells.forEach(function (id) {
+            if (clear) delete plateDraft.wells[id];
+            else plateDraft.wells[id] = { sample: valueOf('wellSample'), treatment: valueOf('wellTreatment'), concentration: valueOf('wellConcentration') === '' ? '' : positiveNumber(valueOf('wellConcentration'), 0), unit: valueOf('wellConcentrationUnit'), color: valueOf('wellColor') || '#b8e63b' };
+        });
+        els.plateLayoutStatus.textContent = '有未保存的修改'; renderPlateMap(); updatePlateMemory();
+    }
+
+    function savePlateLayout() {
+        if (denyReadOnlyMutation()) return;
+        readPlateMetadata();
+        if (!plateDraft.name) plateDraft.name = '未命名布局 ' + (state.plateLayouts.length + 1);
+        if (!plateDraft.id) plateDraft.id = 'PLATE-' + Date.now();
+        plateDraft.updatedAt = new Date().toISOString();
+        const saved = normalizePlateLayout(plateDraft, state.plateLayouts.length);
+        const index = state.plateLayouts.findIndex(function (item) { return item.id === saved.id; });
+        if (index >= 0) state.plateLayouts[index] = clone(saved); else state.plateLayouts.push(clone(saved));
+        activePlateLayoutId = saved.id; plateDraft = clone(saved);
+        appendAuditLog({ action: index >= 0 ? 'updated' : 'created', recordType: 'plateLayout', recordId: saved.id, changes: { name: saved.name, format: saved.format, wells: Object.keys(saved.wells).length } });
+        saveState(); renderPlateWorkspace(); showToast('实验布局已保存');
+    }
+
+    function renderResearchTools() {
+        setToolsTab(activeToolsTab);
+    }
+
+    function bindResearchToolsEvents() {
+        document.addEventListener('click', function (event) {
+            const embeddedSave = event.target.closest('[data-save-lineage-from]');
+            if (embeddedSave) { saveEmbeddedLineage(embeddedSave.dataset.saveLineageFrom, embeddedSave); return; }
+            const embeddedDelete = event.target.closest('[data-delete-embedded-lineage]');
+            if (embeddedDelete) { deleteEmbeddedLineage(embeddedDelete.dataset.deleteEmbeddedLineage); return; }
+            const tab = event.target.closest('[data-tools-tab]');
+            if (tab) { setToolsTab(tab.dataset.toolsTab); return; }
+            const node = event.target.closest('[data-lineage-entity]');
+            if (node) { openLineageEntity(node.dataset.lineageEntity); return; }
+            if (event.target.closest('#saveLineageLink')) { saveLineageRelationship(); return; }
+            const deleteLink = event.target.closest('[data-delete-lineage-link]');
+            if (deleteLink) { if (denyReadOnlyMutation(event)) return; state.lineageLinks = state.lineageLinks.filter(function (item) { return item.id !== deleteLink.dataset.deleteLineageLink; }); saveState(); renderLineageWorkspace(); showToast('谱系关系已删除'); return; }
+            if (event.target.closest('[data-add-mix-component]')) { els.mastermixRows.insertAdjacentHTML('beforeend', masterMixRowHtml('', '', 'µL')); recalculateResearchTools(); return; }
+            const removeMix = event.target.closest('[data-remove-mix-component]');
+            if (removeMix) { const row = removeMix.closest('.mastermix-row'); if (row) row.remove(); recalculateResearchTools(); return; }
+            const layout = event.target.closest('[data-plate-layout]');
+            if (layout) { activePlateLayoutId = layout.dataset.plateLayout; plateDraft = clone(state.plateLayouts.find(function (item) { return item.id === activePlateLayoutId; }) || createBlankPlateLayout()); selectedPlateWells.clear(); renderPlateWorkspace(); return; }
+            if (event.target.closest('#newPlateLayout')) { activePlateLayoutId = ''; plateDraft = createBlankPlateLayout(); selectedPlateWells.clear(); renderPlateWorkspace(); return; }
+            if (event.target.closest('#savePlateLayout')) { savePlateLayout(); return; }
+            if (event.target.closest('[data-delete-plate-layout]')) { if (denyReadOnlyMutation(event)) return; if (!activePlateLayoutId) { showToast('当前布局尚未保存'); return; } if (!window.confirm('确认删除当前实验布局？')) return; state.plateLayouts = state.plateLayouts.filter(function (item) { return item.id !== activePlateLayoutId; }); saveState(); activePlateLayoutId = state.plateLayouts[0] ? state.plateLayouts[0].id : ''; plateDraft = activePlateLayoutId ? clone(state.plateLayouts[0]) : createBlankPlateLayout(); selectedPlateWells.clear(); renderPlateWorkspace(); return; }
+            if (event.target.closest('[data-clear-well-selection]')) { selectedPlateWells.clear(); renderPlateMap(); return; }
+            if (event.target.closest('[data-apply-well-brush]')) { applyPlateBrush(false); return; }
+            if (event.target.closest('[data-clear-selected-wells]')) { applyPlateBrush(true); return; }
+            const well = event.target.closest('[data-plate-well]');
+            if (well) { const id = well.dataset.plateWell; if (event.shiftKey && selectedPlateWells.size) { const all = plateWellIds(plateDraft.format); const previous = all.indexOf(Array.from(selectedPlateWells).pop()); const current = all.indexOf(id); all.slice(Math.min(previous, current), Math.max(previous, current) + 1).forEach(function (entry) { selectedPlateWells.add(entry); }); } else if (selectedPlateWells.has(id)) selectedPlateWells.delete(id); else selectedPlateWells.add(id); renderPlateMap(); return; }
+        });
+        document.addEventListener('input', function (event) {
+            if (event.target.closest('[data-calculator]')) recalculateResearchTools();
+            if (event.target.closest('.plate-editor-toolbar') || event.target.closest('.well-brush-panel')) { if (els.plateLayoutStatus) els.plateLayoutStatus.textContent = '有未保存的修改'; }
+        });
+        document.addEventListener('change', function (event) {
+            if (event.target === els.lineageFocus) { activeLineageFocus = els.lineageFocus.value; renderLineageWorkspace(); return; }
+            if (event.target === els.plateFormat) { readPlateMetadata(); plateDraft.format = Number(els.plateFormat.value); const valid = new Set(plateWellIds(plateDraft.format)); Object.keys(plateDraft.wells).forEach(function (id) { if (!valid.has(id)) delete plateDraft.wells[id]; }); selectedPlateWells.clear(); renderPlateMap(); els.plateLayoutStatus.textContent = '有未保存的修改'; return; }
+            if (event.target.closest('[data-calculator]')) recalculateResearchTools();
+        });
+        document.addEventListener('keydown', function (event) {
+            const node = event.target.closest && event.target.closest('[data-lineage-entity]');
+            if (node && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openLineageEntity(node.dataset.lineageEntity); }
+        });
+        if (els.plateMap) {
+            els.plateMap.addEventListener('pointerdown', function (event) {
+                const well = event.target.closest('[data-plate-well]');
+                if (!well) return;
+                platePointerDown = true;
+                els.plateMap.dataset.paintMode = selectedPlateWells.has(well.dataset.plateWell) ? 'remove' : 'add';
+                if (typeof els.plateMap.setPointerCapture === 'function') {
+                    try { els.plateMap.setPointerCapture(event.pointerId); } catch (error) { /* capture is optional */ }
+                }
+            });
+            els.plateMap.addEventListener('pointerover', function (event) {
+                if (!platePointerDown) return;
+                const well = event.target.closest('[data-plate-well]');
+                if (!well) return;
+                if (els.plateMap.dataset.paintMode === 'remove') selectedPlateWells.delete(well.dataset.plateWell);
+                else selectedPlateWells.add(well.dataset.plateWell);
+                renderPlateMap();
+            });
+        }
+        document.addEventListener('pointerup', function () { platePointerDown = false; });
     }
 
     function renderSchedule() {
@@ -2806,17 +3345,22 @@
             calculator: {
                 expression: String(calculator.expression || ''),
                 result: String(calculator.result || ''),
-                angleMode: calculator.angleMode === 'rad' ? 'rad' : 'deg'
+                angleMode: calculator.angleMode === 'rad' ? 'rad' : 'deg',
+                mode: ['scientific', 'dilution', 'molarity', 'seeding', 'mastermix'].includes(calculator.mode) ? calculator.mode : '',
+                visible: Boolean(calculator.visible),
+                fields: calculator.fields && typeof calculator.fields === 'object' ? Object.assign({}, calculator.fields) : {}
             },
             apparatus: {
                 type: apparatusDefinitions[apparatus.type] ? apparatus.type : '',
-                marks: apparatus.marks && typeof apparatus.marks === 'object' ? Object.assign({}, apparatus.marks) : {}
+                marks: apparatus.marks && typeof apparatus.marks === 'object' ? Object.assign({}, apparatus.marks) : {},
+                rows: number(apparatus.rows || 6, 1, 12),
+                columns: number(apparatus.columns || 6, 1, 12)
             }
         };
     }
 
     function defaultRunStepState(stepText) {
-        return normalizeRunStepState({ apparatus: { type: recommendedApparatus(stepText), marks: {} } });
+        return normalizeRunStepState({ calculator: { mode: recommendedCalculator(stepText), visible: false }, apparatus: { type: recommendedApparatus(stepText), marks: {} } });
     }
 
     function recommendedApparatus(stepText) {
@@ -2824,12 +3368,22 @@
         if (/凝胶|电泳|gel/i.test(text)) return 'gel';
         if (/切片|封片|载玻片|成像|脑片|slide/i.test(text)) return 'slides';
         if (/离心|冻存管|耳样|样本管|tube/i.test(text)) return 'tubeRack';
+        if (/12\s*孔|12[- ]?well/i.test(text)) return 'plate12';
         if (/PCR|qPCR|反应体系|染色|培养|接种|细胞|抗体|孵育|plate/i.test(text)) return 'plate96';
         return 'custom';
     }
 
+    function recommendedCalculator(stepText) {
+        const text = String(stepText || '');
+        if (/稀释|配液|倍比|dilut|C1V1/i.test(text)) return 'dilution';
+        if (/摩尔|molar|mM|µM|称量|分子量/i.test(text)) return 'molarity';
+        if (/铺板|接种|细胞数|cell seeding/i.test(text)) return 'seeding';
+        if (/PCR|qPCR|master\s*mix|反应体系/i.test(text)) return 'mastermix';
+        return 'scientific';
+    }
+
     function ensureRunSession(experiment, protocol) {
-        const existing = experiment.runSession && typeof experiment.runSession === 'object' ? experiment.runSession : normalizeRunSession(experiment.runSession);
+        const existing = normalizeRunSession(experiment.runSession);
         if (!existing || existing.protocolId !== protocol.id || existing.finishedAt) {
             experiment.runSession = {
                 protocolId: protocol.id,
@@ -2843,6 +3397,7 @@
         existing.stepStates = protocol.steps.map(function (step, index) {
             const stepState = existing.stepStates[index] || defaultRunStepState(step);
             if (!stepState.apparatus.type) stepState.apparatus.type = recommendedApparatus(step);
+            if (!stepState.calculator.mode) stepState.calculator.mode = recommendedCalculator(step);
             return stepState;
         });
         existing.currentStep = Math.min(Math.max(0, existing.currentStep), Math.max(0, protocol.steps.length - 1));
@@ -2927,6 +3482,8 @@
         const stepState = context.stepState;
         const timerValue = formatRunDuration(timerElapsedSeconds(stepState.timer));
         const apparatus = apparatusDefinitions[stepState.apparatus.type] || apparatusDefinitions.custom;
+        const suggestedCalculator = recommendedCalculator(stepText);
+        if (!stepState.calculator.mode) stepState.calculator.mode = suggestedCalculator;
         const stepList = steps.map(function (step, index) {
             const stateForStep = context.session.stepStates[index];
             const classes = ['run-step-item'];
@@ -2941,13 +3498,13 @@
 
         els.experimentRunBody.innerHTML =
             '<aside class="run-step-rail"><div class="run-step-rail-head"><p class="micro-label">SYNCHRONIZED STEPS</p><strong>' + completed + ' / ' + steps.length + ' 已完成</strong></div><div class="run-step-list">' + stepList + '</div></aside>' +
-            '<section class="run-step-workspace"><header class="run-current-step"><div><span>STEP ' + String(context.stepIndex + 1).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0') + '</span><h3>' + esc(stepText) + '</h3><p>步骤来自 ' + esc(context.protocol.id) + '，笔记与工具状态会自动保存在本次实验中。</p></div><b class="' + (stepState.done ? 'done' : '') + '">' + (stepState.done ? '已完成' : '执行中') + '</b></header>' +
+            '<section class="run-step-workspace"><header class="run-current-step"><div><span>STEP ' + String(context.stepIndex + 1).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0') + '</span><h3>' + esc(stepText) + '</h3></div><div class="run-current-actions"><button type="button" data-toggle-run-calculator>ƒx ' + esc(calculatorModeLabel(suggestedCalculator)) + '</button><b class="' + (stepState.done ? 'done' : '') + '">' + (stepState.done ? '已完成' : '执行中') + '</b></div></header>' +
             '<label class="run-step-notes"><span>步骤记录与观察</span><textarea data-run-notes placeholder="记录操作参数、异常现象或样本变化…">' + esc(stepState.notes) + '</textarea></label>' +
             runStepPhotoHtml(stepState) +
             '<div class="run-tool-grid">' +
-                '<section class="run-tool-card timer-tool"><header><div><p class="micro-label">STEP TIMER</p><h4>步骤计时器</h4></div><span class="tool-status-dot' + (stepState.timer.running ? ' active' : '') + '"></span></header><strong class="run-timer-display" id="runTimerDisplay">' + timerValue + '</strong><div class="run-tool-actions"><button type="button" data-run-timer="start">开始</button><button type="button" data-run-timer="pause">暂停</button><button type="button" data-run-timer="reset">复位</button></div><p>切换步骤或关闭窗口后，计时仍会按保存的时间继续。</p></section>' +
-                scientificCalculatorHtml(stepState) +
-                '<section class="run-tool-card apparatus-tool"><header><div><p class="micro-label">APPARATUS ANNOTATION</p><h4>装置标注</h4></div><select data-apparatus-type aria-label="装置类型">' + apparatusOptions + '</select></header><div class="apparatus-legend"><span><i class="sample"></i>样本</span><span><i class="control"></i>对照</span><span><i class="blank"></i>空白</span><button type="button" data-clear-apparatus>清空标注</button></div>' + apparatusGridHtml(apparatus, stepState.apparatus.marks) + '<p>点击孔位循环标记“样本 → 对照 → 空白”；装置建议根据当前步骤自动选择，也可手动更改。</p></section>' +
+                '<section class="run-tool-card timer-tool"><header><div><p class="micro-label">STEP TIMER</p><h4>步骤计时器</h4></div><span class="tool-status-dot' + (stepState.timer.running ? ' active' : '') + '"></span></header><strong class="run-timer-display" id="runTimerDisplay">' + timerValue + '</strong><div class="run-tool-actions"><button type="button" data-run-timer="start">开始</button><button type="button" data-run-timer="pause">暂停</button><button type="button" data-run-timer="reset">复位</button></div></section>' +
+                (stepState.calculator.visible ? runCalculatorHtml(stepState, stepText) : '') +
+                '<section class="run-tool-card apparatus-tool"><header><div><p class="micro-label">APPARATUS ANNOTATION</p><h4>装置标注</h4></div><div class="apparatus-controls"><select data-apparatus-type aria-label="装置类型">' + apparatusOptions + '</select>' + apparatusDimensionsHtml(stepState) + '</div></header><div class="apparatus-legend"><span>孔位可直接填写样本名称</span><button type="button" data-clear-apparatus>清空标注</button></div>' + apparatusGridHtml(apparatus, stepState.apparatus) + '</section>' +
             '</div></section>';
 
         els.experimentRunProgressLabel.textContent = '步骤进度 ' + completed + ' / ' + steps.length;
@@ -2969,7 +3526,36 @@
         return '<section class="run-step-photos"><header><div><p class="micro-label">STEP IMAGES</p><h4>步骤照片记录</h4></div><label class="run-photo-add" for="runStepPhotoInput"><input id="runStepPhotoInput" type="file" accept="image/*" capture="environment" multiple data-run-photo-input><span>＋ 拍照 / 选择图片</span></label></header><div class="run-step-photo-grid">' + (items || '<p>尚未保存本步骤的照片。</p>') + '</div><small>每个步骤最多保存 6 张压缩照片；切换步骤后仍会保留。</small></section>';
     }
 
-    function scientificCalculatorHtml(stepState) {
+    function calculatorModeLabel(mode) {
+        return ({ scientific: '科学计算', dilution: '稀释计算', molarity: '摩尔配制', seeding: '细胞铺板', mastermix: '反应体系' })[mode] || '科学计算';
+    }
+
+    function calculatorFieldValue(stepState, name, fallback) {
+        const value = stepState.calculator.fields[name];
+        return value == null || value === '' ? fallback : value;
+    }
+
+    function smartCalculatorFieldsHtml(stepState, mode) {
+        const definitions = {
+            dilution: [['c1', '母液浓度 C1', 100], ['c2', '目标浓度 C2', 10], ['v2', '终体积 V2', 10]],
+            molarity: [['mw', '分子量', 180.16], ['concentration', '目标浓度 mM', 10], ['volume', '终体积 mL', 100]],
+            seeding: [['cellsPerWell', '每孔细胞数', 50000], ['wells', '使用孔数', 12], ['cellConcentration', '细胞浓度 cells/mL', 1000000], ['overage', '余量 %', 10]],
+            mastermix: [['perReaction', '每反应用量 µL', 20], ['reactions', '反应数量', 12], ['overage', '余量 %', 10]]
+        };
+        return '<div class="smart-calculator-fields">' + (definitions[mode] || []).map(function (field) {
+            return '<label><span>' + field[1] + '</span><input data-calc-field="' + field[0] + '" type="number" min="0" step="any" value="' + esc(calculatorFieldValue(stepState, field[0], field[2])) + '"></label>';
+        }).join('') + '</div><div class="calculator-result-row"><button class="calculator-equals" type="button" data-run-calculate aria-label="计算">=</button><output id="runCalculatorResult">' + esc(stepState.calculator.result || '等待输入') + '</output></div>';
+    }
+
+    function runCalculatorHtml(stepState, stepText) {
+        const mode = stepState.calculator.mode || recommendedCalculator(stepText);
+        const modeOptions = ['scientific', 'dilution', 'molarity', 'seeding', 'mastermix'].map(function (key) {
+            return '<option value="' + key + '"' + (key === mode ? ' selected' : '') + '>' + calculatorModeLabel(key) + '</option>';
+        }).join('');
+        const modeControl = '<select data-calc-mode aria-label="计算类型">' + modeOptions + '</select>';
+        if (mode !== 'scientific') {
+            return '<section class="run-tool-card calculator-tool smart-calculator"><header><div><p class="micro-label">PROTOCOL MATCHED CALCULATION</p><h4>' + esc(calculatorModeLabel(mode)) + '</h4></div>' + modeControl + '</header>' + smartCalculatorFieldsHtml(stepState, mode) + '</section>';
+        }
         const buttons = [
             ['sin(', 'sin'], ['cos(', 'cos'], ['tan(', 'tan'], ['sqrt(', '√'], ['log(', 'log'], ['ln(', 'ln'],
             ['(', '('], [')', ')'], ['pi', 'π'], ['e', 'e'], ['^2', 'x²'], ['^', 'xʸ'],
@@ -2980,23 +3566,28 @@
         ].map(function (entry) {
             return '<button type="button" data-calc-token="' + esc(entry[0]) + '">' + esc(entry[1]) + '</button>';
         }).join('');
-        return '<section class="run-tool-card calculator-tool scientific-calculator"><header><div><p class="micro-label">SCIENTIFIC CALCULATION</p><h4>科学计算器</h4></div><select data-calc-angle aria-label="角度模式"><option value="deg"' + (stepState.calculator.angleMode === 'deg' ? ' selected' : '') + '>DEG</option><option value="rad"' + (stepState.calculator.angleMode === 'rad' ? ' selected' : '') + '>RAD</option></select></header><label><span>计算式</span><input data-run-expression type="text" value="' + esc(stepState.calculator.expression) + '" placeholder="例如：sin(30) + sqrt(16)"></label><div class="scientific-keypad">' + buttons + '<button class="key-action" type="button" data-calc-action="backspace">⌫</button><button class="key-action danger" type="button" data-calc-action="clear">C</button></div><div class="calculator-result-row"><button type="button" data-run-calculate>计算结果</button><output id="runCalculatorResult">' + esc(stepState.calculator.result || '等待输入') + '</output></div><p>支持三角函数、对数、平方根、指数、幂、阶乘、π 与角度模式，适合浓度和配液换算。</p></section>';
+        return '<section class="run-tool-card calculator-tool scientific-calculator"><header><div><p class="micro-label">SCIENTIFIC CALCULATION</p><h4>科学计算器</h4></div><div class="calculator-header-controls">' + modeControl + '<select data-calc-angle aria-label="角度模式"><option value="deg"' + (stepState.calculator.angleMode === 'deg' ? ' selected' : '') + '>DEG</option><option value="rad"' + (stepState.calculator.angleMode === 'rad' ? ' selected' : '') + '>RAD</option></select></div></header><label><span>计算式</span><input data-run-expression type="text" value="' + esc(stepState.calculator.expression) + '" placeholder="例如：sin(30) + sqrt(16)"></label><div class="scientific-keypad">' + buttons + '<button class="key-action" type="button" data-calc-action="backspace">⌫</button><button class="key-action danger" type="button" data-calc-action="clear">C</button></div><div class="calculator-result-row"><button class="calculator-equals" type="button" data-run-calculate aria-label="计算">=</button><output id="runCalculatorResult">' + esc(stepState.calculator.result || '等待输入') + '</output></div></section>';
     }
 
-    function apparatusGridHtml(definition, marks) {
+    function apparatusDimensionsHtml(stepState) {
+        if (stepState.apparatus.type !== 'custom') return '';
+        return '<label class="apparatus-dimension"><span>行</span><input data-apparatus-dimension="rows" type="number" min="1" max="12" value="' + esc(stepState.apparatus.rows) + '"></label><label class="apparatus-dimension"><span>列</span><input data-apparatus-dimension="columns" type="number" min="1" max="12" value="' + esc(stepState.apparatus.columns) + '"></label>';
+    }
+
+    function apparatusGridHtml(definition, apparatus) {
+        const rows = apparatus.type === 'custom' ? number(apparatus.rows, 1, 12) : definition.rows;
+        const columns = apparatus.type === 'custom' ? number(apparatus.columns, 1, 12) : definition.columns;
+        const marks = apparatus.marks || {};
         let cells = '';
-        for (let rowIndex = 0; rowIndex < definition.rows; rowIndex += 1) {
-            for (let column = 1; column <= definition.columns; column += 1) {
+        for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
+            for (let column = 1; column <= columns; column += 1) {
                 const label = String.fromCharCode(65 + rowIndex) + column;
-                const mark = marks[label] || '';
-                cells += '<button class="apparatus-cell ' + definition.shape + (mark ? ' ' + mark : '') + '" type="button" data-apparatus-cell="' + label + '" aria-label="' + label + (mark ? ' · ' + apparatusMarkLabel(mark) : ' · 未标注') + '"><span>' + label + '</span></button>';
+                const legacy = { sample: '样本', control: '对照', blank: '空白' }[marks[label]];
+                const value = legacy || marks[label] || '';
+                cells += '<label class="apparatus-cell ' + definition.shape + (value ? ' filled' : '') + '"><span>' + label + '</span><input data-apparatus-label="' + label + '" type="text" maxlength="32" value="' + esc(value) + '" aria-label="' + label + ' 样本名称"></label>';
             }
         }
-        return '<div class="apparatus-grid ' + definition.shape + '" style="grid-template-columns:repeat(' + definition.columns + ',minmax(22px,1fr))">' + cells + '</div>';
-    }
-
-    function apparatusMarkLabel(mark) {
-        return interfaceText({ sample: '样本', control: '对照', blank: '空白' }[mark] || '未标注');
+        return '<div class="apparatus-scroll"><div class="apparatus-grid ' + definition.shape + '" style="grid-template-columns:repeat(' + columns + ',minmax(58px,1fr));min-width:' + (columns * 62) + 'px">' + cells + '</div></div>';
     }
 
     function persistRunWorkspaceInputs() {
@@ -3006,6 +3597,8 @@
         const expression = els.experimentRunBody.querySelector('[data-run-expression]');
         if (notes) context.stepState.notes = notes.value;
         if (expression) context.stepState.calculator.expression = expression.value;
+        els.experimentRunBody.querySelectorAll('[data-calc-field]').forEach(function (input) { context.stepState.calculator.fields[input.dataset.calcField] = input.value; });
+        els.experimentRunBody.querySelectorAll('[data-apparatus-label]').forEach(function (input) { if (input.value.trim()) context.stepState.apparatus.marks[input.dataset.apparatusLabel] = input.value.trim(); else delete context.stepState.apparatus.marks[input.dataset.apparatusLabel]; });
         window.clearTimeout(runInputSaveTimer);
         saveState();
     }
@@ -3015,6 +3608,12 @@
         if (!context) return;
         if (event.target.matches('[data-run-notes]')) context.stepState.notes = event.target.value;
         if (event.target.matches('[data-run-expression]')) context.stepState.calculator.expression = event.target.value;
+        if (event.target.matches('[data-calc-field]')) context.stepState.calculator.fields[event.target.dataset.calcField] = event.target.value;
+        if (event.target.matches('[data-apparatus-label]')) {
+            const value = event.target.value.trim();
+            if (value) context.stepState.apparatus.marks[event.target.dataset.apparatusLabel] = value;
+            else delete context.stepState.apparatus.marks[event.target.dataset.apparatusLabel];
+        }
         window.clearTimeout(runInputSaveTimer);
         runInputSaveTimer = window.setTimeout(function () { saveState(); }, 700);
     }
@@ -3031,8 +3630,23 @@
             saveState();
             return;
         }
+        if (event.target.matches('[data-calc-mode]')) {
+            context.stepState.calculator.mode = event.target.value;
+            context.stepState.calculator.result = '';
+            context.stepState.calculator.visible = true;
+            saveState();
+            renderExperimentRun();
+            return;
+        }
         if (event.target.matches('[data-apparatus-type]')) {
-            context.stepState.apparatus = { type: event.target.value, marks: {} };
+            const definition = apparatusDefinitions[event.target.value] || apparatusDefinitions.custom;
+            context.stepState.apparatus = { type: event.target.value, marks: {}, rows: definition.rows, columns: definition.columns };
+            saveState();
+            renderExperimentRun();
+            return;
+        }
+        if (event.target.matches('[data-apparatus-dimension]')) {
+            context.stepState.apparatus[event.target.dataset.apparatusDimension] = number(event.target.value, 1, 12);
             saveState();
             renderExperimentRun();
             return;
@@ -3197,16 +3811,51 @@
     function calculateRunExpression() {
         const context = currentRunContext();
         const input = els.experimentRunBody.querySelector('[data-run-expression]');
-        if (!context || !input) return;
+        if (!context) return;
+        const calculator = context.stepState.calculator;
+        const mode = calculator.mode || 'scientific';
+        els.experimentRunBody.querySelectorAll('[data-calc-field]').forEach(function (field) { calculator.fields[field.dataset.calcField] = field.value; });
         try {
-            const result = evaluateArithmeticExpression(input.value, context.stepState.calculator.angleMode);
-            context.stepState.calculator.expression = input.value;
-            context.stepState.calculator.result = formatQuantity(result);
+            let resultText = '';
+            if (mode === 'scientific') {
+                if (!input) return;
+                const result = evaluateArithmeticExpression(input.value, calculator.angleMode);
+                calculator.expression = input.value;
+                resultText = formatQuantity(result);
+            } else if (mode === 'dilution') {
+                const c1 = positiveNumber(calculator.fields.c1, 0);
+                const c2 = positiveNumber(calculator.fields.c2, 0);
+                const v2 = positiveNumber(calculator.fields.v2, 0);
+                if (!c1 || c2 > c1) throw new Error('invalid dilution');
+                const v1 = c2 * v2 / c1;
+                resultText = '母液 ' + formatQuantity(v1) + '；稀释液 ' + formatQuantity(v2 - v1);
+            } else if (mode === 'molarity') {
+                const mw = positiveNumber(calculator.fields.mw, 0);
+                const concentration = positiveNumber(calculator.fields.concentration, 0);
+                const volume = positiveNumber(calculator.fields.volume, 0);
+                if (!mw || !concentration || !volume) throw new Error('invalid molarity');
+                resultText = '称量 ' + formatQuantity(mw * concentration * volume / 1000) + ' mg';
+            } else if (mode === 'seeding') {
+                const cellsPerWell = positiveNumber(calculator.fields.cellsPerWell, 0);
+                const wells = positiveNumber(calculator.fields.wells, 0);
+                const concentration = positiveNumber(calculator.fields.cellConcentration, 0);
+                const factor = 1 + positiveNumber(calculator.fields.overage, 0) / 100;
+                if (!cellsPerWell || !wells || !concentration) throw new Error('invalid seeding');
+                const cells = cellsPerWell * wells * factor;
+                resultText = formatQuantity(cells) + ' cells；取 ' + formatQuantity(cells / concentration) + ' mL';
+            } else if (mode === 'mastermix') {
+                const perReaction = positiveNumber(calculator.fields.perReaction, 0);
+                const reactions = positiveNumber(calculator.fields.reactions, 0);
+                const factor = 1 + positiveNumber(calculator.fields.overage, 0) / 100;
+                if (!perReaction || !reactions) throw new Error('invalid master mix');
+                resultText = '体系总量 ' + formatQuantity(perReaction * reactions * factor) + ' µL';
+            }
+            calculator.result = resultText;
             saveState();
-            document.getElementById('runCalculatorResult').textContent = context.stepState.calculator.result;
+            document.getElementById('runCalculatorResult').textContent = calculator.result;
         } catch (error) {
-            context.stepState.calculator.result = '表达式有误';
-            document.getElementById('runCalculatorResult').textContent = '表达式有误，请检查括号与运算符';
+            calculator.result = '输入有误';
+            document.getElementById('runCalculatorResult').textContent = mode === 'scientific' ? '表达式有误，请检查括号与运算符' : '请检查输入数值和单位';
         }
     }
 
@@ -3678,7 +4327,7 @@ function getReagentDisplayStatus(reagent) {
                 field('rackId', '所属笼架', 'animal-rack-select', '', true),
                 field('position', '架内位置', 'text', '例：A1', true),
                 field('label', '笼位标签', 'text', '例：CAGE-A01', true),
-                field('species', '建议物种', 'select', ['小鼠', '大鼠', '兔', '豚鼠', '斑马鱼', '果蝇', '非人灵长类', '混合 / 待设置', '其他'], true),
+                field('species', '物种', 'select', ['小鼠', '大鼠', '兔', '豚鼠', '斑马鱼', '果蝇', '非人灵长类', '混合 / 待设置', '其他'], true),
                 field('capacity', '建议容量', 'number', '5', true),
                 field('status', '笼位状态', 'select', ['在用', '隔离', '清洁中', '停用'], true),
                 field('notes', '饲养条件与备注', 'textarea', '记录垫料、光照、饲料、温度或特殊照护要求…', false, true)
@@ -3709,7 +4358,7 @@ function getReagentDisplayStatus(reagent) {
                 field('boxId', '冻存盒', 'freezer-select', '', true),
                 field('position', '盒内位置', 'text', 'A1', true),
                 field('date', '入库日期', 'date', '', true),
-                field('status', '当前状态', 'select', ['在库', '质控中', '剩余少'], true),
+                field('status', '当前状态', 'select', ['在库', '剩余少'], true),
                 field('photoData', '样本照片', 'photo-capture', '拍摄冻存管标签或样本外观', false, true)
             ]
         },

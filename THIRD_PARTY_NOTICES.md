@@ -24,3 +24,25 @@ Rhine Lab bundles the Supabase JavaScript client for authentication, database sy
 
 - Project: https://github.com/supabase/supabase-js
 - License: MIT; the complete license is included at `js/vendor/SUPABASE_LICENSE.txt`.
+
+## Research workflow design references
+
+The sample-lineage graph and multi-well layout editor are original Rhine Lab implementations. Their interaction and data-model design was informed by the following open-source projects; no runtime code or assets from these projects are bundled.
+
+### Cytoscape.js
+
+Reference for interactive graph concepts and accessible node/edge navigation.
+
+- Project: https://github.com/cytoscape/cytoscape.js
+- License: MIT
+
+### PlateEditor
+
+Reference for client-side multi-well plate selection and annotation workflows.
+
+- Project: https://github.com/vindelorme/PlateEditor
+- License: MIT
+
+### PCR Plate
+
+Reference for compact 96-well visual layout conventions.

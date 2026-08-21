@@ -15,13 +15,11 @@
             }
         } catch (error) {
             console.error('Secure local workspace initialization failed.', error);
+            window.RHINE_LAB_STORAGE_LOCKED = true;
             document.body.dataset.cryptoError = 'true';
-            const boot = document.getElementById('appBootScreen');
-            if (boot) { boot.querySelector('strong').textContent = 'SECURE STORAGE ERROR'; boot.querySelector('span').textContent = '无法解锁本机加密数据，请重新载入或恢复备份'; }
-            return;
         }
         const script = document.createElement('script');
-        script.src = 'js/rhine-lab.js?v=20260818-4';
+        script.src = 'js/rhine-lab.js?v=20260821-2';
         script.defer = true;
         document.body.appendChild(script);
     }

@@ -19,12 +19,29 @@
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260818-8">
+    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=20260821-7">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
-        <div class="boot-loader" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <strong>LOADING WORKSPACE</strong>
-        <span>正在准备工作区</span>
+        <div class="boot-brand" aria-hidden="true">
+            <svg class="boot-line-logo" viewBox="0 0 600 380" focusable="false">
+                <g class="boot-ink-segments">
+                    <path class="boot-ink-segment ink-segment-01" pathLength="1" d="M520 190 C505 238 468 264 422 264"></path>
+                    <path class="boot-ink-segment ink-segment-02" pathLength="1" d="M422 264 C362 264 330 208 300 160"></path>
+                    <path class="boot-ink-segment ink-segment-03" pathLength="1" d="M300 160 C270 112 238 56 178 56"></path>
+                    <path class="boot-ink-segment ink-segment-04" pathLength="1" d="M178 56 C116 56 70 92 70 160"></path>
+                    <path class="boot-ink-segment ink-segment-05" pathLength="1" d="M70 160 C70 228 116 264 178 264"></path>
+                    <path class="boot-ink-segment ink-segment-06" pathLength="1" d="M178 264 C238 264 270 208 300 160"></path>
+                    <path class="boot-ink-segment ink-segment-07" pathLength="1" d="M300 160 C330 112 362 56 422 56"></path>
+                    <path class="boot-ink-segment ink-segment-08" pathLength="1" d="M422 56 C468 56 505 82 520 130"></path>
+                </g>
+                <g class="boot-logo-symbols">
+                    <path class="boot-logo-plus" d="M148 160 H208 M178 130 V190"></path>
+                    <path class="boot-logo-minus" d="M392 160 H452"></path>
+                </g>
+                <text class="boot-logo-wordmark" x="300" y="348" text-anchor="middle">RHINE LAB</text>
+            </svg>
+        </div>
     </div>
     <a class="skip-link" href="#mainContent">跳至主要内容</a>
 
@@ -243,6 +260,55 @@
                     <div class="protocol-grid" id="protocolGrid"></div>
                 </section>
 
+                <section class="view" id="view-tools" data-title="科研工具">
+                    <div class="page-heading technical-heading research-tools-heading">
+                        <div><p class="eyebrow"><span>RESEARCH WORKBENCH</span></p><h1>科研工具</h1><p class="story-quote">“把每一个结果放回它发生的位置。”<cite>——莱茵生命研究档案</cite></p></div>
+                        <div class="heading-visual heading-visual-tools" aria-hidden="true" data-i18n-skip><span class="tools-chain-mark"><i></i><i></i><i></i><i></i></span><span class="heading-visual-label"><b>LINEAGE / DESIGN</b><small>RHINE LAB · WORKBENCH</small></span><span class="heading-monogram">R&amp;D</span></div>
+                    </div>
+                    <div class="research-tools-tabs" role="tablist" aria-label="科研工具类型">
+                        <button class="active" type="button" data-tools-tab="lineage" aria-selected="true">样本谱系</button>
+                        <button type="button" data-tools-tab="calculators" aria-selected="false">科研计算</button>
+                        <button type="button" data-tools-tab="layout" aria-selected="false">实验布局</button>
+                    </div>
+                    <section class="research-tool-panel active" id="toolsLineagePanel" data-tools-panel="lineage">
+                        <div class="lineage-workspace">
+                            <section class="panel lineage-map-panel">
+                                <header class="panel-head lineage-panel-head"><div><p class="micro-label">SAMPLE PROVENANCE</p><h2>样本与实验链路</h2><small>追踪动物或细胞来源、衍生样本、实验记录与实验结果。</small></div><label class="lineage-focus-control"><span>聚焦记录</span><select id="lineageFocus"></select></label></header>
+                                <div class="lineage-map" id="lineageMap" aria-label="样本谱系关系图"></div>
+                                <div class="lineage-stage-legend"><span><i data-stage="origin"></i>来源</span><span><i data-stage="sample"></i>样本</span><span><i data-stage="experiment"></i>实验</span><span><i data-stage="result"></i>结果</span></div>
+                            </section>
+                            <aside class="panel lineage-editor-panel">
+                                <div><p class="micro-label">CHAIN OF CUSTODY</p><h2>建立关系</h2><p>选择两个已有条目，保存后会形成可追溯链路。</p></div>
+                                <label><span>来源条目</span><select id="lineageSource"></select></label>
+                                <label><span>目标条目</span><select id="lineageTarget"></select></label>
+                                <label><span>关系</span><select id="lineageRelation"><option>取材</option><option>分装</option><option>衍生</option><option>用于实验</option><option>产生结果</option><option>其他</option></select></label>
+                                <div class="lineage-editor-split"><label><span>数量</span><input id="lineageQuantity" type="number" min="0" step="any" placeholder="可留空"></label><label><span>单位</span><input id="lineageUnit" type="text" placeholder="如 µL、份"></label></div>
+                                <label><span>备注</span><textarea id="lineageNotes" rows="3" placeholder="记录处理条件、批次或关键差异"></textarea></label>
+                                <button class="button primary" id="saveLineageLink" type="button">保存关系</button>
+                                <div class="lineage-link-list" id="lineageLinkList"></div>
+                            </aside>
+                        </div>
+                    </section>
+                    <section class="research-tool-panel" id="toolsCalculatorPanel" data-tools-panel="calculators" hidden>
+                        <div class="calculator-grid">
+                            <article class="panel science-calculator" data-calculator="dilution"><header><span>C1V1 = C2V2</span><h2>稀释计算</h2><p>计算母液体积与需要补充的稀释液体积。</p></header><div class="calculator-fields four"><label><span>母液浓度 C1</span><input id="dilutionC1" type="number" min="0" step="any" value="100"></label><label><span>目标浓度 C2</span><input id="dilutionC2" type="number" min="0" step="any" value="10"></label><label><span>终体积 V2</span><input id="dilutionV2" type="number" min="0" step="any" value="10"></label><label><span>体积单位</span><select id="dilutionUnit"><option>mL</option><option>µL</option><option>L</option></select></label></div><output id="dilutionResult"><strong>母液 1 mL</strong><span>加入稀释液 9 mL</span></output></article>
+                            <article class="panel science-calculator" data-calculator="molarity"><header><span>MASS / MOLARITY</span><h2>摩尔溶液配制</h2><p>根据分子量、目标浓度和体积计算称量质量。</p></header><div class="calculator-fields"><label><span>分子量</span><input id="molarMw" type="number" min="0" step="any" value="180.16"></label><label><span>目标浓度</span><input id="molarConcentration" type="number" min="0" step="any" value="10"></label><label><span>浓度单位</span><select id="molarConcentrationUnit"><option>mM</option><option>µM</option><option>M</option></select></label><label><span>终体积</span><input id="molarVolume" type="number" min="0" step="any" value="100"></label><label><span>体积单位</span><select id="molarVolumeUnit"><option>mL</option><option>µL</option><option>L</option></select></label></div><output id="molarityResult"><strong>需要 180.16 mg</strong><span>按纯度 100% 计算</span></output></article>
+                            <article class="panel science-calculator" data-calculator="seeding"><header><span>CELL SEEDING</span><h2>细胞铺板计算</h2><p>按孔数、目标细胞数与操作余量计算所需总细胞数。</p></header><div class="calculator-fields"><label><span>每孔细胞数</span><input id="seedingPerWell" type="number" min="0" step="any" value="50000"></label><label><span>使用孔数</span><input id="seedingWells" type="number" min="1" step="1" value="24"></label><label><span>细胞浓度 cells/mL</span><input id="seedingConcentration" type="number" min="0" step="any" value="1000000"></label><label><span>操作余量 %</span><input id="seedingOverage" type="number" min="0" max="100" step="1" value="10"></label></div><output id="seedingResult"><strong>需要 1.32 × 10⁶ 个细胞</strong><span>取 1.32 mL 细胞悬液</span></output></article>
+                            <article class="panel science-calculator" data-calculator="mastermix"><header><span>MASTER MIX</span><h2>反应体系放大</h2><p>按反应数量和额外余量计算各组分总量。</p></header><div class="mastermix-settings"><label><span>反应数量</span><input id="mixReactionCount" type="number" min="1" step="1" value="12"></label><label><span>额外余量 %</span><input id="mixOverage" type="number" min="0" max="100" step="1" value="10"></label></div><div class="mastermix-rows" id="mastermixRows"></div><button class="button ghost compact" type="button" data-add-mix-component>＋ 添加组分</button><output id="mastermixResult"></output></article>
+                        </div>
+                    </section>
+                    <section class="research-tool-panel" id="toolsLayoutPanel" data-tools-panel="layout" hidden>
+                        <div class="layout-workspace">
+                            <aside class="panel layout-library-panel"><div><p class="micro-label">SAVED LAYOUTS</p><h2>布局方案</h2><p>布局保存在当前工作区，可关联实验或 Protocol。</p></div><button class="button primary" id="newPlateLayout" type="button">＋ 新建布局</button><div class="plate-layout-list" id="plateLayoutList"></div></aside>
+                            <section class="panel plate-editor-panel">
+                                <div class="plate-editor-toolbar"><label class="wide"><span>布局名称</span><input id="plateLayoutName" type="text" placeholder="例如：BV2 剂量响应"></label><label><span>规格</span><select id="plateFormat"><option value="6">6 孔板</option><option value="12">12 孔板</option><option value="24">24 孔板</option><option value="48">48 孔板</option><option value="96" selected>96 孔板</option><option value="384">384 孔板</option></select></label><label><span>关联实验</span><select id="plateExperiment"></select></label><label><span>关联 Protocol</span><select id="plateProtocol"></select></label></div>
+                                <div class="plate-design-body"><div class="plate-map-shell"><div class="plate-map" id="plateMap" aria-label="多孔板布局编辑器"></div></div><aside class="well-brush-panel"><header><strong id="selectedWellCount">未选择孔位</strong><button type="button" data-clear-well-selection>清除选择</button></header><label><span>样本或组别</span><input id="wellSample" type="text" list="wellSampleMemory" placeholder="例如 Vehicle"></label><datalist id="wellSampleMemory"></datalist><label><span>处理条件</span><input id="wellTreatment" type="text" list="wellTreatmentMemory" placeholder="例如 LPS 100 ng/mL"></label><datalist id="wellTreatmentMemory"></datalist><div class="well-brush-split"><label><span>浓度</span><input id="wellConcentration" type="number" min="0" step="any"></label><label><span>单位</span><input id="wellConcentrationUnit" type="text" placeholder="µM"></label></div><label><span>显示颜色</span><input id="wellColor" type="color" value="#b8e63b"></label><button class="button primary" type="button" data-apply-well-brush>应用到已选孔</button><button class="button ghost" type="button" data-clear-selected-wells>清空已选孔内容</button></aside></div>
+                                <footer class="plate-editor-footer"><span id="plateLayoutStatus">尚未保存</span><div><button class="button danger ghost" type="button" data-delete-plate-layout>删除布局</button><button class="button primary" id="savePlateLayout" type="button">保存布局</button></div></footer>
+                            </section>
+                        </div>
+                    </section>
+                </section>
+
                 <section class="view" id="view-schedule" data-title="日程排班">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>OPERATIONS SCHEDULE</span></p><h1>日程排班</h1><p class="story-quote">“时间有限，但应该能有些帮助。”<cite>——塞雷娅</cite></p></div>
@@ -256,7 +322,7 @@
                     <div class="calendar-view active" id="calendarDayView">
                         <div class="schedule-layout">
                             <section class="panel timeline-panel">
-                                <header class="panel-head"><div><p class="micro-label">DAILY TIMELINE · DRAG TO CREATE</p><h2 id="scheduleDateTitle">今日运行计划</h2></div><span class="drag-hint"><i></i> 拖动创建，可与已有日程重叠</span></header>
+                                <header class="panel-head"><div><p class="micro-label">DAILY TIMELINE</p><h2 id="scheduleDateTitle">今日运行计划</h2></div></header>
                                 <div class="day-timeline" id="dayTimeline" aria-label="每日时间网格"></div>
                             </section>
                             <aside class="panel utilization-panel"><p class="micro-label">FACILITY LOAD</p><h2>资源使用率</h2><div id="facilityLoads"></div><button class="end-day-button" id="endDayButton" type="button"><span aria-hidden="true">✓</span><div><strong>结束今日工作</strong><small>完成今日收尾，查看实验室签退动画</small></div><b aria-hidden="true">→</b></button></aside>
@@ -276,17 +342,12 @@
                         <button class="button primary" type="button" data-add="cell"><span>＋</span> 登记细胞</button>
                         <div class="heading-visual heading-visual-05" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>CULTURE / MAINTENANCE</b><small>RHINE LAB · BIOLOGY</small></span><span class="heading-monogram">CELL</span></div>
                     </div>
-                    <div class="cell-maintenance-layout">
+                    <div class="cell-maintenance-layout cell-maintenance-streamlined">
                         <section class="panel cell-culture-panel">
-                            <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">C</span><div><p class="micro-label">ACTIVE CULTURES</p><h2>正在维持的细胞</h2></div></div><label class="inline-search"><span>⌕</span><input id="cellSearch" type="search" placeholder="搜索细胞、培养基或容器"></label></div>
+                            <div class="module-toolbar in-panel cell-search-toolbar"><label class="inline-search"><span>⌕</span><input id="cellSearch" type="search" placeholder="搜索细胞、培养基或容器"></label></div>
                             <div class="cell-culture-grid" id="cellCultureGrid"></div>
                         </section>
-                        <aside class="panel cell-action-board">
-                            <p class="micro-label">CULTURE HISTORY</p>
-                            <h2>最近培养记录</h2>
-                            <div id="cellMaintenanceQueue"></div>
-                            <div class="cell-workspace-note"><span>↻</span><div><strong>传代记录会持续累积</strong><p>每次操作都可保存容器、比例、代次、汇合度、培养基、备注与照片。</p></div></div>
-                        </aside>
+                        <div id="cellMaintenanceQueue" hidden></div>
                     </div>
                 </section>
             </main>
@@ -542,8 +603,8 @@
     <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
     <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-account-transfer-modal-fix"></script>
-    <script src="js/rhine-lab-pwa.js?v=0.1.9"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=20260818-3"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-research-tools"></script>
+    <script src="js/rhine-lab-pwa.js?v=0.1.9-progressive-ink-logo"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=20260821-2"></script>
 </body>
 </html>

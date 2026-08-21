@@ -1,0 +1,619 @@
+/* Workflow refinements: embedded lineage and protocol-matched tools. */
+:root {
+    --lineage-line: #84ad2f;
+    --lineage-node: #f3f7e9;
+    --lineage-current: #26332d;
+}
+
+#view-tools { display: none !important; }
+#cellMaintenanceQueue { display: none !important; }
+
+/* Detail entry titles share one restrained background in every visual theme. */
+body .record-detail-hero,
+body.background-all-lives .record-detail-hero,
+body.background-black-current .record-detail-hero,
+body.dark-theme.background-all-lives .record-detail-hero,
+body.dark-theme.background-black-current .record-detail-hero {
+    color: #f5f8f1 !important;
+    background:
+        linear-gradient(90deg, rgba(191, 227, 74, .1), transparent 34%),
+        linear-gradient(112deg, #26352f, #18221e) !important;
+    border: 1px solid rgba(169, 207, 56, .35) !important;
+    border-radius: 18px 5px 18px 5px !important;
+    box-shadow: none !important;
+}
+
+body .record-detail-hero::after,
+body.background-all-lives .record-detail-hero::after,
+body.background-black-current .record-detail-hero::after {
+    inset: 0 !important;
+    opacity: .35 !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background:
+        linear-gradient(90deg, transparent 0 72%, rgba(255,255,255,.1) 72% 72.2%, transparent 72.2%),
+        repeating-linear-gradient(135deg, transparent 0 16px, rgba(255,255,255,.035) 16px 17px) !important;
+    mix-blend-mode: normal !important;
+    filter: none !important;
+}
+
+.record-detail-hero :is(h3, p, span) { color: inherit !important; }
+
+/* Cell workspace keeps the records and search without a redundant dashboard/sidebar. */
+.cell-maintenance-streamlined { display: block !important; }
+.cell-maintenance-streamlined .cell-culture-panel { width: 100%; }
+.cell-search-toolbar { justify-content: flex-end; min-height: 62px; }
+.cell-search-toolbar .inline-search { width: min(420px, 100%); margin-left: auto; }
+
+/* Compact embedded provenance view. */
+.embedded-lineage-section { --lineage-border: rgba(95, 119, 105, .24); }
+.embedded-lineage-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 190px) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--lineage-border);
+    background:
+        linear-gradient(rgba(132,173,47,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(132,173,47,.045) 1px, transparent 1px),
+        rgba(247,249,242,.78);
+    background-size: 22px 22px;
+    overflow: hidden;
+}
+
+.embedded-lineage-side { display: grid; gap: 10px; min-width: 0; }
+.embedded-lineage-branch { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: center; min-width: 0; }
+.embedded-lineage-branch.outgoing { grid-template-columns: 28px minmax(0, 1fr); }
+.embedded-lineage-branch.outgoing .embedded-lineage-node { grid-column: 2; }
+.embedded-lineage-branch.outgoing > i { grid-column: 1; grid-row: 1; }
+.embedded-lineage-branch > i { height: 1px; background: var(--lineage-line); }
+.embedded-lineage-branch > em {
+    position: absolute;
+    top: -7px;
+    right: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    font-style: normal;
+    white-space: nowrap;
+}
+.embedded-lineage-branch.outgoing > em { left: 8px; right: auto; }
+
+.embedded-lineage-node,
+.embedded-lineage-current {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 12px 14px;
+    text-align: left;
+    border: 1px solid rgba(132,173,47,.35);
+    background: var(--lineage-node);
+}
+.embedded-lineage-node { cursor: pointer; }
+.embedded-lineage-node:hover { border-color: var(--lineage-line); transform: translateY(-1px); }
+.embedded-lineage-node small,
+.embedded-lineage-current small { color: #668326; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.embedded-lineage-node strong,
+.embedded-lineage-current strong { overflow: hidden; color: var(--text); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.embedded-lineage-node span,
+.embedded-lineage-current span { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.embedded-lineage-current { color: #f3f7ef; background: var(--lineage-current); border-color: rgba(169,207,56,.6); }
+.embedded-lineage-current :is(strong, span) { color: inherit; }
+.embedded-lineage-current span { opacity: .68; }
+.embedded-lineage-remove {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    color: #b44132;
+    background: var(--card);
+    border: 1px solid rgba(180,65,50,.3);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.embedded-lineage-empty { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+.embedded-lineage-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(120px, .7fr) auto;
+    align-items: end;
+    gap: 10px;
+    margin-top: 14px;
+}
+.embedded-lineage-editor label { display: grid; gap: 5px; }
+.embedded-lineage-editor label > span { color: var(--muted); font-size: 11px; font-weight: 800; }
+.embedded-lineage-editor select { min-height: 40px; padding-inline: 10px; color: var(--text); background: var(--field); border: 1px solid var(--line); }
+.embedded-lineage-editor .button { min-height: 40px; }
+
+/* Run workspace: compact tool launcher, calculator modes and editable apparatus grid. */
+.run-current-actions { display: flex; align-items: center; gap: 10px; }
+.run-current-actions > button {
+    min-height: 34px;
+    padding: 0 12px;
+    color: var(--text);
+    background: var(--acid-soft);
+    border: 1px solid rgba(132,173,47,.35);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.run-tool-grid { align-items: start; }
+.apparatus-tool { grid-column: 1 / -1; overflow: hidden; }
+.calculator-header-controls,
+.apparatus-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.apparatus-controls select,
+.calculator-header-controls select,
+.smart-calculator > header select { min-height: 36px; padding: 0 10px; color: var(--text); background: var(--field); border: 1px solid var(--line); }
+.apparatus-dimension { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 800; }
+.apparatus-dimension input { width: 58px; min-height: 36px; padding: 0 7px; color: var(--text); background: var(--field); border: 1px solid var(--line); }
+.apparatus-legend { min-height: 34px; }
+.apparatus-legend > span { color: var(--muted); font-size: 11px; }
+.apparatus-scroll { max-width: 100%; overflow-x: auto; }
+.apparatus-grid {
+    max-width: 100%;
+    padding: 12px !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    border-radius: 10px !important;
+}
+.apparatus-cell {
+    display: grid !important;
+    grid-template-rows: auto minmax(28px, auto);
+    gap: 3px;
+    min-width: 0 !important;
+    min-height: 52px !important;
+    padding: 4px !important;
+    color: var(--text) !important;
+    background: var(--card) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+}
+.apparatus-cell.round { border-radius: 15px !important; }
+.apparatus-cell.filled { border-color: rgba(132,173,47,.7) !important; background: var(--acid-soft) !important; }
+.apparatus-cell > span { color: var(--muted) !important; font-size: 9px !important; font-weight: 800; text-align: center; }
+.apparatus-cell > input {
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    padding: 2px 4px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    font-size: 10px !important;
+    font-weight: 700;
+    text-align: center;
+}
+.apparatus-cell > input:focus { outline: 0; border-bottom-color: var(--lineage-line); }
+.smart-calculator-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.smart-calculator-fields label { display: grid; gap: 5px; }
+.smart-calculator-fields span { color: var(--muted); font-size: 11px; font-weight: 800; }
+.smart-calculator-fields input { width: 100%; min-height: 40px; padding: 0 10px; color: var(--text); background: var(--field); border: 1px solid var(--line); }
+.calculator-result-row .calculator-equals { width: 44px; min-width: 44px; padding: 0; font-size: 20px; font-weight: 800; }
+
+.dark-theme {
+    --lineage-line: #b1db4a;
+    --lineage-node: #202b26;
+    --lineage-current: #101814;
+}
+.dark-theme .embedded-lineage-flow { background-color: rgba(18,25,21,.9); border-color: rgba(177,219,74,.2); }
+.dark-theme .embedded-lineage-node { border-color: rgba(177,219,74,.2); }
+.dark-theme .embedded-lineage-node:hover { border-color: rgba(177,219,74,.65); }
+
+@media (max-width: 760px) {
+    .embedded-lineage-flow { grid-template-columns: 1fr; }
+    .embedded-lineage-branch,
+    .embedded-lineage-branch.outgoing { grid-template-columns: 24px minmax(0, 1fr); }
+    .embedded-lineage-branch .embedded-lineage-node,
+    .embedded-lineage-branch.outgoing .embedded-lineage-node { grid-column: 2; }
+    .embedded-lineage-branch > i,
+    .embedded-lineage-branch.outgoing > i { grid-column: 1; grid-row: 1; }
+    .embedded-lineage-current { grid-row: 1; }
+    .incoming-side { grid-row: 2; }
+    .outgoing-side { grid-row: 3; }
+    .embedded-lineage-editor { grid-template-columns: 1fr; }
+    .run-current-step { align-items: flex-start; }
+}
+
+/* Rhine Life entrance: a brief identity reveal shared by web and installed builds. */
+.app-boot-screen,
+html.native-app .app-boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 16px;
+    overflow: hidden;
+    color: #1d2722;
+    background:
+        linear-gradient(rgba(76, 105, 84, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(76, 105, 84, .07) 1px, transparent 1px),
+        radial-gradient(circle at 50% 58%, rgba(185, 235, 34, .27), transparent 27%),
+        linear-gradient(145deg, #fbfcf7 0 48%, #edf3e5 48% 100%);
+    background-size: 28px 28px, 28px 28px, auto, auto;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .48s ease, visibility .48s ease, filter .48s ease;
+}
+
+.app-boot-screen::before,
+.app-boot-screen::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.app-boot-screen::before {
+    width: min(72vw, 880px);
+    height: min(72vw, 880px);
+    border: 1px solid rgba(61, 88, 70, .16);
+    border-radius: 50%;
+    animation: boot-field-in 1s cubic-bezier(.2, .75, .2, 1) both;
+}
+
+.app-boot-screen::after {
+    inset: 0;
+    background: linear-gradient(110deg, transparent 39%, rgba(255,255,255,.85) 48%, transparent 57%);
+    transform: translateX(-115%);
+    animation: boot-field-sweep 1.25s .18s ease both;
+}
+
+.app-boot-screen.is-hidden,
+html.native-app .app-boot-screen.is-hidden {
+    visibility: hidden;
+    opacity: 0;
+    filter: blur(6px);
+    pointer-events: none;
+}
+
+.boot-brand {
+    position: relative;
+    width: clamp(190px, 28vw, 280px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+}
+
+.boot-logo-frame {
+    position: relative;
+    z-index: 3;
+    width: 74%;
+    padding: 22px 18px;
+    background: rgba(255,255,255,.52);
+    border: 1px solid rgba(36, 51, 44, .18);
+    backdrop-filter: blur(7px);
+    clip-path: inset(0 100% 0 0);
+    animation: boot-logo-reveal .72s .22s cubic-bezier(.2, .82, .2, 1) forwards;
+}
+
+.boot-logo-frame img { display: block; width: 100%; height: auto; }
+.boot-orbit { position: absolute; border: 1px solid rgba(81, 111, 90, .3); border-radius: 50%; }
+.boot-orbit-outer { inset: 1%; animation: boot-orbit-in .9s cubic-bezier(.2,.8,.2,1) both, boot-orbit-turn 7s 1s linear infinite; }
+.boot-orbit-inner { inset: 17%; border-style: dashed; animation: boot-orbit-in .75s .12s cubic-bezier(.2,.8,.2,1) both, boot-orbit-turn 5.5s 1s linear infinite reverse; }
+.boot-orbit-outer::before,
+.boot-orbit-inner::before { content: ""; position: absolute; top: 50%; left: -4px; width: 8px; height: 8px; margin-top: -4px; background: var(--acid-strong); border-radius: 50%; box-shadow: 0 0 0 5px rgba(185,235,34,.13); }
+.boot-scan-line { position: absolute; z-index: 4; left: 9%; right: 9%; top: 50%; height: 2px; background: linear-gradient(90deg, transparent, #8eba23 18% 82%, transparent); box-shadow: 0 0 15px rgba(142,186,35,.5); animation: boot-scan 1.05s .18s ease both; }
+
+.boot-copy { position: relative; z-index: 2; display: grid; justify-items: center; gap: 5px; animation: boot-copy-in .48s .68s ease both; }
+.boot-copy strong { font: 800 12px/1 var(--font-interface); letter-spacing: .32em; }
+.boot-copy span { color: #69756e; font: 600 12px/1.2 var(--font-interface); letter-spacing: .12em; }
+.boot-progress { position: relative; z-index: 2; width: min(260px, 58vw); height: 2px; overflow: hidden; background: rgba(54, 72, 63, .14); }
+.boot-progress i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #8db529, var(--acid)); transform-origin: left; animation: boot-progress 1.25s .12s cubic-bezier(.2,.75,.2,1) both; }
+
+body.dark-theme .app-boot-screen {
+    color: #f2f6ef;
+    background:
+        linear-gradient(rgba(183, 221, 196, .055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(183, 221, 196, .055) 1px, transparent 1px),
+        radial-gradient(circle at 50% 58%, rgba(154, 201, 39, .14), transparent 27%),
+        linear-gradient(145deg, #19211d 0 48%, #101613 48% 100%);
+    background-size: 28px 28px, 28px 28px, auto, auto;
+}
+body.dark-theme .boot-logo-frame { background: rgba(244,248,239,.92); border-color: rgba(205,232,215,.2); }
+body.dark-theme .boot-copy span { color: #aeb9b2; }
+body.dark-theme .boot-orbit { border-color: rgba(184, 218, 196, .24); }
+
+@keyframes boot-logo-reveal { to { clip-path: inset(0 0 0 0); } }
+@keyframes boot-orbit-in { from { opacity: 0; transform: scale(.62) rotate(-22deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes boot-orbit-turn { to { transform: rotate(360deg); } }
+@keyframes boot-scan { 0% { opacity: 0; transform: translateY(-72px) scaleX(.2); } 35% { opacity: 1; } 100% { opacity: 0; transform: translateY(72px) scaleX(1); } }
+@keyframes boot-copy-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes boot-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes boot-field-in { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: scale(1); } }
+@keyframes boot-field-sweep { to { transform: translateX(115%); } }
+
+/* Line-drawn mark: outline first, then the + / - symbols and wordmark. */
+.app-boot-screen,
+html.native-app .app-boot-screen {
+    gap: 0;
+    background:
+        radial-gradient(circle at 50% 54%, rgba(185, 235, 34, .15), transparent 35%),
+        #f3f5ef;
+}
+
+.app-boot-screen::before,
+.app-boot-screen::after { display: none; }
+
+.boot-brand {
+    width: clamp(340px, 52vw, 560px);
+    aspect-ratio: 512 / 430;
+    background: none;
+    border: 0;
+}
+
+.boot-line-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    color: #25302b;
+    background: none;
+}
+
+.boot-logo-outline {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 2300;
+    stroke-dashoffset: 2300;
+    animation: boot-line-draw 1.02s .08s cubic-bezier(.45, 0, .2, 1) forwards;
+}
+
+.boot-logo-symbols {
+    fill: var(--acid-strong);
+}
+.boot-logo-symbols path {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: boot-symbols-in .34s cubic-bezier(.18, .86, .34, 1.2) forwards;
+}
+.boot-logo-symbols path:first-child { animation-delay: .88s; }
+.boot-logo-symbols path:last-child { animation-delay: 1s; }
+
+.boot-logo-wordmark {
+    fill: currentColor;
+    font-family: var(--font-latin, Helvetica, Arial, sans-serif);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    transform-origin: center;
+    animation: boot-wordmark-in .46s 1.12s ease forwards;
+}
+
+body.dark-theme .app-boot-screen {
+    background:
+        radial-gradient(circle at 50% 54%, rgba(154, 201, 39, .12), transparent 35%),
+        #151c19;
+}
+body.dark-theme .boot-line-logo { color: #f0f4ed; }
+
+@keyframes boot-line-draw {
+    0% { opacity: 0; stroke-dashoffset: 2300; }
+    8% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes boot-symbols-in {
+    from { opacity: 0; transform: scale(.58); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes boot-wordmark-in {
+    from { opacity: 0; transform: translateY(10px); letter-spacing: 24px; }
+    to { opacity: 1; transform: translateY(0); letter-spacing: 16px; }
+}
+
+/* Single-stroke logo geometry with centered symbols and elastic settling. */
+.boot-brand {
+    width: clamp(390px, 58vw, 640px);
+    aspect-ratio: 600 / 380;
+}
+.boot-line-logo { aspect-ratio: 600 / 380; }
+.boot-logo-centerline {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 20;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation:
+        boot-centerline-draw 1.62s .12s cubic-bezier(.48, 0, .2, 1) forwards,
+        boot-centerline-settle .72s 1.52s cubic-bezier(.2, .8, .2, 1) both;
+}
+.boot-logo-symbols { fill: none; stroke: var(--acid-strong); stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.boot-logo-symbols .boot-logo-plus,
+.boot-logo-symbols .boot-logo-minus {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: boot-symbol-spring .55s cubic-bezier(.22, 1.4, .36, 1) forwards;
+}
+.boot-logo-symbols .boot-logo-plus { animation-delay: 1.45s; }
+.boot-logo-symbols .boot-logo-minus { animation-delay: 1.58s; }
+.boot-logo-wordmark {
+    font-size: 32px;
+    animation: boot-wordmark-settle .58s 1.88s cubic-bezier(.2, .9, .28, 1.15) forwards;
+}
+
+@keyframes boot-centerline-draw {
+    0% { opacity: 0; stroke-dashoffset: 1; }
+    6% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes boot-centerline-settle {
+    0% { transform: scaleX(1) scaleY(1); }
+    28% { transform: scaleX(1.045) scaleY(.93); }
+    55% { transform: scaleX(.975) scaleY(1.035); }
+    76% { transform: scaleX(1.012) scaleY(.988); }
+    100% { transform: scaleX(1) scaleY(1); }
+}
+@keyframes boot-symbol-spring {
+    0% { opacity: 0; transform: scale(.25) rotate(-10deg); }
+    55% { opacity: 1; transform: scale(1.18) rotate(3deg); }
+    76% { opacity: 1; transform: scale(.92) rotate(-1deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes boot-wordmark-settle {
+    0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: 26px; }
+    65% { opacity: 1; transform: translateY(-2px) scale(1.015); letter-spacing: 15px; }
+    100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 16px; }
+}
+
+@media (max-width: 600px) {
+    .boot-brand { width: min(94vw, 500px); }
+    .boot-logo-centerline { stroke-width: 18; }
+    .boot-logo-symbols { stroke-width: 16; }
+    .boot-logo-wordmark { font-size: 29px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .app-boot-screen *, .app-boot-screen::before, .app-boot-screen::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Open-ended Rhine mark: ink starts at the lower break and finishes above it. */
+.app-boot-screen,
+html.native-app .app-boot-screen,
+body.dark-theme .app-boot-screen {
+    color: #111615;
+    background: radial-gradient(circle at 50% 52%, rgba(185, 235, 34, .12), transparent 38%), #f3f5ef;
+}
+.boot-line-logo,
+body.dark-theme .boot-line-logo { color: #111615; }
+.boot-logo-centerline {
+    stroke-width: 5;
+    transform: none;
+    animation:
+        boot-ink-write 2.18s .14s cubic-bezier(.38, 0, .22, 1) forwards,
+        boot-ink-spread 2.15s .28s cubic-bezier(.25, .58, .22, 1) forwards;
+}
+.boot-logo-symbols,
+body.dark-theme .boot-logo-symbols {
+    stroke: #111615;
+    stroke-width: 24;
+}
+.boot-logo-symbols .boot-logo-plus,
+.boot-logo-symbols .boot-logo-minus {
+    animation: boot-symbol-ink .5s cubic-bezier(.2, .72, .24, 1) forwards;
+}
+.boot-logo-symbols .boot-logo-plus { animation-delay: 1.82s; }
+.boot-logo-symbols .boot-logo-minus { animation-delay: 1.96s; }
+.boot-logo-wordmark {
+    fill: #111615;
+    animation: boot-wordmark-ink .58s 2.25s ease forwards;
+}
+
+@keyframes boot-ink-write {
+    0% { opacity: 0; stroke-dashoffset: 1; }
+    5% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes boot-ink-spread {
+    0% { stroke-width: 5; }
+    30% { stroke-width: 9; }
+    58% { stroke-width: 17; }
+    80% { stroke-width: 27; }
+    100% { stroke-width: 34; }
+}
+@keyframes boot-symbol-ink {
+    0% { opacity: 0; transform: scale(.72); }
+    100% { opacity: 1; transform: scale(1); }
+}
+@keyframes boot-wordmark-ink {
+    0% { opacity: 0; transform: translateY(8px); letter-spacing: 22px; }
+    100% { opacity: 1; transform: translateY(0); letter-spacing: 16px; }
+}
+
+@media (max-width: 600px) {
+    .boot-logo-centerline { stroke-width: 4; }
+    .boot-logo-symbols { stroke-width: 21; }
+}
+@media (max-width: 760px) {
+    .run-current-actions { flex-direction: column-reverse; align-items: flex-end; }
+    .smart-calculator-fields { grid-template-columns: 1fr; }
+    .cell-search-toolbar .inline-search { width: 100%; }
+}
+
+/* Progressive ink trace: later strokes arrive heavier while every visible segment blooms together. */
+.boot-ink-segments { --ink-final-width: 34; }
+.boot-ink-segment {
+    fill: none;
+    stroke: #111615;
+    stroke-width: var(--ink-start-width);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    animation:
+        boot-ink-segment-write .43s var(--ink-write-delay) cubic-bezier(.38, 0, .2, 1) forwards,
+        boot-ink-segment-spread 2.45s .62s cubic-bezier(.28, .52, .18, 1) forwards;
+}
+.ink-segment-01 { --ink-start-width: 9;  --ink-write-delay: .12s; }
+.ink-segment-02 { --ink-start-width: 12; --ink-write-delay: .43s; }
+.ink-segment-03 { --ink-start-width: 15; --ink-write-delay: .74s; }
+.ink-segment-04 { --ink-start-width: 18; --ink-write-delay: 1.05s; }
+.ink-segment-05 { --ink-start-width: 21; --ink-write-delay: 1.36s; }
+.ink-segment-06 { --ink-start-width: 25; --ink-write-delay: 1.67s; }
+.ink-segment-07 { --ink-start-width: 29; --ink-write-delay: 1.98s; }
+.ink-segment-08 { --ink-start-width: 34; --ink-write-delay: 2.29s; }
+
+.boot-logo-symbols .boot-logo-plus,
+.boot-logo-symbols .boot-logo-minus {
+    animation: boot-ink-symbol-reveal .46s cubic-bezier(.2, .72, .24, 1) forwards;
+}
+.boot-logo-symbols .boot-logo-plus { animation-delay: 3.16s; }
+.boot-logo-symbols .boot-logo-minus { animation-delay: 3.28s; }
+.boot-logo-wordmark {
+    animation: boot-ink-wordmark-reveal .52s 3.52s ease forwards;
+}
+
+@keyframes boot-ink-segment-write {
+    0% { opacity: 0; stroke-dashoffset: 1; }
+    9% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
+}
+
+@keyframes boot-ink-segment-spread {
+    from { stroke-width: var(--ink-start-width); }
+    to { stroke-width: var(--ink-final-width); }
+}
+
+@keyframes boot-ink-symbol-reveal {
+    0% { opacity: 0; transform: scale(.88); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes boot-ink-wordmark-reveal {
+    0% { opacity: 0; transform: translateY(7px); letter-spacing: 21px; }
+    100% { opacity: 1; transform: translateY(0); letter-spacing: 16px; }
+}
+
+@media (max-width: 600px) {
+    .boot-ink-segments { --ink-final-width: 31; }
+    .ink-segment-01 { --ink-start-width: 8; }
+    .ink-segment-02 { --ink-start-width: 11; }
+    .ink-segment-03 { --ink-start-width: 14; }
+    .ink-segment-04 { --ink-start-width: 17; }
+    .ink-segment-05 { --ink-start-width: 20; }
+    .ink-segment-06 { --ink-start-width: 23; }
+    .ink-segment-07 { --ink-start-width: 27; }
+    .ink-segment-08 { --ink-start-width: 31; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boot-ink-segment,
+    .boot-logo-symbols .boot-logo-plus,
+    .boot-logo-symbols .boot-logo-minus,
+    .boot-logo-wordmark { animation-delay: 0s !important; }
+}
