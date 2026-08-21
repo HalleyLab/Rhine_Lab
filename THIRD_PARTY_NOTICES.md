@@ -46,3 +46,11 @@ Reference for client-side multi-well plate selection and annotation workflows.
 ### PCR Plate
 
 Reference for compact 96-well visual layout conventions.
+
+## Visual motion reference
+
+The Rhine Lab loading animation uses original SVG and CSS. Its layered ribbon timing was visually informed by the official *Arknights* “Rhodes Island Co-op Competition” promotional video.
+
+- Reference: https://www.bilibili.com/video/BV1cZ421773t/
+- Rights holder: Hypergryph / Arknights
+- No video footage, audio, game artwork, source code, or other assets from the reference are bundled with Rhine Lab.

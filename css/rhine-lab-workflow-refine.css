@@ -544,75 +544,104 @@ body.dark-theme .boot-logo-symbols {
     .cell-search-toolbar .inline-search { width: 100%; }
 }
 
-/* Progressive ink trace: later strokes arrive heavier while every visible segment blooms together. */
-.boot-ink-segments { --ink-final-width: 34; }
-.boot-ink-segment {
+/* Kinetic ribbon intro, informed by the layered race-line motion in Arknights' Co-op Competition PV. */
+.app-boot-screen,
+html.native-app .app-boot-screen,
+body.dark-theme .app-boot-screen {
+    color: #111615;
+    background: #f5f6f1;
+}
+.boot-brand {
+    contain: layout paint;
+    isolation: isolate;
+}
+.boot-line-logo {
+    overflow: visible;
+    color: #111615;
+}
+.boot-race-line,
+.boot-logo-final {
     fill: none;
-    stroke: #111615;
-    stroke-width: var(--ink-start-width);
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
+    transform-box: view-box;
+    transform-origin: center;
+    will-change: stroke-dashoffset, opacity;
+}
+.boot-race-line {
+    stroke-width: 7;
     opacity: 0;
     animation:
-        boot-ink-segment-write .43s var(--ink-write-delay) cubic-bezier(.38, 0, .2, 1) forwards,
-        boot-ink-segment-spread 2.45s .62s cubic-bezier(.28, .52, .18, 1) forwards;
+        boot-race-trace 1.42s var(--race-delay) cubic-bezier(.34, .02, .18, 1) forwards,
+        boot-race-clear .38s 1.68s ease-out forwards;
 }
-.ink-segment-01 { --ink-start-width: 9;  --ink-write-delay: .12s; }
-.ink-segment-02 { --ink-start-width: 12; --ink-write-delay: .43s; }
-.ink-segment-03 { --ink-start-width: 15; --ink-write-delay: .74s; }
-.ink-segment-04 { --ink-start-width: 18; --ink-write-delay: 1.05s; }
-.ink-segment-05 { --ink-start-width: 21; --ink-write-delay: 1.36s; }
-.ink-segment-06 { --ink-start-width: 25; --ink-write-delay: 1.67s; }
-.ink-segment-07 { --ink-start-width: 29; --ink-write-delay: 1.98s; }
-.ink-segment-08 { --ink-start-width: 34; --ink-write-delay: 2.29s; }
+
+.race-cyan { --race-delay: .06s; stroke: #43cfd0; transform: translateY(-8px); }
+.race-magenta { --race-delay: .12s; stroke: #d12b64; transform: translateY(7px); }
+.race-acid { --race-delay: .18s; stroke: #b7df34; transform: translateY(-3px); }
+.race-graphite { --race-delay: .24s; stroke: #697477; transform: translateY(3px); }
+
+.boot-logo-final {
+    stroke: #111615;
+    stroke-width: 32;
+    opacity: 0;
+    animation: boot-final-line 1.54s .38s cubic-bezier(.4, 0, .16, 1) forwards;
+}
 
 .boot-logo-symbols .boot-logo-plus,
 .boot-logo-symbols .boot-logo-minus {
-    animation: boot-ink-symbol-reveal .46s cubic-bezier(.2, .72, .24, 1) forwards;
+    opacity: 0;
+    stroke: #111615;
+    stroke-width: 24;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transform: none;
+    animation: boot-symbol-line .3s cubic-bezier(.34, 0, .18, 1) forwards;
 }
-.boot-logo-symbols .boot-logo-plus { animation-delay: 3.16s; }
-.boot-logo-symbols .boot-logo-minus { animation-delay: 3.28s; }
+.boot-logo-symbols .boot-logo-plus { animation-delay: 2.04s; }
+.boot-logo-symbols .boot-logo-minus { animation-delay: 2.14s; }
 .boot-logo-wordmark {
-    animation: boot-ink-wordmark-reveal .52s 3.52s ease forwards;
+    fill: #111615;
+    opacity: 0;
+    animation: boot-race-wordmark .42s 2.34s cubic-bezier(.24, .72, .2, 1) forwards;
 }
 
-@keyframes boot-ink-segment-write {
+@keyframes boot-race-trace {
     0% { opacity: 0; stroke-dashoffset: 1; }
-    9% { opacity: 1; }
+    7% { opacity: 1; }
     100% { opacity: 1; stroke-dashoffset: 0; }
 }
-
-@keyframes boot-ink-segment-spread {
-    from { stroke-width: var(--ink-start-width); }
-    to { stroke-width: var(--ink-final-width); }
+@keyframes boot-race-clear {
+    from { opacity: 1; }
+    to { opacity: 0; }
 }
-
-@keyframes boot-ink-symbol-reveal {
-    0% { opacity: 0; transform: scale(.88); }
-    100% { opacity: 1; transform: scale(1); }
+@keyframes boot-final-line {
+    0% { opacity: 0; stroke-dashoffset: 1; }
+    5% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
 }
-
-@keyframes boot-ink-wordmark-reveal {
-    0% { opacity: 0; transform: translateY(7px); letter-spacing: 21px; }
+@keyframes boot-symbol-line {
+    0% { opacity: 0; stroke-dashoffset: 1; }
+    12% { opacity: 1; }
+    100% { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes boot-race-wordmark {
+    0% { opacity: 0; transform: translateY(10px); letter-spacing: 22px; }
     100% { opacity: 1; transform: translateY(0); letter-spacing: 16px; }
 }
 
 @media (max-width: 600px) {
-    .boot-ink-segments { --ink-final-width: 31; }
-    .ink-segment-01 { --ink-start-width: 8; }
-    .ink-segment-02 { --ink-start-width: 11; }
-    .ink-segment-03 { --ink-start-width: 14; }
-    .ink-segment-04 { --ink-start-width: 17; }
-    .ink-segment-05 { --ink-start-width: 20; }
-    .ink-segment-06 { --ink-start-width: 23; }
-    .ink-segment-07 { --ink-start-width: 27; }
-    .ink-segment-08 { --ink-start-width: 31; }
+    .boot-race-line { stroke-width: 6; }
+    .boot-logo-final { stroke-width: 29; }
+    .boot-logo-symbols .boot-logo-plus,
+    .boot-logo-symbols .boot-logo-minus { stroke-width: 21; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .boot-ink-segment,
+    .boot-race-line,
+    .boot-logo-final,
     .boot-logo-symbols .boot-logo-plus,
     .boot-logo-symbols .boot-logo-minus,
     .boot-logo-wordmark { animation-delay: 0s !important; }

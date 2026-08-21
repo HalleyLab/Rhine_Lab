@@ -13,7 +13,7 @@
         if (bootFinished || !bootScreen) return;
         bootFinished = true;
         const now = window.performance && performance.now ? performance.now() : Date.now();
-        const remaining = Math.max(0, 4350 - (now - bootStartedAt));
+        const remaining = Math.max(0, 3200 - (now - bootStartedAt));
         window.setTimeout(function () {
             window.requestAnimationFrame(function () {
                 bootScreen.classList.add('is-hidden');
@@ -24,7 +24,7 @@
 
     if (bootScreen) {
         window.addEventListener('rhine:ready', finishBoot, { once: true });
-        window.setTimeout(finishBoot, 4200);
+        window.setTimeout(finishBoot, 3600);
     }
 
     if (nativeApp) {
