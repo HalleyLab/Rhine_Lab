@@ -14,7 +14,7 @@
     "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease",
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
-    "desktop:build": "pnpm desktop:assets && electron-builder --win nsis"
+    "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
