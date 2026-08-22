@@ -7,7 +7,7 @@ on:
       - "v*"
 
 env:
-  RELEASE_TAG: v0.2.0
+  RELEASE_TAG: v0.2.1
 
 permissions:
   contents: write
@@ -51,16 +51,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $files = Get-ChildItem dist/desktop -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { $_.FullName }
+          $version = node -p "require('./package.json').version"
+          $files = Get-ChildItem "dist/release-$version" -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { $_.FullName }
           if (-not $files) { throw 'No Windows release files were generated.' }
           gh release upload $env:RELEASE_TAG $files --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Windows-Setup
           path: |
-            dist/desktop/*.exe
-            dist/desktop/*.blockmap
-            dist/desktop/latest.yml
+            dist/release-*/*.exe
+            dist/release-*/*.blockmap
+            dist/release-*/latest.yml
           retention-days: 30
           if-no-files-found: error
 
@@ -101,16 +102,16 @@ jobs:
       - name: Prepare release files
         run: |
           version=$(node -p "require('./package.json').version")
-          mkdir -p dist/release
-          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/release/Rhine-Lab-${version}-Android.apk"
-          sha256sum "dist/release/Rhine-Lab-${version}-Android.apk" > "dist/release/Rhine-Lab-${version}-Android.apk.sha256"
+          mkdir -p "dist/release-${version}"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/release-${version}/Rhine-Lab-${version}-Android.apk"
+          sha256sum "dist/release-${version}/Rhine-Lab-${version}-Android.apk" > "dist/release-${version}/Rhine-Lab-${version}-Android.apk.sha256"
       - name: Upload APK to GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$RELEASE_TAG" dist/release/* --clobber
+        run: gh release upload "$RELEASE_TAG" dist/release-*/* --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Android
-          path: dist/release/*
+          path: dist/release-*/*
           retention-days: 30
           if-no-files-found: error

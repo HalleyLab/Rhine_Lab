@@ -589,7 +589,7 @@ body.dark-theme .app-boot-screen {
 
 .boot-logo-final {
     stroke: #111615;
-    stroke-width: 32;
+    stroke-width: 36;
     opacity: 0;
     animation: boot-final-line .72s .28s cubic-bezier(.4, 0, .16, 1) forwards;
 }
@@ -598,7 +598,7 @@ body.dark-theme .app-boot-screen {
 .boot-logo-symbols .boot-logo-minus {
     opacity: 0;
     stroke: #111615;
-    stroke-width: 24;
+    stroke-width: 26;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     transform: none;
@@ -635,9 +635,9 @@ body.dark-theme .app-boot-screen {
 
 @media (max-width: 600px) {
     .boot-race-line { stroke-width: 6; }
-    .boot-logo-final { stroke-width: 29; }
+    .boot-logo-final { stroke-width: 33; }
     .boot-logo-symbols .boot-logo-plus,
-    .boot-logo-symbols .boot-logo-minus { stroke-width: 21; }
+    .boot-logo-symbols .boot-logo-minus { stroke-width: 23; }
 }
 
 @media (prefers-reduced-motion: reduce) {

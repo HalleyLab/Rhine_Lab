@@ -92,14 +92,14 @@ jobs:
 
       - name: Prepare downloadable package
         run: |
-          mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Rhine-Lab-0.2.0-Android.apk
-          sha256sum dist/Rhine-Lab-0.2.0-Android.apk > dist/Rhine-Lab-0.2.0-Android.apk.sha256
+          mkdir -p dist/release-0.2.1
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/release-0.2.1/Rhine-Lab-0.2.1-Android.apk
+          sha256sum dist/release-0.2.1/Rhine-Lab-0.2.1-Android.apk > dist/release-0.2.1/Rhine-Lab-0.2.1-Android.apk.sha256
 
       - name: Upload internal test package
         uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Android-Internal
-          path: dist/*
+          path: dist/release-0.2.1/*
           retention-days: 30
           if-no-files-found: error

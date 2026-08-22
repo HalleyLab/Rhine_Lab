@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v64';
+const CACHE_NAME = 'rhine-lab-pages-v65';
 const APP_SHELL = [
     './',
     './index.html',
@@ -11,12 +11,12 @@ const APP_SHELL = [
     './js/vendor/supabase.min.js?v=2.112.3',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
     './js/rhine-lab-sync-v019.js?v=0.1.9-account-transfer-modal-fix',
-    './js/rhine-lab-pwa.js?v=0.1.9',
+    './js/rhine-lab-pwa.js?v=0.2.1',
     './js/rhine-lab-bootstrap.js?v=0.1.9-storage-recovery',
     './js/rhine-lab.js?v=20260816-2',
     './data/seed.json',
     './images/rhine-life-logo.png',
-    './images/rhine-life-app-icon.png?v=0.1.9'
+    './images/rhine-life-app-icon.png?v=0.2.1'
 ];
 
 self.addEventListener('install', function (event) {

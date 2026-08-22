@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",
@@ -12,6 +12,11 @@
     "mobile:sync": "pnpm mobile:prepare && pnpm mobile:assets && cap sync android && pnpm mobile:icons",
     "android:debug": "pnpm mobile:sync && cd android && gradlew.bat assembleDebug",
     "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease",
+    "android:collect": "node scripts/collect-android-release.mjs",
+    "android:package": "pnpm android:debug && pnpm android:collect",
+    "release:clean": "node scripts/clean-release.mjs",
+    "release:finalize": "node scripts/finalize-release.mjs",
+    "release:local": "pnpm release:clean && pnpm desktop:build && pnpm android:debug && pnpm android:collect && pnpm release:finalize",
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
     "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never"
@@ -41,7 +46,7 @@
     "productName": "Rhine Lab",
     "artifactName": "Rhine-Lab-${version}-Windows-Setup.${ext}",
     "directories": {
-      "output": "dist/desktop"
+      "output": "dist/release-${version}"
     },
     "files": [
       "index.html",

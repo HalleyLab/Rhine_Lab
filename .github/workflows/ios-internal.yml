@@ -17,13 +17,13 @@ permissions:
 
 jobs:
   build:
-    name: Signed iOS 0.2.0 IPA
+    name: Signed iOS 0.2.1 IPA
     runs-on: macos-15
     timeout-minutes: 45
 
     env:
-      APP_VERSION: 0.2.0
-      APP_BUILD: 20
+      APP_VERSION: 0.2.1
+      APP_BUILD: 21
       APP_BUNDLE_ID: com.halleylab.rhinelab
       IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
       IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -147,29 +147,29 @@ jobs:
           </plist>
           PLIST
 
-          mkdir -p dist/release-0.2.0
+          mkdir -p dist/release-0.2.1
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/RhineLab.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
           ipa=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' -print -quit)
           test -n "$ipa"
-          cp "$ipa" dist/release-0.2.0/Rhine-Lab-0.2.0-iOS.ipa
-          shasum -a 256 dist/release-0.2.0/Rhine-Lab-0.2.0-iOS.ipa > dist/release-0.2.0/Rhine-Lab-0.2.0-iOS.ipa.sha256
+          cp "$ipa" dist/release-0.2.1/Rhine-Lab-0.2.1-iOS.ipa
+          shasum -a 256 dist/release-0.2.1/Rhine-Lab-0.2.1-iOS.ipa > dist/release-0.2.1/Rhine-Lab-0.2.1-iOS.ipa.sha256
 
       - name: Upload signed IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rhine-Lab-iOS-Internal-0.2.0
-          path: dist/release-0.2.0/*
+          name: Rhine-Lab-iOS-Internal-0.2.1
+          path: dist/release-0.2.1/*
           retention-days: 30
           if-no-files-found: error
 
-      - name: Add IPA beside the APK in v0.2.0 Release
+      - name: Add IPA beside the APK in v0.2.1 Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload v0.2.0 \
-            "dist/release-0.2.0/Rhine-Lab-0.2.0-iOS.ipa#Rhine Lab 0.2.0 signed iOS IPA" \
-            "dist/release-0.2.0/Rhine-Lab-0.2.0-iOS.ipa.sha256#iOS IPA SHA-256" \
+          gh release upload v0.2.1 \
+            "dist/release-0.2.1/Rhine-Lab-0.2.1-iOS.ipa#Rhine Lab 0.2.1 signed iOS IPA" \
+            "dist/release-0.2.1/Rhine-Lab-0.2.1-iOS.ipa.sha256#iOS IPA SHA-256" \
             --clobber
