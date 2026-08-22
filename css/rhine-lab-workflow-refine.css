@@ -552,13 +552,15 @@ body.dark-theme .app-boot-screen {
     background: #f5f6f1;
 }
 .boot-brand {
-    contain: layout paint;
+    contain: layout;
+    overflow: visible;
     isolation: isolate;
 }
 .boot-line-logo {
     overflow: visible;
     color: #111615;
 }
+
 .boot-race-line,
 .boot-logo-final {
     fill: none;
@@ -573,9 +575,9 @@ body.dark-theme .app-boot-screen {
 .boot-race-line {
     stroke-width: 7;
     opacity: 0;
-    animation:
-        boot-race-trace 1.42s var(--race-delay) cubic-bezier(.34, .02, .18, 1) forwards,
-        boot-race-clear .38s 1.68s ease-out forwards;
+    stroke-dasharray: .5089 2;
+    stroke-dashoffset: .5089;
+    animation: boot-ribbon-flow 2.35s var(--race-delay) linear forwards;
 }
 
 .race-cyan { --race-delay: .06s; stroke: #43cfd0; transform: translateY(-8px); }
@@ -587,7 +589,7 @@ body.dark-theme .app-boot-screen {
     stroke: #111615;
     stroke-width: 32;
     opacity: 0;
-    animation: boot-final-line 1.54s .38s cubic-bezier(.4, 0, .16, 1) forwards;
+    animation: boot-final-line 1.42s .88s cubic-bezier(.4, 0, .16, 1) forwards;
 }
 
 .boot-logo-symbols .boot-logo-plus,
@@ -600,22 +602,22 @@ body.dark-theme .app-boot-screen {
     transform: none;
     animation: boot-symbol-line .3s cubic-bezier(.34, 0, .18, 1) forwards;
 }
-.boot-logo-symbols .boot-logo-plus { animation-delay: 2.04s; }
-.boot-logo-symbols .boot-logo-minus { animation-delay: 2.14s; }
+.boot-logo-symbols .boot-logo-plus { animation-delay: 2.62s; }
+.boot-logo-symbols .boot-logo-minus { animation-delay: 2.72s; }
 .boot-logo-wordmark {
     fill: #111615;
     opacity: 0;
-    animation: boot-race-wordmark .42s 2.34s cubic-bezier(.24, .72, .2, 1) forwards;
+    animation: boot-race-wordmark .42s 2.92s cubic-bezier(.24, .72, .2, 1) forwards;
 }
 
-@keyframes boot-race-trace {
-    0% { opacity: 0; stroke-dashoffset: 1; }
-    7% { opacity: 1; }
-    100% { opacity: 1; stroke-dashoffset: 0; }
-}
-@keyframes boot-race-clear {
-    from { opacity: 1; }
-    to { opacity: 0; }
+@keyframes boot-ribbon-flow {
+    0% { opacity: 0; stroke-dasharray: .5089 2; stroke-dashoffset: .5089; }
+    2% { opacity: 1; }
+    88% { opacity: 1; stroke-dasharray: .5089 2; }
+    93% { stroke-dasharray: .26 2; }
+    96% { stroke-dasharray: .08 2; }
+    98% { opacity: 1; stroke-dasharray: .02 2; }
+    100% { opacity: 0; stroke-dasharray: .002 2; stroke-dashoffset: -1; }
 }
 @keyframes boot-final-line {
     0% { opacity: 0; stroke-dashoffset: 1; }
