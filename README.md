@@ -16,7 +16,7 @@ Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与�
 - 一个账户可创建或加入多个 LAB；通过 LAB 名称和密码加入。LAB 共用页始终只读。
 - 每条日程可选择“在 LAB 显示”或“仅个人可见”。
 
-下载：Android 使用 `Rhine-Lab-0.1.10-Android.apk`；Windows 使用 `Rhine-Lab-0.1.10-Windows-Setup.exe`。应用启动后会联网检查 GitHub 最新正式版本，并在更新前征求确认。
+下载：Android 使用 `Rhine-Lab-0.1.11-Android.apk`；Windows 使用 `Rhine-Lab-0.1.11-Windows-Setup.exe`。应用启动后会联网检查 GitHub 最新正式版本，并在更新前征求确认。
 
 无账号同步：在“设备同步”中设置至少 10 位传输密码并导出文件；把文件传到另一台设备，选择同一文件、输入相同密码并确认导入。导入会替换目标设备的个人工作区。
 
@@ -36,7 +36,7 @@ The Research Tools workspace connects animal/cell sources to samples, experiment
 - One account may create or join multiple LABs by LAB name and password. The shared LAB workspace is always read-only.
 - Each schedule item can be shared with the LAB or kept private.
 
-Downloads: `Rhine-Lab-0.1.10-Android.apk` for Android or `Rhine-Lab-0.1.10-Windows-Setup.exe` for Windows. On launch, the apps check the latest stable GitHub release and ask before updating.
+Downloads: `Rhine-Lab-0.1.11-Android.apk` for Android or `Rhine-Lab-0.1.11-Windows-Setup.exe` for Windows. On launch, the apps check the latest stable GitHub release and ask before updating.
 
 Account-free transfer: open “Device sync,” choose a transfer password of at least 10 characters, and export the file. Move it to the other device, choose the same file, enter the same password, and confirm import. Importing replaces that device’s personal workspace.
 

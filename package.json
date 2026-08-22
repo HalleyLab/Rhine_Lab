@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",

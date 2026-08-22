@@ -7,7 +7,7 @@ on:
       - "v*"
 
 env:
-  RELEASE_TAG: v0.1.10
+  RELEASE_TAG: v0.1.11
 
 permissions:
   contents: write
