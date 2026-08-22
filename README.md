@@ -6,47 +6,42 @@
 
 ## 中文
 
-Rhine Lab 是面向生命科学研究的个人工作台，提供实验记录与结果、Protocol 与文献关联、日程、动物笼架、试剂/耗材、细胞维持和冻存样本管理。
-科研工具工作区可建立“动物/细胞来源 → 样本 → 实验 → 结果”谱系，并提供稀释、摩尔溶液、细胞铺板、Master Mix 计算和 6–384 孔实验布局。
+Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱茵生命技术设计风格整合日常实验、样本与库存信息。
 
-- 支持网页、Android、Windows 与 Chrome/Edge 扩展。
-- 新安装默认是空工作区；GitHub Pages 未登录时只读展示。
-- 本机数据使用设备级 AES‑256‑GCM 加密；账户密码同时派生个人数据加密密钥，云端仅保存密文。
-- 不登录也可导出 `.rhinelab` 加密同步文件，通过数据线、隔空投送、附近分享或网盘传到另一台设备后导入。
-- 一个账户可创建或加入多个 LAB；通过 LAB 名称和密码加入。LAB 共用页始终只读。
-- 每条日程可选择“在 LAB 显示”或“仅个人可见”。
+### 主要功能
 
-下载：Android 使用 `Rhine-Lab-0.2.1-Android.apk`；Windows 使用 `Rhine-Lab-0.2.1-Windows-Setup.exe`。应用启动后会联网检查 GitHub 最新正式版本，并在更新前征求确认。
+- 按日期管理实验记录，并在记录下保存结果、照片和附件。
+- 创建 Protocol，关联文献、实验步骤、试剂用量与日程。
+- 使用日历或每日视图安排可重叠日程，并从日程开始实验。
+- 通过笼架、笼位和动物条目管理不同实验动物。
+- 管理试剂与实验耗材，记录实验消耗并提供低库存提醒。
+- 记录细胞培养、传代、培养条件与冻存样本位置。
+- 查看动物、细胞、样本、实验和结果之间的简明谱系。
+- 提供科学计算器、配液计算、Master Mix 及多孔板标注工具。
+- 支持本地加密存储、跨设备同步和只读 LAB 共用界面。
+- 提供网页、Windows 与 Android 版本，并支持中英文和日夜主题。
 
-无账号同步：在“设备同步”中设置至少 10 位传输密码并导出文件；把文件传到另一台设备，选择同一文件、输入相同密码并确认导入。导入会替换目标设备的个人工作区。
-
-云端配置需依次执行 `supabase/migrations/001` 至 `007_fix_lab_password_join_ambiguity.sql`。账户密码不会发送给 Rhine Lab 数据库；忘记后无法恢复既有密文。
+当前版本：**0.2.1**
 
 <a id="english"></a>
 
 ## English
 
-Rhine Lab is a personal life-science workspace for experiment records and results, literature-linked protocols, schedules, animal housing, reagent and consumable inventory, cell maintenance, and frozen samples.
-The Research Tools workspace connects animal/cell sources to samples, experiments, and results, and includes dilution, molar-solution, cell-seeding, master-mix, and 6–384-well layout tools.
+Rhine Lab is a personal research workspace for life-science laboratories, combining experiment, sample, culture, and inventory management in a Rhine Lab-inspired technical interface.
 
-- Available on the web, Android, Windows, and Chrome/Edge.
-- New installations start empty; the unsigned GitHub Pages site is read-only.
-- Local data is protected with device-bound AES‑256‑GCM. The account password also derives the personal-data encryption key, so the cloud stores ciphertext only.
-- Without signing in, export an encrypted `.rhinelab` file and move it to another device by USB cable, AirDrop, Nearby Share, or cloud drive.
-- One account may create or join multiple LABs by LAB name and password. The shared LAB workspace is always read-only.
-- Each schedule item can be shared with the LAB or kept private.
+### Key features
 
-Downloads: `Rhine-Lab-0.2.1-Android.apk` for Android or `Rhine-Lab-0.2.1-Windows-Setup.exe` for Windows. On launch, the apps check the latest stable GitHub release and ask before updating.
+- Organize experiment records by date and attach results, images, and files.
+- Create literature-linked protocols with steps, reagent usage, and schedules.
+- Plan overlapping events in calendar or daily views and start experiments from the schedule.
+- Manage multiple animal species through racks, cage positions, and animal records.
+- Track reagents and laboratory consumables, recorded usage, and low-stock alerts.
+- Record cell culture conditions, passages, and frozen-sample locations.
+- View concise lineage links between animals, cells, samples, experiments, and results.
+- Use a scientific calculator, solution calculators, Master Mix tools, and customizable plate annotations.
+- Keep data encrypted locally, synchronize between devices, and use read-only shared LAB workspaces.
+- Available for web, Windows, and Android with Chinese/English and light/dark themes.
 
-Account-free transfer: open “Device sync,” choose a transfer password of at least 10 characters, and export the file. Move it to the other device, choose the same file, enter the same password, and confirm import. Importing replaces that device’s personal workspace.
+Current version: **0.2.1**
 
-For cloud setup, apply migrations `001` through `007_fix_lab_password_join_ambiguity.sql` in order. The account password is not sent to the Rhine Lab database and cannot be recovered if lost.
-
-## Development
-
-```bash
-pnpm install
-python -m http.server 4173
-```
-
-Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Rhine Lab is an unofficial, non-commercial fan-style prototype and is not affiliated with or endorsed by *Arknights* or its rights holders.
+Third-party notices are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Rhine Lab is an unofficial, non-commercial fan-style prototype and is not affiliated with or endorsed by *Arknights* or its rights holders.
