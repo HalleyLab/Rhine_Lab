@@ -66,7 +66,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         if (awaitingUnknownSourcesPermission
             && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -77,7 +77,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         try {
             unregisterReceiver(updateDownloadReceiver);
         } catch (IllegalArgumentException ignored) {
@@ -105,7 +105,7 @@ public class MainActivity extends BridgeActivity {
         updateExecutor.execute(() -> {
             ReleaseInfo release = fetchLatestRelease();
             if (release == null) return;
-            boolean updateAvailable = compareVersions(release.version, BuildConfig.VERSION_NAME) > 0;
+            boolean updateAvailable = compareVersions(release.version, currentVersion()) > 0;
             if (updateAvailable && release.apkUrl.isEmpty()) return;
             getSharedPreferences(UPDATE_PREFERENCES, MODE_PRIVATE)
                 .edit()
@@ -125,7 +125,7 @@ public class MainActivity extends BridgeActivity {
             connection.setReadTimeout(9000);
             connection.setRequestProperty("Accept", "application/vnd.github+json");
             connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
-            connection.setRequestProperty("User-Agent", "Rhine-Lab-Android/" + BuildConfig.VERSION_NAME);
+            connection.setRequestProperty("User-Agent", "Rhine-Lab-Android/" + currentVersion());
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) return null;
 
             String payload = readUtf8(connection.getInputStream());
@@ -241,6 +241,14 @@ public class MainActivity extends BridgeActivity {
             pendingUpdateFile = null;
         } catch (Exception error) {
             Toast.makeText(this, "无法打开系统安装程序", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String currentVersion() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception error) {
+            return "0";
         }
     }
 

@@ -1,9 +1,13 @@
 name: Publish Rhine Lab release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
+
+env:
+  RELEASE_TAG: v0.1.10
 
 permissions:
   contents: write
@@ -15,11 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate version tag
-        run: node -e "const p=require('./package.json'); if ('v'+p.version !== process.env.GITHUB_REF_NAME) { console.error('Tag and package version differ'); process.exit(1); }"
+        run: node -e "const p=require('./package.json'); if ('v'+p.version !== process.env.RELEASE_TAG) { console.error('Release tag and package version differ'); process.exit(1); }"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release view "$GITHUB_REF_NAME" || gh release create "$GITHUB_REF_NAME" --title "Rhine Lab ${GITHUB_REF_NAME#v}" --generate-notes --latest
+        run: gh release view "$RELEASE_TAG" || gh release create "$RELEASE_TAG" --title "Rhine Lab ${RELEASE_TAG#v}" --generate-notes --latest
 
   windows:
     name: Publish Windows updater package
@@ -49,7 +53,7 @@ jobs:
         run: |
           $files = Get-ChildItem dist/desktop -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { $_.FullName }
           if (-not $files) { throw 'No Windows release files were generated.' }
-          gh release upload $env:GITHUB_REF_NAME $files --clobber
+          gh release upload $env:RELEASE_TAG $files --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Windows-Setup
@@ -103,7 +107,7 @@ jobs:
       - name: Upload APK to GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/release/* --clobber
+        run: gh release upload "$RELEASE_TAG" dist/release/* --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Android
