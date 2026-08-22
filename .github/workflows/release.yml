@@ -1,0 +1,112 @@
+name: Publish Rhine Lab release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate version tag
+        run: node -e "const p=require('./package.json'); if ('v'+p.version !== process.env.GITHUB_REF_NAME) { console.error('Tag and package version differ'); process.exit(1); }"
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" || gh release create "$GITHUB_REF_NAME" --title "Rhine Lab ${GITHUB_REF_NAME#v}" --generate-notes --latest
+
+  windows:
+    name: Publish Windows updater package
+    needs: release
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build NSIS updater package
+        run: pnpm desktop:build
+      - name: Upload Windows installer and update metadata
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = Get-ChildItem dist/desktop -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { $_.FullName }
+          if (-not $files) { throw 'No Windows release files were generated.' }
+          gh release upload $env:GITHUB_REF_NAME $files --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-Windows-Setup
+          path: |
+            dist/desktop/*.exe
+            dist/desktop/*.blockmap
+            dist/desktop/latest.yml
+          retention-days: 30
+          if-no-files-found: error
+
+  android:
+    name: Publish Android updater package
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Restore internal signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: rhine-lab-android-debug-keystore-v1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Synchronize Capacitor
+        run: pnpm mobile:sync
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+      - name: Prepare release files
+        run: |
+          version=$(node -p "require('./package.json').version")
+          mkdir -p dist/release
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/release/Rhine-Lab-${version}-Android.apk"
+          sha256sum "dist/release/Rhine-Lab-${version}-Android.apk" > "dist/release/Rhine-Lab-${version}-Android.apk.sha256"
+      - name: Upload APK to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/release/* --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-Android
+          path: dist/release/*
+          retention-days: 30
+          if-no-files-found: error

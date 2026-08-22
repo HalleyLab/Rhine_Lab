@@ -1,8 +1,13 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
 
 const isDevelopment = !app.isPackaged;
 let mainWindow = null;
+let updateCheckTimer = null;
+let updatePromptOpen = false;
+let updateInstallQueued = false;
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-smooth-scrolling');
@@ -54,6 +59,69 @@ function createWindow() {
     if (isDevelopment && process.env.RHINE_LAB_DEVTOOLS === '1') window.webContents.openDevTools({ mode: 'detach' });
 }
 
+function setupAutomaticUpdates() {
+    if (isDevelopment || process.platform !== 'win32') return;
+
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.autoRunAppAfterInstall = true;
+    autoUpdater.allowPrerelease = false;
+
+    autoUpdater.on('update-available', async function (info) {
+        if (updatePromptOpen || updateInstallQueued) return;
+        updatePromptOpen = true;
+        try {
+            const result = await dialog.showMessageBox(mainWindow || undefined, {
+                type: 'info',
+                title: 'Rhine Lab 更新',
+                message: '发现新版本 ' + info.version,
+                detail: '是否现在下载并安装？完成后 Rhine Lab 会自动重新打开。',
+                buttons: ['更新', '稍后'],
+                defaultId: 0,
+                cancelId: 1,
+                noLink: true
+            });
+            if (result.response === 0) {
+                updateInstallQueued = true;
+                await autoUpdater.downloadUpdate();
+            }
+        } catch (error) {
+            updateInstallQueued = false;
+            console.warn('Rhine Lab update download failed:', error && error.message ? error.message : error);
+        } finally {
+            updatePromptOpen = false;
+        }
+    });
+
+    autoUpdater.on('download-progress', function (progress) {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setProgressBar(Math.max(0, Math.min(1, progress.percent / 100)));
+    });
+
+    autoUpdater.on('update-downloaded', function () {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setProgressBar(-1);
+        setTimeout(function () {
+            autoUpdater.quitAndInstall(false, true);
+        }, 450);
+    });
+
+    autoUpdater.on('error', function (error) {
+        updateInstallQueued = false;
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setProgressBar(-1);
+        console.warn('Rhine Lab update check failed:', error && error.message ? error.message : error);
+    });
+
+    const checkForUpdates = function () {
+        if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents) return;
+        autoUpdater.checkForUpdates().catch(function (error) {
+            console.warn('Rhine Lab update check failed:', error && error.message ? error.message : error);
+        });
+    };
+
+    setTimeout(checkForUpdates, 5000);
+    updateCheckTimer = setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
+    if (updateCheckTimer.unref) updateCheckTimer.unref();
+}
+
 const applicationMenu = Menu.buildFromTemplate([
     {
         label: 'Rhine Lab',
@@ -95,9 +163,14 @@ app.whenReady().then(function () {
     }
     Menu.setApplicationMenu(applicationMenu);
     if (singleInstance) createWindow();
+    setupAutomaticUpdates();
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
+});
+
+app.on('before-quit', function () {
+    if (updateCheckTimer) clearInterval(updateCheckTimer);
 });
 
 app.on('window-all-closed', function () {

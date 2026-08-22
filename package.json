@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",
@@ -14,7 +14,7 @@
     "android:bundle": "pnpm mobile:sync && cd android && gradlew.bat bundleRelease",
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
-    "desktop:build": "pnpm desktop:assets && electron-builder --win portable"
+    "desktop:build": "pnpm desktop:assets && electron-builder --win nsis"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
@@ -23,7 +23,8 @@
     "@capacitor/ios": "8.5.0",
     "@capacitor/splash-screen": "8.0.2",
     "@capacitor/status-bar": "8.0.3",
-    "@supabase/supabase-js": "2.112.3"
+    "@supabase/supabase-js": "2.112.3",
+    "electron-updater": "6.8.9"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
@@ -38,7 +39,7 @@
   "build": {
     "appId": "com.halleylab.rhinelab.desktop",
     "productName": "Rhine Lab",
-    "artifactName": "Rhine-Lab-${version}-Windows.${ext}",
+    "artifactName": "Rhine-Lab-${version}-Windows-Setup.${ext}",
     "directories": {
       "output": "dist/desktop"
     },
@@ -54,8 +55,23 @@
     "win": {
       "icon": "images/rhine-lab-desktop-icon.png",
       "target": [
-        "portable"
+        "nsis"
       ]
-    }
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "HalleyLab",
+        "repo": "Rhine_Lab",
+        "releaseType": "release"
+      }
+    ]
   }
 }
