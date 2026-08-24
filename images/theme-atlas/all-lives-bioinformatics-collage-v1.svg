@@ -1,17 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="420" viewBox="0 0 1040 420">
- <defs><pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#2457c6" stroke-opacity=".22"/></pattern><filter id="rough"><feTurbulence baseFrequency=".55" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2"/></filter></defs>
+ <defs><pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#718694" stroke-opacity=".22"/></pattern><filter id="rough"><feTurbulence baseFrequency=".55" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2"/></filter></defs>
  <rect width="1040" height="420" fill="#f2f2ec"/><rect width="1040" height="420" fill="url(#grid)"/>
  <path d="M60 352L270 30 380 28 205 390z" fill="#dfe9ec"/><path d="M420 0l250 0-118 420H310z" fill="#e9dfda" opacity=".8"/>
  <g fill="none" stroke="#1d2d34" filter="url(#rough)"><path stroke-width="3" d="M70 292C144 180 219 106 325 92c87-11 165 41 215 108 43 57 94 84 181 55 53-17 96-9 159 26"/><path d="M118 286l88-76 74 32 81-102 82 83 95-45 76 66 96-91 127 80"/><circle cx="206" cy="210" r="95"/><circle cx="721" cy="255" r="112"/><path d="M609 78h246v104H609zM632 101h74v58h-74zM726 101h106v16H726zm0 29h74v29h-74z"/></g>
- <g fill="#2457c6"><rect x="89" y="74" width="108" height="72"/><rect x="778" y="286" width="130" height="54"/><circle cx="361" cy="140" r="7"/><circle cx="538" cy="200" r="7"/><circle cx="721" cy="255" r="7"/></g>
- <g fill="#df6658"><rect x="89" y="146" width="146" height="8"/><rect x="908" y="286" width="8" height="82"/><circle cx="280" cy="242" r="6"/></g>
- <g id="protein-collage" transform="translate(390 118)" opacity=".82" filter="url(#rough)">
-  <path d="M0 94C20 20 63 13 87 63s57 73 91 20 80-55 101 3 45 57 72 7" fill="none" stroke="#1d2d34" stroke-width="5" stroke-linecap="round"/>
-  <path d="M24 112C54 86 57 30 94 32s44 92 86 79 56-83 106-56" fill="none" stroke="#2457c6" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M102 8c20-17 40 17 60 0s40 17 60 0M102 22c20-17 40 17 60 0s40 17 60 0" fill="none" stroke="#df6658" stroke-width="3" stroke-linecap="round"/>
-  <g fill="#f2f2ec" stroke="#2457c6" stroke-width="3"><circle cx="5" cy="91" r="7"/><circle cx="87" cy="63" r="7"/><circle cx="178" cy="83" r="7"/><circle cx="279" cy="86" r="7"/><circle cx="348" cy="93" r="7"/></g>
-  <path d="M238 127l38-17-8 18 21 10-39 16 8-17z" fill="#2457c6" opacity=".75"/>
-  <text x="3" y="145" fill="#1d2d34" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">PROTEIN // STRUCTURE</text>
- </g> <g font-family="Helvetica,Arial,sans-serif" fill="#1d2d34"><text x="105" y="118" font-size="36" font-weight="700">Σ λᵢvᵢ</text><text x="625" y="88" font-size="11" font-weight="700" letter-spacing="2">COMPUTATIONAL // BIOLOGY</text><text x="625" y="204" font-size="48" font-weight="700">01</text><text x="704" y="204" font-size="48" font-weight="700">10</text><text x="785" y="326" font-size="12" font-weight="700">DATA / PIPELINE / RUN</text><text x="390" y="344" font-size="13">{ genome: "reference" }</text><text x="426" y="373" font-size="11">$ nextflow run workflow.nf</text></g>
+ <g fill="#718694"><rect x="89" y="74" width="108" height="72"/><rect x="778" y="286" width="130" height="54"/><circle cx="361" cy="140" r="7"/><circle cx="538" cy="200" r="7"/><circle cx="721" cy="255" r="7"/></g>
+ <g fill="#ad9189"><rect x="89" y="146" width="146" height="8"/><rect x="908" y="286" width="8" height="82"/><circle cx="280" cy="242" r="6"/></g>
+ <g id="membrane-complex-collage" transform="translate(338 34)" opacity=".94">
+  <!-- offset paper fragments / crop marks -->
+  <path d="M12 34h114v4H12zm29 154h92v6H41z" fill="#718694" opacity=".72"/>
+  <path d="M3 27v27m0-27h27M522 42h-25m25 0v25M492 302h28m0-28v28" fill="none" stroke="#ad9189" stroke-width="3"/>
+  <rect x="28" y="55" width="118" height="116" fill="#e4e3dc" stroke="#1d2d34" stroke-width="1" transform="rotate(-3 87 113)"/>
+
+  <!-- schematic seven-pass membrane receptor -->
+  <g transform="translate(38 62)" filter="url(#rough)">
+   <g fill="#a8aa8b" stroke="#1d2d34" stroke-width="1"><circle cx="0" cy="29" r="7"/><circle cx="18" cy="29" r="7"/><circle cx="36" cy="29" r="7"/><circle cx="54" cy="29" r="7"/><circle cx="72" cy="29" r="7"/><circle cx="90" cy="29" r="7"/><circle cx="108" cy="29" r="7"/><circle cx="0" cy="85" r="7"/><circle cx="18" cy="85" r="7"/><circle cx="36" cy="85" r="7"/><circle cx="54" cy="85" r="7"/><circle cx="72" cy="85" r="7"/><circle cx="90" cy="85" r="7"/><circle cx="108" cy="85" r="7"/></g>
+   <g stroke="#1d2d34" stroke-width="1.3"><path d="M0 36v14m8-14v14m10-14v14m8-14v14m10-14v14m8-14v14m10-14v14m8-14v14m10-14v14m8-14v14m10-14v14m8-14v14m10-14v14M0 78V64m8 14V64m10 14V64m8 14V64m10 14V64m8 14V64m10 14V64m8 14V64m10 14V64m8 14V64m10 14V64m8 14V64m10 14V64"/></g>
+   <g fill="#91aaa7" stroke="#1d2d34" stroke-width="1.6"><rect x="12" y="11" width="13" height="92" rx="6"/><rect x="28" y="4" width="13" height="94" rx="6"/><rect x="44" y="16" width="13" height="92" rx="6"/><rect x="60" y="7" width="13" height="98" rx="6"/><rect x="76" y="17" width="13" height="89" rx="6"/><rect x="92" y="5" width="13" height="96" rx="6"/></g>
+   <path d="M18 11C17-8 37-10 35 4m0 0C39-20 66-18 67 7m0 0C72-11 99-11 99 5" fill="none" stroke="#1d2d34" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- cryo-EM density cutout behind fitted model -->
+  <g transform="translate(181 37)">
+   <path d="M33 49C69 9 124 15 145 44c31-24 79-9 84 27 49-2 82 36 60 70 29 31 4 72-39 71-16 37-70 47-99 20-38 26-93 10-96-31-44-2-63-43-37-74-23-23-13-59 15-78z" fill="#727b7b" opacity=".36" stroke="#1d2d34" stroke-width="1.4"/>
+   <g fill="#707878" opacity=".55"><circle cx="53" cy="58" r="15"/><circle cx="91" cy="44" r="19"/><circle cx="131" cy="65" r="17"/><circle cx="178" cy="49" r="20"/><circle cx="218" cy="79" r="18"/><circle cx="250" cy="113" r="20"/><circle cx="212" cy="145" r="23"/><circle cx="162" cy="129" r="18"/><circle cx="118" cy="151" r="22"/><circle cx="77" cy="126" r="20"/><circle cx="47" cy="96" r="17"/></g>
+   <path d="M45 50c40-31 90-29 124 1 39-20 87-1 96 38 29 23 24 67-10 83-31 37-86 34-115 4-42 18-88-7-89-48-34-21-36-61-6-78z" fill="none" stroke="#f2f2ec" stroke-width="1.5" stroke-dasharray="5 5" opacity=".8"/>
+  </g>
+
+  <!-- fitted crystal/ribbon structure: transmembrane helices + cytosolic complex -->
+  <g transform="translate(238 60)" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
+   <g stroke="#829589" stroke-width="9"><path d="M10 11c12 27 2 54 16 82"/><path d="M33 3c-6 34 13 54 3 91"/><path d="M55 8c16 24-4 58 12 88"/><path d="M79 1c-8 33 10 60 1 97"/><path d="M101 12c13 22-3 58 11 87"/><path d="M124 4c-8 29 11 62 0 96"/></g>
+   <path d="M16 14c15-22 36-19 43-5m5 1c17-19 41-15 52 1m-90 82c18 19 43 16 56 0m3 2c16 14 34 12 43-1" stroke="#1d2d34" stroke-width="3.5"/>
+   <path d="M37 111c20 9 19 35 41 38 26 4 27-29 51-17 21 11 7 39 31 48 18 7 34-8 46 8" stroke="#8e7370" stroke-width="6"/>
+   <path d="M24 147c26-22 58-9 69 12 13 25 47 21 59-3 10-20 41-26 57-8 11 12 5 31 20 42" stroke="#718694" stroke-width="5.5"/>
+   <path d="M92 112l31 14-15 7 13 16-35-14 16-8zM160 106l29 13-14 7 12 15-33-13 15-8z" fill="#a8aa8b" stroke="none"/>
+  </g>
+
+  <!-- detached subunit labels, treated as paper cut-outs -->
+  <g transform="translate(188 239)" font-family="Helvetica,Arial,sans-serif" font-weight="700" text-anchor="middle">
+   <circle cx="28" cy="28" r="29" fill="#ad9189" stroke="#1d2d34"/><circle cx="79" cy="35" r="25" fill="#718694" stroke="#1d2d34"/><ellipse cx="118" cy="34" rx="14" ry="32" fill="#a69d7e" stroke="#1d2d34"/>
+   <text x="28" y="37" fill="#1d2d34" font-size="28">α</text><text x="79" y="44" fill="#f2f2ec" font-size="28">β</text><text x="118" y="43" fill="#1d2d34" font-size="26">γ</text>
+  </g>
+
+  <g font-family="Helvetica,Arial,sans-serif" fill="#1d2d34">
+   <text x="30" y="215" font-size="9" font-weight="700" letter-spacing="1.5">7TM / RECEPTOR MAP</text>
+   <text x="345" y="294" font-size="10" font-weight="700" letter-spacing="1.6">EMD-24816 · PDB 7XYZ</text>
+   <text x="345" y="310" font-size="8">CRYO-EM 2.8 Å / MAP + MODEL</text>
+  </g>
+  <g fill="#f2f2ec" stroke="#718694"><rect x="151" y="25" width="14" height="14"/><rect x="169" y="25" width="14" height="14"/><rect x="151" y="43" width="14" height="14"/></g>
+ </g> <g font-family="Helvetica,Arial,sans-serif" fill="#1d2d34"><text x="105" y="118" font-size="36" font-weight="700">Σ λᵢvᵢ</text><text x="625" y="88" font-size="11" font-weight="700" letter-spacing="2">COMPUTATIONAL // BIOLOGY</text><text x="625" y="190" font-size="8" font-weight="700" letter-spacing="3" opacity=".62">1000001000 1000001000 1000001000</text></g>
  <g fill="none" stroke="#fff" opacity=".88"><path d="M785 299h110M785 310h82M785 338h102"/><rect x="330" y="66" width="22" height="22"/><rect x="355" y="66" width="22" height="22"/><rect x="380" y="66" width="22" height="22"/></g>
 </svg>

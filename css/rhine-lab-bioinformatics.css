@@ -12,40 +12,40 @@
 .bioinfo-table-panel .data-table tbody tr{cursor:pointer}
 
 .bioinformatics-heading>div:first-child:not(.heading-visual){max-width:50%}
-.heading-visual-bioinformatics{--heading-signal:#4c83d9;--heading-signal-soft:rgba(76,131,217,.16);isolation:isolate}
-.heading-visual-bioinformatics::before{background-image:linear-gradient(rgba(76,131,217,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(76,131,217,.09) 1px,transparent 1px)!important;background-size:22px 22px!important}
+.heading-visual-bioinformatics{--heading-signal:#8fbd25;--heading-signal-soft:rgba(143,189,37,.17);isolation:isolate}
+.heading-visual-bioinformatics::before{background:radial-gradient(circle at 67% 57%,rgba(143,189,37,.18) 0 3px,transparent 4px),radial-gradient(circle at 54% 35%,rgba(81,170,166,.16) 0 4px,transparent 5px),linear-gradient(118deg,transparent 0 62%,rgba(233,154,53,.11) 62.3% 68%,transparent 68.3%),linear-gradient(rgba(82,105,92,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(82,105,92,.08) 1px,transparent 1px)!important;background-size:auto,auto,auto,22px 22px,22px 22px!important}
 .heading-visual-bioinformatics .heading-monogram{font-size:12px;letter-spacing:.04em}
-.bioinfo-protein-structure{position:absolute;left:4%;bottom:12px;z-index:2;width:38%;height:auto;overflow:visible;color:color-mix(in srgb,var(--heading-signal) 82%,var(--ink));opacity:.82}
+.bioinfo-protein-structure{position:absolute;left:4%;bottom:12px;z-index:2;width:38%;height:auto;overflow:visible;color:#50685d;opacity:.82}
 .bioinfo-protein-structure .protein-backbone,.bioinfo-protein-structure .protein-helix{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
-.bioinfo-protein-structure .protein-backbone{stroke-width:2.1}
-.bioinfo-protein-structure .protein-backbone path:last-child{stroke-width:1;opacity:.55}
-.bioinfo-protein-structure .protein-helix{stroke-width:1.5;opacity:.74}
-.bioinfo-protein-structure .protein-nodes{fill:var(--paper);stroke:currentColor;stroke-width:2}
-.bioinfo-rnaseq{position:absolute;left:39%;bottom:20px;z-index:2;display:grid;grid-template-columns:56px 1fr;grid-template-rows:repeat(4,4px) auto;gap:5px 8px;width:31%;color:color-mix(in srgb,var(--heading-signal) 88%,var(--ink));font-family:Helvetica,Arial,sans-serif!important}
+.bioinfo-protein-structure .protein-backbone{stroke-width:2.1}.bioinfo-protein-structure .protein-backbone path:last-child{stroke:#d5903d!important}
+.bioinfo-protein-structure .protein-backbone path:last-child{stroke-width:1;opacity:.68}
+.bioinfo-protein-structure .protein-helix{stroke:#8fbd25;stroke-width:1.5;opacity:.8}
+.bioinfo-protein-structure .protein-nodes{fill:var(--paper);stroke:#4d9991;stroke-width:2}
+.bioinfo-rnaseq{position:absolute;left:39%;bottom:20px;z-index:2;display:grid;grid-template-columns:56px 1fr;grid-template-rows:repeat(4,4px) auto;gap:5px 8px;width:31%;color:#526d5e;font-family:Helvetica,Arial,sans-serif!important}
 .bioinfo-rnaseq b{grid-row:1/5;align-self:center;font-size:10px;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg)}
 .bioinfo-rnaseq i{display:block;height:3px;background:linear-gradient(90deg,currentColor 0 34%,transparent 34% 39%,currentColor 39% 68%,transparent 68% 73%,currentColor 73%);opacity:.84}
-.bioinfo-rnaseq i:nth-of-type(2){width:82%;margin-left:13%}
-.bioinfo-rnaseq i:nth-of-type(3){width:94%;margin-left:3%}
+.bioinfo-rnaseq i:nth-of-type(1){color:#8fbd25}.bioinfo-rnaseq i:nth-of-type(2){width:82%;margin-left:13%;color:#51aaa6}
+.bioinfo-rnaseq i:nth-of-type(3){width:94%;margin-left:3%;color:#d5903d}
 .bioinfo-rnaseq i:nth-of-type(4){width:71%;margin-left:19%}
 .bioinfo-rnaseq small{grid-column:1/-1;margin-top:2px;font-size:7px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
-.bioinfo-math-symbol{position:absolute;z-index:2;color:color-mix(in srgb,var(--heading-signal) 86%,var(--ink));font:800 13px/1 Helvetica,Arial,sans-serif;letter-spacing:.04em}
-.bioinfo-math-symbol.math-log{left:43%;top:88px}
-.bioinfo-math-symbol.math-sum{right:15%;bottom:28px;font-size:16px}
+.bioinfo-math-symbol{position:absolute;z-index:2;color:#596b61;font:800 13px/1 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.bioinfo-math-symbol.math-log{left:43%;top:88px;color:#c17f35}
+.bioinfo-math-symbol.math-sum{right:15%;bottom:28px;color:#799f2b;font-size:16px}
 
-.bioinfo-detail-hero{color:#22312b!important;background:linear-gradient(105deg,rgba(112,157,218,.26),rgba(248,250,243,.98) 40%,rgba(226,236,228,.98))!important;border-color:rgba(85,129,190,.3)!important}
-.bioinfo-detail-hero :is(h3,p){color:#22312b!important}
-.bioinfo-detail-hero .record-detail-code{color:#3567aa!important}
-.bioinfo-detail-hero .status-chip{color:#26352e;background:rgba(247,250,243,.9);border-color:rgba(70,112,171,.28)}
+.bioinfo-detail-hero{color:#26332d!important;background:linear-gradient(105deg,rgba(143,189,37,.22),rgba(248,250,243,.98) 40%,rgba(81,170,166,.14))!important;border-color:rgba(104,145,61,.3)!important}
+.bioinfo-detail-hero :is(h3,p){color:#26332d!important}
+.bioinfo-detail-hero .record-detail-code{color:#668c20!important}
+.bioinfo-detail-hero .status-chip{color:#2d3b33;background:rgba(247,250,243,.9);border-color:rgba(117,153,56,.3)}
 .bioinfo-code-block{margin:0;padding:13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--soft);font:600 12px/1.6 Consolas,'Courier New',monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 .dark-theme .bioinfo-subpage-tabs{background:color-mix(in srgb,var(--paper) 92%,#08101a)}
-.dark-theme .bioinfo-detail-hero{color:#f3f7f2!important;background:linear-gradient(108deg,rgba(78,123,190,.26),rgba(48,60,67,.98) 40%,rgba(29,38,43,.99))!important;border-color:rgba(116,158,220,.34)!important}
+.dark-theme .bioinfo-detail-hero{color:#f3f7f2!important;background:linear-gradient(108deg,rgba(104,139,43,.28),rgba(42,55,48,.98) 40%,rgba(27,40,38,.99))!important;border-color:rgba(143,189,37,.34)!important}
 .dark-theme .bioinfo-detail-hero :is(h3,p){color:#f3f7f2!important}
-.dark-theme .bioinfo-detail-hero .record-detail-code{color:#9fc2f2!important}
-.dark-theme .bioinfo-detail-hero .status-chip{color:#edf5f0;background:rgba(22,34,39,.84);border-color:rgba(151,185,231,.34)}
-.dark-theme .bioinfo-protein-structure .protein-nodes{fill:#26302b}
+.dark-theme .bioinfo-detail-hero .record-detail-code{color:#b8da6b!important}
+.dark-theme .bioinfo-detail-hero .status-chip{color:#edf5f0;background:rgba(22,34,31,.84);border-color:rgba(143,189,37,.36)}
+.dark-theme .bioinfo-protein-structure{color:#a8b9ae}.dark-theme .bioinfo-protein-structure .protein-nodes{fill:#26302b;stroke:#71b8af}.dark-theme .bioinfo-rnaseq{color:#b8c8bf}.dark-theme .bioinfo-math-symbol.math-log{color:#e1a75e}.dark-theme .bioinfo-math-symbol.math-sum{color:#b3d866}
 
 body.background-all-lives #view-bioinformatics .page-heading{--page-collage-accent:#2457c6}
-body.background-all-lives #view-bioinformatics .heading-visual{background-image:url('../images/theme-atlas/all-lives-bioinformatics-collage-v1.svg')!important;background-size:auto 190%!important;background-position:58% 50%!important;background-repeat:no-repeat!important;opacity:.72}
+body.background-all-lives #view-bioinformatics .heading-visual{background-image:url('../images/theme-atlas/all-lives-bioinformatics-collage-v1.svg?v=0.2.2c')!important;background-size:auto 190%!important;background-position:58% 50%!important;background-repeat:no-repeat!important;filter:saturate(.58) contrast(.94);mix-blend-mode:multiply;opacity:.64}
 body.background-all-lives #view-bioinformatics .heading-visual>*{display:none!important}
 body.background-all-lives :is(.bioinfo-subpage-tabs,.bioinfo-code-block){border-radius:0}
 body.background-all-lives .bioinfo-subpage-tabs button.active{color:#fff;background:var(--atlas-blue);box-shadow:inset 0 -3px 0 var(--atlas-red)}

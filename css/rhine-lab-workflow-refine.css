@@ -916,26 +916,14 @@ body.dark-theme #recordDetailDialog[data-record-type="reagent"] .reagent-detail-
 body.dark-theme #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero .record-detail-code {
     color: #c4e36b !important;
 }
-/* Desktop Windows download */
+/* Desktop Windows download: shares the sync-control component geometry and theme rules. */
 .desktop-download-button{
-    display:inline-flex;
-    align-items:center;
     justify-content:center;
-    gap:7px;
-    min-height:38px;
-    padding:0 13px;
-    color:var(--ink);
-    background:color-mix(in srgb,var(--surface) 92%,var(--accent) 8%);
-    border:1px solid var(--line);
-    border-radius:999px;
+    color:var(--muted);
+    cursor:pointer;
     text-decoration:none;
-    white-space:nowrap;
-    font:800 11px/1 var(--font-interface);
-    transition:border-color .18s ease,background .18s ease,transform .18s ease;
+    transition:border-color .18s ease,background .18s ease,color .18s ease,transform .18s ease;
 }
-.desktop-download-button span{color:var(--accent-deep);font:900 16px/1 Helvetica,Arial,sans-serif;transform:translateY(-1px)}
 .desktop-download-button:hover{color:var(--ink);background:color-mix(in srgb,var(--surface) 78%,var(--accent) 22%);border-color:color-mix(in srgb,var(--accent-deep) 48%,var(--line));transform:translateY(-1px)}
 html.native-app .desktop-download-button{display:none!important}
-body.background-all-lives .desktop-download-button{border-radius:0;box-shadow:3px 3px 0 color-mix(in srgb,var(--atlas-blue) 17%,transparent)}
-@media(max-width:1500px){.desktop-download-button{width:38px;min-width:38px;padding:0}.desktop-download-button b{display:none}}
 @media(max-width:900px){.desktop-download-button{display:none!important}}
