@@ -21,7 +21,7 @@ Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱�
 - 支持本地加密存储、跨设备同步和只读 LAB 共用界面。
 - 提供网页、Windows 与 Android 版本，并支持中英文和日夜主题。
 
-当前版本：**0.2.1**
+当前版本：**0.2.2**
 
 <a id="english"></a>
 
@@ -42,6 +42,6 @@ Rhine Lab is a personal research workspace for life-science laboratories, combin
 - Keep data encrypted locally, synchronize between devices, and use read-only shared LAB workspaces.
 - Available for web, Windows, and Android with Chinese/English and light/dark themes.
 
-Current version: **0.2.1**
+Current version: **0.2.2**
 
 Third-party notices are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Rhine Lab is an unofficial, non-commercial fan-style prototype and is not affiliated with or endorsed by *Arknights* or its rights holders.

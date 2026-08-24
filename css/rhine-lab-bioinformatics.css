@@ -1,0 +1,70 @@
+/* Bioinformatics workspace: local project, dataset, workflow and run registry. */
+.bioinfo-subpage-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 16px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:color-mix(in srgb,var(--paper) 94%,transparent)}
+.bioinfo-subpage-tabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;min-height:52px;padding:10px 14px;color:var(--muted);background:transparent;border:0;border-right:1px solid var(--line);font:800 13px var(--font-interface);cursor:pointer}
+.bioinfo-subpage-tabs button:last-child{border-right:0}
+.bioinfo-subpage-tabs button span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}
+.bioinfo-subpage-tabs button.active{color:var(--ink);background:color-mix(in srgb,var(--accent) 13%,var(--paper));box-shadow:inset 0 -3px 0 var(--accent)}
+.bioinfo-subpage[hidden]{display:none!important}
+.bioinfo-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;width:min(100%,620px);margin-left:auto}
+.bioinfo-toolbar-actions .inline-search{flex:1;max-width:390px}
+.bioinfo-table-panel{overflow:hidden}
+.bioinfo-table-panel .data-table{min-width:1050px}
+.bioinfo-table-panel .data-table tbody tr{cursor:pointer}
+
+.bioinformatics-heading>div:first-child:not(.heading-visual){max-width:50%}
+.heading-visual-bioinformatics{--heading-signal:#4c83d9;--heading-signal-soft:rgba(76,131,217,.16);isolation:isolate}
+.heading-visual-bioinformatics::before{background-image:linear-gradient(rgba(76,131,217,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(76,131,217,.09) 1px,transparent 1px)!important;background-size:22px 22px!important}
+.heading-visual-bioinformatics .heading-monogram{font-size:12px;letter-spacing:.04em}
+.bioinfo-protein-structure{position:absolute;left:4%;bottom:12px;z-index:2;width:38%;height:auto;overflow:visible;color:color-mix(in srgb,var(--heading-signal) 82%,var(--ink));opacity:.82}
+.bioinfo-protein-structure .protein-backbone,.bioinfo-protein-structure .protein-helix{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.bioinfo-protein-structure .protein-backbone{stroke-width:2.1}
+.bioinfo-protein-structure .protein-backbone path:last-child{stroke-width:1;opacity:.55}
+.bioinfo-protein-structure .protein-helix{stroke-width:1.5;opacity:.74}
+.bioinfo-protein-structure .protein-nodes{fill:var(--paper);stroke:currentColor;stroke-width:2}
+.bioinfo-rnaseq{position:absolute;left:39%;bottom:20px;z-index:2;display:grid;grid-template-columns:56px 1fr;grid-template-rows:repeat(4,4px) auto;gap:5px 8px;width:31%;color:color-mix(in srgb,var(--heading-signal) 88%,var(--ink));font-family:Helvetica,Arial,sans-serif!important}
+.bioinfo-rnaseq b{grid-row:1/5;align-self:center;font-size:10px;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg)}
+.bioinfo-rnaseq i{display:block;height:3px;background:linear-gradient(90deg,currentColor 0 34%,transparent 34% 39%,currentColor 39% 68%,transparent 68% 73%,currentColor 73%);opacity:.84}
+.bioinfo-rnaseq i:nth-of-type(2){width:82%;margin-left:13%}
+.bioinfo-rnaseq i:nth-of-type(3){width:94%;margin-left:3%}
+.bioinfo-rnaseq i:nth-of-type(4){width:71%;margin-left:19%}
+.bioinfo-rnaseq small{grid-column:1/-1;margin-top:2px;font-size:7px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.bioinfo-math-symbol{position:absolute;z-index:2;color:color-mix(in srgb,var(--heading-signal) 86%,var(--ink));font:800 13px/1 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.bioinfo-math-symbol.math-log{left:43%;top:88px}
+.bioinfo-math-symbol.math-sum{right:15%;bottom:28px;font-size:16px}
+
+.bioinfo-detail-hero{color:#22312b!important;background:linear-gradient(105deg,rgba(112,157,218,.26),rgba(248,250,243,.98) 40%,rgba(226,236,228,.98))!important;border-color:rgba(85,129,190,.3)!important}
+.bioinfo-detail-hero :is(h3,p){color:#22312b!important}
+.bioinfo-detail-hero .record-detail-code{color:#3567aa!important}
+.bioinfo-detail-hero .status-chip{color:#26352e;background:rgba(247,250,243,.9);border-color:rgba(70,112,171,.28)}
+.bioinfo-code-block{margin:0;padding:13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--soft);font:600 12px/1.6 Consolas,'Courier New',monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.dark-theme .bioinfo-subpage-tabs{background:color-mix(in srgb,var(--paper) 92%,#08101a)}
+.dark-theme .bioinfo-detail-hero{color:#f3f7f2!important;background:linear-gradient(108deg,rgba(78,123,190,.26),rgba(48,60,67,.98) 40%,rgba(29,38,43,.99))!important;border-color:rgba(116,158,220,.34)!important}
+.dark-theme .bioinfo-detail-hero :is(h3,p){color:#f3f7f2!important}
+.dark-theme .bioinfo-detail-hero .record-detail-code{color:#9fc2f2!important}
+.dark-theme .bioinfo-detail-hero .status-chip{color:#edf5f0;background:rgba(22,34,39,.84);border-color:rgba(151,185,231,.34)}
+.dark-theme .bioinfo-protein-structure .protein-nodes{fill:#26302b}
+
+body.background-all-lives #view-bioinformatics .page-heading{--page-collage-accent:#2457c6}
+body.background-all-lives #view-bioinformatics .heading-visual{background-image:url('../images/theme-atlas/all-lives-bioinformatics-collage-v1.svg')!important;background-size:auto 190%!important;background-position:58% 50%!important;background-repeat:no-repeat!important;opacity:.72}
+body.background-all-lives #view-bioinformatics .heading-visual>*{display:none!important}
+body.background-all-lives :is(.bioinfo-subpage-tabs,.bioinfo-code-block){border-radius:0}
+body.background-all-lives .bioinfo-subpage-tabs button.active{color:#fff;background:var(--atlas-blue);box-shadow:inset 0 -3px 0 var(--atlas-red)}
+body.dark-theme.background-all-lives #view-bioinformatics .heading-visual{filter:invert(1) grayscale(1) brightness(1.28) contrast(1.15);mix-blend-mode:screen;opacity:.34}
+
+@media(max-width:1000px){
+  .bioinformatics-heading>div:first-child:not(.heading-visual){max-width:58%}
+  .bioinfo-protein-structure{left:2%;width:46%;opacity:.58}
+  .bioinfo-rnaseq{left:42%;width:34%}
+  .bioinfo-math-symbol.math-log{display:none}
+}
+@media(max-width:700px){
+  .bioinfo-subpage-tabs{grid-template-columns:repeat(4,minmax(92px,1fr));overflow-x:auto;border-radius:14px}
+  .bioinfo-subpage-tabs button{padding:8px;font-size:11px}
+  .bioinfo-toolbar-actions{width:100%;flex-wrap:wrap}
+  .bioinfo-toolbar-actions .inline-search{flex:1 1 100%;max-width:none}
+  .bioinformatics-heading>div:first-child:not(.heading-visual){width:64%!important;max-width:64%}
+  .heading-visual-bioinformatics{width:42%!important;opacity:.4}
+  .bioinfo-protein-structure{left:0;bottom:18px;width:68%}
+  .bioinfo-rnaseq,.bioinfo-math-symbol{display:none}
+  body.background-all-lives #view-bioinformatics .heading-visual{background-size:auto 160%!important;opacity:.25}
+}

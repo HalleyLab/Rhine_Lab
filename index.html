@@ -5,21 +5,23 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#d8ff45">
-    <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、冻存样本、细胞维持与实验日程。">
+    <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、生物资源、试剂、冻存样本、细胞维持与实验日程。">
     <meta property="og:title" content="Rhine Lab · 生命科学研究工作台">
-    <meta property="og:description" content="实验记录、动物管理、试剂库存、冻存样本、细胞维持与实验日程的一体化科研工作台。">
+    <meta property="og:description" content="实验记录、生物资源管理、试剂库存、冻存样本、细胞维持与实验日程的一体化科研工作台。">
     <meta property="og:type" content="website">
     <meta property="og:image" content="images/rhine-life-logo.png">
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
-    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.1" type="image/png" sizes="512x512">
-    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.1">
+    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.2" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.2">
     <link rel="stylesheet" href="css/rhine-lab.css?v=20260815-1">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260818-8">
-    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.1">
+    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.2">
+    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.2">
+    <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.2">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -55,12 +57,13 @@
                 <p class="nav-label">WORKSPACE / 工作区</p>
                 <button class="nav-item active" type="button" data-view="dashboard"><span class="nav-code">01</span><span>工作总览</span><b>OVERVIEW</b></button>
                 <button class="nav-item" type="button" data-view="experiments"><span class="nav-code">02</span><span>实验记录</span><b>RECORDS</b></button>
-                <button class="nav-item" type="button" data-view="mice"><span class="nav-code">03</span><span>动物管理</span><b>ANIMALS</b></button>
-                <button class="nav-item" type="button" data-view="reagents"><span class="nav-code">04</span><span>试剂库存</span><b>REAGENTS</b></button>
-                <button class="nav-item" type="button" data-view="cells"><span class="nav-code">05</span><span>细胞维持</span><b>CELL CULTURE</b></button>
-                <button class="nav-item" type="button" data-view="samples"><span class="nav-code">06</span><span>冻存样本</span><b>FROZEN SAMPLES</b></button>
-                <button class="nav-item" type="button" data-view="protocols"><span class="nav-code">07</span><span>实验方案</span><b>PROTOCOLS</b></button>
-                <button class="nav-item" type="button" data-view="schedule"><span class="nav-code">08</span><span>日程排班</span><b>SCHEDULE</b></button>
+                <button class="nav-item" type="button" data-view="mice"><span class="nav-code">03</span><span>生物管理</span><b>BIOLOGICALS</b></button>
+                <button class="nav-item" type="button" data-view="bioinformatics"><span class="nav-code">04</span><span>生物信息</span><b>BIOINFORMATICS</b></button>
+                <button class="nav-item" type="button" data-view="reagents"><span class="nav-code">05</span><span>试剂库存</span><b>REAGENTS</b></button>
+                <button class="nav-item" type="button" data-view="cells"><span class="nav-code">06</span><span>细胞维持</span><b>CELL CULTURE</b></button>
+                <button class="nav-item" type="button" data-view="samples"><span class="nav-code">07</span><span>冻存样本</span><b>FROZEN SAMPLES</b></button>
+                <button class="nav-item" type="button" data-view="protocols"><span class="nav-code">08</span><span>实验方案</span><b>PROTOCOLS</b></button>
+                <button class="nav-item" type="button" data-view="schedule"><span class="nav-code">09</span><span>日程排班</span><b>SCHEDULE</b></button>
             </nav>
 
             <div class="sidebar-foot">
@@ -75,7 +78,7 @@
                 <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
                 <label class="global-search">
                     <span aria-hidden="true">⌕</span>
-                    <input id="globalSearch" type="search" placeholder="检索实验记录、实验结果、动物、试剂、样本或细胞…" autocomplete="off">
+                    <input id="globalSearch" type="search" autocomplete="off">
                     <kbd>CTRL K</kbd>
                 </label>
                 <div class="top-actions">
@@ -83,6 +86,7 @@
                         <span>公开展示 · 只读</span>
                         <button type="button" data-open-sync>登录后编辑</button>
                     </div>
+                    <a class="desktop-download-button" id="desktopDownloadButton" href="dist/release-0.2.1/Rhine-Lab-0.2.1-Windows.zip" download aria-label="下载 Rhine Lab Windows 应用"><span aria-hidden="true">↓</span><b>下载应用</b></a>
                     <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="syncDialog" aria-haspopup="dialog" aria-label="登录或管理设备同步" title="登录或管理设备同步">
                         <i aria-hidden="true"></i><span id="syncStatusLabel">登录 / 同步</span>
                     </button>
@@ -176,37 +180,74 @@
                     </div>
                     <div class="module-toolbar">
                         <div class="filter-tabs" id="experimentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="进行中">进行中</button><button data-filter="待分析">待分析</button><button data-filter="已完成">已完成</button><button data-filter="有结果">有结果</button><button data-filter="待填写结果">待填写结果</button></div>
-                        <label class="inline-search"><span>⌕</span><input id="experimentSearch" type="search" placeholder="筛选实验、记录内容或结果"></label>
+                        <label class="inline-search"><span>⌕</span><input id="experimentSearch" type="search"></label>
                     </div>
                     <div class="experiment-day-list" id="experimentGrid"></div>
                 </section>
 
 
-                <section class="view" id="view-mice" data-title="动物管理">
-                    <div class="page-heading technical-heading">
-                        <div><p class="eyebrow"><span>ANIMAL FACILITY</span></p><h1>动物管理</h1><p class="story-quote">“可我从来都无法赞同理所当然的牺牲。”<cite>——塞雷娅</cite></p></div>
-                        <div class="heading-actions animal-heading-actions"><button class="button primary" type="button" data-add="mouse"><span>＋</span> 添加动物</button></div>
-                        <div class="heading-visual heading-visual-03" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>VIVARIUM / ETHICS</b><small>RHINE LAB · HOUSING</small></span><span class="heading-monogram">VIV</span></div>
+                <section class="view" id="view-mice" data-title="生物管理">
+                    <div class="page-heading technical-heading biology-heading">
+                        <div><p class="eyebrow"><span>BIOLOGICAL RESOURCE CENTER</span></p><h1>生物管理</h1><p class="story-quote">“生命本身就是我们要回答的问题。”<cite>——莱茵生命研究档案</cite></p></div>
+                        <div class="heading-visual heading-visual-03" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>BIOLOGICAL / RESOURCE</b><small>RHINE LAB · LIVING SYSTEMS</small></span><span class="heading-monogram">BIO</span></div>
                     </div>
-                    <section class="panel animal-rack-manager">
-                        <div class="module-toolbar in-panel animal-rack-toolbar">
-                            <div class="section-title"><span class="section-index">A</span><div><p class="micro-label">HOUSING MAP</p><h2>笼架与笼位</h2></div></div>
-                            <div class="animal-rack-actions"><button class="button ghost compact" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button></div>
-                        </div>
-                        <div class="animal-rack-tabs" id="animalRackTabs" aria-label="动物笼架"></div>
-                        <div class="animal-housing-layout">
-                            <div class="animal-rack-board">
-                                <header><div><p class="micro-label" id="animalRackKicker">ANIMAL RACK</p><h3 id="animalRackTitle">尚未建立笼架</h3><small id="animalRackMeta">新建笼架后，可逐个添加笼位和动物。</small></div><div class="animal-rack-legend"><span><i class="occupied"></i>已建笼位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
-                                <div class="animal-rack-grid" id="animalRackGrid"></div>
+                    <div class="biology-subpage-tabs" role="tablist" aria-label="生物管理子页面">
+                        <button class="active" type="button" role="tab" data-biology-tab="animals" aria-selected="true"><span>ANI</span>动物</button>
+                        <button type="button" role="tab" data-biology-tab="plants" aria-selected="false"><span>PLT</span>植物</button>
+                        <button type="button" role="tab" data-biology-tab="microbes" aria-selected="false"><span>MIC</span>菌</button>
+                        <button type="button" role="tab" data-biology-tab="viruses" aria-selected="false"><span>VIR</span>病毒</button>
+                    </div>
+
+                    <section class="biology-subpage active" data-biology-panel="animals">
+                        <section class="panel animal-rack-manager">
+                            <div class="module-toolbar in-panel animal-rack-toolbar compact-resource-toolbar"><div class="animal-rack-actions"><button class="button ghost compact" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button></div></div>
+                            <div class="animal-rack-tabs direct-drag-scroll" id="animalRackTabs" aria-label="动物笼架" data-drag-scroll></div>
+                            <div class="animal-housing-layout">
+                                <div class="animal-rack-board">
+                                    <header><div><p class="micro-label" id="animalRackKicker">ANIMAL RACK</p><h3 id="animalRackTitle">尚未建立笼架</h3><small id="animalRackMeta">新建笼架后，可逐个添加笼位和动物。</small></div><div class="animal-rack-legend"><span><i class="occupied"></i>已建笼位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
+                                    <div class="animal-rack-grid direct-drag-scroll" id="animalRackGrid" data-drag-scroll></div>
+                                </div>
+                                <aside class="animal-cage-inspector" id="animalCageInspector"><div class="animal-cage-empty"><span>CAGE</span><strong>选择一个笼位</strong><p>查看笼位条件与其中的动物。</p></div></aside>
                             </div>
-                            <aside class="animal-cage-inspector" id="animalCageInspector">
-                                <div class="animal-cage-empty"><span>CAGE</span><strong>选择一个笼位</strong><p>查看笼位条件与其中的动物，或点击空位建立新笼位。</p></div>
-                            </aside>
-                        </div>
+                        </section>
+                        <section class="panel table-panel biology-table-panel">
+                            <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">ANIMAL REGISTRY</p><h2>动物条目</h2></div></div><div class="biology-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="mouseSearch" type="search"></label><button class="button primary compact" type="button" data-add="mouse"><span>＋</span> 添加动物</button></div></div>
+                            <div class="table-scroll"><table class="data-table"><thead><tr><th>动物编号</th><th>物种</th><th>品种 / 品系</th><th>性别</th><th>出生 / 孵化日期</th><th>笼位</th><th>状态</th><th></th></tr></thead><tbody id="mouseTable"></tbody></table></div>
+                        </section>
                     </section>
-                    <section class="panel table-panel">
-                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">ANIMAL REGISTRY</p><h2>动物条目</h2></div></div><label class="inline-search"><span>⌕</span><input id="mouseSearch" type="search" placeholder="搜索编号、物种、品系或笼位"></label></div>
-                        <div class="table-scroll"><table class="data-table"><thead><tr><th>动物编号</th><th>物种</th><th>品种 / 品系</th><th>性别</th><th>出生 / 孵化日期</th><th>笼位</th><th>状态</th><th></th></tr></thead><tbody id="mouseTable"></tbody></table></div>
+
+                    <section class="biology-subpage" data-biology-panel="plants" hidden>
+                        <section class="panel plant-rack-manager">
+                            <div class="module-toolbar in-panel plant-rack-toolbar compact-resource-toolbar"><div class="plant-rack-actions"><button class="button ghost compact" type="button" data-add="plantRack"><span>＋</span> 新建培养架</button></div></div>
+                            <div class="plant-rack-tabs direct-drag-scroll" id="plantRackTabs" aria-label="植物培养架" data-drag-scroll></div>
+                            <div class="plant-housing-layout">
+                                <div class="plant-rack-board">
+                                    <header><div><p class="micro-label" id="plantRackKicker">GROWTH RACK</p><h3 id="plantRackTitle">尚未建立培养架</h3><small id="plantRackMeta">建立培养架后，可为每株植物分配准确位置。</small></div><div class="plant-rack-legend"><span><i class="occupied"></i>已定位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
+                                    <div class="plant-rack-grid direct-drag-scroll" id="plantRackGrid" data-drag-scroll></div>
+                                </div>
+                                <aside class="plant-position-inspector" id="plantPositionInspector"><div class="plant-position-empty"><span>PLANT</span><strong>选择一个位置</strong><p>查看该位置的植物材料与培养条件。</p></div></aside>
+                            </div>
+                        </section>
+                        <section class="panel table-panel biology-table-panel">
+                            <div class="module-toolbar in-panel resource-only-toolbar"><div class="biology-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="plantSearch" type="search"></label><button class="button primary compact" type="button" data-add="plant"><span>＋</span> 登记植物</button></div></div>
+                            <div class="biology-research-ribbon" aria-label="植物研究链路"><span>GERMPLASM<small>种质 / 材料</small></span><i></i><span>GROWTH<small>环境 / 阶段</small></span><i></i><span>PHENOTYPE<small>表型 / 处理</small></span></div>
+                            <div class="table-scroll"><table class="data-table"><thead><tr><th>材料编号</th><th>名称 / 物种</th><th>材料类型</th><th>品系 / 世代</th><th>生长阶段</th><th>培养架 / 位置</th><th>状态</th><th></th></tr></thead><tbody id="plantTable"></tbody></table></div>
+                        </section>
+                    </section>
+
+                    <section class="biology-subpage" data-biology-panel="microbes" hidden>
+                        <section class="panel table-panel biology-table-panel">
+                            <div class="module-toolbar in-panel resource-only-toolbar"><div class="biology-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioresourceSearch" type="search"></label><button class="button ghost compact" type="button" data-add="microbe"><span>＋</span> 录入菌种</button><button class="button primary compact" type="button" data-add="plasmid"><span>＋</span> 录入质粒</button></div></div>
+                            <div class="filter-tabs biology-resource-filters" id="bioresourceFilters"><button class="active" type="button" data-bioresource-filter="全部">全部</button><button type="button" data-bioresource-filter="菌种">菌种</button><button type="button" data-bioresource-filter="质粒">质粒</button></div>
+                            <div class="table-scroll"><table class="data-table"><thead><tr><th>编号</th><th>资源名称</th><th>类别</th><th>宿主 / 物种</th><th>遗传特征 / 载荷</th><th>培养或筛选条件</th><th>存储位置</th><th></th></tr></thead><tbody id="bioresourceTable"></tbody></table></div>
+                        </section>
+                    </section>
+
+                    <section class="biology-subpage" data-biology-panel="viruses" hidden>
+                        <section class="panel table-panel biology-table-panel">
+                            <div class="module-toolbar in-panel resource-only-toolbar"><div class="biology-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="virusSearch" type="search"></label><button class="button primary compact" type="button" data-add="virus"><span>＋</span> 录入病毒</button></div></div>
+                            <div class="table-scroll"><table class="data-table"><thead><tr><th>病毒编号</th><th>名称 / 类型</th><th>株系 / 血清型</th><th>表达载荷</th><th>宿主 / 嗜性</th><th>滴度</th><th>生物安全</th><th></th></tr></thead><tbody id="virusTable"></tbody></table></div>
+                        </section>
                     </section>
                 </section>
 
@@ -217,7 +258,7 @@
                         <div class="heading-visual heading-visual-04" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>CHEMICAL / INVENTORY</b><small>RHINE LAB · STORAGE</small></span><span class="heading-monogram">CHM</span></div>
                     </div>
                     <section class="panel table-panel">
-                        <div class="module-toolbar in-panel"><div class="filter-tabs" id="reagentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="抗体">抗体</button><button data-filter="培养基">培养基</button><button data-filter="化学试剂">化学试剂</button><button data-filter="实验耗材">实验耗材</button></div><label class="inline-search"><span>⌕</span><input id="reagentSearch" type="search" placeholder="搜索名称、货号或位置"></label></div>
+                        <div class="module-toolbar in-panel"><div class="filter-tabs" id="reagentFilters"><button class="active" data-filter="全部">全部</button><button data-filter="抗体">抗体</button><button data-filter="培养基">培养基</button><button data-filter="化学试剂">化学试剂</button><button data-filter="实验耗材">实验耗材</button></div><label class="inline-search"><span>⌕</span><input id="reagentSearch" type="search"></label></div>
                         <div class="table-scroll"><table class="data-table"><thead><tr><th>试剂名称</th><th>类别 / 货号</th><th>批次</th><th>存储位置</th><th>实际库存</th><th>有效期</th><th>状态</th><th></th></tr></thead><tbody id="reagentTable"></tbody></table></div>
                     </section>
                 </section>
@@ -243,7 +284,7 @@
                         <aside class="panel sample-detail" id="sampleDetail"></aside>
                     </div>
                     <section class="panel sample-list-panel">
-                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">SAMPLE CATALOG</p><h2>样本目录</h2></div></div><label class="inline-search"><span>⌕</span><input id="sampleSearch" type="search" placeholder="搜索样本编号或来源"></label></div>
+                        <div class="module-toolbar in-panel"><div class="section-title"><span class="section-index">B</span><div><p class="micro-label">SAMPLE CATALOG</p><h2>样本目录</h2></div></div><label class="inline-search"><span>⌕</span><input id="sampleSearch" type="search"></label></div>
                         <div class="table-scroll"><table class="data-table"><thead><tr><th>样本编号</th><th>类型</th><th>来源</th><th>处理方式</th><th>存储位置</th><th>入库日期</th><th>状态</th></tr></thead><tbody id="sampleTable"></tbody></table></div>
                     </section>
                 </section>
@@ -319,6 +360,39 @@
                     </section>
                 </section>
 
+                <section class="view" id="view-bioinformatics" data-title="生物信息">
+                    <div class="page-heading technical-heading bioinformatics-heading">
+                        <div><p class="eyebrow"><span>COMPUTATIONAL BIOLOGY</span></p><h1>生物信息</h1><p class="story-quote">“可科学本该是理性的。”<cite>——塞雷娅</cite></p></div>
+                        <div class="heading-visual heading-visual-bioinformatics" aria-hidden="true" data-i18n-skip>
+                            <svg class="bioinfo-protein-structure" viewBox="0 0 260 126" focusable="false" aria-hidden="true">
+                                <g class="protein-backbone"><path d="M12 79C34 17 73 18 84 54s31 55 55 18 54-37 67 0 30 34 43 4"/><path d="M28 90C57 71 59 32 91 33s33 57 65 52 39-51 78-28"/></g>
+                                <g class="protein-nodes"><circle cx="17" cy="78" r="5"/><circle cx="82" cy="54" r="5"/><circle cx="139" cy="72" r="5"/><circle cx="205" cy="72" r="5"/><circle cx="247" cy="76" r="5"/></g>
+                                <g class="protein-helix"><path d="M101 25c17-13 34 13 51 0s34 13 51 0"/><path d="M101 36c17-13 34 13 51 0s34 13 51 0"/></g>
+                            </svg>
+                            <span class="bioinfo-rnaseq"><b>RNA-seq</b><i></i><i></i><i></i><i></i><small>FASTQ → ALIGN → COUNT</small></span>
+                            <span class="bioinfo-math-symbol math-log">log₂FC</span><span class="bioinfo-math-symbol math-sum">Σxᵢ</span>
+                            <span class="heading-visual-label"><b>DATA / COMPUTE</b><small>RHINE LAB · BIOINFORMATICS</small></span><span class="heading-monogram">INFO</span>
+                        </div>
+                    </div>
+                    <div class="bioinfo-subpage-tabs" role="tablist" aria-label="生物信息子页面">
+                        <button class="active" type="button" role="tab" data-bioinfo-tab="projects" aria-selected="true"><span>PRJ</span>项目</button>
+                        <button type="button" role="tab" data-bioinfo-tab="datasets" aria-selected="false"><span>DATA</span>数据集</button>
+                        <button type="button" role="tab" data-bioinfo-tab="pipelines" aria-selected="false"><span>FLOW</span>分析流程</button>
+                        <button type="button" role="tab" data-bioinfo-tab="runs" aria-selected="false"><span>RUN</span>运行任务</button>
+                    </div>
+                    <section class="bioinfo-subpage active" data-bioinfo-panel="projects">
+                        <section class="panel table-panel bioinfo-table-panel"><div class="module-toolbar in-panel resource-only-toolbar"><div class="bioinfo-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioProjectSearch" type="search"></label><button class="button primary compact" type="button" data-add="bioProject"><span>＋</span> 新建项目</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>项目编号</th><th>项目名称</th><th>研究对象</th><th>参考基因组</th><th>负责人 / 组织</th><th>数据位置</th><th>状态</th><th></th></tr></thead><tbody id="bioProjectTable"></tbody></table></div></section>
+                    </section>
+                    <section class="bioinfo-subpage" data-bioinfo-panel="datasets" hidden>
+                        <section class="panel table-panel bioinfo-table-panel"><div class="module-toolbar in-panel resource-only-toolbar"><div class="bioinfo-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioDatasetSearch" type="search"></label><button class="button primary compact" type="button" data-add="bioDataset"><span>＋</span> 登记数据集</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>数据集编号</th><th>名称 / 类型</th><th>关联项目</th><th>样本 / 来源</th><th>规模</th><th>校验值</th><th>位置</th><th></th></tr></thead><tbody id="bioDatasetTable"></tbody></table></div></section>
+                    </section>
+                    <section class="bioinfo-subpage" data-bioinfo-panel="pipelines" hidden>
+                        <section class="panel table-panel bioinfo-table-panel"><div class="module-toolbar in-panel resource-only-toolbar"><div class="bioinfo-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioPipelineSearch" type="search"></label><button class="button primary compact" type="button" data-add="bioPipeline"><span>＋</span> 新建流程</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>流程编号</th><th>名称 / 版本</th><th>分析类型</th><th>运行环境</th><th>输入</th><th>输出</th><th>代码位置</th><th></th></tr></thead><tbody id="bioPipelineTable"></tbody></table></div></section>
+                    </section>
+                    <section class="bioinfo-subpage" data-bioinfo-panel="runs" hidden>
+                        <section class="panel table-panel bioinfo-table-panel"><div class="module-toolbar in-panel resource-only-toolbar"><div class="bioinfo-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioRunSearch" type="search"></label><button class="button primary compact" type="button" data-add="bioRun"><span>＋</span> 新建任务</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>任务编号</th><th>项目</th><th>分析流程</th><th>输入数据</th><th>计算资源</th><th>开始 / 完成</th><th>状态</th><th></th></tr></thead><tbody id="bioRunTable"></tbody></table></div></section>
+                    </section>
+                </section>
                 <section class="view" id="view-schedule" data-title="日程排班">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>OPERATIONS SCHEDULE</span></p><h1>日程排班</h1><p class="story-quote">“时间有限，但应该能有些帮助。”<cite>——塞雷娅</cite></p></div>
@@ -354,7 +428,7 @@
                     </div>
                     <div class="cell-maintenance-layout cell-maintenance-streamlined">
                         <section class="panel cell-culture-panel">
-                            <div class="module-toolbar in-panel cell-search-toolbar"><label class="inline-search"><span>⌕</span><input id="cellSearch" type="search" placeholder="搜索细胞、培养基或容器"></label></div>
+                            <div class="module-toolbar in-panel cell-search-toolbar"><label class="inline-search"><span>⌕</span><input id="cellSearch" type="search"></label></div>
                             <div class="cell-culture-grid" id="cellCultureGrid"></div>
                         </section>
                         <div id="cellMaintenanceQueue" hidden></div>
@@ -368,7 +442,7 @@
         <button class="search-backdrop" type="button" aria-label="关闭检索结果"></button>
         <section class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
             <header><div><p class="micro-label">GLOBAL DATABASE SEARCH</p><h2 id="searchTitle">全局检索</h2></div><button class="close-button" type="button" data-close-search>ESC</button></header>
-            <label class="dialog-search"><span>⌕</span><input id="overlaySearchInput" type="search" placeholder="输入关键词…" autocomplete="off"></label>
+            <label class="dialog-search"><span>⌕</span><input id="overlaySearchInput" type="search" autocomplete="off"></label>
             <div class="search-results" id="searchResults"></div>
         </section>
     </div>
@@ -471,7 +545,6 @@
 
             <p class="sync-message" id="syncMessage">云同步尚未配置；页面仍可作为本地工作台使用。</p>
             <footer>
-                <button class="button ghost" id="installAppButton" type="button" hidden>安装到此设备</button>
                 <button class="button ghost" id="syncSignOut" type="button" hidden>退出登录</button>
                 <button class="button primary" type="button" data-close-sync>完成</button>
             </footer>
@@ -609,12 +682,12 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=20260818-1"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.2"></script>
     <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
     <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.1.9-research-tools"></script>
-    <script src="js/rhine-lab-pwa.js?v=0.2.1-native-update-check"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=20260821-2"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.2"></script>
+    <script src="js/rhine-lab-pwa.js?v=0.2.2"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.2.2"></script>
 </body>
 </html>

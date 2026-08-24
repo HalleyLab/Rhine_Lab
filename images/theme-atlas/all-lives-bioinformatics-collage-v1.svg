@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="420" viewBox="0 0 1040 420">
+ <defs><pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#2457c6" stroke-opacity=".22"/></pattern><filter id="rough"><feTurbulence baseFrequency=".55" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2"/></filter></defs>
+ <rect width="1040" height="420" fill="#f2f2ec"/><rect width="1040" height="420" fill="url(#grid)"/>
+ <path d="M60 352L270 30 380 28 205 390z" fill="#dfe9ec"/><path d="M420 0l250 0-118 420H310z" fill="#e9dfda" opacity=".8"/>
+ <g fill="none" stroke="#1d2d34" filter="url(#rough)"><path stroke-width="3" d="M70 292C144 180 219 106 325 92c87-11 165 41 215 108 43 57 94 84 181 55 53-17 96-9 159 26"/><path d="M118 286l88-76 74 32 81-102 82 83 95-45 76 66 96-91 127 80"/><circle cx="206" cy="210" r="95"/><circle cx="721" cy="255" r="112"/><path d="M609 78h246v104H609zM632 101h74v58h-74zM726 101h106v16H726zm0 29h74v29h-74z"/></g>
+ <g fill="#2457c6"><rect x="89" y="74" width="108" height="72"/><rect x="778" y="286" width="130" height="54"/><circle cx="361" cy="140" r="7"/><circle cx="538" cy="200" r="7"/><circle cx="721" cy="255" r="7"/></g>
+ <g fill="#df6658"><rect x="89" y="146" width="146" height="8"/><rect x="908" y="286" width="8" height="82"/><circle cx="280" cy="242" r="6"/></g>
+ <g id="protein-collage" transform="translate(390 118)" opacity=".82" filter="url(#rough)">
+  <path d="M0 94C20 20 63 13 87 63s57 73 91 20 80-55 101 3 45 57 72 7" fill="none" stroke="#1d2d34" stroke-width="5" stroke-linecap="round"/>
+  <path d="M24 112C54 86 57 30 94 32s44 92 86 79 56-83 106-56" fill="none" stroke="#2457c6" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M102 8c20-17 40 17 60 0s40 17 60 0M102 22c20-17 40 17 60 0s40 17 60 0" fill="none" stroke="#df6658" stroke-width="3" stroke-linecap="round"/>
+  <g fill="#f2f2ec" stroke="#2457c6" stroke-width="3"><circle cx="5" cy="91" r="7"/><circle cx="87" cy="63" r="7"/><circle cx="178" cy="83" r="7"/><circle cx="279" cy="86" r="7"/><circle cx="348" cy="93" r="7"/></g>
+  <path d="M238 127l38-17-8 18 21 10-39 16 8-17z" fill="#2457c6" opacity=".75"/>
+  <text x="3" y="145" fill="#1d2d34" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">PROTEIN // STRUCTURE</text>
+ </g> <g font-family="Helvetica,Arial,sans-serif" fill="#1d2d34"><text x="105" y="118" font-size="36" font-weight="700">Σ λᵢvᵢ</text><text x="625" y="88" font-size="11" font-weight="700" letter-spacing="2">COMPUTATIONAL // BIOLOGY</text><text x="625" y="204" font-size="48" font-weight="700">01</text><text x="704" y="204" font-size="48" font-weight="700">10</text><text x="785" y="326" font-size="12" font-weight="700">DATA / PIPELINE / RUN</text><text x="390" y="344" font-size="13">{ genome: "reference" }</text><text x="426" y="373" font-size="11">$ nextflow run workflow.nf</text></g>
+ <g fill="none" stroke="#fff" opacity=".88"><path d="M785 299h110M785 310h82M785 338h102"/><rect x="330" y="66" width="22" height="22"/><rect x="355" y="66" width="22" height="22"/><rect x="380" y="66" width="22" height="22"/></g>
+</svg>

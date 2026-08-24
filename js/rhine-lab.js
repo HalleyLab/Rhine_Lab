@@ -177,7 +177,46 @@
     defaults.experiments = defaults.experiments.concat(clone(additionalExamples.experiments));
     defaults.results = clone(additionalExamples.results);
     defaults.mice = defaults.mice.concat(clone(additionalExamples.mice));
-    defaults.reagents = defaults.reagents.concat(clone(additionalExamples.reagents));
+    defaults.plants = [
+        { id: 'PLT-AT-001', name: '拟南芥 Col-0', scientificName: 'Arabidopsis thaliana', materialType: '种子 / 植株', accession: 'Col-0', generation: 'T3', genotype: 'WT', growthStage: '莲座期', growthConditions: '22°C · 16 h / 8 h 光周期', location: '植物房 GR-01 / A2', parentage: 'T2 自交后代', treatment: '对照', phenotype: '株型均一，叶色正常', status: '生长中', frozenSampleId: '', notes: '', createdBy: 'NODE-04', history: [] },
+        { id: 'PLT-NB-002', name: '本氏烟草', scientificName: 'Nicotiana benthamiana', materialType: '植株', accession: 'LAB-NB-01', generation: 'P1', genotype: 'WT', growthStage: '6 叶期', growthConditions: '24°C · 16 h / 8 h 光周期', location: '植物房 GR-02 / B1', parentage: '种子繁殖', treatment: '待农杆菌浸润', phenotype: '叶片展开正常', status: '待处理', frozenSampleId: '', notes: '', createdBy: 'NODE-04', history: [] },
+        { id: 'PLT-RC-003', name: '水稻愈伤组织', scientificName: 'Oryza sativa', materialType: '愈伤组织', accession: 'Nipponbare', generation: 'T0', genotype: '编辑候选株', growthStage: '诱导期', growthConditions: '28°C · 暗培养', location: '组织培养室 TC-01 / C3', parentage: '成熟胚诱导', treatment: '潮霉素筛选', phenotype: '淡黄色颗粒状愈伤', status: '筛选中', frozenSampleId: '', notes: '', createdBy: 'NODE-03', history: [] }
+    ];
+    defaults.plantRacks = [
+        { id: 'PRACK-GR01-01', name: '植物房 GR-01 培养架', facility: '植物房 GR-01', rows: 5, columns: 10, createdBy: 'NODE-04' },
+        { id: 'PRACK-TC01-02', name: '组织培养室 TC-01 培养架', facility: '组织培养室 TC-01', rows: 4, columns: 8, createdBy: 'NODE-03' }
+    ];
+    defaults.plants[0].rackId = 'PRACK-GR01-01'; defaults.plants[0].position = 'A2';
+    defaults.plants[1].rackId = 'PRACK-GR01-01'; defaults.plants[1].position = 'B1';
+    defaults.plants[2].rackId = 'PRACK-TC01-02'; defaults.plants[2].position = 'C3';
+    defaults.bioProjects = [
+        { id: 'BIO-PRJ-001', name: '海马空间转录组图谱', organism: 'Mus musculus', referenceGenome: 'GRCm39 / mm39', objective: '解析记忆形成相关的空间表达变化', organization: '神经基因组工作组', repository: 'DATA-01 / projects/hippocampus-st', status: '进行中', notes: '', createdBy: 'NODE-03', history: [] },
+        { id: 'BIO-PRJ-002', name: '拟南芥胁迫响应变异分析', organism: 'Arabidopsis thaliana', referenceGenome: 'TAIR10', objective: '比较干旱处理前后的变异与表达特征', organization: '植物系统研究组', repository: 'DATA-02 / projects/ath-stress', status: '准备中', notes: '', createdBy: 'NODE-04', history: [] }
+    ];
+    defaults.bioDatasets = [
+        { id: 'BIO-DATA-001', name: 'CA1 Visium 原始测序数据', dataType: '空间转录组', projectId: 'BIO-PRJ-001', sampleSource: 'RL-S-0869', accession: 'LOCAL-ST-2608', size: '186 GB', checksum: 'SHA256 已校验', location: 'DATA-01 / raw/visium', format: 'FASTQ + TIFF', notes: '', createdBy: 'NODE-03', history: [] },
+        { id: 'BIO-DATA-002', name: '拟南芥胁迫 RNA-seq', dataType: 'RNA-seq', projectId: 'BIO-PRJ-002', sampleSource: 'PLT-AT-001', accession: 'LOCAL-RNA-2611', size: '72 GB', checksum: 'SHA256 已校验', location: 'DATA-02 / raw/rnaseq', format: 'FASTQ', notes: '', createdBy: 'NODE-04', history: [] }
+    ];
+    defaults.bioPipelines = [
+        { id: 'BIO-FLOW-001', name: 'RNA-seq 标准流程', version: 'nf-core/rnaseq 3.18', analysisType: '转录组定量', environment: 'Nextflow · Docker', repository: 'github.com/nf-core/rnaseq', inputType: 'FASTQ + sample sheet', outputType: 'QC + counts + BAM', command: 'nextflow run nf-core/rnaseq -profile docker', projectId: '', notes: '', createdBy: 'NODE-03', history: [] },
+        { id: 'BIO-FLOW-002', name: '短变异检测流程', version: 'GATK 4.6', analysisType: 'SNV / Indel calling', environment: 'WDL · Cromwell', repository: 'broadinstitute/gatk', inputType: 'FASTQ / BAM', outputType: 'gVCF / VCF', command: 'java -jar cromwell.jar run workflow.wdl', projectId: '', notes: '', createdBy: 'NODE-02', history: [] }
+    ];
+    defaults.bioRuns = [
+        { id: 'BIO-RUN-001', projectId: 'BIO-PRJ-001', pipelineId: 'BIO-FLOW-001', datasetId: 'BIO-DATA-001', compute: 'WORKSTATION-03 · 24 CPU · 96 GB', startDate: '2026-08-08', endDate: '', status: '运行中', outputLocation: 'DATA-01 / results/st-2608', notes: '已完成原始数据质控。', createdBy: 'NODE-03', history: [] }
+    ];
+    defaults.microbes = [
+        { id: 'MIC-DH5A-001', name: 'E. coli DH5α', species: 'Escherichia coli', strain: 'DH5α', biosafetyLevel: 'BSL-1', genotype: 'recA1 · endA1 · hsdR17', source: '实验室保藏', medium: 'LB', growthConditions: '37°C · 200 rpm', resistance: '无', location: '-80°C / MIC-A1', status: '在库', frozenSampleId: '', notes: '用于常规质粒克隆。', createdBy: 'NODE-02', history: [] },
+        { id: 'MIC-BL21-002', name: 'E. coli BL21(DE3)', species: 'Escherichia coli', strain: 'BL21(DE3)', biosafetyLevel: 'BSL-1', genotype: 'T7 RNA polymerase', source: '实验室保藏', medium: 'LB', growthConditions: '37°C · 200 rpm', resistance: '无', location: '-80°C / MIC-A2', status: '在库', frozenSampleId: '', notes: '用于重组蛋白表达。', createdBy: 'NODE-02', history: [] },
+        { id: 'MIC-GV31-003', name: 'A. tumefaciens GV3101', species: 'Agrobacterium tumefaciens', strain: 'GV3101', biosafetyLevel: 'BSL-1', genotype: 'pMP90', source: '植物平台', medium: 'YEB', growthConditions: '28°C · 200 rpm', resistance: 'Rifampicin', location: '-80°C / MIC-B1', status: '在库', frozenSampleId: '', notes: '用于植物瞬时表达。', createdBy: 'NODE-04', history: [] }
+    ];
+    defaults.plasmids = [
+        { id: 'PLA-PUC19-001', name: 'pUC19', backbone: 'pUC19', insert: '无', host: 'E. coli DH5α', sizeBp: 2686, resistance: 'Ampicillin', promoter: 'lac', source: '实验室保藏', sequenceRef: 'GenBank / 本地序列文件', location: '-20°C / DNA-A1', status: '在库', frozenSampleId: '', notes: '', createdBy: 'NODE-02', history: [] },
+        { id: 'PLA-GFP-002', name: 'pLenti-EF1α-GFP', backbone: 'Lentiviral transfer vector', insert: 'GFP', host: 'E. coli Stbl3', sizeBp: 8740, resistance: 'Ampicillin', promoter: 'EF1α', source: '载体平台', sequenceRef: '本地 GenBank 记录', location: '-20°C / DNA-A3', status: '在库', frozenSampleId: '', notes: '慢病毒包装用转移质粒。', createdBy: 'NODE-05', history: [] }
+    ];
+    defaults.viruses = [
+        { id: 'VIR-AAV9-001', name: 'AAV9-hSyn-GCaMP6s', virusType: 'AAV 载体', serotype: 'AAV9', genome: 'ssAAV', cargo: 'hSyn-GCaMP6s', hostRange: '神经元', titer: '2.1 × 10¹³ vg/mL', batch: 'AAV9-2607', biosafetyLevel: 'BSL-1', productionDate: '2026-07-18', location: '-80°C / VIR-A1', status: '在库', frozenSampleId: '', notes: '', createdBy: 'NODE-01', history: [] },
+        { id: 'VIR-LV-002', name: 'LV-EF1α-GFP', virusType: '慢病毒载体', serotype: 'VSV-G 假型', genome: 'RNA', cargo: 'EF1α-GFP', hostRange: '哺乳动物细胞', titer: '8.4 × 10⁸ TU/mL', batch: 'LV-2608-02', biosafetyLevel: 'BSL-2', productionDate: '2026-08-02', location: '-80°C / VIR-B2', status: '在库', frozenSampleId: '', notes: '', createdBy: 'NODE-05', history: [] }
+    ];    defaults.reagents = defaults.reagents.concat(clone(additionalExamples.reagents));
     defaults.samples = defaults.samples.concat(clone(additionalExamples.samples));
     defaults.schedule = defaults.schedule.concat(clone(additionalExamples.schedule));
     defaults.activities = defaults.activities.concat(clone(additionalExamples.activities));
@@ -274,7 +313,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'plants', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -298,6 +337,12 @@
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
     let activeAnimalRackId = state.animalRacks.some(rack => rack.id === localStorage.getItem('rhineLabActiveAnimalRack')) ? localStorage.getItem('rhineLabActiveAnimalRack') : (state.animalRacks[0] ? state.animalRacks[0].id : '');
     let selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
+    let activePlantRackId = state.plantRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActivePlantRack'); }) ? localStorage.getItem('rhineLabActivePlantRack') : (state.plantRacks[0] ? state.plantRacks[0].id : '');
+    let selectedPlantId = state.plants[0] ? state.plants[0].id : '';
+    let pendingPlantDefaults = null;
+    let activeBioinfoTab = ['projects', 'datasets', 'pipelines', 'runs'].includes(localStorage.getItem('rhineLabBioinfoTab')) ? localStorage.getItem('rhineLabBioinfoTab') : 'projects';
+    let activeBiologyTab = ['animals', 'plants', 'microbes', 'viruses'].includes(localStorage.getItem('rhineLabBiologyTab')) ? localStorage.getItem('rhineLabBiologyTab') : 'animals';
+    let bioresourceFilter = '全部';
     let pendingAnimalCageDefaults = null;
     let activeDialogType = '';
     let editingRecord = null;
@@ -546,6 +591,15 @@
             mice: Array.isArray(stored.mice) ? stored.mice : clone(defaults.mice),
             animalRacks: Array.isArray(stored.animalRacks) ? stored.animalRacks : [],
             animalCages: Array.isArray(stored.animalCages) ? stored.animalCages : [],
+            plants: Array.isArray(stored.plants) ? stored.plants : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plants)),
+            plantRacks: Array.isArray(stored.plantRacks) ? stored.plantRacks : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plantRacks)),
+            microbes: Array.isArray(stored.microbes) ? stored.microbes : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.microbes)),
+            plasmids: Array.isArray(stored.plasmids) ? stored.plasmids : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plasmids)),
+            viruses: Array.isArray(stored.viruses) ? stored.viruses : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.viruses)),
+            bioProjects: Array.isArray(stored.bioProjects) ? stored.bioProjects : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.bioProjects)),
+            bioDatasets: Array.isArray(stored.bioDatasets) ? stored.bioDatasets : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.bioDatasets)),
+            bioPipelines: Array.isArray(stored.bioPipelines) ? stored.bioPipelines : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.bioPipelines)),
+            bioRuns: Array.isArray(stored.bioRuns) ? stored.bioRuns : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.bioRuns)),
             cellCultures: Array.isArray(stored.cellCultures) ? stored.cellCultures : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.cellCultures)),
             reagents: Array.isArray(stored.reagents) ? stored.reagents : clone(defaults.reagents),
             samples: (Array.isArray(stored.samples) ? stored.samples : clone(defaults.samples)).map(function (sample) {
@@ -694,6 +748,8 @@
         });
 
         migrateAnimalHousing(data);
+        migratePlantHousing(data);
+        normalizeBioinformaticsData(data);
 
         data.results = (Array.isArray(data.results) ? data.results : []).filter(function (result, index, list) {
             return result && result.experimentId && list.findIndex(item => item && item.experimentId === result.experimentId) === index;
@@ -835,6 +891,44 @@
         });
     }
 
+    function migratePlantHousing(data) {
+        data.plantRacks = (Array.isArray(data.plantRacks) ? data.plantRacks : []).map(function (rack, index) {
+            return Object.assign({}, rack, {
+                id: rack.id || 'PRACK-' + String(index + 1).padStart(3, '0'),
+                name: rack.name || '植物培养架 ' + (index + 1), facility: rack.facility || '位置待设置',
+                rows: Math.round(number(rack.rows, 1, 12)) || 4, columns: Math.round(number(rack.columns, 1, 48)) || 8,
+                createdBy: anonymousContributor(rack.createdBy)
+            });
+        });
+        data.plants = (Array.isArray(data.plants) ? data.plants : []).map(function (plant, index) {
+            return Object.assign({}, plant, { id: plant.id || 'PLT-' + String(index + 1).padStart(3, '0'), name: plant.name || '未命名植物材料', rackId: plant.rackId || '', position: normalizePlantPosition(plant.position), createdBy: anonymousContributor(plant.createdBy), history: Array.isArray(plant.history) ? plant.history : [] });
+        });
+        if (!data.plants.length) return;
+        if (!data.plantRacks.length) data.plantRacks.push({ id: 'PRACK-LEGACY-01', name: '迁移培养架', facility: '原有植物记录', rows: 6, columns: 12, createdBy: 'LOCAL-NODE' });
+        data.plants.forEach(function (plant) {
+            let rack = data.plantRacks.find(function (item) { return item.id === plant.rackId; });
+            if (!rack) rack = data.plantRacks.find(function (item) { return String(plant.location || '').includes(item.facility); }) || data.plantRacks[0];
+            let position = normalizePlantPosition(plant.position) || normalizePlantPosition(String(plant.location || '').split('/').pop());
+            if (!position || !isValidPlantPosition(rack, position) || data.plants.some(function (other) { return other !== plant && other.rackId === rack.id && other.position === position; })) position = firstAvailablePlantPosition(rack, data.plants);
+            plant.rackId = rack.id; plant.position = position; plant.location = formatPlantLocation(rack, position);
+        });
+    }
+
+    function normalizeBioinformaticsData(data) {
+        [['bioProjects','BIO-PRJ','未命名项目'],['bioDatasets','BIO-DATA','未命名数据集'],['bioPipelines','BIO-FLOW','未命名分析流程'],['bioRuns','BIO-RUN','未命名运行任务']].forEach(function (spec) {
+            data[spec[0]] = (Array.isArray(data[spec[0]]) ? data[spec[0]] : []).map(function (record, index) {
+                return Object.assign({}, record, { id: record.id || spec[1] + '-' + String(index + 1).padStart(3, '0'), name: record.name || spec[2], createdBy: anonymousContributor(record.createdBy), history: Array.isArray(record.history) ? record.history : [] });
+            });
+        });
+    }
+
+    function normalizePlantPosition(value) { const match = String(value || '').trim().toUpperCase().match(/^([A-L])[-\s]?(\d{1,2})$/); return match ? match[1] + Number(match[2]) : ''; }
+    function isValidPlantPosition(rack, position) { const match = String(position || '').match(/^([A-L])(\d{1,2})$/); return Boolean(rack && match && match[1].charCodeAt(0) - 64 <= rack.rows && Number(match[2]) <= rack.columns); }
+    function firstAvailablePlantPosition(rack, plants) {
+        if (!rack) return ''; const occupied = new Set(plants.filter(function (item) { return item.rackId === rack.id; }).map(function (item) { return item.position; }));
+        for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) { const position = String.fromCharCode(65 + row) + column; if (!occupied.has(position)) return position; } return '';
+    }
+    function formatPlantLocation(rack, position) { return rack ? rack.facility + (position ? ' / ' + position : '') : '未分配'; }
     function normalizeAnimalPosition(value) {
         const match = String(value || '').trim().toUpperCase().match(/^([A-L])[-\s]?(\d{1,2})$/);
         return match ? match[1] + Number(match[2]) : '';
@@ -1126,14 +1220,37 @@
         document.getElementById('timeGreeting').textContent = interfaceText(greeting + '，研究员。');
     }
 
+    function bindDirectDragScroll() {
+        let drag = null;
+        let suppressClick = false;
+        document.addEventListener('pointerdown', function (event) {
+            const scroller = event.target.closest('[data-drag-scroll]');
+            if (!scroller || event.button !== 0 || event.target.closest('.animal-rack-delete,.plant-rack-delete')) return;
+            drag = { element: scroller, pointerId: event.pointerId, startX: event.clientX, startScroll: scroller.scrollLeft, moved: false };
+        });
+        document.addEventListener('pointermove', function (event) {
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const delta = event.clientX - drag.startX;
+            if (!drag.moved && Math.abs(delta) < 5) return;
+            drag.moved = true; drag.element.classList.add('is-dragging'); drag.element.scrollLeft = drag.startScroll - delta; event.preventDefault();
+        }, { passive: false });
+        function finish(event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            suppressClick = drag.moved; drag.element.classList.remove('is-dragging'); drag = null;
+            if (suppressClick) window.setTimeout(function () { suppressClick = false; }, 0);
+        }
+        document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', finish);
+        document.addEventListener('click', function (event) { if (suppressClick && event.target.closest('[data-drag-scroll]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; } }, true);
+    }
     function bindEvents() {
+        bindDirectDragScroll();
         document.addEventListener('click', function (event) {
             if (event.target.closest('[data-open-sync]')) {
                 const syncControl = document.getElementById('syncControl');
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1155,6 +1272,20 @@
                 return;
             }
 
+            const biologyTab = event.target.closest('[data-biology-tab]');
+            if (biologyTab) {
+                setBiologyTab(biologyTab.dataset.biologyTab);
+                return;
+            }
+            const bioinfoTab = event.target.closest('[data-bioinfo-tab]');
+            if (bioinfoTab) { setBioinfoTab(bioinfoTab.dataset.bioinfoTab); return; }
+            const bioresourceFilterButton = event.target.closest('[data-bioresource-filter]');
+            if (bioresourceFilterButton) {
+                bioresourceFilter = bioresourceFilterButton.dataset.bioresourceFilter;
+                updateActiveFilter(document.getElementById('bioresourceFilters'), bioresourceFilterButton);
+                renderBioResources();
+                return;
+            }
             const protocolTab = event.target.closest('[data-protocol-tab]');
             if (protocolTab) {
                 setProtocolTab(protocolTab.dataset.protocolTab);
@@ -1269,11 +1400,26 @@
                 return;
             }
 
+            const plantRecord = event.target.closest('[data-plant-id]');
+            if (plantRecord) { selectedPlantId = plantRecord.dataset.plantId; openPlantDetail(plantRecord.dataset.plantId); return; }
+            const plantPosition = event.target.closest('[data-plant-position]');
+            if (plantPosition) { pendingPlantDefaults = { rackId: activePlantRackId, position: plantPosition.dataset.plantPosition }; openEntryDialog('plant'); return; }
+            const bioresourceRecord = event.target.closest('[data-bioresource-id]');
+            if (bioresourceRecord) {
+                if (bioresourceRecord.dataset.bioresourceType === 'microbe') openMicrobeDetail(bioresourceRecord.dataset.bioresourceId);
+                else openPlasmidDetail(bioresourceRecord.dataset.bioresourceId);
+                return;
+            }
+            const virusRecord = event.target.closest('[data-virus-id]');
+            if (virusRecord) { openVirusDetail(virusRecord.dataset.virusId); return; }
             const deleteRack = event.target.closest('[data-delete-animal-rack]');
             if (deleteRack) {
                 requestRecordDelete('animalRack', deleteRack.dataset.deleteAnimalRack);
                 return;
             }
+
+            const deletePlantRack = event.target.closest('[data-delete-plant-rack]');
+            if (deletePlantRack) { requestRecordDelete('plantRack', deletePlantRack.dataset.deletePlantRack); return; }
 
             const deleteCage = event.target.closest('[data-delete-animal-cage]');
             if (deleteCage) {
@@ -1300,6 +1446,9 @@
                 return;
             }
 
+            const plantRack = event.target.closest('[data-plant-rack]');
+            if (plantRack) { selectPlantRack(plantRack.dataset.plantRack); return; }
+
             const animalCage = event.target.closest('[data-animal-cage]');
             if (animalCage) {
                 selectAnimalCage(animalCage.dataset.animalCage);
@@ -1321,6 +1470,9 @@
                 openEntryDialog('mouse');
                 return;
             }
+
+            const bioinfoRecord = event.target.closest('[data-bioinfo-record]');
+            if (bioinfoRecord) { openRecordDetail(bioinfoRecord.dataset.bioinfoType, bioinfoRecord.dataset.bioinfoRecord); return; }
 
             const reagentRecord = event.target.closest('[data-reagent-catalog]');
             if (reagentRecord) {
@@ -1584,6 +1736,8 @@
 
             const searchResult = event.target.closest('[data-result-view]');
             if (searchResult) {
+                if (searchResult.dataset.resultBiologyTab) activeBiologyTab = searchResult.dataset.resultBiologyTab;
+                if (searchResult.dataset.resultBioinfoTab) activeBioinfoTab = searchResult.dataset.resultBioinfoTab;
                 switchView(searchResult.dataset.resultView);
                 closeSearch();
                 showToast('已定位到“' + searchResult.dataset.resultTitle + '”');
@@ -1662,17 +1816,26 @@
             }
             if (event.key === 'Escape' && !els.searchOverlay.hidden) closeSearch();
             if (event.key === 'Escape' && !els.notificationPanel.hidden) closeNotifications();
-            if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-mouse-id], [data-reagent-catalog], #sampleTable [data-sample-id], [data-cell-id]')) {
+            if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-mouse-id], [data-reagent-catalog], #sampleTable [data-sample-id], [data-cell-id], [data-plant-id], [data-bioresource-id], [data-virus-id], [data-bioinfo-record]')) {
                 event.preventDefault();
                 if (event.target.dataset.mouseId) openAnimalDetail(event.target.dataset.mouseId);
                 if (event.target.dataset.reagentCatalog) openReagentDetail(event.target.dataset.reagentCatalog);
                 if (event.target.dataset.sampleId) openSampleDetail(event.target.dataset.sampleId);
                 if (event.target.dataset.cellId) openCellDetail(event.target.dataset.cellId);
+                if (event.target.dataset.plantId) openPlantDetail(event.target.dataset.plantId);
+                if (event.target.dataset.bioresourceId && event.target.dataset.bioresourceType === 'microbe') openMicrobeDetail(event.target.dataset.bioresourceId);
+                if (event.target.dataset.bioresourceId && event.target.dataset.bioresourceType === 'plasmid') openPlasmidDetail(event.target.dataset.bioresourceId);
+                if (event.target.dataset.virusId) openVirusDetail(event.target.dataset.virusId);
+                if (event.target.dataset.bioinfoRecord) openRecordDetail(event.target.dataset.bioinfoType, event.target.dataset.bioinfoRecord);
             }
         });
 
         document.getElementById('experimentSearch').addEventListener('input', renderExperiments);
         document.getElementById('mouseSearch').addEventListener('input', renderMice);
+        document.getElementById('plantSearch').addEventListener('input', renderPlants);
+        document.getElementById('bioresourceSearch').addEventListener('input', renderBioResources);
+        document.getElementById('virusSearch').addEventListener('input', renderViruses);
+        ['bioProjectSearch','bioDatasetSearch','bioPipelineSearch','bioRunSearch'].forEach(function (id) { document.getElementById(id).addEventListener('input', renderBioinformatics); });
         document.getElementById('reagentSearch').addEventListener('input', renderReagents);
         document.getElementById('sampleSearch').addEventListener('input', renderSamples);
         document.getElementById('cellSearch').addEventListener('input', renderCellCultures);
@@ -1904,12 +2067,13 @@
         const renderers = {
             dashboard: renderDashboard,
             experiments: renderExperiments,
-            mice: renderMice,
+            mice: renderBiologyManagement,
             reagents: renderReagents,
             samples: renderSamples,
             protocols: renderProtocols,
             schedule: renderSchedule,
-            cells: renderCellCultures
+            cells: renderCellCultures,
+            bioinformatics: renderBioinformatics
         };
         const renderer = renderers[view];
         if (renderer) renderer();
@@ -2021,13 +2185,167 @@
 
     function renderMice() {
         const search = valueOf('mouseSearch').toLowerCase();
-        const items = state.mice.filter(item => [item.id, item.species, item.strain, item.genotype, item.cage, item.status, item.ethics].join(' ').toLowerCase().includes(search));
+        const items = state.mice.filter(item => [item.id, item.species, item.strain, item.genotype, item.cage, item.status, item.ethics, item.line, item.parents, item.project, item.marker].join(' ').toLowerCase().includes(search));
         renderAnimalHousing();
         document.getElementById('mouseTable').innerHTML = items.map(function (item) {
             return '<tr class="clickable-data-row" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>ANIMAL RECORD' + contributorInline(item) + '</small></td><td><strong>' + esc(item.species || '未设置') + '</strong></td><td><strong>' + esc(item.strain || '未设置') + '</strong><small>' + esc(item.genotype || '基因型未填写') + '</small></td><td>' + esc(item.sex || '未确认') + '</td><td>' + esc(item.birth || '未填写') + '</td><td><strong>' + esc(item.cage || '未分配') + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在养') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
         }).join('') || '<tr><td colspan="8">暂无动物条目；请先建立笼架和笼位，再添加动物。</td></tr>';
     }
 
+    function setBiologyTab(tab) {
+        activeBiologyTab = ['animals', 'plants', 'microbes', 'viruses'].includes(tab) ? tab : 'animals';
+        localStorage.setItem('rhineLabBiologyTab', activeBiologyTab);
+        document.querySelectorAll('[data-biology-tab]').forEach(function (button) {
+            const active = button.dataset.biologyTab === activeBiologyTab;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('[data-biology-panel]').forEach(function (panel) {
+            const active = panel.dataset.biologyPanel === activeBiologyTab;
+            panel.hidden = !active;
+            panel.classList.toggle('active', active);
+        });
+        if (activeBiologyTab === 'animals') renderMice();
+        else if (activeBiologyTab === 'plants') renderPlants();
+        else if (activeBiologyTab === 'microbes') renderBioResources();
+        else renderViruses();
+    }
+
+    function renderBiologyManagement() {
+        setBiologyTab(activeBiologyTab);
+    }
+
+    function renderPlants() {
+        const table = document.getElementById('plantTable');
+        if (!table) return;
+        renderPlantHousing();
+        const search = valueOf('plantSearch').toLowerCase();
+        const items = state.plants.filter(function (item) {
+            const rack = state.plantRacks.find(function (entry) { return entry.id === item.rackId; });
+            return [item.id,item.name,item.scientificName,item.materialType,item.accession,item.generation,item.genotype,item.growthStage,item.growthConditions,item.location,item.position,rack && rack.name,item.status].join(' ').toLowerCase().includes(search);
+        });
+        table.innerHTML = items.map(function (item) {
+            const rack = state.plantRacks.find(function (entry) { return entry.id === item.rackId; });
+            const placement = rack ? rack.name + (item.position ? ' · ' + item.position : '') : (item.location || '未分配');
+            return '<tr class="clickable-data-row" data-plant-id="' + esc(item.id) + '" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>PLANT MATERIAL' + contributorInline(item) + '</small></td><td><strong>' + esc(item.name || '未命名植物') + '</strong><small><i>' + esc(item.scientificName || '物种未填写') + '</i></small></td><td><span class="biology-record-kind">' + esc(item.materialType || '未分类') + '</span></td><td><strong>' + esc(item.accession || '未填写') + '</strong><small>' + esc([item.generation,item.genotype].filter(Boolean).join(' · ') || '世代未填写') + '</small></td><td>' + esc(item.growthStage || '未填写') + '</td><td><strong>' + esc(placement) + '</strong><small>' + esc(item.growthConditions || '条件未填写') + '</small></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在库') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无植物材料记录。</td></tr>';
+    }
+
+    function renderPlantHousing() {
+        const tabs = document.getElementById('plantRackTabs');
+        const grid = document.getElementById('plantRackGrid');
+        const title = document.getElementById('plantRackTitle');
+        const meta = document.getElementById('plantRackMeta');
+        if (!tabs || !grid) return;
+        const rack = state.plantRacks.find(function (item) { return item.id === activePlantRackId; }) || state.plantRacks[0];
+        if (!rack) {
+            activePlantRackId = ''; selectedPlantId = '';
+            tabs.innerHTML = '<span class="animal-rack-empty-tabs">尚无培养架</span>';
+            title.textContent = '尚未建立培养架'; meta.textContent = '建立培养架后，可为每株植物分配准确位置。';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="plantRack"><strong>＋ 新建第一个培养架</strong><span>设置培养室、行数和列数</span></button>';
+            renderPlantPositionInspector(); return;
+        }
+        activePlantRackId = rack.id;
+        tabs.innerHTML = state.plantRacks.map(function (item) {
+            const count = state.plants.filter(function (plant) { return plant.rackId === item.id; }).length;
+            return '<div class="plant-rack-tab-wrap"><button class="plant-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-plant-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + count + ' 株已定位</small></button><button class="plant-rack-delete" type="button" data-delete-plant-rack="' + esc(item.id) + '" aria-label="删除培养架" title="删除培养架">×</button></div>';
+        }).join('');
+        const plants = state.plants.filter(function (item) { return item.rackId === rack.id; });
+        const plantByPosition = new Map(plants.map(function (item) { return [item.position,item]; }));
+        if (!plants.some(function (item) { return item.id === selectedPlantId; })) selectedPlantId = plants[0] ? plants[0].id : '';
+        title.textContent = rack.name; meta.textContent = rack.facility + ' · ' + rack.rows + ' 行 × ' + rack.columns + ' 列';
+        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(70px, 1fr))';
+        let cells = '';
+        for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) {
+            const position = String.fromCharCode(65 + row) + column; const plant = plantByPosition.get(position);
+            if (!plant) cells += '<button class="plant-rack-position empty" type="button" data-plant-position="' + position + '" aria-label="在 ' + position + ' 登记植物"><span>' + position + '</span><strong>＋</strong></button>';
+            else cells += '<button class="plant-rack-position occupied' + (plant.id === selectedPlantId ? ' active' : '') + '" type="button" data-plant-id="' + esc(plant.id) + '"><span>' + position + '</span><strong>' + esc(plant.name) + '</strong><small>' + esc(plant.growthStage || plant.status || '已定位') + '</small></button>';
+        }
+        grid.innerHTML = cells; renderPlantPositionInspector();
+    }
+
+    function renderPlantPositionInspector() {
+        const inspector = document.getElementById('plantPositionInspector');
+        if (!inspector) return;
+        const plant = state.plants.find(function (item) { return item.id === selectedPlantId && item.rackId === activePlantRackId; });
+        if (!plant) { inspector.innerHTML = '<div class="plant-position-empty"><span>PLANT</span><strong>选择一个位置</strong><p>查看该位置的植物材料与培养条件。</p></div>'; return; }
+        inspector.innerHTML = '<div class="plant-position-summary"><header><div><small>' + esc(plant.id) + '</small><h3>' + esc(plant.name) + '</h3></div><span>' + esc(plant.position) + '</span></header><div class="plant-position-meta"><div><small>物种</small><strong><i>' + esc(plant.scientificName || '未填写') + '</i></strong></div><div><small>生长阶段</small><strong>' + esc(plant.growthStage || '未填写') + '</strong></div><div><small>培养条件</small><strong>' + esc(plant.growthConditions || '未填写') + '</strong></div><div><small>状态</small><strong>' + esc(plant.status || '未填写') + '</strong></div></div><p class="plant-position-notes">' + esc(plant.phenotype || plant.notes || '尚未记录表型或备注。') + '</p><div class="plant-position-buttons"><button class="button primary" type="button" data-plant-id="' + esc(plant.id) + '">查看植物详情</button></div></div>';
+    }
+
+    function selectPlantRack(id) {
+        const rack = state.plantRacks.find(function (item) { return item.id === id; });
+        if (!rack) return;
+        activePlantRackId = rack.id; localStorage.setItem('rhineLabActivePlantRack', rack.id);
+        selectedPlantId = (state.plants.find(function (item) { return item.rackId === rack.id; }) || {}).id || '';
+        renderPlants();
+    }
+    function renderBioResources() {
+        const table = document.getElementById('bioresourceTable');
+        if (!table) return;
+        const search = valueOf('bioresourceSearch').toLowerCase();
+        const items = state.microbes.map(function (item) { return { type: 'microbe', kind: '菌种', item: item }; }).concat(state.plasmids.map(function (item) { return { type: 'plasmid', kind: '质粒', item: item }; })).filter(function (entry) {
+            if (bioresourceFilter !== '全部' && entry.kind !== bioresourceFilter) return false;
+            return Object.values(entry.item).join(' ').toLowerCase().includes(search);
+        });
+        table.innerHTML = items.map(function (entry) {
+            const item = entry.item;
+            const host = entry.type === 'microbe' ? item.species : item.host;
+            const feature = entry.type === 'microbe' ? [item.strain, item.genotype].filter(Boolean).join(' · ') : [item.backbone, item.insert].filter(Boolean).join(' · ');
+            const condition = entry.type === 'microbe' ? [item.medium, item.growthConditions].filter(Boolean).join(' · ') : [item.resistance, item.promoter].filter(Boolean).join(' · ');
+            return '<tr class="clickable-data-row" data-bioresource-type="' + entry.type + '" data-bioresource-id="' + esc(item.id) + '" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>' + (entry.type === 'microbe' ? 'MICROBIAL STRAIN' : 'DNA CONSTRUCT') + contributorInline(item) + '</small></td><td><strong>' + esc(item.name || item.id) + '</strong><small>' + esc(item.source || '来源未填写') + '</small></td><td><span class="biology-record-kind">' + esc(entry.kind) + '</span></td><td>' + esc(host || '未填写') + '</td><td><strong>' + esc(feature || '未填写') + '</strong></td><td>' + esc(condition || '未填写') + '</td><td><strong>' + esc(item.location || '未分配') + '</strong><small>' + esc(item.status || '在库') + '</small></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无菌种或质粒记录。</td></tr>';
+    }
+
+    function renderViruses() {
+        const table = document.getElementById('virusTable');
+        if (!table) return;
+        const search = valueOf('virusSearch').toLowerCase();
+        const items = state.viruses.filter(function (item) { return Object.values(item).join(' ').toLowerCase().includes(search); });
+        table.innerHTML = items.map(function (item) {
+            return '<tr class="clickable-data-row" data-virus-id="' + esc(item.id) + '" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>VIRAL RESOURCE' + contributorInline(item) + '</small></td><td><strong>' + esc(item.name || '未命名病毒') + '</strong><small>' + esc(item.virusType || '类型未填写') + '</small></td><td><strong>' + esc(item.serotype || '未填写') + '</strong><small>' + esc(item.genome || '基因组未填写') + '</small></td><td>' + esc(item.cargo || '未填写') + '</td><td>' + esc(item.hostRange || '未填写') + '</td><td><strong>' + esc(item.titer || '未测定') + '</strong><small>' + esc(item.batch || '批次未填写') + '</small></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.biosafetyLevel || '未设置') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无病毒资源记录。</td></tr>';
+    }
+    function setBioinfoTab(tab) {
+        activeBioinfoTab = ['projects','datasets','pipelines','runs'].includes(tab) ? tab : 'projects';
+        localStorage.setItem('rhineLabBioinfoTab', activeBioinfoTab);
+        document.querySelectorAll('[data-bioinfo-tab]').forEach(function (button) { const active = button.dataset.bioinfoTab === activeBioinfoTab; button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active)); });
+        document.querySelectorAll('[data-bioinfo-panel]').forEach(function (panel) { const active = panel.dataset.bioinfoPanel === activeBioinfoTab; panel.hidden = !active; panel.classList.toggle('active', active); });
+        renderBioinformaticsTables();
+    }
+
+    function renderBioinformatics() { setBioinfoTab(activeBioinfoTab); }
+
+    function renderBioinformaticsTables() {
+        const projectSearch = valueOf('bioProjectSearch').toLowerCase();
+        const datasetSearch = valueOf('bioDatasetSearch').toLowerCase();
+        const pipelineSearch = valueOf('bioPipelineSearch').toLowerCase();
+        const runSearch = valueOf('bioRunSearch').toLowerCase();
+        const projectTable = document.getElementById('bioProjectTable');
+        const datasetTable = document.getElementById('bioDatasetTable');
+        const pipelineTable = document.getElementById('bioPipelineTable');
+        const runTable = document.getElementById('bioRunTable');
+        if (!projectTable) return;
+        const projects = state.bioProjects.filter(function (item) { return Object.values(item).join(' ').toLowerCase().includes(projectSearch); });
+        projectTable.innerHTML = projects.map(function (item) {
+            return '<tr class="clickable-data-row" data-bioinfo-record="' + esc(item.id) + '" data-bioinfo-type="bioProject" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>COMPUTATIONAL PROJECT</small></td><td><strong>' + esc(item.name) + '</strong><small>' + esc(item.objective || '研究目标未填写') + '</small></td><td><i>' + esc(item.organism || '未填写') + '</i></td><td>' + esc(item.referenceGenome || '未设置') + '</td><td>' + esc(item.organization || '未填写') + '</td><td>' + esc(item.repository || '未设置') + '</td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '准备中') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无生物信息项目。</td></tr>';
+        const datasets = state.bioDatasets.filter(function (item) { return Object.values(item).join(' ').toLowerCase().includes(datasetSearch); });
+        datasetTable.innerHTML = datasets.map(function (item) {
+            return '<tr class="clickable-data-row" data-bioinfo-record="' + esc(item.id) + '" data-bioinfo-type="bioDataset" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>RESEARCH DATASET</small></td><td><strong>' + esc(item.name) + '</strong><small>' + esc(item.dataType || '类型未填写') + '</small></td><td>' + esc(bioProjectLabel(item.projectId)) + '</td><td>' + esc(item.sampleSource || '未关联') + '</td><td>' + esc(item.size || '未记录') + '</td><td>' + esc(item.checksum || '未校验') + '</td><td><strong>' + esc(item.location || '未设置') + '</strong><small>' + esc(item.format || '格式未填写') + '</small></td><td><button class="row-arrow" type="button" tabindex="-1">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无数据集记录。</td></tr>';
+        const pipelines = state.bioPipelines.filter(function (item) { return Object.values(item).join(' ').toLowerCase().includes(pipelineSearch); });
+        pipelineTable.innerHTML = pipelines.map(function (item) {
+            return '<tr class="clickable-data-row" data-bioinfo-record="' + esc(item.id) + '" data-bioinfo-type="bioPipeline" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>REPRODUCIBLE WORKFLOW</small></td><td><strong>' + esc(item.name) + '</strong><small>' + esc(item.version || '版本未填写') + '</small></td><td>' + esc(item.analysisType || '未分类') + '</td><td>' + esc(item.environment || '未设置') + '</td><td>' + esc(item.inputType || '未填写') + '</td><td>' + esc(item.outputType || '未填写') + '</td><td>' + esc(item.repository || '未设置') + '</td><td><button class="row-arrow" type="button" tabindex="-1">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无分析流程。</td></tr>';
+        const runs = state.bioRuns.filter(function (item) { return Object.values(item).join(' ').toLowerCase().includes(runSearch); });
+        runTable.innerHTML = runs.map(function (item) {
+            return '<tr class="clickable-data-row" data-bioinfo-record="' + esc(item.id) + '" data-bioinfo-type="bioRun" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>ANALYSIS RUN</small></td><td>' + esc(bioProjectLabel(item.projectId)) + '</td><td>' + esc(bioPipelineLabel(item.pipelineId)) + '</td><td>' + esc(bioDatasetLabel(item.datasetId)) + '</td><td>' + esc(item.compute || '未设置') + '</td><td><strong>' + esc(item.startDate || '未开始') + '</strong><small>' + esc(item.endDate || '—') + '</small></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '排队中') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1">→</button></td></tr>';
+        }).join('') || '<tr><td colspan="8">暂无运行任务。</td></tr>';
+    }
+
+    function bioProjectLabel(id) { const item = state.bioProjects.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.id : (id || '未关联'); }
+    function bioDatasetLabel(id) { const item = state.bioDatasets.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.id : (id || '未关联'); }
+    function bioPipelineLabel(id) { const item = state.bioPipelines.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.version : (id || '未关联'); }
     function renderAnimalHousing() {
         const tabs = document.getElementById('animalRackTabs');
         const grid = document.getElementById('animalRackGrid');
@@ -2181,7 +2499,7 @@
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">IDENTITY & HOUSING</p><h3>身份与饲养信息</h3></div><div class="record-detail-grid">' +
                 detailFieldHtml('动物编号', animal.id) + detailFieldHtml('物种', animal.species) + detailFieldHtml('品种 / 品系', animal.strain) + detailFieldHtml('基因型', animal.genotype) + detailFieldHtml('性别', animal.sex) +
                 detailFieldHtml('出生 / 孵化日期', animal.birth) + detailFieldHtml('当前年龄', animalAgeLabel(animal.birth)) + detailFieldHtml('笼位', animal.cage) + detailFieldHtml('所属笼架', rack ? rack.name : '未分配') + detailFieldHtml('状态', animal.status) +
-                detailFieldHtml('伦理审批编号', animal.ethics, true) + detailFieldHtml('备注', animal.notes, true) + nodeField +
+                detailFieldHtml('繁育系 / 群体', animal.line) + detailFieldHtml('亲本 / 系谱', animal.parents) + detailFieldHtml('研究项目', animal.project) + detailFieldHtml('个体标记', animal.marker) + detailFieldHtml('伦理审批编号', animal.ethics, true) + detailFieldHtml('备注', animal.notes, true) + nodeField +
             '</div></section>' + embeddedLineageHtml('animal', animal.id) +
             '<section class="record-detail-section animal-track"><div class="record-detail-section-title"><p class="micro-label">LIFECYCLE TRACE</p><h3>动物状态轨迹</h3></div><div class="record-timeline"><article><i></i><div><small>出生 / 孵化</small><strong>' + esc(animal.birth || '未填写') + '</strong></div></article><article><i></i><div><small>当前笼位</small><strong>' + esc(animal.cage || '未分配') + '</strong></div></article><article class="active"><i></i><div><small>当前阶段</small><strong>' + esc(animal.status || '在养') + '</strong></div></article></div></section>' +
             recordHistoryHtml(animal);
@@ -2189,6 +2507,69 @@
         scheduleEmbeddedLineageLayout();
     }
 
+    function linkedFrozenSampleLabel(sampleId) {
+        const sample = state.samples.find(function (item) { return item.id === sampleId; });
+        return sample ? sample.id + ' · ' + sample.type + ' · ' + sample.location : '未关联';
+    }
+
+    function openPlantDetail(id) {
+        const item = state.plants.find(function (entry) { return entry.id === id; });
+        if (!item) return;
+        prepareRecordDetail('plant', item.id);
+        els.recordDetailKicker.textContent = 'PLANT MATERIAL · ' + item.id;
+        els.recordDetailTitle.textContent = item.name || item.id;
+        els.recordDetailBody.innerHTML =
+            '<section class="record-detail-hero biology-detail-hero plant-detail-hero"><div><span class="record-detail-code">' + esc(item.id) + '</span><h3>' + esc(item.name || '未命名植物') + '</h3><p><i>' + esc(item.scientificName || '物种未填写') + '</i> · ' + esc(item.accession || '材料编号未填写') + '</p></div><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在库') + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">GERMPLASM PASSPORT</p><h3>种质与材料信息</h3></div><div class="record-detail-grid">' +
+                detailFieldHtml('材料编号', item.id) + detailFieldHtml('材料名称', item.name) + detailFieldHtml('学名', item.scientificName) + detailFieldHtml('材料类型', item.materialType) + detailFieldHtml('品系 / 种质号', item.accession) + detailFieldHtml('世代', item.generation) + detailFieldHtml('基因型', item.genotype) + detailFieldHtml('亲本 / 谱系', item.parentage, true) +
+            '</div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">GROWTH & PHENOTYPE</p><h3>生长、处理与表型</h3></div><div class="record-detail-grid">' +
+                detailFieldHtml('生长阶段', item.growthStage) + detailFieldHtml('状态', item.status) + detailFieldHtml('环境与条件', item.growthConditions, true) + detailFieldHtml('位置', item.location) + detailFieldHtml('处理', item.treatment) + detailFieldHtml('表型观察', item.phenotype, true) + detailFieldHtml('冻存样本', linkedFrozenSampleLabel(item.frozenSampleId), true) + detailFieldHtml('备注', item.notes, true) +
+            '</div></section>' + embeddedLineageHtml('plant', item.id) + recordHistoryHtml(item);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
+    }
+
+    function openMicrobeDetail(id) {
+        const item = state.microbes.find(function (entry) { return entry.id === id; });
+        if (!item) return;
+        prepareRecordDetail('microbe', item.id);
+        els.recordDetailKicker.textContent = 'MICROBIAL STRAIN · ' + item.id;
+        els.recordDetailTitle.textContent = item.name || item.id;
+        els.recordDetailBody.innerHTML =
+            '<section class="record-detail-hero biology-detail-hero microbe-detail-hero"><div><span class="record-detail-code">' + esc(item.id) + '</span><h3>' + esc(item.name || '未命名菌种') + '</h3><p><i>' + esc(item.species || '物种未填写') + '</i> · ' + esc(item.strain || '株系未填写') + '</p></div><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.biosafetyLevel || '未设置') + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">STRAIN PASSPORT</p><h3>菌种信息</h3></div><div class="record-detail-grid">' + detailFieldHtml('菌种编号', item.id) + detailFieldHtml('名称', item.name) + detailFieldHtml('物种', item.species) + detailFieldHtml('株系', item.strain) + detailFieldHtml('生物安全等级', item.biosafetyLevel) + detailFieldHtml('来源', item.source) + detailFieldHtml('基因型 / 遗传特征', item.genotype, true) + '</div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">CULTURE & STORAGE</p><h3>培养与保藏</h3></div><div class="record-detail-grid">' + detailFieldHtml('培养基', item.medium) + detailFieldHtml('培养条件', item.growthConditions, true) + detailFieldHtml('抗性', item.resistance) + detailFieldHtml('存储位置', item.location) + detailFieldHtml('状态', item.status) + detailFieldHtml('冻存样本', linkedFrozenSampleLabel(item.frozenSampleId), true) + detailFieldHtml('备注', item.notes, true) + '</div></section>' + embeddedLineageHtml('microbe', item.id) + recordHistoryHtml(item);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
+    }
+
+    function openPlasmidDetail(id) {
+        const item = state.plasmids.find(function (entry) { return entry.id === id; });
+        if (!item) return;
+        prepareRecordDetail('plasmid', item.id);
+        els.recordDetailKicker.textContent = 'PLASMID RECORD · ' + item.id;
+        els.recordDetailTitle.textContent = item.name || item.id;
+        els.recordDetailBody.innerHTML =
+            '<section class="record-detail-hero biology-detail-hero plasmid-detail-hero"><div><span class="record-detail-code">' + esc(item.id) + '</span><h3>' + esc(item.name || '未命名质粒') + '</h3><p>' + esc(item.backbone || '骨架未填写') + ' · ' + esc(item.sizeBp ? item.sizeBp + ' bp' : '长度未填写') + '</p></div><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在库') + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">DNA CONSTRUCT</p><h3>质粒信息</h3></div><div class="record-detail-grid">' + detailFieldHtml('质粒编号', item.id) + detailFieldHtml('质粒名称', item.name) + detailFieldHtml('载体骨架', item.backbone) + detailFieldHtml('插入片段 / 载荷', item.insert) + detailFieldHtml('长度', item.sizeBp ? item.sizeBp + ' bp' : '') + detailFieldHtml('启动子', item.promoter) + detailFieldHtml('筛选标记 / 抗性', item.resistance) + detailFieldHtml('扩增宿主', item.host) + detailFieldHtml('来源', item.source) + detailFieldHtml('序列 / 文件参考', item.sequenceRef, true) + detailFieldHtml('存储位置', item.location) + detailFieldHtml('状态', item.status) + detailFieldHtml('冻存样本', linkedFrozenSampleLabel(item.frozenSampleId), true) + detailFieldHtml('备注', item.notes, true) + '</div></section>' + embeddedLineageHtml('plasmid', item.id) + recordHistoryHtml(item);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
+    }
+
+    function openVirusDetail(id) {
+        const item = state.viruses.find(function (entry) { return entry.id === id; });
+        if (!item) return;
+        prepareRecordDetail('virus', item.id);
+        els.recordDetailKicker.textContent = 'VIRAL RESOURCE · ' + item.id;
+        els.recordDetailTitle.textContent = item.name || item.id;
+        els.recordDetailBody.innerHTML =
+            '<section class="record-detail-hero biology-detail-hero virus-detail-hero"><div><span class="record-detail-code">' + esc(item.id) + '</span><h3>' + esc(item.name || '未命名病毒') + '</h3><p>' + esc(item.virusType || '类型未填写') + ' · ' + esc(item.serotype || '株系 / 血清型未填写') + '</p></div><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.biosafetyLevel || '未设置') + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">VECTOR IDENTITY</p><h3>病毒与载体信息</h3></div><div class="record-detail-grid">' + detailFieldHtml('病毒编号', item.id) + detailFieldHtml('名称', item.name) + detailFieldHtml('病毒 / 载体类型', item.virusType) + detailFieldHtml('株系 / 血清型', item.serotype) + detailFieldHtml('基因组类型', item.genome) + detailFieldHtml('表达载荷', item.cargo, true) + detailFieldHtml('宿主 / 嗜性', item.hostRange, true) + detailFieldHtml('生物安全等级', item.biosafetyLevel) + '</div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">BATCH & STORAGE</p><h3>批次、滴度与保藏</h3></div><div class="record-detail-grid">' + detailFieldHtml('滴度', item.titer) + detailFieldHtml('批次', item.batch) + detailFieldHtml('制备日期', item.productionDate) + detailFieldHtml('存储位置', item.location) + detailFieldHtml('状态', item.status) + detailFieldHtml('冻存样本', linkedFrozenSampleLabel(item.frozenSampleId), true) + detailFieldHtml('备注', item.notes, true) + '</div></section>' + embeddedLineageHtml('virus', item.id) + recordHistoryHtml(item);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
+    }
     function openReagentDetail(catalog) {
         const reagent = state.reagents.find(item => item.catalog === catalog);
         if (!reagent) return;
@@ -2266,7 +2647,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -2274,12 +2655,21 @@
         if (type === 'protocol') return state.protocols;
         if (type === 'formulation') return state.formulations;
         if (type === 'mouse') return state.mice;
+        if (type === 'plant') return state.plants;
+        if (type === 'microbe') return state.microbes;
+        if (type === 'plasmid') return state.plasmids;
+        if (type === 'virus') return state.viruses;
         if (type === 'reagent') return state.reagents;
         if (type === 'sample') return state.samples;
         if (type === 'cell') return state.cellCultures;
         if (type === 'result') return state.results;
         if (type === 'animalRack') return state.animalRacks;
         if (type === 'animalCage') return state.animalCages;
+        if (type === 'plantRack') return state.plantRacks;
+        if (type === 'bioProject') return state.bioProjects;
+        if (type === 'bioDataset') return state.bioDatasets;
+        if (type === 'bioPipeline') return state.bioPipelines;
+        if (type === 'bioRun') return state.bioRuns;
         if (type === 'task') return state.schedule;
         return [];
     }
@@ -2337,6 +2727,10 @@
         const record = collection[index];
         const label = target.label;
         collection.splice(index, 1);
+        const lineageType = target.type === 'mouse' ? 'animal' : target.type;
+        state.lineageLinks = state.lineageLinks.filter(function (link) {
+            return !(link.sourceType === lineageType && link.sourceId === target.key || link.targetType === lineageType && link.targetId === target.key);
+        });
         appendAuditLog({
             action: 'deleted',
             recordType: target.type,
@@ -2369,6 +2763,18 @@
             const nextCage = nextRack ? state.animalCages.find(item => item.rackId === nextRack.id) : null;
             selectedAnimalCageId = nextCage ? nextCage.id : '';
             localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
+        } else if (target.type === 'plantRack') {
+            state.plants.forEach(function (plant) {
+                if (plant.rackId === record.id) {
+                    plant.rackId = '';
+                    plant.position = '';
+                    plant.location = '未分配位置';
+                }
+            });
+            const nextRack = state.plantRacks[0];
+            activePlantRackId = nextRack ? nextRack.id : '';
+            selectedPlantId = state.plants.find(function (plant) { return plant.rackId === activePlantRackId; })?.id || '';
+            localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
         }
         state.activities.unshift({ text: '删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录', time: '刚刚' });
         saveState();
@@ -2399,6 +2805,15 @@
             mice: [],
             animalRacks: [],
             animalCages: [],
+            plants: [],
+            plantRacks: [],
+            microbes: [],
+            plasmids: [],
+            viruses: [],
+            bioProjects: [],
+            bioDatasets: [],
+            bioPipelines: [],
+            bioRuns: [],
             cellCultures: [],
             reagents: [],
             samples: [],
@@ -2635,6 +3050,10 @@
             items.push({ key: toolsEntityKey(type, id), type: type, id: String(id), label: String(label || id), stage: stage, meta: String(meta || '') });
         }
         state.mice.forEach(function (item) { add('animal', item.id, item.id, 'origin', [item.species, item.cage].filter(Boolean).join(' · ')); });
+        state.plants.forEach(function (item) { add('plant', item.id, item.name || item.id, 'origin', [item.scientificName, item.accession, item.generation].filter(Boolean).join(' · ')); });
+        state.microbes.forEach(function (item) { add('microbe', item.id, item.name || item.id, 'origin', [item.species, item.strain].filter(Boolean).join(' · ')); });
+        state.plasmids.forEach(function (item) { add('plasmid', item.id, item.name || item.id, 'origin', [item.backbone, item.insert].filter(Boolean).join(' · ')); });
+        state.viruses.forEach(function (item) { add('virus', item.id, item.name || item.id, 'origin', [item.virusType, item.serotype].filter(Boolean).join(' · ')); });
         state.cellCultures.forEach(function (item) { add('cell', item.id, item.name || item.id, 'origin', [item.species, item.passage != null ? 'P' + item.passage : ''].filter(Boolean).join(' · ')); });
         state.samples.forEach(function (item) { add('sample', item.id, item.id, 'sample', [item.type, item.source].filter(Boolean).join(' · ')); });
         state.experiments.forEach(function (item) { add('experiment', item.id, item.title || item.id, 'experiment', [item.id, item.date].filter(Boolean).join(' · ')); });
@@ -2646,7 +3065,7 @@
     }
 
     function toolsEntityTypeLabel(type) {
-        return ({ animal: '动物', cell: '细胞', sample: '样本', experiment: '实验', result: '结果' })[type] || type;
+        return ({ animal: '动物', plant: '植物', microbe: '菌种', plasmid: '质粒', virus: '病毒', cell: '细胞', sample: '样本', experiment: '实验', result: '结果' })[type] || type;
     }
 
     function lineageEdges(catalog) {
@@ -2694,7 +3113,7 @@
         const targetOptions = catalog.filter(function (item) { return item.key !== currentKey; }).map(function (item) {
             return '<option value="' + esc(item.key) + '">' + esc(toolsEntityTypeLabel(item.type) + ' · ' + item.label) + '</option>';
         }).join('');
-        const editor = workspaceReadOnly ? '' : '<div class="embedded-lineage-editor"><label><span>关联条目</span><select data-lineage-target><option value="">选择已有记录</option>' + targetOptions + '</select></label><label><span>关系</span><select data-lineage-relation><option>取材</option><option>分装</option><option>衍生</option><option>用于实验</option><option>产生结果</option><option>其他</option></select></label><button class="button ghost compact" type="button" data-save-lineage-from="' + esc(currentKey) + '">＋ 添加关联</button></div>';
+        const editor = workspaceReadOnly ? '' : '<div class="embedded-lineage-editor"><label><span>关联条目</span><select data-lineage-target><option value="">选择已有记录</option>' + targetOptions + '</select></label><label><span>关系</span><select data-lineage-relation><option>取材</option><option>分装</option><option>衍生</option><option>冻存保藏</option><option>用于实验</option><option>产生结果</option><option>其他</option></select></label><button class="button ghost compact" type="button" data-save-lineage-from="' + esc(currentKey) + '">＋ 添加关联</button></div>';
         return '<section class="record-detail-section embedded-lineage-section"><div class="record-detail-section-title"><p class="micro-label">SAMPLE LINEAGE</p><h3>样本谱系</h3></div><div class="embedded-lineage-pan" data-lineage-pan aria-label="可拖动的样本谱系图"><div class="embedded-lineage-flow"><div class="embedded-lineage-side incoming-side">' + incomingHtml + '</div><div class="embedded-lineage-current"><small>' + esc(toolsEntityTypeLabel(current.type)) + '</small><strong>' + esc(current.label) + '</strong><span>' + esc(current.meta || current.id) + '</span></div><div class="embedded-lineage-side outgoing-side">' + outgoingHtml + '</div></div></div>' + (!connected.length ? '<p class="embedded-lineage-empty">暂无关联链路。</p>' : '') + editor + '</section>';
     }
 
@@ -2775,7 +3194,7 @@
 
     function lineageOptionsHtml(catalog, includeAll) {
         const groups = [
-            { stage: 'origin', label: '来源：动物与细胞' },
+            { stage: 'origin', label: '来源：动物、植物、菌、质粒、病毒与细胞' },
             { stage: 'sample', label: '冻存样本' },
             { stage: 'experiment', label: '实验记录' },
             { stage: 'result', label: '实验结果' }
@@ -2868,6 +3287,10 @@
     function openLineageEntity(key) {
         const entity = parseToolsEntityKey(key);
         if (entity.type === 'animal') openAnimalDetail(entity.id);
+        else if (entity.type === 'plant') openPlantDetail(entity.id);
+        else if (entity.type === 'microbe') openMicrobeDetail(entity.id);
+        else if (entity.type === 'plasmid') openPlasmidDetail(entity.id);
+        else if (entity.type === 'virus') openVirusDetail(entity.id);
         else if (entity.type === 'cell') openCellDetail(entity.id);
         else if (entity.type === 'sample') openSampleDetail(entity.id);
         else if (entity.type === 'experiment') openExperimentDetail(entity.id);
@@ -4487,14 +4910,22 @@ function getReagentDisplayStatus(reagent) {
             entries.push({ view: 'experiments', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
         });
         state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
+        state.plants.forEach(item => entries.push({ view: 'mice', biologyTab: 'plants', category: 'PLANT', title: item.name + ' · ' + item.id, detail: [item.scientificName, item.accession, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.microbes.forEach(item => entries.push({ view: 'mice', biologyTab: 'microbes', category: 'MICROBIAL STRAIN', title: item.name + ' · ' + item.id, detail: [item.species, item.strain, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.plasmids.forEach(item => entries.push({ view: 'mice', biologyTab: 'microbes', category: 'PLASMID', title: item.name + ' · ' + item.id, detail: [item.backbone, item.insert, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.viruses.forEach(item => entries.push({ view: 'mice', biologyTab: 'viruses', category: 'VIRUS', title: item.name + ' · ' + item.id, detail: [item.virusType, item.serotype, item.titer].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
         state.formulations.forEach(item => entries.push({ view: 'protocols', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
         state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
+        state.bioProjects.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'projects', category: 'BIOINFORMATICS PROJECT', title: item.name, detail: [item.id, item.organism, item.referenceGenome].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioDatasets.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'datasets', category: 'DATASET', title: item.name, detail: [item.id, item.dataType, item.accession].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioPipelines.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'pipelines', category: 'WORKFLOW', title: item.name, detail: [item.id, item.version, item.environment].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioRuns.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'runs', category: 'ANALYSIS RUN', title: item.name || item.id, detail: [item.id, item.status, item.compute].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         const results = entries.filter(item => !term || item.search.toLowerCase().includes(term)).slice(0, 12);
         els.searchResults.innerHTML = results.map(function (item) {
-            return '<button class="search-result" type="button" data-result-view="' + item.view + '" data-result-title="' + esc(item.title) + '"><span>' + esc(item.category) + '</span><span><strong>' + esc(item.title) + '</strong><small>' + esc(item.detail) + '</small></span><b>→</b></button>';
+            return '<button class="search-result" type="button" data-result-view="' + item.view + '"' + (item.biologyTab ? ' data-result-biology-tab="' + item.biologyTab + '"' : '') + (item.bioinfoTab ? ' data-result-bioinfo-tab="' + item.bioinfoTab + '"' : '') + ' data-result-title="' + esc(item.title) + '"><span>' + esc(item.category) + '</span><span><strong>' + esc(item.title) + '</strong><small>' + esc(item.detail) + '</small></span><b>→</b></button>';
         }).join('') || '<div class="search-empty">数据库中没有与“' + esc(query) + '”匹配的记录。</div>';
     }
 
@@ -4534,11 +4965,94 @@ function getReagentDisplayStatus(reagent) {
                 field('birth', '出生 / 孵化日期', 'date', '', false),
                 field('cageId', '所属笼位', 'animal-cage-select', '', true),
                 field('status', '当前状态', 'select', ['在养', '观察期', '繁育中', '实验中', '隔离中', '已转出'], true),
+                field('line', '繁育系 / 群体', 'text', '例：Camk2a-Cre × Ai148', false),
+                field('parents', '亲本 / 系谱', 'text', '例：M-23018 × M-23024', false),
+                field('project', '研究项目', 'text', '例：记忆环路可塑性', false),
+                field('marker', '个体标记', 'text', '例：耳标 071 / 尾纹', false),
                 field('ethics', '伦理审批编号', 'text', '例：IACUC-2026-001', false),
                 field('notes', '动物备注', 'textarea', '记录体重、标记方式、来源或特殊照护要求…', false, true)
             ]
         },
-        animalRack: {
+        plant: {
+            kicker: 'PLANT MATERIAL REGISTRATION', title: '登记植物材料',
+            fields: [
+                field('id', '材料编号', 'text', '例：PLT-AT-001', true),
+                field('name', '材料名称', 'text', '例：拟南芥 Col-0', true),
+                field('scientificName', '学名', 'text', '例：Arabidopsis thaliana', false),
+                field('materialType', '材料类型', 'select', ['种子', '植株', '幼苗', '愈伤组织', '组织培养', '花粉', '果实', '其他'], true),
+                field('accession', '品系 / 种质号', 'memory-text', '例：Col-0', false),
+                field('generation', '世代', 'text', '例：T3 / F2 / BC1', false),
+                field('genotype', '基因型', 'text', '例：WT / 编辑候选株', false),
+                field('parentage', '亲本 / 谱系', 'text', '例：母本 × 父本或自交来源', false, true),
+                field('growthStage', '生长阶段', 'memory-text', '例：莲座期 / 开花期', false),
+                field('growthConditions', '环境与条件', 'memory-text', '例：22°C · 16 h / 8 h 光周期', false, true),
+                field('rackId', '所属培养架', 'plant-rack-select', '', false),
+                field('position', '架内位置', 'text', '例：A1', false),
+                field('treatment', '处理', 'text', '例：干旱处理 / 农杆菌浸润', false),
+                field('phenotype', '表型观察', 'textarea', '记录株高、叶色、发育、成像或评分…', false, true),
+                field('status', '当前状态', 'select', ['在库', '生长中', '待处理', '筛选中', '已收获', '已终止'], true),
+                field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
+                field('notes', '备注', 'textarea', '记录播种、移栽、批次或特殊条件…', false, true)
+            ]
+        },
+        microbe: {
+            kicker: 'MICROBIAL STRAIN REGISTRATION', title: '录入菌种',
+            fields: [
+                field('id', '菌种编号', 'text', '例：MIC-DH5A-001', true),
+                field('name', '菌种名称', 'text', '例：E. coli DH5α', true),
+                field('species', '物种', 'text', '例：Escherichia coli', false),
+                field('strain', '株系', 'text', '例：DH5α', false),
+                field('biosafetyLevel', '生物安全等级', 'select', ['BSL-1', 'BSL-2', 'BSL-3', '其他'], true),
+                field('genotype', '基因型 / 遗传特征', 'textarea', '记录基因型、缺失、携带元件或关键表型…', false, true),
+                field('source', '来源', 'text', '例：实验室保藏 / 菌种库', false),
+                field('medium', '培养基', 'memory-text', '例：LB / YPD / MRS', false),
+                field('growthConditions', '培养条件', 'memory-text', '例：37°C · 200 rpm · 16 h', false, true),
+                field('resistance', '抗性 / 筛选标记', 'memory-text', '例：Ampicillin', false),
+                field('location', '存储位置', 'memory-text', '例：-80°C / MIC-A1', false),
+                field('status', '当前状态', 'select', ['在库', '培养中', '待鉴定', '污染隔离', '已耗尽'], true),
+                field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
+                field('notes', '备注', 'textarea', '记录用途、鉴定结果、保藏方式或异常…', false, true)
+            ]
+        },
+        plasmid: {
+            kicker: 'PLASMID REGISTRATION', title: '录入质粒',
+            fields: [
+                field('id', '质粒编号', 'text', '例：PLA-PUC19-001', true),
+                field('name', '质粒名称', 'text', '例：pUC19', true),
+                field('backbone', '载体骨架', 'memory-text', '例：pUC19 / pLenti', false),
+                field('insert', '插入片段 / 载荷', 'text', '例：GFP / Cas9-sgRNA', false),
+                field('host', '扩增宿主', 'memory-text', '例：E. coli DH5α', false),
+                field('sizeBp', '长度（bp）', 'number', '2686', false),
+                field('resistance', '筛选标记 / 抗性', 'memory-text', '例：Ampicillin', false),
+                field('promoter', '启动子', 'memory-text', '例：CMV / EF1α / T7', false),
+                field('source', '来源', 'text', '例：Addgene / 实验室构建', false),
+                field('sequenceRef', '序列 / 文件参考', 'text', 'GenBank、FASTA、SBOL 或本地文件名', false, true),
+                field('location', '存储位置', 'memory-text', '例：-20°C / DNA-A1', false),
+                field('status', '当前状态', 'select', ['在库', '待测序', '待鉴定', '构建中', '已耗尽'], true),
+                field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
+                field('notes', '备注', 'textarea', '记录克隆策略、测序验证或使用限制…', false, true)
+            ]
+        },
+        virus: {
+            kicker: 'VIRAL RESOURCE REGISTRATION', title: '录入病毒',
+            fields: [
+                field('id', '病毒编号', 'text', '例：VIR-AAV9-001', true),
+                field('name', '名称', 'text', '例：AAV9-hSyn-GCaMP6s', true),
+                field('virusType', '病毒 / 载体类型', 'select', ['AAV 载体', '慢病毒载体', '腺病毒载体', '噬菌体', '实验病毒株', '其他'], true),
+                field('serotype', '株系 / 血清型', 'text', '例：AAV9 / VSV-G 假型', false),
+                field('genome', '基因组类型', 'select', ['ssDNA', 'dsDNA', 'ssRNA', 'dsRNA', '逆转录 RNA', '其他'], false),
+                field('cargo', '表达载荷', 'text', '例：hSyn-GCaMP6s', false, true),
+                field('hostRange', '宿主 / 嗜性', 'text', '例：神经元 / 哺乳动物细胞', false, true),
+                field('titer', '滴度', 'text', '例：2.1 × 10¹³ vg/mL', false),
+                field('batch', '制备批次', 'text', '例：AAV9-2607', false),
+                field('biosafetyLevel', '生物安全等级', 'select', ['BSL-1', 'BSL-2', 'BSL-3', '其他'], true),
+                field('productionDate', '制备日期', 'date', '', false),
+                field('location', '存储位置', 'memory-text', '例：-80°C / VIR-A1', false),
+                field('status', '当前状态', 'select', ['在库', '待滴定', '待质控', '使用中', '已耗尽'], true),
+                field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
+                field('notes', '备注', 'textarea', '记录包装体系、质控、冻融次数或使用限制…', false, true)
+            ]
+        },        animalRack: {
             kicker: 'ANIMAL HOUSING', title: '新建动物笼架',
             fields: [
                 field('name', '笼架名称', 'text', '例：屏障设施 A 区笼架', true),
@@ -4559,7 +5073,57 @@ function getReagentDisplayStatus(reagent) {
                 field('notes', '饲养条件与备注', 'textarea', '记录垫料、光照、饲料、温度或特殊照护要求…', false, true)
             ]
         },
-        reagent: {
+        plantRack: {
+            kicker: 'PLANT GROWTH HOUSING', title: '新建植物培养架',
+            fields: [
+                field('name', '培养架名称', 'text', '例：植物房 GR-01 培养架', true),
+                field('facility', '培养室 / 位置', 'text', '例：植物房 GR-01', true),
+                field('rows', '培养架行数（最多 12 行）', 'number', '5', true),
+                field('columns', '每行位置数', 'number', '10', true)
+            ]
+        },
+        bioProject: {
+            kicker: 'COMPUTATIONAL PROJECT', title: '新建生物信息项目',
+            fields: [
+                field('id','项目编号','text','例：BIO-PRJ-001',true), field('name','项目名称','text','例：空间转录组图谱',true),
+                field('organism','研究对象','memory-text','例：Mus musculus',false), field('referenceGenome','参考基因组','memory-text','例：GRCm39 / mm39',false),
+                field('objective','研究目标','textarea','记录核心问题与分析范围…',false,true), field('organization','负责组织','text','例：神经基因组工作组',false),
+                field('repository','数据 / 项目位置','memory-text','例：DATA-01 / projects/demo',false), field('status','项目状态','select',['准备中','进行中','暂停','已完成','已归档'],true),
+                field('notes','备注','textarea','记录访问权限、关键版本或协作说明…',false,true)
+            ]
+        },
+        bioDataset: {
+            kicker: 'RESEARCH DATASET', title: '登记生物信息数据集',
+            fields: [
+                field('id','数据集编号','text','例：BIO-DATA-001',true), field('name','数据集名称','text','例：CA1 RNA-seq 原始数据',true),
+                field('dataType','数据类型','select',['RNA-seq','单细胞转录组','空间转录组','全基因组测序','外显子组','宏基因组','蛋白质组','成像组学','临床队列','其他'],true),
+                field('projectId','关联项目','bio-project-select','',false), field('sampleSource','样本 / 来源','text','样本编号、公共数据库或队列',false),
+                field('accession','登录号 / 内部批次','text','GEO、SRA、ENA 或内部编号',false), field('size','数据规模','text','例：186 GB / 48 samples',false),
+                field('checksum','完整性校验','text','例：SHA256 已校验',false), field('location','数据位置','memory-text','例：DATA-01 / raw/rnaseq',false),
+                field('format','文件格式','memory-text','例：FASTQ + metadata.tsv',false), field('notes','备注','textarea','记录授权范围、去标识化或质控信息…',false,true)
+            ]
+        },
+        bioPipeline: {
+            kicker: 'REPRODUCIBLE WORKFLOW', title: '新建分析流程',
+            fields: [
+                field('id','流程编号','text','例：BIO-FLOW-001',true), field('name','流程名称','text','例：RNA-seq 标准流程',true),
+                field('version','版本','text','例：nf-core/rnaseq 3.18',false), field('analysisType','分析类型','memory-text','例：转录组定量',false),
+                field('environment','运行环境','memory-text','例：Nextflow · Docker',false), field('repository','代码仓库 / 位置','text','Git URL 或本地路径',false),
+                field('inputType','输入要求','text','例：FASTQ + sample sheet',false), field('outputType','输出内容','text','例：QC + counts + BAM',false),
+                field('command','运行命令','textarea','记录可复现的入口命令与参数…',false,true), field('projectId','默认关联项目','bio-project-select','',false),
+                field('notes','备注','textarea','记录依赖、资源要求或验证状态…',false,true)
+            ]
+        },
+        bioRun: {
+            kicker: 'ANALYSIS RUN', title: '新建分析任务',
+            fields: [
+                field('id','任务编号','text','例：BIO-RUN-001',true), field('projectId','关联项目','bio-project-select','',false),
+                field('pipelineId','分析流程','bio-pipeline-select','',false), field('datasetId','输入数据集','bio-dataset-select','',false),
+                field('compute','计算资源','memory-text','例：24 CPU · 96 GB · GPU 0',false), field('startDate','开始日期','date','',false),
+                field('endDate','完成日期','date','',false), field('status','运行状态','select',['排队中','运行中','失败','已完成','已取消'],true),
+                field('outputLocation','输出位置','memory-text','例：DATA-01 / results/run-001',false), field('notes','运行备注','textarea','记录关键参数、错误原因或质控结论…',false,true)
+            ]
+        },        reagent: {
             kicker: 'INVENTORY INTAKE', title: '录入新试剂',
             fields: [
                 field('name', '试剂名称', 'text', '例：Anti-NeuN antibody', true),
@@ -4698,8 +5262,27 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'mouse') {
             const cage = state.animalCages.find(item => item.id === selectedAnimalCageId);
             defaultsForEntry = { cageId: cage ? cage.id : '', species: cage && !cage.species.includes('混合') ? cage.species : '小鼠', status: '在养' };
+        } else if (type === 'plant') {
+            const rack = state.plantRacks.find(function (item) { return item.id === activePlantRackId; });
+            defaultsForEntry = Object.assign({ materialType: '植株', status: '生长中', rackId: rack ? rack.id : '', position: rack ? firstAvailablePlantPosition(rack, state.plants) : '' }, pendingPlantDefaults || {});
+        } else if (type === 'microbe') {
+            defaultsForEntry = { biosafetyLevel: 'BSL-1', status: '在库' };
+        } else if (type === 'plasmid') {
+            defaultsForEntry = { status: '在库' };
+        } else if (type === 'virus') {
+            defaultsForEntry = { biosafetyLevel: 'BSL-1', status: '在库' };
         } else if (type === 'animalRack') {
             defaultsForEntry = { rows: '4', columns: '8' };
+        } else if (type === 'plantRack') {
+            defaultsForEntry = { rows: '5', columns: '10' };
+        } else if (type === 'bioProject') {
+            defaultsForEntry = { status: '准备中' };
+        } else if (type === 'bioDataset') {
+            defaultsForEntry = { projectId: state.bioProjects[0] ? state.bioProjects[0].id : '' };
+        } else if (type === 'bioPipeline') {
+            defaultsForEntry = { projectId: state.bioProjects[0] ? state.bioProjects[0].id : '' };
+        } else if (type === 'bioRun') {
+            defaultsForEntry = { projectId: state.bioProjects[0] ? state.bioProjects[0].id : '', pipelineId: state.bioPipelines[0] ? state.bioPipelines[0].id : '', datasetId: state.bioDatasets[0] ? state.bioDatasets[0].id : '', startDate: todayIso(), status: '排队中' };
         } else if (type === 'animalCage') {
             const rack = state.animalRacks.find(item => item.id === activeAnimalRackId);
             defaultsForEntry = Object.assign({ rackId: rack ? rack.id : '', position: rack ? firstAvailableAnimalPosition(rack, state.animalCages) : '', species: '小鼠', capacity: 5, status: '在用' }, pendingAnimalCageDefaults || {});
@@ -4774,6 +5357,7 @@ function getReagentDisplayStatus(reagent) {
         pendingTaskDefaults = null;
         pendingSampleDefaults = null;
         pendingAnimalCageDefaults = null;
+        pendingPlantDefaults = null;
         els.entryDialog.showModal();
         const first = els.dialogFields.querySelector('input, select, textarea');
         if (first) first.focus();
@@ -4859,7 +5443,11 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(experiment.id) + '">' + esc(experiment.date) + ' · ' + esc(experiment.title) + ' · ' + esc(experiment.id) + '</option>';
             })).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select><small class="field-note">每条实验记录只能保存一份实验结果；可随时编辑结果与附件。</small>';
-        } else if (config.type === 'freezer-select') {
+        } else if (config.type === 'frozen-sample-select') {
+            const options = ['<option value="">不关联冻存样本</option>'].concat(state.samples.map(function (sample) {
+                return '<option value="' + esc(sample.id) + '">' + esc(sample.id + ' · ' + sample.type + ' · ' + sample.location) + '</option>';
+            })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';        } else if (config.type === 'freezer-select') {
             const options = state.freezerBoxes.map(function (box) {
                 return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(interfaceText(box.storageLocation)) + '</option>';
             }).join('');
@@ -4875,6 +5463,18 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(cage.id) + '">' + esc((rack ? rack.name + ' · ' : '') + cage.position + ' · ' + cage.label) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建笼位</option>') + '</select><small class="field-note">动物条目会归入所选笼位；一个笼位可以包含多个动物。</small>';
+        } else if (config.type === 'plant-rack-select') {
+            const options = ['<option value="">未分配培养架</option>'].concat(state.plantRacks.map(function (rack) { return '<option value="' + esc(rack.id) + '">' + esc(interfaceText(rack.name)) + ' · ' + esc(interfaceText(rack.facility)) + '</option>'; })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
+        } else if (config.type === 'bio-project-select') {
+            const options = ['<option value="">不关联项目</option>'].concat(state.bioProjects.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name + ' · ' + item.id) + '</option>'; })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
+        } else if (config.type === 'bio-pipeline-select') {
+            const options = ['<option value="">不关联流程</option>'].concat(state.bioPipelines.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name + ' · ' + item.id) + '</option>'; })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
+        } else if (config.type === 'bio-dataset-select') {
+            const options = ['<option value="">不关联数据集</option>'].concat(state.bioDatasets.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name + ' · ' + item.id) + '</option>'; })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
         } else if (config.type === 'formulation-components') {
             control = '<div class="formulation-component-editor" id="field-' + config.name + '"><div class="formulation-component-head"><span>组分</span><span>用量</span><span>单位</span><i></i></div><div id="formulationComponentRows"><p class="field-note" data-empty-formulation-components>尚未添加组分。</p></div><button class="add-reagent-row" type="button" data-add-formulation-component>＋ 添加组分</button></div>';        } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
@@ -4891,7 +5491,7 @@ function getReagentDisplayStatus(reagent) {
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text"' + (options ? ' list="' + listId + '"' : '') + ' autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '>' + (options ? '<datalist id="' + listId + '">' + options + '</datalist>' : '');
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
-            const minmax = config.type === 'number' ? (config.name === 'rows' && activeDialogType === 'animalRack' ? ' min="1" max="12" step="1"' : config.name === 'columns' && activeDialogType === 'animalRack' ? ' min="1" max="48" step="1"' : ' min="0" step="0.01"') : '';
+            const minmax = config.type === 'number' ? (config.name === 'rows' && ['animalRack', 'plantRack'].includes(activeDialogType) ? ' min="1" max="12" step="1"' : config.name === 'columns' && ['animalRack', 'plantRack'].includes(activeDialogType) ? ' min="1" max="48" step="1"' : ' min="0" step="0.01"') : '';
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="' + config.type + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + defaultValue + minmax + required + '>';
         }
         return '<div class="' + className + '"><label for="field-' + config.name + '">' + esc(config.label) + '</label>' + control + '</div>';
@@ -5102,7 +5702,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
+        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'plant', 'microbe', 'plasmid', 'virus', 'reagent', 'sample', 'cell', 'result', 'bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -5160,6 +5760,21 @@ function getReagentDisplayStatus(reagent) {
             selectedAnimalCageId = '';
             localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
             activityText = '新建动物笼架“' + rack.name + '”';
+        } else if (activeDialogType === 'plantRack') {
+            const rack = {
+                id: generatedRecordId('PLANT-RACK'),
+                name: displayOr(data.name, '未命名培养架'),
+                facility: displayOr(data.facility, '位置待设置'),
+                rows: Math.min(12, Math.max(1, Math.round(positiveNumber(data.rows, 5)))),
+                columns: Math.min(48, Math.max(1, Math.round(positiveNumber(data.columns, 10)))),
+                createdBy: data.createdBy,
+                history: [createdHistoryEntry()]
+            };
+            state.plantRacks.push(rack);
+            activePlantRackId = rack.id;
+            selectedPlantId = '';
+            localStorage.setItem('rhineLabActivePlantRack', rack.id);
+            activityText = '新建植物培养架“' + rack.name + '”';
         } else if (activeDialogType === 'animalCage') {
             const rack = state.animalRacks.find(item => item.id === data.rackId);
             if (!rack) {
@@ -5207,6 +5822,72 @@ function getReagentDisplayStatus(reagent) {
             state.mice.unshift(data);
             if (cage) selectedAnimalCageId = cage.id;
             activityText = '添加' + data.species + '动物条目 ' + data.id;
+        } else if (activeDialogType === 'plant') {
+            data.id = displayOr(data.id, generatedRecordId('PLT'));
+            if (state.plants.some(function (item) { return item.id === data.id; })) { showToast('该植物材料编号已存在'); return; }
+            const rack = state.plantRacks.find(function (item) { return item.id === data.rackId; });
+            const position = rack ? normalizePlantPosition(data.position) || firstAvailablePlantPosition(rack, state.plants) : '';
+            if (rack && (!position || !isValidPlantPosition(rack, position))) { showToast('培养架位置格式不正确或超出范围'); return; }
+            if (rack && state.plants.some(function (item) { return item.rackId === rack.id && item.position === position; })) { showToast('该培养架位置已有植物材料'); return; }
+            data.name = displayOr(data.name, '未命名植物材料');
+            data.materialType = displayOr(data.materialType, '未分类');
+            data.status = displayOr(data.status, '在库');
+            data.rackId = rack ? rack.id : '';
+            data.position = position;
+            data.location = rack && position ? formatPlantLocation(rack, position) : '未分配位置';
+            data.history = [createdHistoryEntry()];
+            state.plants.unshift(data);
+            if (rack) { activePlantRackId = rack.id; localStorage.setItem('rhineLabActivePlantRack', rack.id); }
+            selectedPlantId = data.id;
+            syncFrozenSampleLineage('plant', data.id, data.frozenSampleId);
+            activityText = '登记植物材料“' + data.name + '”';
+        } else if (activeDialogType === 'microbe') {
+            data.id = displayOr(data.id, generatedRecordId('MIC'));
+            if (state.microbes.some(function (item) { return item.id === data.id; })) { showToast('该菌种编号已存在'); return; }
+            data.name = displayOr(data.name, '未命名菌种');
+            data.status = displayOr(data.status, '在库');
+            data.history = [createdHistoryEntry()];
+            state.microbes.unshift(data);
+            syncFrozenSampleLineage('microbe', data.id, data.frozenSampleId);
+            activityText = '录入菌种“' + data.name + '”';
+        } else if (activeDialogType === 'plasmid') {
+            data.id = displayOr(data.id, generatedRecordId('PLA'));
+            if (state.plasmids.some(function (item) { return item.id === data.id; })) { showToast('该质粒编号已存在'); return; }
+            data.name = displayOr(data.name, '未命名质粒');
+            data.sizeBp = Math.max(0, Math.round(positiveNumber(data.sizeBp, 0)));
+            data.status = displayOr(data.status, '在库');
+            data.history = [createdHistoryEntry()];
+            state.plasmids.unshift(data);
+            syncFrozenSampleLineage('plasmid', data.id, data.frozenSampleId);
+            activityText = '录入质粒“' + data.name + '”';
+        } else if (activeDialogType === 'virus') {
+            data.id = displayOr(data.id, generatedRecordId('VIR'));
+            if (state.viruses.some(function (item) { return item.id === data.id; })) { showToast('该病毒编号已存在'); return; }
+            data.name = displayOr(data.name, '未命名病毒');
+            data.status = displayOr(data.status, '在库');
+            data.history = [createdHistoryEntry()];
+            state.viruses.unshift(data);
+            syncFrozenSampleLineage('virus', data.id, data.frozenSampleId);
+            activityText = '录入病毒资源“' + data.name + '”';
+        } else if (['bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
+            const definitions = {
+                bioProject: { collection: state.bioProjects, prefix: 'BIO-PRJ', fallback: '未命名生物信息项目', tab: 'projects' },
+                bioDataset: { collection: state.bioDatasets, prefix: 'BIO-DATA', fallback: '未命名数据集', tab: 'datasets' },
+                bioPipeline: { collection: state.bioPipelines, prefix: 'BIO-FLOW', fallback: '未命名分析流程', tab: 'pipelines' },
+                bioRun: { collection: state.bioRuns, prefix: 'BIO-RUN', fallback: '未命名分析任务', tab: 'runs' }
+            };
+            const definition = definitions[activeDialogType];
+            data.id = displayOr(data.id, generatedRecordId(definition.prefix));
+            if (definition.collection.some(function (item) { return item.id === data.id; })) { showToast('该编号已存在，请使用新的编号'); return; }
+            if (activeDialogType === 'bioRun') data.name = bioPipelineLabel(data.pipelineId) + ' · ' + data.id;
+            else data.name = displayOr(data.name, definition.fallback);
+            if (activeDialogType === 'bioProject') data.status = displayOr(data.status, '准备中');
+            if (activeDialogType === 'bioRun') data.status = displayOr(data.status, '排队中');
+            data.history = [createdHistoryEntry()];
+            definition.collection.unshift(data);
+            activeBioinfoTab = definition.tab;
+            localStorage.setItem('rhineLabBioinfoTab', activeBioinfoTab);
+            activityText = '新增' + recordTypeLabel(activeDialogType) + '“' + (data.name || data.id) + '”';
         } else if (activeDialogType === 'reagent') {
             data.catalog = displayOr(data.catalog, generatedRecordId('REAG'));
             if (state.reagents.some(item => item.catalog === data.catalog)) {
@@ -5407,6 +6088,13 @@ function getReagentDisplayStatus(reagent) {
         }
     }
 
+    function syncFrozenSampleLineage(type, id, sampleId) {
+        state.lineageLinks = state.lineageLinks.filter(function (link) {
+            return !(link.sourceType === type && link.sourceId === id && link.relation === '冻存保藏');
+        });
+        if (!sampleId || !state.samples.some(function (sample) { return sample.id === sampleId; })) return;
+        state.lineageLinks.push({ id: 'LIN-' + Date.now() + '-' + type, sourceType: type, sourceId: id, targetType: 'sample', targetId: sampleId, relation: '冻存保藏', quantity: '', unit: '', notes: '', date: todayIso() });
+    }
     function createdHistoryEntry() {
         return { at: new Date().toISOString(), action: 'created', changes: [] };
     }
@@ -5474,6 +6162,32 @@ function getReagentDisplayStatus(reagent) {
             updated.cageId = cage ? cage.id : '';
             updated.cage = cage ? cage.label : '未分配';
             updated.species = displayOr(data.species, '未设置物种');
+        } else if (target.type === 'plant') {
+            updated.id = current.id;
+            const rack = state.plantRacks.find(function (item) { return item.id === data.rackId; });
+            const position = rack ? normalizePlantPosition(data.position) || firstAvailablePlantPosition(rack, state.plants.filter(function (item) { return item.id !== current.id; })) : '';
+            if (rack && (!position || !isValidPlantPosition(rack, position))) { showToast('培养架位置格式不正确或超出范围'); return; }
+            if (rack && state.plants.some(function (item) { return item.id !== current.id && item.rackId === rack.id && item.position === position; })) { showToast('该培养架位置已有植物材料'); return; }
+            updated.name = displayOr(data.name, current.name || '未命名植物材料');
+            updated.rackId = rack ? rack.id : '';
+            updated.position = position;
+            updated.location = rack && position ? formatPlantLocation(rack, position) : '未分配位置';
+        } else if (target.type === 'microbe') {
+            updated.id = current.id;
+            updated.name = displayOr(data.name, current.name || '未命名菌种');
+        } else if (target.type === 'plasmid') {
+            updated.id = current.id;
+            updated.name = displayOr(data.name, current.name || '未命名质粒');
+            updated.sizeBp = Math.max(0, Math.round(positiveNumber(data.sizeBp, current.sizeBp || 0)));
+        } else if (target.type === 'virus') {
+            updated.id = current.id;
+            updated.name = displayOr(data.name, current.name || '未命名病毒');
+        } else if (['bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(target.type)) {
+            updated.id = current.id;
+            if (target.type === 'bioRun') updated.name = bioPipelineLabel(updated.pipelineId) + ' · ' + updated.id;
+            else updated.name = displayOr(data.name, current.name || '未命名记录');
+            if (target.type === 'bioProject') updated.status = displayOr(data.status, current.status || '准备中');
+            if (target.type === 'bioRun') updated.status = displayOr(data.status, current.status || '排队中');
         } else if (target.type === 'cell') {
             updated.id = current.id;
             updated.passage = Math.max(0, Math.round(positiveNumber(data.passage, current.passage || 0)));
@@ -5538,6 +6252,7 @@ function getReagentDisplayStatus(reagent) {
         if (target.type === 'cell') updated.changeHistory.push(historyEntry);
         else updated.history.push(historyEntry);
         collection[index] = updated;
+        if (['plant', 'microbe', 'plasmid', 'virus'].includes(target.type)) syncFrozenSampleLineage(target.type, updated.id, updated.frozenSampleId);
         appendAuditLog({ action: 'updated', recordType: target.type, recordId: target.key, changes: clone(changes) });
         state.activities.unshift({ text: '更新' + recordTypeLabel(target.type) + '记录“' + (updated.name || updated.id || updated.catalog) + '”', time: '刚刚' });
         if (target.type === 'sample') {
@@ -5546,6 +6261,12 @@ function getReagentDisplayStatus(reagent) {
             localStorage.setItem('rhineLabActiveFreezerBox', updated.boxId);
         } else if (target.type === 'cell') {
             activeCellId = updated.id;
+        } else if (target.type === 'plant') {
+            selectedPlantId = updated.id;
+            if (updated.rackId) {
+                activePlantRackId = updated.rackId;
+                localStorage.setItem('rhineLabActivePlantRack', updated.rackId);
+            }
         } else if (target.type === 'formulation') {
             activeProtocolTab = 'formulations';
         }
@@ -5576,7 +6297,8 @@ function getReagentDisplayStatus(reagent) {
         }
         if (fieldName === 'components') {
             return (Array.isArray(value) ? value : []).map(function (item) { return [item.name, item.amount, item.unit].filter(Boolean).join(' '); }).join('、');
-        }        if (fieldName === 'attachments') {
+        }
+        if (fieldName === 'attachments') {
             const attachments = Array.isArray(value) ? value : [];
             return attachments.length + ' 个附件' + (attachments.length ? ' · ' + attachments.map(item => item.name).join('、') : '');
         }
@@ -5585,14 +6307,40 @@ function getReagentDisplayStatus(reagent) {
 
     function openRecordDetail(type, key) {
         if (type === 'mouse') openAnimalDetail(key);
+        if (type === 'plant') openPlantDetail(key);
+        if (type === 'microbe') openMicrobeDetail(key);
+        if (type === 'plasmid') openPlasmidDetail(key);
+        if (type === 'virus') openVirusDetail(key);
         if (type === 'reagent') openReagentDetail(key);
         if (type === 'sample') openSampleDetail(key);
         if (type === 'cell') openCellDetail(key);
         if (type === 'formulation') openFormulationDetail(key);
+        if (['bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(type)) openBioinformaticsDetail(type, key);
         if (type === 'result') {
             const result = state.results.find(item => item.id === key);
             if (result) openExperimentDetail(result.experimentId);
         }
+    }
+
+    function openBioinformaticsDetail(type, key) {
+        const record = findRecord(type, key);
+        const schema = dialogSchemas[type];
+        if (!record || !schema) return;
+        prepareRecordDetail(type, key);
+        const title = record.name || record.id;
+        const labels = { bioProject: 'COMPUTATIONAL PROJECT', bioDataset: 'RESEARCH DATASET', bioPipeline: 'REPRODUCIBLE WORKFLOW', bioRun: 'ANALYSIS RUN' };
+        els.recordDetailKicker.textContent = labels[type] + ' · ' + record.id;
+        els.recordDetailTitle.textContent = title;
+        const fields = schema.fields.map(function (config) {
+            let value = schemaRecordValue(type, record, config.name);
+            if (config.name === 'projectId') value = bioProjectLabel(value);
+            if (config.name === 'pipelineId') value = bioPipelineLabel(value);
+            if (config.name === 'datasetId') value = bioDatasetLabel(value);
+            return detailFieldHtml(config.label, value, ['objective', 'notes', 'command'].includes(config.name));
+        }).join('');
+        const command = type === 'bioPipeline' && record.command ? '<section class="record-detail-section bioinfo-command"><div class="record-detail-section-title"><p class="micro-label">REPRODUCIBLE ENTRYPOINT</p><h3>运行入口</h3></div><pre class="bioinfo-code-block"><code>' + esc(record.command) + '</code></pre></section>' : '';
+        els.recordDetailBody.innerHTML = '<section class="record-detail-hero bioinfo-detail-hero"><div><span class="record-detail-code">' + esc(record.id) + '</span><h3>' + esc(title) + '</h3><p>' + esc(record.organism || record.dataType || record.analysisType || bioProjectLabel(record.projectId)) + '</p></div><span class="status-chip ' + statusClass(record.status) + '">' + esc(record.status || labels[type]) + '</span></section><section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">COMPUTATIONAL RECORD</p><h3>记录详情</h3></div><div class="record-detail-grid">' + fields + '</div></section>' + command + recordHistoryHtml(record);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
     }
 
     function isExpiringSoon(dateString) {
@@ -5612,9 +6360,9 @@ function getReagentDisplayStatus(reagent) {
     }
 
     function statusClass(status) {
-        if (['进行中', '实验中', '质控中'].includes(status)) return 'processing';
-        if (['待分析', '临期', '观察期', '待传代', '待操作'].includes(status)) return 'caution';
-    if (['余量低', '剩余少'].includes(status)) return 'danger';
+        if (['进行中', '实验中', '质控中', '运行中'].includes(status)) return 'processing';
+        if (['待分析', '临期', '观察期', '待传代', '待操作', '排队中', '准备中'].includes(status)) return 'caution';
+    if (['余量低', '剩余少', '失败'].includes(status)) return 'danger';
         if (['待分配'].includes(status)) return 'neutral';
         return '';
     }
