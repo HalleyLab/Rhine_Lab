@@ -647,3 +647,272 @@ body.dark-theme .app-boot-screen {
     .boot-logo-symbols .boot-logo-minus,
     .boot-logo-wordmark { animation-delay: 0s !important; }
 }
+/* Lineage canvas spacing and pan interaction. */
+.embedded-lineage-pan {
+    max-width: 100%;
+    padding-bottom: 4px;
+    overflow: auto;
+    cursor: grab;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(132, 173, 47, .48) transparent;
+    scrollbar-width: thin;
+    touch-action: pan-y;
+}
+.embedded-lineage-pan.is-panning { cursor: grabbing; }
+.embedded-lineage-pan.is-panning * { pointer-events: none; }
+.embedded-lineage-flow {
+    grid-template-columns: 340px 190px 340px;
+    gap: 24px;
+    min-width: 918px;
+    overflow: visible;
+}
+.embedded-lineage-branch { grid-template-columns: minmax(0, 1fr) 112px; }
+.embedded-lineage-branch.outgoing { grid-template-columns: 112px minmax(0, 1fr); }
+.embedded-lineage-branch > em {
+    top: -10px;
+    right: 0;
+    width: 112px;
+    padding: 0 6px;
+    color: var(--text);
+    background: var(--card);
+    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+    text-align: center;
+}
+.embedded-lineage-branch.outgoing > em { left: 0; right: auto; }
+html[lang^="zh"] .embedded-lineage-flow :is(small, strong, span, em),
+html[lang^="zh"] .lineage-map text {
+    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+}
+html[lang="en"] .embedded-lineage-flow :is(small, strong, span, em),
+html[lang="en"] .lineage-map text {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+.lineage-map {
+    min-height: 340px;
+    max-height: 620px;
+    overflow: auto;
+    cursor: grab;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(132, 173, 47, .48) transparent;
+    scrollbar-width: thin;
+    touch-action: pan-y;
+}
+.lineage-map.is-panning { cursor: grabbing; }
+.lineage-map.is-panning * { pointer-events: none; }
+.lineage-map svg { display: block; max-width: none; }
+.lineage-map text { fill: var(--text); }
+.lineage-stage-title { font-size: 13px; font-weight: 900; text-anchor: middle; }
+.lineage-edge { fill: none; stroke: var(--lineage-line); stroke-width: 2; }
+#lineageArrow path { fill: var(--lineage-line); }
+.lineage-edge-label {
+    fill: var(--text);
+    stroke: var(--card);
+    stroke-width: 7px;
+    paint-order: stroke fill;
+    font-size: 13px;
+    font-weight: 900;
+}
+.lineage-node { cursor: pointer; }
+.lineage-node rect { fill: var(--lineage-node); stroke: var(--lineage-line); stroke-width: 1; }
+.lineage-node-type { fill: #668326 !important; font-size: 10px; font-weight: 900; }
+.lineage-node-title { font-size: 14px; font-weight: 900; }
+.lineage-node-meta { fill: var(--muted) !important; font-size: 10px; font-weight: 700; }
+@media (max-width: 760px) {
+    .embedded-lineage-flow {
+        min-width: 0;
+        grid-template-columns: 1fr;
+    }
+    .embedded-lineage-branch,
+    .embedded-lineage-branch.outgoing { grid-template-columns: 96px minmax(0, 1fr); }
+    .embedded-lineage-branch > em { width: 96px; }
+}
+/* Lineage responsive fit refinement. */
+.embedded-lineage-pan {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+.embedded-lineage-flow {
+    width: 100%;
+    min-width: 554px;
+    grid-template-columns: minmax(150px, 1fr) minmax(170px, 190px) minmax(210px, 1.2fr);
+    gap: 12px;
+}
+.embedded-lineage-side { align-content: center; }
+.embedded-lineage-branch {
+    grid-template-columns: minmax(0, 1fr) clamp(72px, 32%, 104px);
+    align-items: stretch;
+}
+.embedded-lineage-branch.outgoing {
+    grid-template-columns: clamp(72px, 32%, 104px) minmax(0, 1fr);
+}
+.embedded-lineage-branch > i {
+    position: relative;
+    align-self: center;
+    height: 3px;
+    background: var(--lineage-line);
+}
+.embedded-lineage-branch > i::after {
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    background: var(--lineage-line);
+    border-radius: 50%;
+    content: "";
+    transform: translateY(-50%);
+}
+.embedded-lineage-branch.incoming > i::after { left: -2px; }
+.embedded-lineage-branch.outgoing > i::after { right: -2px; }
+.embedded-lineage-branch > em {
+    top: 50%;
+    right: 0;
+    width: clamp(72px, 32%, 104px);
+    padding: 0 4px;
+    transform: translateY(calc(-100% - 3px));
+}
+.embedded-lineage-branch.outgoing > em { left: 0; right: auto; }
+.embedded-lineage-node,
+.embedded-lineage-current {
+    width: 100%;
+    min-width: 0;
+    min-height: 78px;
+    align-content: center;
+    padding: 11px 12px;
+}
+.embedded-lineage-node strong,
+.embedded-lineage-node span,
+.embedded-lineage-current strong,
+.embedded-lineage-current span {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.embedded-lineage-remove {
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+}
+.embedded-lineage-branch.incoming .embedded-lineage-remove {
+    right: auto;
+    left: 4px;
+}
+.lineage-edge { stroke-width: 3; }
+.lineage-node rect { stroke-width: 1.5; }
+@media (max-width: 760px) {
+    .embedded-lineage-flow {
+        min-width: 0;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .embedded-lineage-branch,
+    .embedded-lineage-branch.outgoing { grid-template-columns: 88px minmax(0, 1fr); }
+    .embedded-lineage-branch > em { left: 0; right: auto; width: 88px; }
+    .embedded-lineage-branch.incoming .embedded-lineage-remove { right: 4px; left: auto; }
+}
+
+/* Embedded lineage connector tree and reagent detail contrast. */
+.embedded-lineage-remove {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0 !important;
+    appearance: none;
+    font-family: Helvetica, Arial, sans-serif !important;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1 !important;
+    text-align: center;
+}
+
+@media (min-width: 761px) {
+    .embedded-lineage-branch > i::before {
+        position: absolute;
+        box-sizing: border-box;
+        content: "";
+        pointer-events: none;
+    }
+    .embedded-lineage-branch.outgoing[data-lineage-bend="straight"] > i::before {
+        top: 50%;
+        left: -12px;
+        width: 12px;
+        border-top: 3px solid var(--lineage-line);
+        transform: translateY(-50%);
+    }
+    .embedded-lineage-branch.outgoing[data-lineage-bend="source-below"] > i::before {
+        top: 50%;
+        left: -12px;
+        width: 12px;
+        height: var(--lineage-bend);
+        border-right: 3px solid var(--lineage-line);
+        border-bottom: 3px solid var(--lineage-line);
+        border-bottom-right-radius: 9px;
+    }
+    .embedded-lineage-branch.outgoing[data-lineage-bend="source-above"] > i::before {
+        bottom: 50%;
+        left: -12px;
+        width: 12px;
+        height: var(--lineage-bend);
+        border-top: 3px solid var(--lineage-line);
+        border-right: 3px solid var(--lineage-line);
+        border-top-right-radius: 9px;
+    }
+    .embedded-lineage-branch.incoming[data-lineage-bend="straight"] > i::before {
+        top: 50%;
+        right: -12px;
+        width: 12px;
+        border-top: 3px solid var(--lineage-line);
+        transform: translateY(-50%);
+    }
+    .embedded-lineage-branch.incoming[data-lineage-bend="source-below"] > i::before {
+        top: 50%;
+        right: -12px;
+        width: 12px;
+        height: var(--lineage-bend);
+        border-bottom: 3px solid var(--lineage-line);
+        border-left: 3px solid var(--lineage-line);
+        border-bottom-left-radius: 9px;
+    }
+    .embedded-lineage-branch.incoming[data-lineage-bend="source-above"] > i::before {
+        right: -12px;
+        bottom: 50%;
+        width: 12px;
+        height: var(--lineage-bend);
+        border-top: 3px solid var(--lineage-line);
+        border-left: 3px solid var(--lineage-line);
+        border-top-left-radius: 9px;
+    }
+}
+
+body:not(.dark-theme) #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero {
+    color: #22312b !important;
+    background:
+        linear-gradient(105deg, rgba(189, 224, 78, .34), rgba(248, 250, 243, .98) 40%, rgba(226, 236, 228, .98)) !important;
+    border-color: rgba(116, 151, 46, .32) !important;
+}
+body:not(.dark-theme) #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero h3 {
+    color: #1d2b25 !important;
+}
+body:not(.dark-theme) #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero p {
+    color: #52635b !important;
+}
+body:not(.dark-theme) #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero .record-detail-code {
+    color: #63851e !important;
+}
+body.dark-theme #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero {
+    color: #f3f7f2 !important;
+    background:
+        linear-gradient(108deg, rgba(164, 207, 57, .2), rgba(48, 67, 58, .98) 40%, rgba(29, 42, 36, .99)) !important;
+    border-color: rgba(174, 213, 72, .38) !important;
+}
+body.dark-theme #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero :is(h3, p) {
+    color: #f3f7f2 !important;
+}
+body.dark-theme #recordDetailDialog[data-record-type="reagent"] .reagent-detail-hero .record-detail-code {
+    color: #c4e36b !important;
+}

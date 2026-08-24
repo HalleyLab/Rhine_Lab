@@ -251,10 +251,23 @@
                 <section class="view" id="view-protocols" data-title="实验方案">
                     <div class="page-heading technical-heading">
                         <div><p class="eyebrow"><span>PROTOCOL LIBRARY</span></p><h1>实验方案</h1><p class="story-quote">“理论上说，这确实是可行的......”<cite>——塞雷娅</cite></p></div>
-                        <div class="heading-actions"><button class="button primary" type="button" data-add="protocol"><span>＋</span> 录入 Protocol</button></div>
+                        <div class="heading-actions"><button class="button primary" id="addProtocolButton" type="button" data-add="protocol"><span>＋</span> 录入 Protocol</button></div>
                         <div class="heading-visual heading-visual-07" aria-hidden="true" data-i18n-skip><span class="heading-axis"><i></i><i></i><i></i></span><span class="heading-visual-label"><b>PROCEDURE / CONTROL</b><small>RHINE LAB · METHODS</small></span><span class="heading-monogram">SOP</span></div>
                     </div>
-                    <div class="protocol-grid" id="protocolGrid"></div>
+                    <div class="protocol-subpage-tabs" role="tablist" aria-label="实验方案子页面">
+                        <button class="active" type="button" role="tab" data-protocol-tab="protocols" aria-selected="true">Protocol</button>
+                        <button type="button" role="tab" data-protocol-tab="formulations" aria-selected="false">配方库</button>
+                    </div>
+                    <section class="protocol-subpage active" data-protocol-panel="protocols">
+                        <div class="protocol-grid" id="protocolGrid"></div>
+                    </section>
+                    <section class="protocol-subpage" data-protocol-panel="formulations" hidden>
+                        <div class="formulation-toolbar panel">
+                            <div><p class="micro-label">FORMULATION LIBRARY</p><h2>实验配方库</h2></div>
+                            <button class="button primary" type="button" data-add="formulation"><span>＋</span> 新建配方</button>
+                        </div>
+                        <div class="formulation-grid" id="formulationGrid"></div>
+                    </section>
                 </section>
 
                 <section class="view" id="view-tools" data-title="科研工具">

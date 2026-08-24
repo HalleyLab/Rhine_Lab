@@ -182,6 +182,42 @@
     defaults.schedule = defaults.schedule.concat(clone(additionalExamples.schedule));
     defaults.activities = defaults.activities.concat(clone(additionalExamples.activities));
     defaults.protocols = clone(protocols);
+    defaults.formulations = [
+        {
+            id: 'FORM-DEMO-001', name: '1× PBS · pH 7.4', physicalForm: '液体', purpose: '细胞与组织常规清洗',
+            finalAmount: 1, unit: 'L', concentration: '1×', storage: '室温', version: 'V1.0',
+            components: [
+                { name: 'NaCl', amount: '8', unit: 'g' },
+                { name: 'KCl', amount: '0.2', unit: 'g' },
+                { name: 'Na₂HPO₄', amount: '1.44', unit: 'g' },
+                { name: 'KH₂PO₄', amount: '0.24', unit: 'g' },
+                { name: '超纯水', amount: '定容至', unit: '1 L' }
+            ],
+            preparation: '依次溶解各组分，以 HCl 或 NaOH 调整至 pH 7.4，定容后按实验要求灭菌。',
+            notes: '', createdBy: 'LOCAL-NODE', history: []
+        },
+        {
+            id: 'FORM-DEMO-002', name: '1.5% 琼脂糖凝胶', physicalForm: '凝胶', purpose: 'DNA 琼脂糖凝胶电泳',
+            finalAmount: 50, unit: 'mL', concentration: '1.5% (w/v)', storage: '现配现用', version: 'V1.0',
+            components: [
+                { name: 'Agarose', amount: '0.75', unit: 'g' },
+                { name: '1× TAE', amount: '50', unit: 'mL' }
+            ],
+            preparation: '混匀后加热至琼脂糖完全溶解，冷却至约 60°C 后灌胶。',
+            notes: '', createdBy: 'LOCAL-NODE', history: []
+        },
+        {
+            id: 'FORM-DEMO-003', name: '细胞培养混合气', physicalForm: '气体', purpose: '哺乳动物细胞培养箱供气',
+            finalAmount: 1, unit: 'batch', concentration: '5% CO₂', storage: '合规气瓶与减压阀', version: 'V1.0',
+            components: [
+                { name: 'CO₂', amount: '5', unit: '%' },
+                { name: 'O₂', amount: '20.9', unit: '%' },
+                { name: 'N₂', amount: '余量', unit: '%' }
+            ],
+            preparation: '由合规供应商预混并提供组分证书；连接培养箱前核对标签、压力与有效期。',
+            notes: '', createdBy: 'LOCAL-NODE', history: []
+        }
+    ];
     defaults.exampleSeedVersion = 4;
     defaults.auditLog = [];
     defaults.lineageLinks = [
@@ -238,7 +274,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -291,11 +327,13 @@
     let themeTimer = 0;
     let runDisplayTimer = 0;
     let activeToolsTab = 'lineage';
+    let activeProtocolTab = 'protocols';
     let activeLineageFocus = 'all';
     let activePlateLayoutId = state.plateLayouts[0] ? state.plateLayouts[0].id : '';
     let plateDraft = activePlateLayoutId ? clone(state.plateLayouts[0]) : createBlankPlateLayout();
     let selectedPlateWells = new Set();
     let platePointerDown = false;
+    let lineagePan = null;
 
     const els = {
         breadcrumb: document.getElementById('breadcrumbLabel'),
@@ -517,6 +555,7 @@
             freezerBoxes: Array.isArray(stored.freezerBoxes) ? stored.freezerBoxes : clone(defaults.freezerBoxes),
             schedule: Array.isArray(stored.schedule) ? stored.schedule : clone(defaults.schedule),
             protocols: Array.isArray(stored.protocols) ? stored.protocols : clone(defaults.protocols),
+            formulations: Array.isArray(stored.formulations) ? stored.formulations : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.formulations)),
             activities: Array.isArray(stored.activities) ? stored.activities : clone(defaults.activities),
             auditLog: Array.isArray(stored.auditLog) ? stored.auditLog : [],
             lineageLinks: Array.isArray(stored.lineageLinks) ? stored.lineageLinks : [],
@@ -575,10 +614,31 @@
                 literatureId: String(protocol.literatureId || (seeded && seeded.literatureId) || '').trim(),
                 literatureUrl: String(protocol.literatureUrl || (seeded && seeded.literatureUrl) || '').trim(),
                 photoData: protocol.photoData || '',
-                createdBy: anonymousContributor(protocol.createdBy)
+                createdBy: anonymousContributor(protocol.createdBy),
+                history: Array.isArray(protocol.history) ? clone(protocol.history) : []
             };
         });
 
+        data.formulations = (Array.isArray(data.formulations) ? data.formulations : clone(defaults.formulations)).map(function (formulation, index) {
+            return {
+                id: formulation.id || 'FORM-' + String(index + 1).padStart(3, '0'),
+                name: formulation.name || '未命名配方',
+                physicalForm: formulation.physicalForm || '液体',
+                purpose: String(formulation.purpose || ''),
+                finalAmount: positiveNumber(formulation.finalAmount, 0),
+                unit: String(formulation.unit || ''),
+                concentration: String(formulation.concentration || ''),
+                storage: String(formulation.storage || ''),
+                version: String(formulation.version || 'V1.0'),
+                components: (Array.isArray(formulation.components) ? formulation.components : []).map(function (component) {
+                    return { name: String(component.name || ''), amount: String(component.amount || ''), unit: String(component.unit || '') };
+                }).filter(function (component) { return component.name || component.amount || component.unit; }),
+                preparation: String(formulation.preparation || ''),
+                notes: String(formulation.notes || ''),
+                createdBy: anonymousContributor(formulation.createdBy),
+                history: Array.isArray(formulation.history) ? clone(formulation.history) : []
+            };
+        });
         const experimentProtocolMap = {
             'RL-EXP-026': 'SOP-IM-021',
             'RL-EXP-024': 'SOP-AN-008',
@@ -1073,7 +1133,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1095,6 +1155,11 @@
                 return;
             }
 
+            const protocolTab = event.target.closest('[data-protocol-tab]');
+            if (protocolTab) {
+                setProtocolTab(protocolTab.dataset.protocolTab);
+                return;
+            }
             const add = event.target.closest('[data-add]');
             if (add) {
                 openEntryDialog(add.dataset.add);
@@ -1133,6 +1198,21 @@
                 return;
             }
 
+            const addFormulationComponent = event.target.closest('[data-add-formulation-component]');
+            if (addFormulationComponent) {
+                const rows = document.getElementById('formulationComponentRows');
+                const empty = rows && rows.querySelector('[data-empty-formulation-components]');
+                if (empty) empty.remove();
+                if (rows) rows.insertAdjacentHTML('beforeend', formulationComponentRowHtml());
+                return;
+            }
+
+            const removeFormulationComponent = event.target.closest('[data-remove-formulation-component]');
+            if (removeFormulationComponent) {
+                const row = removeFormulationComponent.closest('.formulation-component-row');
+                if (row) row.remove();
+                return;
+            }
             const addReagentRow = event.target.closest('[data-add-reagent-row]');
             if (addReagentRow) {
                 const rows = document.getElementById('protocolReagentRows');
@@ -1175,6 +1255,11 @@
             const protocolCard = event.target.closest('[data-protocol-id]');
             if (protocolCard) {
                 openProtocolDetail(protocolCard.dataset.protocolId);
+                return;
+            }
+            const formulationCard = event.target.closest('[data-formulation-id]');
+            if (formulationCard) {
+                openFormulationDetail(formulationCard.dataset.formulationId);
                 return;
             }
 
@@ -2070,6 +2155,7 @@
             '</div><div class="detail-stock-meter cell-confluence-meter"><div><i style="width:' + number(culture.confluence, 0, 100) + '%"></i></div><span>' + esc(interfaceText('汇合度')) + ' ' + esc(culture.confluence) + '%</span></div></section>' + embeddedLineageHtml('cell', culture.id) +
             '<section class="record-detail-section cell-passage-section"><div class="record-detail-section-title passage-title"><div><p class="micro-label">CULTURE HISTORY</p><h3>传代与培养记录</h3></div><button class="button primary" type="button" data-add-passage>＋ 记录传代 / 操作</button></div>' + cellCultureHistoryHtml(culture) + '</section>' + photo + recordHistoryHtml(culture);
         if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
     }
 
     function cellCultureHistoryHtml(culture) {
@@ -2100,6 +2186,7 @@
             '<section class="record-detail-section animal-track"><div class="record-detail-section-title"><p class="micro-label">LIFECYCLE TRACE</p><h3>动物状态轨迹</h3></div><div class="record-timeline"><article><i></i><div><small>出生 / 孵化</small><strong>' + esc(animal.birth || '未填写') + '</strong></div></article><article><i></i><div><small>当前笼位</small><strong>' + esc(animal.cage || '未分配') + '</strong></div></article><article class="active"><i></i><div><small>当前阶段</small><strong>' + esc(animal.status || '在养') + '</strong></div></article></div></section>' +
             recordHistoryHtml(animal);
         if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
     }
 
     function openReagentDetail(catalog) {
@@ -2140,10 +2227,12 @@
                 detailFieldHtml('设备 / 层架', box ? box.storageLocation : sample.location, true) + nodeField +
             '</div></section>' + embeddedLineageHtml('sample', sample.id) + photo + recordHistoryHtml(sample);
         if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+        scheduleEmbeddedLineageLayout();
     }
 
     function prepareRecordDetail(type, key) {
         activeRecordDetail = { type: type, key: key };
+        els.recordDetailDialog.dataset.recordType = type;
         const readOnly = workspaceMode === 'lab' && workspaceReadOnly;
         els.recordEditButton.disabled = readOnly;
         els.recordDeleteButton.disabled = readOnly;
@@ -2177,12 +2266,13 @@
     }
 
     function recordTypeLabel(type) {
-        return { experiment: '实验记录', protocol: '实验方案', mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
         if (type === 'experiment') return state.experiments;
         if (type === 'protocol') return state.protocols;
+        if (type === 'formulation') return state.formulations;
         if (type === 'mouse') return state.mice;
         if (type === 'reagent') return state.reagents;
         if (type === 'sample') return state.samples;
@@ -2324,6 +2414,7 @@
             }],
             schedule: [],
             protocols: [],
+            formulations: [],
             activities: [],
             auditLog: [],
             lineageLinks: [],
@@ -2422,6 +2513,19 @@
     }
 
     function renderProtocols() {
+        document.querySelectorAll('[data-protocol-tab]').forEach(function (button) {
+            const active = button.dataset.protocolTab === activeProtocolTab;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('[data-protocol-panel]').forEach(function (panel) {
+            const active = panel.dataset.protocolPanel === activeProtocolTab;
+            panel.classList.toggle('active', active);
+            panel.hidden = !active;
+        });
+        const addProtocolButton = document.getElementById('addProtocolButton');
+        if (addProtocolButton) addProtocolButton.hidden = activeProtocolTab !== 'protocols';
+
         const protocolCount = document.getElementById('protocolCount');
         if (protocolCount) protocolCount.textContent = state.protocols.length;
         document.getElementById('protocolGrid').innerHTML = state.protocols.map(function (item) {
@@ -2429,8 +2533,57 @@
             const literatureBadge = item.literatureTitle || item.literatureId || item.literatureUrl ? '<span class="protocol-reference-badge">文献</span>' : '';
             return '<button class="protocol-card" type="button" data-protocol-id="' + esc(item.id) + '"><span class="protocol-number">' + esc(item.number) + (item.photoData ? ' · 附照片' : '') + contributorInline(item) + literatureBadge + '</span><h2>' + esc(item.title) + '</h2><footer class="protocol-foot"><span>' + esc(item.meta) + '</span><strong>' + esc(usageLabel) + ' →</strong></footer></button>';
         }).join('') || '<div class="empty-card">还没有 Protocol，点击“录入 Protocol”开始建立方案库。</div>';
+
+        const formulationGrid = document.getElementById('formulationGrid');
+        if (!formulationGrid) return;
+        formulationGrid.innerHTML = state.formulations.map(formulationCardHtml).join('') || '<div class="empty-card">还没有实验配方，点击“新建配方”记录液体、固体、气体或其他配方。</div>';
     }
 
+    function setProtocolTab(tab) {
+        activeProtocolTab = tab === 'formulations' ? 'formulations' : 'protocols';
+        renderProtocols();
+    }
+
+    function formulationPhysicalCode(value) {
+        return { '液体': 'LIQ', '固体': 'SOL', '气体': 'GAS', '悬液': 'SUS', '凝胶': 'GEL', '乳液': 'EMU' }[value] || 'MIX';
+    }
+
+    function formulationAmountLabel(item) {
+        const amount = positiveNumber(item.finalAmount, 0);
+        return amount > 0 ? formatQuantity(amount) + (item.unit ? ' ' + item.unit : '') : '未设置';
+    }
+
+    function formulationCardHtml(item) {
+        return '<button class="formulation-card" type="button" data-formulation-id="' + esc(item.id) + '">' +
+            '<header><span class="formulation-form" data-form="' + esc(formulationPhysicalCode(item.physicalForm)) + '">' + esc(item.physicalForm) + '</span><small>' + esc(item.id) + ' · ' + esc(item.version || 'V1.0') + '</small></header>' +
+            '<h2>' + esc(item.name) + '</h2><p>' + esc(item.purpose || '用途待补充') + '</p>' +
+            '<dl><div><dt>终量</dt><dd>' + esc(formulationAmountLabel(item)) + '</dd></div><div><dt>浓度</dt><dd>' + esc(item.concentration || '—') + '</dd></div></dl>' +
+            '<footer><span>' + item.components.length + ' 种组分</span><strong>查看配方 →</strong></footer></button>';
+    }
+
+    function openFormulationDetail(id) {
+        const formulation = state.formulations.find(item => item.id === id);
+        if (!formulation) return;
+        prepareRecordDetail('formulation', formulation.id);
+        const componentRows = formulation.components.map(function (component) {
+            return '<tr><td><strong>' + esc(component.name || '未命名组分') + '</strong></td><td>' + esc(component.amount || '—') + '</td><td>' + esc(component.unit || '—') + '</td></tr>';
+        }).join('');
+        const nodeField = workspaceMode === 'lab' ? detailFieldHtml('录入节点', contributorName(formulation)) : '';
+        els.recordDetailKicker.textContent = 'FORMULATION RECORD · ' + formulation.id;
+        els.recordDetailTitle.textContent = formulation.name;
+        els.recordDetailBody.innerHTML =
+            '<section class="record-detail-hero formulation-detail-hero"><div><span class="record-detail-code">' + esc(formulation.id) + '</span><h3>' + esc(formulation.name) + '</h3><p>' + esc(formulation.purpose || '用途待补充') + '</p></div><span class="status-chip">' + esc(formulation.physicalForm) + '</span></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">FORMULATION PROFILE</p><h3>配方信息</h3></div><div class="record-detail-grid">' +
+                detailFieldHtml('物态 / 形态', formulation.physicalForm) + detailFieldHtml('终量', formulationAmountLabel(formulation)) + detailFieldHtml('目标浓度', formulation.concentration) +
+                detailFieldHtml('保存条件', formulation.storage) + detailFieldHtml('版本', formulation.version) + detailFieldHtml('用途', formulation.purpose, true) + nodeField +
+            '</div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">COMPONENTS</p><h3>组成</h3></div>' +
+                (componentRows ? '<div class="formulation-component-table"><table><thead><tr><th>组分</th><th>用量</th><th>单位</th></tr></thead><tbody>' + componentRows + '</tbody></table></div>' : '<p class="record-history-empty">尚未记录组分。</p>') +
+            '</section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">PREPARATION</p><h3>配制与备注</h3></div><div class="formulation-notes"><div><strong>配制方法</strong><p>' + esc(formulation.preparation || '—') + '</p></div><div><strong>备注</strong><p>' + esc(formulation.notes || '—') + '</p></div></div></section>' +
+            recordHistoryHtml(formulation);
+        if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
+    }
     function createBlankPlateLayout() {
         return {
             id: '',
@@ -2542,9 +2695,31 @@
             return '<option value="' + esc(item.key) + '">' + esc(toolsEntityTypeLabel(item.type) + ' · ' + item.label) + '</option>';
         }).join('');
         const editor = workspaceReadOnly ? '' : '<div class="embedded-lineage-editor"><label><span>关联条目</span><select data-lineage-target><option value="">选择已有记录</option>' + targetOptions + '</select></label><label><span>关系</span><select data-lineage-relation><option>取材</option><option>分装</option><option>衍生</option><option>用于实验</option><option>产生结果</option><option>其他</option></select></label><button class="button ghost compact" type="button" data-save-lineage-from="' + esc(currentKey) + '">＋ 添加关联</button></div>';
-        return '<section class="record-detail-section embedded-lineage-section"><div class="record-detail-section-title"><p class="micro-label">SAMPLE LINEAGE</p><h3>样本谱系</h3></div><div class="embedded-lineage-flow"><div class="embedded-lineage-side incoming-side">' + incomingHtml + '</div><div class="embedded-lineage-current"><small>' + esc(toolsEntityTypeLabel(current.type)) + '</small><strong>' + esc(current.label) + '</strong><span>' + esc(current.meta || current.id) + '</span></div><div class="embedded-lineage-side outgoing-side">' + outgoingHtml + '</div></div>' + (!connected.length ? '<p class="embedded-lineage-empty">暂无关联链路。</p>' : '') + editor + '</section>';
+        return '<section class="record-detail-section embedded-lineage-section"><div class="record-detail-section-title"><p class="micro-label">SAMPLE LINEAGE</p><h3>样本谱系</h3></div><div class="embedded-lineage-pan" data-lineage-pan aria-label="可拖动的样本谱系图"><div class="embedded-lineage-flow"><div class="embedded-lineage-side incoming-side">' + incomingHtml + '</div><div class="embedded-lineage-current"><small>' + esc(toolsEntityTypeLabel(current.type)) + '</small><strong>' + esc(current.label) + '</strong><span>' + esc(current.meta || current.id) + '</span></div><div class="embedded-lineage-side outgoing-side">' + outgoingHtml + '</div></div></div>' + (!connected.length ? '<p class="embedded-lineage-empty">暂无关联链路。</p>' : '') + editor + '</section>';
     }
 
+    let embeddedLineageLayoutTimer = 0;
+    function scheduleEmbeddedLineageLayout() {
+        if (embeddedLineageLayoutTimer) window.clearTimeout(embeddedLineageLayoutTimer);
+        embeddedLineageLayoutTimer = window.setTimeout(function () {
+            embeddedLineageLayoutTimer = 0;
+            document.querySelectorAll('.embedded-lineage-flow').forEach(function (flow) {
+                const current = flow.querySelector('.embedded-lineage-current');
+                if (!current) return;
+                const currentRect = current.getBoundingClientRect();
+                if (!currentRect.width) return;
+                const currentCenter = currentRect.top + currentRect.height / 2;
+                flow.querySelectorAll('.embedded-lineage-branch').forEach(function (branch) {
+                    const line = Array.from(branch.children).find(function (child) { return child.tagName === 'I'; });
+                    if (!line) return;
+                    const lineRect = line.getBoundingClientRect();
+                    const delta = Math.round(currentCenter - (lineRect.top + lineRect.height / 2));
+                    branch.style.setProperty('--lineage-bend', Math.abs(delta) + 'px');
+                    branch.dataset.lineageBend = delta > 2 ? 'source-below' : (delta < -2 ? 'source-above' : 'straight');
+                });
+            });
+        });
+    }
     function saveEmbeddedLineage(sourceKey, button) {
         if (denyReadOnlyMutation()) return;
         const section = button.closest('.embedded-lineage-section');
@@ -2644,7 +2819,7 @@
             const stageOrder = ['origin', 'sample', 'experiment', 'result'];
             const stageLabels = { origin: '来源', sample: '样本', experiment: '实验', result: '结果' };
             const positions = new Map();
-            const columns = { origin: 130, sample: 405, experiment: 690, result: 965 };
+            const columns = { origin: 140, sample: 580, experiment: 1020, result: 1460 };
             let maxRows = 1;
             stageOrder.forEach(function (stage) {
                 const members = visible.filter(function (item) { return item.stage === stage; });
@@ -2653,16 +2828,16 @@
             });
             const height = Math.max(290, 150 + maxRows * 100);
             const visibleEdges = edges.filter(function (edge) { return positions.has(edge.source) && positions.has(edge.target); });
-            let svg = '<svg viewBox="0 0 1100 ' + height + '" role="img" aria-label="样本谱系图"><defs><marker id="lineageArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>';
+            let svg = '<svg width="1600" height="' + height + '" viewBox="0 0 1600 ' + height + '" role="img" aria-label="样本谱系图"><defs><marker id="lineageArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>';
             stageOrder.forEach(function (stage) { svg += '<text class="lineage-stage-title" x="' + columns[stage] + '" y="35">' + stageLabels[stage] + '</text>'; });
             visibleEdges.forEach(function (edge) {
                 const from = positions.get(edge.source); const to = positions.get(edge.target); const mid = (from.x + to.x) / 2;
-                svg += '<path class="lineage-edge" d="M ' + (from.x + 92) + ' ' + from.y + ' C ' + mid + ' ' + from.y + ', ' + mid + ' ' + to.y + ', ' + (to.x - 92) + ' ' + to.y + '" marker-end="url(#lineageArrow)"></path>';
-                svg += '<text class="lineage-edge-label" x="' + mid + '" y="' + ((from.y + to.y) / 2 - 7) + '">' + esc(edge.relation) + '</text>';
+                svg += '<path class="lineage-edge" d="M ' + (from.x + 100) + ' ' + from.y + ' C ' + mid + ' ' + from.y + ', ' + mid + ' ' + to.y + ', ' + (to.x - 100) + ' ' + to.y + '" marker-end="url(#lineageArrow)"></path>';
+                svg += '<text class="lineage-edge-label" x="' + mid + '" y="' + ((from.y + to.y) / 2 - 7) + '" text-anchor="middle">' + esc(edge.relation) + '</text>';
             });
             visible.forEach(function (item) {
                 const point = positions.get(item.key);
-                svg += '<g class="lineage-node" data-stage="' + item.stage + '" data-lineage-entity="' + esc(item.key) + '" transform="translate(' + (point.x - 92) + ' ' + (point.y - 34) + ')" tabindex="0" role="button"><rect width="184" height="68" rx="8"></rect><text class="lineage-node-type" x="14" y="20">' + esc(toolsEntityTypeLabel(item.type)) + '</text><text class="lineage-node-title" x="14" y="42">' + esc(item.label.slice(0, 20)) + '</text><text class="lineage-node-meta" x="14" y="57">' + esc(item.meta.slice(0, 26)) + '</text><title>' + esc(item.label + ' ' + item.meta) + '</title></g>';
+                svg += '<g class="lineage-node" data-stage="' + item.stage + '" data-lineage-entity="' + esc(item.key) + '" transform="translate(' + (point.x - 100) + ' ' + (point.y - 34) + ')" tabindex="0" role="button"><rect width="200" height="68" rx="8"></rect><text class="lineage-node-type" x="14" y="20">' + esc(toolsEntityTypeLabel(item.type)) + '</text><text class="lineage-node-title" x="14" y="42">' + esc(item.label.slice(0, 20)) + '</text><text class="lineage-node-meta" x="14" y="57">' + esc(item.meta.slice(0, 26)) + '</text><title>' + esc(item.label + ' ' + item.meta) + '</title></g>';
             });
             svg += '</svg>';
             els.lineageMap.innerHTML = svg;
@@ -2852,6 +3027,41 @@
         setToolsTab(activeToolsTab);
     }
 
+    function beginLineagePan(event) {
+        if (event.button !== 0) return;
+        const canvas = event.target.closest && event.target.closest('[data-lineage-pan], #lineageMap');
+        if (!canvas || event.target.closest('button, a, input, select, textarea, [data-lineage-entity]')) return;
+        lineagePan = {
+            canvas: canvas,
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            scrollLeft: canvas.scrollLeft,
+            scrollTop: canvas.scrollTop
+        };
+        canvas.classList.add('is-panning');
+        if (typeof canvas.setPointerCapture === 'function') {
+            try { canvas.setPointerCapture(event.pointerId); } catch (error) { /* capture is optional */ }
+        }
+        event.preventDefault();
+    }
+
+    function moveLineagePan(event) {
+        if (!lineagePan || event.pointerId !== lineagePan.pointerId) return;
+        lineagePan.canvas.scrollLeft = lineagePan.scrollLeft - (event.clientX - lineagePan.startX);
+        lineagePan.canvas.scrollTop = lineagePan.scrollTop - (event.clientY - lineagePan.startY);
+        event.preventDefault();
+    }
+
+    function endLineagePan(event) {
+        if (!lineagePan || (event.pointerId != null && event.pointerId !== lineagePan.pointerId)) return;
+        const canvas = lineagePan.canvas;
+        canvas.classList.remove('is-panning');
+        if (typeof canvas.releasePointerCapture === 'function') {
+            try { canvas.releasePointerCapture(lineagePan.pointerId); } catch (error) { /* capture is optional */ }
+        }
+        lineagePan = null;
+    }
     function bindResearchToolsEvents() {
         document.addEventListener('click', function (event) {
             const embeddedSave = event.target.closest('[data-save-lineage-from]');
@@ -2911,7 +3121,22 @@
                 renderPlateMap();
             });
         }
-        document.addEventListener('pointerup', function () { platePointerDown = false; });
+        if (els.recordDetailBody && typeof MutationObserver !== 'undefined') {
+            const embeddedLineageObserver = new MutationObserver(function (records) {
+                const hasLineageChange = records.some(function (record) {
+                    return Array.from(record.addedNodes).some(function (node) {
+                        return node.nodeType === 1 && (node.matches('.embedded-lineage-section') || node.querySelector('.embedded-lineage-section'));
+                    });
+                });
+                if (hasLineageChange) scheduleEmbeddedLineageLayout();
+            });
+            embeddedLineageObserver.observe(els.recordDetailBody, { childList: true, subtree: true });
+        }
+        window.addEventListener('resize', scheduleEmbeddedLineageLayout);
+        document.addEventListener('pointerdown', beginLineagePan);
+        document.addEventListener('pointermove', moveLineagePan);
+        document.addEventListener('pointerup', function (event) { platePointerDown = false; endLineagePan(event); });
+        document.addEventListener('pointercancel', endLineagePan);
     }
 
     function renderSchedule() {
@@ -4265,6 +4490,7 @@ function getReagentDisplayStatus(reagent) {
         state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
+        state.formulations.forEach(item => entries.push({ view: 'protocols', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
         state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
         const results = entries.filter(item => !term || item.search.toLowerCase().includes(term)).slice(0, 12);
         els.searchResults.innerHTML = results.map(function (item) {
@@ -4419,6 +4645,22 @@ function getReagentDisplayStatus(reagent) {
                 field('photoData', '方案照片辅助录入', 'photo-capture', '拍摄纸质 SOP 或实验本页面作为附件', false, true)
             ]
         },
+        formulation: {
+            kicker: 'FORMULATION BUILDER', title: '新建实验配方',
+            fields: [
+                field('name', '配方名称', 'text', '例：1× PBS · pH 7.4', true, true),
+                field('physicalForm', '物态 / 形态', 'select', ['液体', '固体', '气体', '悬液', '凝胶', '乳液', '其他'], true),
+                field('purpose', '用途', 'text', '例：细胞与组织清洗', false),
+                field('finalAmount', '终量', 'number', '500', false),
+                field('unit', '终量单位', 'select', ['mL', 'L', 'µL', 'g', 'mg', 'kg', 'mol', 'batch|批'], false),
+                field('concentration', '目标浓度', 'text', '例：1×、1.5% (w/v) 或 5% CO₂', false),
+                field('components', '配方组成', 'formulation-components', '', false, true),
+                field('preparation', '配制方法', 'textarea', '按顺序记录溶解、混合、调节 pH、定容、灭菌或供气步骤…', false, true),
+                field('storage', '保存条件', 'memory-text', '例：4°C 避光、室温或现配现用', false),
+                field('version', '版本', 'text', 'V1.0', false),
+                field('notes', '备注', 'textarea', '记录安全要求、稳定期、质量检查或替代组分…', false, true)
+            ]
+        },
         freezer: {
             kicker: 'FREEZER BOX REGISTRATION', title: '新增冻存盒',
             fields: [
@@ -4461,6 +4703,8 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'animalCage') {
             const rack = state.animalRacks.find(item => item.id === activeAnimalRackId);
             defaultsForEntry = Object.assign({ rackId: rack ? rack.id : '', position: rack ? firstAvailableAnimalPosition(rack, state.animalCages) : '', species: '小鼠', capacity: 5, status: '在用' }, pendingAnimalCageDefaults || {});
+        } else if (type === 'formulation') {
+            defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
         } else if (type === 'freezer') {
             defaultsForEntry = { rows: '9', columns: '9', temperature: '-80°C' };
         } else if (type === 'cell') {
@@ -4487,6 +4731,7 @@ function getReagentDisplayStatus(reagent) {
         els.dialogFields.innerHTML = schema.fields.map(fieldHtml).join('');
         if (type === 'result') renderPendingResultAttachments();
         if (type === 'protocol' && editOptions) renderProtocolReagentEditor(editOptions.record.reagents || []);
+        if (type === 'formulation') renderFormulationComponentEditor(editOptions ? editOptions.record.components || [] : []);
         if (defaultsForEntry) {
             Object.keys(defaultsForEntry).forEach(function (name) {
                 const control = els.entryForm.elements.namedItem(name);
@@ -4630,7 +4875,8 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(cage.id) + '">' + esc((rack ? rack.name + ' · ' : '') + cage.position + ' · ' + cage.label) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建笼位</option>') + '</select><small class="field-note">动物条目会归入所选笼位；一个笼位可以包含多个动物。</small>';
-        } else if (config.type === 'reagent-list') {
+        } else if (config.type === 'formulation-components') {
+            control = '<div class="formulation-component-editor" id="field-' + config.name + '"><div class="formulation-component-head"><span>组分</span><span>用量</span><span>单位</span><i></i></div><div id="formulationComponentRows"><p class="field-note" data-empty-formulation-components>尚未添加组分。</p></div><button class="add-reagent-row" type="button" data-add-formulation-component>＋ 添加组分</button></div>';        } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
             const protocolNote = activeDialogType === 'protocol' ? '<small class="field-note">照片作为附件保留，不会自动填写表单。</small>' : '';
@@ -4674,6 +4920,25 @@ function getReagentDisplayStatus(reagent) {
         return true;
     }
 
+    function formulationComponentRowHtml(component) {
+        const item = component || {};
+        return '<div class="formulation-component-row"><input name="formulationComponentName" type="text" value="' + esc(item.name || '') + '" placeholder="例：NaCl" aria-label="组分名称"><input name="formulationComponentAmount" type="text" value="' + esc(item.amount || '') + '" placeholder="例：8" aria-label="组分用量"><input name="formulationComponentUnit" type="text" value="' + esc(item.unit || '') + '" placeholder="例：g" aria-label="组分单位"><button type="button" data-remove-formulation-component aria-label="移除此组分">×</button></div>';
+    }
+
+    function renderFormulationComponentEditor(components) {
+        const rows = document.getElementById('formulationComponentRows');
+        if (!rows) return;
+        rows.innerHTML = (components || []).map(formulationComponentRowHtml).join('') || '<p class="field-note" data-empty-formulation-components>尚未添加组分。</p>';
+    }
+
+    function readFormulationComponents(formData) {
+        const names = formData.getAll('formulationComponentName');
+        const amounts = formData.getAll('formulationComponentAmount');
+        const units = formData.getAll('formulationComponentUnit');
+        return names.map(function (name, index) {
+            return { name: String(name || '').trim(), amount: String(amounts[index] || '').trim(), unit: String(units[index] || '').trim() };
+        }).filter(function (component) { return component.name || component.amount || component.unit; });
+    }
     function reagentUsageRowHtml(usage) {
         const selectedCatalog = usage && usage.catalog ? usage.catalog : (state.reagents[0] ? state.reagents[0].catalog : '');
         const amount = usage && usage.amount != null ? usage.amount : 1;
@@ -4837,7 +5102,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['experiment', 'protocol', 'task', 'mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
+        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'reagent', 'sample', 'cell', 'result'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -5017,6 +5282,26 @@ function getReagentDisplayStatus(reagent) {
             state.protocols.unshift(protocol);
             activeProtocolId = protocol.id;
             activityText = '录入 Protocol“' + protocol.title + '”';
+        } else if (activeDialogType === 'formulation') {
+            const formulation = {
+                id: generatedRecordId('FORM'),
+                name: displayOr(data.name, '未命名配方'),
+                physicalForm: displayOr(data.physicalForm, '其他'),
+                purpose: String(data.purpose || '').trim(),
+                finalAmount: positiveNumber(data.finalAmount, 0),
+                unit: String(data.unit || '').trim(),
+                concentration: String(data.concentration || '').trim(),
+                components: readFormulationComponents(formData),
+                preparation: String(data.preparation || '').trim(),
+                storage: String(data.storage || '').trim(),
+                version: displayOr(data.version, 'V1.0'),
+                notes: String(data.notes || '').trim(),
+                createdBy: data.createdBy,
+                history: [createdHistoryEntry()]
+            };
+            state.formulations.unshift(formulation);
+            activeProtocolTab = 'formulations';
+            activityText = '新建实验配方“' + formulation.name + '”';
         } else if (activeDialogType === 'cell') {
             data.id = displayOr(data.id, generatedRecordId('CELL'));
             if (state.cellCultures.some(item => item.id === data.id)) {
@@ -5160,6 +5445,13 @@ function getReagentDisplayStatus(reagent) {
             });
             updated.reagents = Array.from(reagentMap, entry => ({ catalog: entry[0], amount: entry[1] }));
             delete updated.stepsText;
+        } else if (target.type === 'formulation') {
+            updated.id = current.id;
+            updated.name = displayOr(data.name, '未命名配方');
+            updated.physicalForm = displayOr(data.physicalForm, '其他');
+            updated.finalAmount = positiveNumber(data.finalAmount, 0);
+            updated.components = readFormulationComponents(new FormData(els.entryForm));
+            updated.version = displayOr(data.version, current.version || 'V1.0');
         } else if (target.type === 'task') {
             updated.id = current.id;
             updated.done = current.done;
@@ -5254,6 +5546,8 @@ function getReagentDisplayStatus(reagent) {
             localStorage.setItem('rhineLabActiveFreezerBox', updated.boxId);
         } else if (target.type === 'cell') {
             activeCellId = updated.id;
+        } else if (target.type === 'formulation') {
+            activeProtocolTab = 'formulations';
         }
         saveState();
         renderAll();
@@ -5270,6 +5564,7 @@ function getReagentDisplayStatus(reagent) {
 
     function schemaRecordValue(type, record, fieldName) {
         if (type === 'protocol' && fieldName === 'stepsText') return (record.steps || []).join('\n');
+        if (type === 'formulation' && fieldName === 'components') return record.components || [];
         if (type === 'task' && fieldName === 'shareWithLab') return record.shareWithLab === false ? 'no' : 'yes';
         return record[fieldName];
     }
@@ -5279,7 +5574,9 @@ function getReagentDisplayStatus(reagent) {
         if (fieldName === 'reagents' || fieldName === 'reagentUsage') {
             return (Array.isArray(value) ? value : []).map(function (item) { return item.catalog + ' × ' + formatQuantity(item.amount); }).join('、');
         }
-        if (fieldName === 'attachments') {
+        if (fieldName === 'components') {
+            return (Array.isArray(value) ? value : []).map(function (item) { return [item.name, item.amount, item.unit].filter(Boolean).join(' '); }).join('、');
+        }        if (fieldName === 'attachments') {
             const attachments = Array.isArray(value) ? value : [];
             return attachments.length + ' 个附件' + (attachments.length ? ' · ' + attachments.map(item => item.name).join('、') : '');
         }
@@ -5291,6 +5588,7 @@ function getReagentDisplayStatus(reagent) {
         if (type === 'reagent') openReagentDetail(key);
         if (type === 'sample') openSampleDetail(key);
         if (type === 'cell') openCellDetail(key);
+        if (type === 'formulation') openFormulationDetail(key);
         if (type === 'result') {
             const result = state.results.find(item => item.id === key);
             if (result) openExperimentDetail(result.experimentId);
