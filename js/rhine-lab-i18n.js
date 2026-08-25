@@ -620,7 +620,6 @@
         '登录身份已验证；输入数据密码后才能读取或同步云端内容。': 'Your identity is verified. Enter the data-vault password to read or sync cloud data.',
         '尚未加入 LAB': 'Not in a LAB',
         '共用页面由成员个人工作区的共享投影组成，任何账户都不能直接修改。': 'The shared view is assembled from member-controlled personal projections and cannot be edited directly by any account.',
-        '个人数据以 AES‑256‑GCM 加密后同步。': 'Personal data is synchronized after AES-256-GCM encryption.',
         '保存后将加密同步到已登录设备': 'Saved changes are encrypted before syncing to signed-in devices',
         '数据使用设备密钥加密保存在本机': 'Data is encrypted locally with a device-bound key',
         '加密云端已连接': 'Encrypted cloud connected',
@@ -642,8 +641,7 @@
 
         '当前使用设备加密存储': 'Using encrypted device storage',
         '配置云项目并登录后，可启用端到端加密的跨设备同步。': 'Configure the cloud project and sign in to enable end-to-end encrypted cross-device sync.',
-        '加密同步已连接': 'Encrypted sync connected',
-        '云端只保存密文；账户密码同时用于解密本账户数据。': 'Only ciphertext is stored in the cloud; the account password also decrypts this account’s data.',
+        '已同步': 'Synced',
         '云端只保存密文；其他设备需登录并输入相同数据密码。': 'Only ciphertext is stored in the cloud; other devices must sign in and use the same data-vault password.',
         'LAB 日程可见性': 'LAB schedule visibility',
         '在 LAB 共用日程显示': 'Show in the shared LAB schedule',

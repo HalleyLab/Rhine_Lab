@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v69';
+const CACHE_NAME = 'rhine-lab-pages-v73-sync-label';
 const APP_SHELL = [
     './',
     './index.html',
@@ -11,11 +11,11 @@ const APP_SHELL = [
     './css/rhine-lab-workflow-refine.css?v=0.2.2',
     './css/rhine-lab-biology.css?v=0.2.2',
     './css/rhine-lab-bioinformatics.css?v=0.2.2',
-    './js/rhine-lab-config.js?v=0.1.9-invite-url',
-    './js/rhine-lab-i18n.js?v=0.2.2',
-    './js/vendor/supabase.min.js?v=2.112.3',
+    './js/rhine-lab-config.js?v=0.2.2-cloudflare2',
+    './js/rhine-lab-i18n.js?v=0.2.2c',
+    './js/rhine-lab-cloudflare-client.js?v=0.2.2-cloudflare2',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
-    './js/rhine-lab-sync-v019.js?v=0.2.2',
+    './js/rhine-lab-sync-v019.js?v=0.2.2-cloudflare4',
     './js/rhine-lab-pwa.js?v=0.2.2',
     './js/rhine-lab-bootstrap.js?v=0.2.2',
     './js/rhine-lab.js?v=0.2.2',

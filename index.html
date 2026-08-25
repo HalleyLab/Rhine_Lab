@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://api.rh1nelab.com https://*.workers.dev; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#d8ff45">
     <meta name="description" content="Rhine Lab 生命科学实验管理工作台：实验记录、生物资源、试剂、冻存样本、细胞维持与实验日程。">
@@ -682,11 +682,11 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.2.2a"></script>
-    <script src="js/vendor/supabase.min.js?v=2.112.3"></script>
-    <script src="js/rhine-lab-config.js?v=0.1.9-invite-url"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.2c"></script>
+    <script src="js/rhine-lab-cloudflare-client.js?v=0.2.2-cloudflare2"></script>
+    <script src="js/rhine-lab-config.js?v=0.2.2-cloudflare2"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.2.2"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.2-cloudflare4"></script>
     <script src="js/rhine-lab-pwa.js?v=0.2.2"></script>
     <script src="js/rhine-lab-bootstrap.js?v=0.2.2a"></script>
 </body>

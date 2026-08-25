@@ -21,6 +21,8 @@ Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱�
 - 支持本地加密存储、跨设备同步和只读 LAB 共用界面。
 - 提供网页、Windows 与 Android 版本，并支持中英文和日夜主题。
 
+云同步后端采用 Cloudflare Workers、D1 与 R2；工作区、LAB 投影和附件在客户端加密后上传。部署说明见 [cloudflare/README.md](cloudflare/README.md)。
+
 当前版本：**0.2.2**
 
 <a id="english"></a>
@@ -41,6 +43,8 @@ Rhine Lab is a personal research workspace for life-science laboratories, combin
 - Use a scientific calculator, solution calculators, Master Mix tools, and customizable plate annotations.
 - Keep data encrypted locally, synchronize between devices, and use read-only shared LAB workspaces.
 - Available for web, Windows, and Android with Chinese/English and light/dark themes.
+
+Cloud sync uses Cloudflare Workers, D1, and R2. Workspace snapshots, LAB projections, and attachments are encrypted on the client before upload. See [cloudflare/README.md](cloudflare/README.md) for deployment notes.
 
 Current version: **0.2.2**
 

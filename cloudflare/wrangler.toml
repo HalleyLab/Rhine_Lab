@@ -1,0 +1,19 @@
+name = "rhine-lab-api"
+main = "src/index.js"
+compatibility_date = "2026-08-25"
+workers_dev = true
+routes = [{ pattern = "api.rh1nelab.com", custom_domain = true }]
+
+[vars]
+ALLOWED_ORIGINS = "https://rh1nelab.com,https://www.rh1nelab.com,https://halleylab.github.io"
+MAIL_FROM_EMAIL = "noreply@rh1nelab.com"
+MAIL_FROM_NAME = "Rhine Lab"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rhine-lab"
+database_id = "d3b6c737-0681-4088-88b7-e481bb9f6a23"
+
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "rhine-lab-attachments"

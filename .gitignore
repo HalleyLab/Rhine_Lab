@@ -1,6 +1,9 @@
 .env
 .env.*
 !.env.example
+.dev.vars
+.wrangler/
+cloudflare/.wrangler/
 js/rhine-lab-config.local.js
 .DS_Store
 Thumbs.db

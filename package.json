@@ -19,7 +19,10 @@
     "release:local": "pnpm release:clean && pnpm desktop:build && pnpm android:debug && pnpm android:collect && pnpm release:finalize",
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
-    "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never"
+    "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never",
+    "cloudflare:dev": "wrangler dev --config cloudflare/wrangler.toml",
+    "cloudflare:db:local": "wrangler d1 execute rhine-lab --local --config cloudflare/wrangler.toml --file cloudflare/schema.sql",
+    "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.toml"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
@@ -28,7 +31,6 @@
     "@capacitor/ios": "8.5.0",
     "@capacitor/splash-screen": "8.0.2",
     "@capacitor/status-bar": "8.0.3",
-    "@supabase/supabase-js": "2.112.3",
     "electron-updater": "6.8.9"
   },
   "devDependencies": {
@@ -36,7 +38,8 @@
     "@capacitor/cli": "8.5.0",
     "electron": "^43.3.0",
     "electron-builder": "^26.15.7",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "wrangler": "^4.125.0"
   },
   "engines": {
     "node": ">=22"

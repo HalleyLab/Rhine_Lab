@@ -46,7 +46,7 @@
     let returnToAccountAfterTransfer = false;
 
     function configured() {
-        return /^https:\/\/.+\.supabase\.co\/?$/i.test(String(config.supabaseUrl || '')) && String(config.supabasePublishableKey || '').length > 20;
+        return /^https:\/\//i.test(String(config.cloudflareApiUrl || ''));
     }
 
     function vaultUnlocked() {
@@ -170,6 +170,24 @@
         const canViewDirectory = signedIn && unlocked && Boolean(membership);
         if (ui.memberDirectory) ui.memberDirectory.hidden = !canViewDirectory;
         if (!canViewDirectory) loadedMemberDirectoryFor = '';
+        if (ui.title) {
+            ui.title.textContent = !configured()
+                ? '当前使用设备加密存储'
+                : signedIn && unlocked
+                    ? '同步已连接'
+                    : signedIn
+                        ? '账户登录'
+                        : '登录以同步';
+        }
+        if (ui.description) {
+            const description = !configured()
+                ? '配置云项目并登录后，可启用端到端加密的跨设备同步。'
+                : signedIn && !unlocked
+                    ? '输入账户密码以读取并同步数据。'
+                    : '';
+            ui.description.textContent = description;
+            ui.description.hidden = !description;
+        }
         renderMemberships();
     }
 
@@ -179,7 +197,7 @@
         else if (!vaultUnlocked()) setStatus('locked', '账户数据已锁定', '请输入账户密码以读取并同步数据。');
         else if (currentScope === 'lab' && !membership) setStatus('warning', '未选择 LAB', '请在同步面板中选择一个 LAB。');
         else if (currentScope === 'lab') setStatus('readonly', 'LAB 只读', '共用页面由成员个人工作区的共享投影组成，任何账户都不能直接修改。');
-        else setStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? '已加密同步' : '等待网络', navigator.onLine ? '个人数据以 AES‑256‑GCM 加密后同步。' : '修改已加密保存在本机，联网后继续同步。');
+        else setStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? '已同步' : '等待网络', navigator.onLine ? '' : '修改已加密保存在本机，联网后继续同步。');
         updateAccountUi();
     }
 
@@ -217,10 +235,12 @@
     }
 
     function importClient() {
-        if (!window.supabase || !window.supabase.createClient) throw new Error('本地 Supabase 客户端未载入');
-        return window.supabase.createClient(config.supabaseUrl.replace(/\/$/, ''), config.supabasePublishableKey, {
-            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce', storageKey: 'rhine-lab-auth-v019', storage: secure.encryptedAuthStorage('rhineLabSecureAuth:') }
-        });
+        if (!window.RhineLabCloudflare || !window.RhineLabCloudflare.createClient) throw new Error('Cloudflare 同步客户端未载入');
+        return window.RhineLabCloudflare.createClient(
+            config.cloudflareApiUrl.replace(/\/$/, ''),
+            secure.encryptedAuthStorage('rhineLabSecureAuth:'),
+            String(config.cloudflareFallbackApiUrl || '').replace(/\/$/, '')
+        );
     }
 
     async function start(nextAdapter) {
@@ -461,7 +481,7 @@
         if (result.error) throw result.error;
         localStorage.removeItem(dirtyStorageKey());
         await publishSharedProjection();
-        setStatus('synced', '已加密同步', '个人快照和附件已加密上传。');
+        setStatus('synced', '已同步', '个人快照和附件已加密上传。');
     }
 
     async function publishSharedProjection() {
@@ -831,10 +851,6 @@
 
     function openDialog() {
         updateAccountUi();
-        if (!configured()) { ui.title.textContent = '当前使用设备加密存储'; ui.description.textContent = '配置云项目并登录后，可启用端到端加密的跨设备同步。'; }
-        else if (user && vaultUnlocked()) { ui.title.textContent = '同步已连接'; ui.description.textContent = '云端只保存密文；账户密码同时用于解密本账户数据。'; }
-        else if (user) { ui.title.textContent = '账户登录'; ui.description.textContent = '输入账户密码以读取并同步数据。'; }
-        else { ui.title.textContent = '登录以同步'; ui.description.textContent = ''; }
         if (ui.dialog && !ui.dialog.open) ui.dialog.showModal();
     }
 

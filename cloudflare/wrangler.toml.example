@@ -1,0 +1,21 @@
+name = "rhine-lab-api"
+main = "src/index.js"
+compatibility_date = "2026-08-25"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://rh1nelab.com,https://www.rh1nelab.com,https://halleylab.github.io"
+MAIL_FROM_EMAIL = "noreply@rh1nelab.com"
+MAIL_FROM_NAME = "Rhine Lab"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rhine-lab"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "rhine-lab-attachments"
+
+# After the first successful workers.dev deployment, you may enable:
+# routes = [{ pattern = "api.rh1nelab.com", custom_domain = true }]

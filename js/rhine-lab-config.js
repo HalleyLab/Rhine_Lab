@@ -1,11 +1,11 @@
 (function () {
     'use strict';
 
-    // The publishable/anon key is safe to use in a browser when RLS is enabled.
-    // Never place a service_role key in this file.
+    // Only the public Worker URL belongs in this browser configuration.
+    // D1/R2 credentials and email provider keys remain Worker secrets.
     window.RHINE_LAB_CONFIG = Object.assign({
-        supabaseUrl: 'https://tyjaprmkrjxgccsnqwog.supabase.co',
-        supabasePublishableKey: 'sb_publishable_7OQarZUrwQw9UdqTfGFaQw_vO5AqAQa',
+        cloudflareApiUrl: 'https://api.rh1nelab.com',
+        cloudflareFallbackApiUrl: 'https://rhine-lab-api.rhine-lab.workers.dev',
         publicAppUrl: 'https://halleylab.github.io/Rhine_Lab/',
         seedUrl: './data/seed.json'
     }, window.RHINE_LAB_CONFIG || {});
