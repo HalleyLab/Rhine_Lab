@@ -1492,7 +1492,23 @@
         '编辑生物信息项目信息': 'Edit Bioinformatics Project',
         '编辑生物信息数据集信息': 'Edit Bioinformatics Dataset',
         '编辑分析流程信息': 'Edit Analysis Workflow',
-        '编辑分析任务信息': 'Edit Analysis Run'
+        '编辑分析任务信息': 'Edit Analysis Run',
+        '项目与分析链路': 'Projects and Analysis Flow',
+        '该项目还没有登记数据集。': 'No datasets have been registered for this project.',
+        '未命名项目': 'Untitled project',
+        '研究对象未填写': 'Study organism not entered',
+        '参考基因组未设置': 'Reference genome not set',
+        '规模未记录': 'Size not recorded',
+        '位置未设置': 'Location not set',
+        '来源未关联': 'Source not linked',
+        '尚未关联分析流程或运行任务。': 'No workflow or run is linked yet.',
+        '未关联分析流程': 'Unlinked analysis workflow',
+        '环境未设置': 'Environment not set',
+        '流程信息未找到': 'Workflow information not found',
+        '计算资源未设置': 'Compute resource not set',
+        '未运行': 'Not run',
+        '查看项目详情': 'View project details',
+        '查看数据集详情': 'View dataset details'
     });
 
     const patterns = [
@@ -1521,6 +1537,10 @@
         [/^(\d+) 份 SOP 已同步$/, function (m) { return countLabel(m[1], 'SOP', 'SOPs') + ' synced'; }],
         [/^从准备到归档，共 (\d+) 个步骤$/, function (m) { return 'From preparation to archive · ' + m[1] + ' steps'; }],
         [/^(\d+) 个步骤$/, function (m) { return countLabel(m[1], 'step', 'steps'); }],
+        [/^(\d+) 个任务 · (\d+) 个运行中$/, function (m) { return m[1] + ' runs · ' + m[2] + ' running'; }],
+        [/^(\d+) 个数据集$/, function (m) { return countLabel(m[1], 'dataset', 'datasets'); }],
+        [/^(\d+) 个任务$/, function (m) { return countLabel(m[1], 'run', 'runs'); }],
+        [/^(\d+) 个运行中$/, function (m) { return m[1] + ' running'; }],
         [/^(\d+) 个位置$/, function (m) { return countLabel(m[1], 'position', 'positions'); }],
         [/^(\d+) 个疑似新管位$/, function (m) { return m[1] + ' possible new tube positions'; }],
         [/^(\d+) 种组分$/, function (m) { return countLabel(m[1], 'component', 'components'); }],

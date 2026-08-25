@@ -269,3 +269,86 @@ body.background-all-lives :is(.plant-rack-tab,.plant-rack-position,.plant-positi
 body.background-all-lives .plant-rack-tab.active { box-shadow:inset 4px 0 0 var(--atlas-blue); }
 @media (max-width:980px){.plant-housing-layout{grid-template-columns:1fr}.plant-rack-board{border-right:0;border-bottom:1px solid var(--line)}}
 @media (max-width:700px){.compact-resource-toolbar,.resource-only-toolbar{min-height:52px}.plant-rack-tabs{padding-inline:12px}.plant-rack-tab-wrap{flex-basis:215px}.plant-rack-board,.plant-position-inspector{padding:14px}.plant-rack-grid{max-height:380px}.plant-rack-position{min-width:62px;min-height:58px}.plant-rack-legend{display:none}}
+/* Biology bookmark tabs 2026-08-24 */
+.biology-subpage-tabs{position:relative;z-index:3;display:flex;grid-template-columns:none;width:max-content;max-width:calc(100% - 24px);margin:0 0 -1px 18px;padding:0 6px;gap:5px;overflow:visible;border:0;border-radius:0;background:transparent}
+.biology-subpage-tabs button{position:relative;display:grid;grid-template-columns:28px auto;align-items:center;justify-content:start;gap:9px;min-width:138px;min-height:58px;padding:9px 23px 9px 13px;color:var(--muted);background:color-mix(in srgb,var(--soft) 92%,var(--paper));border:1px solid var(--line);border-bottom-color:var(--line);border-radius:11px 11px 0 0;clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,0 100%);font:inherit;font-weight:800;cursor:pointer;transition:color .18s ease,background .18s ease,transform .18s ease}
+.biology-subpage-tabs button:last-child{border-right:1px solid var(--line)}
+.biology-subpage-tabs button::after{content:"";position:absolute;top:0;right:0;bottom:auto;left:auto;width:14px;height:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 48%,var(--paper)) 0 49%,transparent 51%);clip-path:none}
+.biology-subpage-tabs button:hover{color:var(--ink);background:color-mix(in srgb,var(--accent) 9%,var(--paper));transform:translateY(-2px)}
+.biology-subpage-tabs button.active{z-index:2;color:var(--ink);background:var(--paper);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));border-bottom-color:var(--paper);box-shadow:inset 0 4px 0 var(--accent)}
+.biology-tab-icon{width:25px;height:25px;overflow:visible;color:var(--accent-deep);fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.biology-tab-copy{display:grid;gap:3px;color:inherit!important}
+.biology-tab-copy b{color:var(--accent-deep);font:800 9px/1 Helvetica,Arial,sans-serif;letter-spacing:.13em}
+.biology-tab-copy em{color:inherit;font-style:normal;font-size:14px;line-height:1.15}
+.biology-subpage-tabs button.active .biology-tab-icon{color:var(--accent-deep)}
+.biology-subpage:first-of-type>.panel:first-child,.biology-subpage>.panel:first-child{position:relative;z-index:1}
+.dark-theme .biology-subpage-tabs{background:transparent}
+.dark-theme .biology-subpage-tabs button{color:var(--muted);background:color-mix(in srgb,var(--soft) 90%,#07100c);border-color:var(--line)}
+.dark-theme .biology-subpage-tabs button.active{color:var(--ink);background:var(--paper);border-color:color-mix(in srgb,var(--accent) 48%,var(--line));border-bottom-color:var(--paper)}
+body.background-all-lives .biology-subpage-tabs{background:transparent;border-radius:0}
+body.background-all-lives .biology-subpage-tabs button{border-radius:0;clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,0 100%)}
+body.background-all-lives .biology-subpage-tabs button.active{color:#fff;background:var(--atlas-blue);border-bottom-color:var(--atlas-blue);box-shadow:inset 0 4px 0 var(--atlas-red)}
+body.background-all-lives .biology-subpage-tabs button.active :is(.biology-tab-icon,.biology-tab-copy,.biology-tab-copy b){color:#fff!important}
+body.background-black-current .biology-subpage-tabs{background:transparent;border-radius:0}
+body.background-black-current .biology-subpage-tabs button{border-color:rgba(94,211,191,.2)}
+body.background-black-current .biology-subpage-tabs button.active{color:#07130e;background:var(--current-cyan);border-bottom-color:var(--current-cyan)}
+body.background-black-current .biology-subpage-tabs button.active :is(.biology-tab-icon,.biology-tab-copy,.biology-tab-copy b){color:#07130e!important}
+@media(max-width:700px){
+  .biology-subpage-tabs{display:flex;grid-template-columns:none;max-width:calc(100% - 12px);margin-left:8px;padding-inline:4px;overflow-x:auto;border-radius:0}
+  .biology-subpage-tabs button{flex:0 0 112px;min-width:112px;min-height:52px;padding:7px 16px 7px 10px;gap:6px}
+  .biology-tab-icon{width:21px;height:21px}.biology-tab-copy em{font-size:12px}.biology-tab-copy b{font-size:8px}
+}
+
+/* Biology bookmark palette 2026-08-24 */
+.biology-subpage-tabs button[data-biology-tab="animals"] { --biology-tab-tone: #c3a15d; }
+.biology-subpage-tabs button[data-biology-tab="plants"] { --biology-tab-tone: #8fb83f; }
+.biology-subpage-tabs button[data-biology-tab="microbes"] { --biology-tab-tone: #4fa39b; }
+.biology-subpage-tabs button[data-biology-tab="viruses"] { --biology-tab-tone: #cf8454; }
+.biology-subpage-tabs button {
+    color: color-mix(in srgb, var(--ink) 88%, var(--biology-tab-tone) 12%);
+    background: color-mix(in srgb, var(--surface) 88%, var(--biology-tab-tone) 12%);
+    border-color: color-mix(in srgb, var(--line) 68%, var(--biology-tab-tone) 32%);
+}
+.biology-subpage-tabs button:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 82%, var(--biology-tab-tone) 18%);
+}
+.biology-subpage-tabs button.active {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 78%, var(--biology-tab-tone) 22%);
+    border-color: color-mix(in srgb, var(--line-dark) 54%, var(--biology-tab-tone) 46%);
+    border-bottom-color: var(--surface);
+    box-shadow: inset 0 4px 0 var(--biology-tab-tone), 0 -6px 18px color-mix(in srgb, var(--biology-tab-tone) 9%, transparent);
+}
+.biology-subpage-tabs button .biology-tab-icon {
+    color: color-mix(in srgb, var(--ink) 62%, var(--biology-tab-tone) 38%);
+}
+.dark-theme .biology-subpage-tabs button {
+    color: color-mix(in srgb, var(--ink) 86%, var(--biology-tab-tone) 14%);
+    background: color-mix(in srgb, var(--surface) 91%, var(--biology-tab-tone) 9%);
+    border-color: color-mix(in srgb, var(--line) 70%, var(--biology-tab-tone) 30%);
+}
+.dark-theme .biology-subpage-tabs button:hover {
+    background: color-mix(in srgb, var(--surface) 84%, var(--biology-tab-tone) 16%);
+}
+.dark-theme .biology-subpage-tabs button.active {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 78%, var(--biology-tab-tone) 22%);
+    border-bottom-color: var(--surface);
+}
+body.background-all-lives .biology-subpage-tabs button,
+body.dark-theme.background-all-lives .biology-subpage-tabs button {
+    color: var(--theme-text);
+    background: color-mix(in srgb, var(--theme-paper) 88%, var(--biology-tab-tone) 12%);
+    border-color: color-mix(in srgb, var(--theme-rule) 68%, var(--biology-tab-tone) 32%);
+}
+body.background-all-lives .biology-subpage-tabs button.active,
+body.dark-theme.background-all-lives .biology-subpage-tabs button.active {
+    color: var(--theme-heading);
+    background: color-mix(in srgb, var(--theme-paper) 76%, var(--biology-tab-tone) 24%);
+    border-bottom-color: var(--theme-paper);
+    box-shadow: inset 0 4px 0 var(--biology-tab-tone), 4px -4px 0 color-mix(in srgb, var(--biology-tab-tone) 16%, transparent);
+}body.background-all-lives .biology-subpage-tabs button.active :is(.biology-tab-icon, .biology-tab-copy, .biology-tab-copy b),
+body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.biology-tab-icon, .biology-tab-copy, .biology-tab-copy b) {
+    color: var(--theme-heading) !important;
+}
