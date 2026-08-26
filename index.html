@@ -14,13 +14,13 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.2" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.2">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260815-1">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260826-3">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260818-8">
     <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.2e">
-    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.2b">
+    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.2g">
     <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.2a">
 </head>
 <body>
@@ -145,18 +145,17 @@
 
                     <div class="dashboard-grid">
                         <section class="panel project-panel">
-                            <header class="panel-head"><div><p class="micro-label">ACTIVE PIPELINE</p><h2>进行中的研究项目</h2></div><button class="text-button" type="button" data-view-target="experiments">查看全部 <span>↗</span></button></header>
+                            <header class="panel-head"><div><p class="micro-label">ACTIVE PIPELINE</p><h2>研究项目</h2></div></header>
                             <div class="project-list" id="dashboardProjects"></div>
                         </section>
 
                         <section class="panel today-panel">
-                            <header class="panel-head"><div><p class="micro-label">TODAY · <span id="todayLabel"></span></p><h2>今日安排</h2></div><button class="square-button" type="button" data-add="task" aria-label="添加日程">＋</button></header>
+                            <header class="panel-head"><div><p class="micro-label">TODAY · <span id="todayLabel"></span></p><h2>今日安排</h2></div></header>
                             <div class="today-list" id="dashboardSchedule"></div>
-                            <button class="full-link" type="button" data-view-target="schedule">打开完整日程 <span>→</span></button>
                         </section>
 
                         <section class="panel alert-panel">
-                            <header class="panel-head"><div><p class="micro-label">INVENTORY SIGNAL</p><h2>库存与样本预警</h2></div><span class="status-chip caution">需要关注</span></header>
+                            <header class="panel-head"><div><p class="micro-label">INVENTORY SIGNAL</p><h2>库存预警</h2></div><span class="status-chip caution">需要关注</span></header>
                             <div class="alert-table-wrap">
                                 <table class="data-table compact-table">
                                     <thead><tr><th>对象</th><th>分类</th><th>当前状态</th><th>位置 / 截止</th><th></th></tr></thead>
@@ -211,8 +210,12 @@
                     </div>
                     <section class="biology-subpage active" data-biology-panel="animals">
                         <section class="panel animal-rack-manager">
-                            <div class="module-toolbar in-panel animal-rack-toolbar compact-resource-toolbar"><div class="animal-rack-actions"><button class="button ghost compact" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button></div></div>
-                            <div class="animal-rack-tabs direct-drag-scroll" id="animalRackTabs" aria-label="动物笼架" data-drag-scroll></div>
+                            <div class="module-toolbar in-panel animal-rack-toolbar compact-resource-toolbar"><div class="animal-rack-actions"><button class="button ghost compact" type="button" data-add="animalRoom"><span>＋</span> 新建房间</button><button class="button primary compact" type="button" data-add="animalRack"><span>＋</span> 新建笼架</button></div></div>
+                            <div class="housing-room-tabs direct-drag-scroll" id="animalRoomTabs" aria-label="动物房间" data-drag-scroll></div>
+                            <section class="housing-room-overview animal-room-overview">
+                                <header><div><p class="micro-label">ROOM LAYOUT</p><h3 id="animalRoomTitle">尚未建立动物房间</h3><small id="animalRoomMeta">先建立房间，再在房间布局中放置笼架。</small></div><span class="housing-room-drag-hint">拖动笼架调整位置</span></header>
+                                <div class="housing-room-map animal-room-map" id="animalRoomMap" data-room-map="animal"></div>
+                            </section>
                             <div class="animal-housing-layout">
                                 <div class="animal-rack-board">
                                     <header><div><p class="micro-label" id="animalRackKicker">ANIMAL RACK</p><h3 id="animalRackTitle">尚未建立笼架</h3><small id="animalRackMeta">新建笼架后，可逐个添加笼位和动物。</small></div><div class="animal-rack-legend"><span><i class="occupied"></i>已建笼位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
@@ -229,8 +232,12 @@
 
                     <section class="biology-subpage" data-biology-panel="plants" hidden>
                         <section class="panel plant-rack-manager">
-                            <div class="module-toolbar in-panel plant-rack-toolbar compact-resource-toolbar"><div class="plant-rack-actions"><button class="button ghost compact" type="button" data-add="plantRack"><span>＋</span> 新建培养架</button></div></div>
-                            <div class="plant-rack-tabs direct-drag-scroll" id="plantRackTabs" aria-label="植物培养架" data-drag-scroll></div>
+                            <div class="module-toolbar in-panel plant-rack-toolbar compact-resource-toolbar"><div class="plant-rack-actions"><button class="button ghost compact" type="button" data-add="plantRoom"><span>＋</span> 新建培养室</button><button class="button primary compact" type="button" data-add="plantRack"><span>＋</span> 新建培养架</button></div></div>
+                            <div class="housing-room-tabs direct-drag-scroll" id="plantRoomTabs" aria-label="植物培养室" data-drag-scroll></div>
+                            <section class="housing-room-overview plant-room-overview">
+                                <header><div><p class="micro-label">ROOM LAYOUT</p><h3 id="plantRoomTitle">尚未建立培养室</h3><small id="plantRoomMeta">先建立培养室，再在房间布局中放置培养架。</small></div><span class="housing-room-drag-hint">拖动培养架调整位置</span></header>
+                                <div class="housing-room-map plant-room-map" id="plantRoomMap" data-room-map="plant"></div>
+                            </section>
                             <div class="plant-housing-layout">
                                 <div class="plant-rack-board">
                                     <header><div><p class="micro-label" id="plantRackKicker">GROWTH RACK</p><h3 id="plantRackTitle">尚未建立培养架</h3><small id="plantRackMeta">建立培养架后，可为每株植物分配准确位置。</small></div><div class="plant-rack-legend"><span><i class="occupied"></i>已定位</span><span><i class="selected"></i>当前</span><span><i></i>空位</span></div></header>
@@ -682,12 +689,12 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.2.2c"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.2g"></script>
     <script src="js/rhine-lab-cloudflare-client.js?v=0.2.2-cloudflare2"></script>
     <script src="js/rhine-lab-config.js?v=0.2.2-cloudflare2"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.2.2-cloudflare4"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.2-cloudflare5"></script>
     <script src="js/rhine-lab-pwa.js?v=0.2.2"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.2.2a"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.2.2f"></script>
 </body>
 </html>

@@ -11977,3 +11977,64 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
         grid-template-columns: minmax(0, 1fr) minmax(64px, .55fr) minmax(58px, .45fr) 34px;
     }
 }
+/* Readable helper copy 2026-08-26 */
+.delete-confirm-dialog article>p:not(.micro-label),
+.entry-dialog .field-note,
+.entry-dialog .dialog-helper,
+.entry-dialog .form-help,
+.entry-dialog footer p,
+.photo-capture-status,
+.photo-capture-button small,
+.search-empty,
+.empty-state p,
+.empty-card span {
+    font-family:var(--font-interface)!important;
+    font-size:13px!important;
+    font-weight:700!important;
+    line-height:1.65!important;
+}
+.delete-confirm-dialog article>p:not(.micro-label){font-size:13px!important;color:color-mix(in srgb,var(--ink) 68%,var(--muted) 32%)}
+html[lang="zh-CN"] :is(.delete-confirm-dialog article>p:not(.micro-label),.entry-dialog .field-note,.entry-dialog .dialog-helper,.entry-dialog .form-help,.entry-dialog footer p,.photo-capture-status,.photo-capture-button small,.search-empty,.empty-state p,.empty-card span){font-family:"Rhine SimHei",SimHei,"黑体",sans-serif!important}
+.entry-save-status[hidden]{display:none!important}
+
+/* Overview activity readability and room-dialog helper visibility 2026-08-26 */
+.entry-dialog footer>p[hidden]{display:none!important}
+.activity-item p,
+.activity-item time{
+    font-family:var(--font-interface)!important;
+    font-weight:700!important;
+    line-height:1.55!important;
+}
+.activity-item p{font-size:14px!important;color:var(--ink)!important}
+.activity-item time{font-size:12px!important;color:var(--muted)!important}
+html[lang="zh-CN"] .activity-item p,
+html[lang="zh-CN"] .activity-item time{
+    font-family:"Rhine SimHei",SimHei,"黑体",sans-serif!important;
+}
+
+/* Dashboard hierarchy and compact change history 2026-08-26 */
+#view-dashboard .dashboard-grid .panel-head h2{
+    font-weight:900!important;
+}
+.entry-dialog[data-entry-type="animalRoom"] footer>p,
+.entry-dialog[data-entry-type="plantRoom"] footer>p{
+    display:none!important;
+}
+.record-history .record-detail-section-title h3{
+    font-size:16px!important;
+    line-height:1.3!important;
+}
+.record-history .record-detail-section-title .micro-label{
+    font-size:9px!important;
+}
+.record-history .record-history-item header strong{
+    font-size:13px!important;
+}
+.record-history .record-history-item time{
+    font-size:10px!important;
+}
+.record-history .record-history-item p,
+.record-history .record-history-empty{
+    font-size:12px!important;
+    line-height:1.55!important;
+}

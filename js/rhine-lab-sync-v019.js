@@ -5,7 +5,7 @@
     const secure = window.RhineLabCrypto;
     const ATTACHMENT_BUCKET = 'rhine-lab-attachments';
     const NATIVE_AUTH_REDIRECT = 'rhinelab://auth/callback';
-    const COLLECTIONS = ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'plants', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'activities', 'lineageLinks', 'plateLayouts'];
+    const COLLECTIONS = ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'activities', 'lineageLinks', 'plateLayouts'];
     const ui = Object.fromEntries([
         ['control', 'syncControl'], ['label', 'syncStatusLabel'], ['dialog', 'syncDialog'], ['title', 'syncDialogTitle'], ['description', 'syncDialogDescription'],
         ['transferControl', 'localTransferControl'], ['transferDialog', 'portableSyncDialog'],
@@ -146,9 +146,9 @@
         if (ui.label) ui.label.textContent = label;
         if (ui.message) ui.message.textContent = message || '';
         if (ui.entrySaveStatus) ui.entrySaveStatus.textContent = user && vaultUnlocked() ? '保存后将加密同步到已登录设备' : '数据使用设备密钥加密保存在本机';
-        if (ui.systemConnection) ui.systemConnection.textContent = user ? (state === 'offline' ? '云端等待中' : '加密云端已连接') : '本地模式';
-        if (ui.systemSync) ui.systemSync.textContent = user ? (state === 'synced' || state === 'readonly' ? '端到端加密数据已同步' : state === 'offline' ? '修改将在联网后加密上传' : '正在处理加密同步') : '云同步未连接';
-        if (ui.systemBadge) ui.systemBadge.textContent = user ? (state === 'synced' || state === 'readonly' ? 'E2EE' : 'WAIT') : 'LOCAL';
+        if (ui.systemConnection) ui.systemConnection.textContent = user ? (state === 'offline' ? '云端等待中' : '云端已连接') : '本地模式';
+        if (ui.systemSync) ui.systemSync.textContent = user ? (state === 'synced' || state === 'readonly' ? '数据已同步' : state === 'offline' ? '修改将在联网后加密上传' : '正在处理加密同步') : '云同步未连接';
+        if (ui.systemBadge) ui.systemBadge.textContent = user ? (state === 'synced' || state === 'readonly' ? 'SYNC' : 'WAIT') : 'LOCAL';
     }
 
     function updateAccountUi() {

@@ -182,9 +182,13 @@
         { id: 'PLT-NB-002', name: '本氏烟草', scientificName: 'Nicotiana benthamiana', materialType: '植株', accession: 'LAB-NB-01', generation: 'P1', genotype: 'WT', growthStage: '6 叶期', growthConditions: '24°C · 16 h / 8 h 光周期', location: '植物房 GR-02 / B1', parentage: '种子繁殖', treatment: '待农杆菌浸润', phenotype: '叶片展开正常', status: '待处理', frozenSampleId: '', notes: '', createdBy: 'NODE-04', history: [] },
         { id: 'PLT-RC-003', name: '水稻愈伤组织', scientificName: 'Oryza sativa', materialType: '愈伤组织', accession: 'Nipponbare', generation: 'T0', genotype: '编辑候选株', growthStage: '诱导期', growthConditions: '28°C · 暗培养', location: '组织培养室 TC-01 / C3', parentage: '成熟胚诱导', treatment: '潮霉素筛选', phenotype: '淡黄色颗粒状愈伤', status: '筛选中', frozenSampleId: '', notes: '', createdBy: 'NODE-03', history: [] }
     ];
+    defaults.plantRooms = [
+        { id: 'PROOM-GR01', name: '植物房 GR-01', notes: '标准光照培养室', createdBy: 'NODE-04' },
+        { id: 'PROOM-TC01', name: '组织培养室 TC-01', notes: '无菌组织培养区', createdBy: 'NODE-03' }
+    ];
     defaults.plantRacks = [
-        { id: 'PRACK-GR01-01', name: '植物房 GR-01 培养架', facility: '植物房 GR-01', rows: 5, columns: 10, createdBy: 'NODE-04' },
-        { id: 'PRACK-TC01-02', name: '组织培养室 TC-01 培养架', facility: '组织培养室 TC-01', rows: 4, columns: 8, createdBy: 'NODE-03' }
+        { id: 'PRACK-GR01-01', roomId: 'PROOM-GR01', name: 'GR-01 培养架 1', facility: '植物房 GR-01', rows: 5, columns: 10, layoutX: 18, layoutY: 28, createdBy: 'NODE-04' },
+        { id: 'PRACK-TC01-02', roomId: 'PROOM-TC01', name: 'TC-01 培养架 1', facility: '组织培养室 TC-01', rows: 4, columns: 8, layoutX: 22, layoutY: 32, createdBy: 'NODE-03' }
     ];
     defaults.plants[0].rackId = 'PRACK-GR01-01'; defaults.plants[0].position = 'A2';
     defaults.plants[1].rackId = 'PRACK-GR01-01'; defaults.plants[1].position = 'B1';
@@ -281,8 +285,11 @@
     seedDefaultAnimalHousing();
 
     function seedDefaultAnimalHousing() {
+        if (!Array.isArray(defaults.animalRooms) || !defaults.animalRooms.length) {
+            defaults.animalRooms = [{ id: 'AROOM-DEMO-01', name: '动物中心 · A 区', notes: '屏障设施饲养室', createdBy: 'NODE-01' }];
+        }
         if (!Array.isArray(defaults.animalRacks) || !defaults.animalRacks.length) {
-            defaults.animalRacks = [{ id: 'RACK-DEMO-01', name: '屏障设施 A 区笼架', facility: '动物中心 · A 区', rows: 4, columns: 12, createdBy: 'NODE-01' }];
+            defaults.animalRacks = [{ id: 'RACK-DEMO-01', roomId: defaults.animalRooms[0].id, name: 'A 区笼架 1', facility: defaults.animalRooms[0].name, rows: 4, columns: 12, layoutX: 18, layoutY: 28, createdBy: 'NODE-01' }];
         }
         const rack = defaults.animalRacks[0];
         const cages = Array.isArray(defaults.animalCages) ? defaults.animalCages.slice() : [];
@@ -313,7 +320,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRacks', 'animalCages', 'plants', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -335,10 +342,14 @@
     let workspaceReadOnly = publicDemoMode || workspaceMode === 'lab';
     let selectedSampleId = state.samples[0] ? state.samples[0].id : '';
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
-    let activeAnimalRackId = state.animalRacks.some(rack => rack.id === localStorage.getItem('rhineLabActiveAnimalRack')) ? localStorage.getItem('rhineLabActiveAnimalRack') : (state.animalRacks[0] ? state.animalRacks[0].id : '');
+    let activeAnimalRoomId = state.animalRooms.some(function (room) { return room.id === localStorage.getItem('rhineLabActiveAnimalRoom'); }) ? localStorage.getItem('rhineLabActiveAnimalRoom') : (state.animalRooms[0] ? state.animalRooms[0].id : '');
+    let activeAnimalRackId = state.animalRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActiveAnimalRack') && (!activeAnimalRoomId || rack.roomId === activeAnimalRoomId); }) ? localStorage.getItem('rhineLabActiveAnimalRack') : ((state.animalRacks.find(function (rack) { return rack.roomId === activeAnimalRoomId; }) || {}).id || '');
     let selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
-    let activePlantRackId = state.plantRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActivePlantRack'); }) ? localStorage.getItem('rhineLabActivePlantRack') : (state.plantRacks[0] ? state.plantRacks[0].id : '');
+    let zoomedAnimalRoomId = '';
+    let activePlantRoomId = state.plantRooms.some(function (room) { return room.id === localStorage.getItem('rhineLabActivePlantRoom'); }) ? localStorage.getItem('rhineLabActivePlantRoom') : (state.plantRooms[0] ? state.plantRooms[0].id : '');
+    let activePlantRackId = state.plantRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActivePlantRack') && (!activePlantRoomId || rack.roomId === activePlantRoomId); }) ? localStorage.getItem('rhineLabActivePlantRack') : ((state.plantRacks.find(function (rack) { return rack.roomId === activePlantRoomId; }) || {}).id || '');
     let selectedPlantId = state.plants[0] ? state.plants[0].id : '';
+    let zoomedPlantRoomId = '';
     let pendingPlantDefaults = null;
     let activeBioinfoTab = 'projects';
     let activeBioProjectId = localStorage.getItem('rhineLabActiveBioProject') || '';
@@ -591,9 +602,11 @@
             experiments: Array.isArray(stored.experiments) ? stored.experiments : clone(defaults.experiments),
             results: Array.isArray(stored.results) ? stored.results : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.results)),
             mice: Array.isArray(stored.mice) ? stored.mice : clone(defaults.mice),
+            animalRooms: Array.isArray(stored.animalRooms) ? stored.animalRooms : [],
             animalRacks: Array.isArray(stored.animalRacks) ? stored.animalRacks : [],
             animalCages: Array.isArray(stored.animalCages) ? stored.animalCages : [],
             plants: Array.isArray(stored.plants) ? stored.plants : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plants)),
+            plantRooms: Array.isArray(stored.plantRooms) ? stored.plantRooms : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plantRooms)),
             plantRacks: Array.isArray(stored.plantRacks) ? stored.plantRacks : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plantRacks)),
             microbes: Array.isArray(stored.microbes) ? stored.microbes : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.microbes)),
             plasmids: Array.isArray(stored.plasmids) ? stored.plasmids : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plasmids)),
@@ -617,7 +630,8 @@
             lineageLinks: Array.isArray(stored.lineageLinks) ? stored.lineageLinks : [],
             plateLayouts: Array.isArray(stored.plateLayouts) ? stored.plateLayouts : [],
             security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
-            exampleSeedVersion: Number(stored.exampleSeedVersion) || 0
+            exampleSeedVersion: Number(stored.exampleSeedVersion) || 0,
+            housingSchemaVersion: Number(stored.housingSchemaVersion) || 0
         };
     }
 
@@ -751,6 +765,7 @@
 
         migrateAnimalHousing(data);
         migratePlantHousing(data);
+        cleanupLegacyHousingPlaceholders(data);
         normalizeBioinformaticsData(data);
 
         data.results = (Array.isArray(data.results) ? data.results : []).filter(function (result, index, list) {
@@ -841,15 +856,73 @@
         return data;
     }
 
+    function housingLayoutCoordinate(value, index, axis) {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return Math.min(100, Math.max(0, parsed));
+        const columns = axis === 'x' ? [10, 38, 66, 24, 52, 80] : [18, 18, 18, 62, 62, 62];
+        return columns[index % columns.length];
+    }
+
+    function normalizeHousingRooms(items, prefix, fallbackName) {
+        return (Array.isArray(items) ? items : []).map(function (room, index) {
+            return Object.assign({}, room, {
+                id: room.id || prefix + '-' + String(index + 1).padStart(3, '0'),
+                name: room.name || fallbackName + ' ' + (index + 1),
+                notes: String(room.notes || ''),
+                shape: ['矩形', '圆角', '斜角', 'L 形'].includes(room.shape) ? room.shape : '矩形',
+                entranceSide: ['左侧', '右侧', '上侧', '下侧'].includes(room.entranceSide) ? room.entranceSide : '右侧',
+                entrancePosition: number(room.entrancePosition, 12, 88) || 50,
+                createdBy: anonymousContributor(room.createdBy),
+                history: Array.isArray(room.history) ? room.history : []
+            });
+        });
+    }
+
+    function cleanupLegacyHousingPlaceholders(data) {
+        if ((Number(data.housingSchemaVersion) || 0) >= 2) return;
+        const usedAnimalRacks = new Set(data.animalCages.map(function (item) { return item.rackId; }).filter(Boolean));
+        const usedPlantRacks = new Set(data.plants.map(function (item) { return item.rackId; }).filter(Boolean));
+        data.animalRacks = data.animalRacks.filter(function (rack) {
+            const placeholder = /^(?:未命名笼架|Untitled rack)$/i.test(String(rack.name || '').trim());
+            return usedAnimalRacks.has(rack.id) || !placeholder;
+        });
+        data.plantRacks = data.plantRacks.filter(function (rack) {
+            const placeholder = /^(?:未命名培养架|Untitled growth rack)$/i.test(String(rack.name || '').trim());
+            return usedPlantRacks.has(rack.id) || !placeholder;
+        });
+        data.housingSchemaVersion = 2;
+    }
+
+    function roomForLegacyRack(rooms, rack, prefix, fallbackName) {
+        let room = rooms.find(function (item) { return item.id === rack.roomId; });
+        const facility = String(rack.facility || '').trim();
+        if (!room && facility) room = rooms.find(function (item) { return item.name === facility; });
+        if (!room) {
+            room = {
+                id: prefix + '-' + String(rooms.length + 1).padStart(3, '0'),
+                name: facility || fallbackName + ' ' + (rooms.length + 1),
+                notes: '', createdBy: anonymousContributor(rack.createdBy), history: []
+            };
+            rooms.push(room);
+        }
+        return room;
+    }
+
     function migrateAnimalHousing(data) {
+        data.animalRooms = normalizeHousingRooms(data.animalRooms, 'AROOM', '动物房间');
         data.animalRacks = (Array.isArray(data.animalRacks) ? data.animalRacks : []).map(function (rack, index) {
+            const room = roomForLegacyRack(data.animalRooms, rack, 'AROOM', '动物房间');
             return Object.assign({}, rack, {
                 id: rack.id || 'RACK-' + String(index + 1).padStart(3, '0'),
+                roomId: room.id,
                 name: rack.name || '动物笼架 ' + (index + 1),
-                facility: rack.facility || '位置待设置',
+                facility: room.name,
                 rows: Math.round(number(rack.rows, 1, 12)) || 4,
                 columns: Math.round(number(rack.columns, 1, 48)) || 8,
-                createdBy: anonymousContributor(rack.createdBy)
+                layoutX: housingLayoutCoordinate(rack.layoutX, index, 'x'),
+                layoutY: housingLayoutCoordinate(rack.layoutY, index, 'y'),
+                createdBy: anonymousContributor(rack.createdBy),
+                history: Array.isArray(rack.history) ? rack.history : []
             });
         });
         data.animalCages = (Array.isArray(data.animalCages) ? data.animalCages : []).map(function (cage, index) {
@@ -873,16 +946,18 @@
                 history: Array.isArray(animal.history) ? animal.history : []
             });
         });
-        if (!data.mice.length && !data.animalCages.length) return;
+        if (!data.mice.length && !data.animalCages.length && !data.animalRacks.length) return;
         if (!data.animalRacks.length) {
-            data.animalRacks.push({ id: 'RACK-LEGACY-01', name: '迁移笼架', facility: '原有动物记录', rows: 6, columns: 12, createdBy: 'LOCAL-NODE' });
+            const room = data.animalRooms[0] || { id: 'AROOM-LEGACY-01', name: '原有动物记录', notes: '', createdBy: 'LOCAL-NODE', history: [] };
+            if (!data.animalRooms.length) data.animalRooms.push(room);
+            data.animalRacks.push({ id: 'RACK-LEGACY-01', roomId: room.id, name: '迁移笼架', facility: room.name, rows: 6, columns: 12, layoutX: 18, layoutY: 28, createdBy: 'LOCAL-NODE', history: [] });
         }
         const rack = data.animalRacks[0];
         data.mice = data.mice.map(function (animal) {
-            let cage = data.animalCages.find(item => item.id === animal.cageId);
+            let cage = data.animalCages.find(function (item) { return item.id === animal.cageId; });
             if (!cage) {
                 const legacyLabel = String(animal.cage || '未分配');
-                cage = data.animalCages.find(item => item.rackId === rack.id && item.label === legacyLabel);
+                cage = data.animalCages.find(function (item) { return item.rackId === rack.id && item.label === legacyLabel; });
                 if (!cage) {
                     const position = normalizeAnimalPosition(legacyLabel) || firstAvailableAnimalPosition(rack, data.animalCages);
                     cage = { id: 'CAGE-MIG-' + String(data.animalCages.length + 1).padStart(3, '0'), rackId: rack.id, position: position, label: legacyLabel, species: animal.species, capacity: 5, status: '在用', notes: '', createdBy: animal.createdBy };
@@ -894,19 +969,31 @@
     }
 
     function migratePlantHousing(data) {
+        data.plantRooms = normalizeHousingRooms(data.plantRooms, 'PROOM', '植物培养室');
         data.plantRacks = (Array.isArray(data.plantRacks) ? data.plantRacks : []).map(function (rack, index) {
+            const room = roomForLegacyRack(data.plantRooms, rack, 'PROOM', '植物培养室');
             return Object.assign({}, rack, {
                 id: rack.id || 'PRACK-' + String(index + 1).padStart(3, '0'),
-                name: rack.name || '植物培养架 ' + (index + 1), facility: rack.facility || '位置待设置',
-                rows: Math.round(number(rack.rows, 1, 12)) || 4, columns: Math.round(number(rack.columns, 1, 48)) || 8,
-                createdBy: anonymousContributor(rack.createdBy)
+                roomId: room.id,
+                name: rack.name || '植物培养架 ' + (index + 1),
+                facility: room.name,
+                rows: Math.round(number(rack.rows, 1, 12)) || 4,
+                columns: Math.round(number(rack.columns, 1, 48)) || 8,
+                layoutX: housingLayoutCoordinate(rack.layoutX, index, 'x'),
+                layoutY: housingLayoutCoordinate(rack.layoutY, index, 'y'),
+                createdBy: anonymousContributor(rack.createdBy),
+                history: Array.isArray(rack.history) ? rack.history : []
             });
         });
         data.plants = (Array.isArray(data.plants) ? data.plants : []).map(function (plant, index) {
             return Object.assign({}, plant, { id: plant.id || 'PLT-' + String(index + 1).padStart(3, '0'), name: plant.name || '未命名植物材料', rackId: plant.rackId || '', position: normalizePlantPosition(plant.position), createdBy: anonymousContributor(plant.createdBy), history: Array.isArray(plant.history) ? plant.history : [] });
         });
-        if (!data.plants.length) return;
-        if (!data.plantRacks.length) data.plantRacks.push({ id: 'PRACK-LEGACY-01', name: '迁移培养架', facility: '原有植物记录', rows: 6, columns: 12, createdBy: 'LOCAL-NODE' });
+        if (!data.plants.length && !data.plantRacks.length) return;
+        if (!data.plantRacks.length) {
+            const room = data.plantRooms[0] || { id: 'PROOM-LEGACY-01', name: '原有植物记录', notes: '', createdBy: 'LOCAL-NODE', history: [] };
+            if (!data.plantRooms.length) data.plantRooms.push(room);
+            data.plantRacks.push({ id: 'PRACK-LEGACY-01', roomId: room.id, name: '迁移培养架', facility: room.name, rows: 6, columns: 12, layoutX: 18, layoutY: 28, createdBy: 'LOCAL-NODE', history: [] });
+        }
         data.plants.forEach(function (plant) {
             let rack = data.plantRacks.find(function (item) { return item.id === plant.rackId; });
             if (!rack) rack = data.plantRacks.find(function (item) { return String(plant.location || '').includes(item.facility); }) || data.plantRacks[0];
@@ -915,7 +1002,6 @@
             plant.rackId = rack.id; plant.position = position; plant.location = formatPlantLocation(rack, position);
         });
     }
-
     function normalizeBioinformaticsData(data) {
         [['bioProjects','BIO-PRJ','未命名项目'],['bioDatasets','BIO-DATA','未命名数据集'],['bioPipelines','BIO-FLOW','未命名分析流程'],['bioRuns','BIO-RUN','未命名运行任务']].forEach(function (spec) {
             data[spec[0]] = (Array.isArray(data[spec[0]]) ? data[spec[0]] : []).map(function (record, index) {
@@ -1244,15 +1330,119 @@
         document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', finish);
         document.addEventListener('click', function (event) { if (suppressClick && event.target.closest('[data-drag-scroll]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; } }, true);
     }
+    function bindRoomLayoutDrag() {
+        let drag = null;
+        let suppressClick = false;
+        document.addEventListener('pointerdown', function (event) {
+            const card = event.target.closest('[data-room-layout-rack]');
+            if (!card || event.button !== 0 || workspaceReadOnly || event.target.closest('[data-delete-animal-rack],[data-delete-plant-rack]')) return;
+            const map = card.closest('[data-room-map]');
+            if (!map) return;
+            const cardRect = card.getBoundingClientRect();
+            drag = {
+                card: card, map: map, pointerId: event.pointerId,
+                kind: card.dataset.roomLayoutRack, id: card.dataset.animalRack || card.dataset.plantRack,
+                offsetX: event.clientX - cardRect.left, offsetY: event.clientY - cardRect.top,
+                moved: false, x: 0, y: 0
+            };
+            card.setPointerCapture?.(event.pointerId);
+        });
+        document.addEventListener('pointermove', function (event) {
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const mapRect = drag.map.getBoundingClientRect();
+            const cardRect = drag.card.getBoundingClientRect();
+            const maxX = Math.max(1, mapRect.width - cardRect.width);
+            const maxY = Math.max(1, mapRect.height - cardRect.height);
+            const left = Math.min(maxX, Math.max(0, event.clientX - mapRect.left - drag.offsetX));
+            const top = Math.min(maxY, Math.max(0, event.clientY - mapRect.top - drag.offsetY));
+            if (!drag.moved && Math.hypot(left - (cardRect.left - mapRect.left), top - (cardRect.top - mapRect.top)) < 4) return;
+            drag.moved = true;
+            drag.x = left / maxX * 100;
+            drag.y = top / maxY * 100;
+            drag.card.style.left = drag.x + '%';
+            drag.card.style.top = drag.y + '%';
+            drag.card.style.transform = 'translate(-' + drag.x + '%, -' + drag.y + '%)';
+            drag.card.classList.add('is-dragging');
+            event.preventDefault();
+        }, { passive: false });
+        function finish(event) {
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            drag.card.classList.remove('is-dragging');
+            if (drag.moved) {
+                const collection = drag.kind === 'animal' ? state.animalRacks : state.plantRacks;
+                const rack = collection.find(function (item) { return item.id === drag.id; });
+                if (rack) { rack.layoutX = roundQuantity(drag.x); rack.layoutY = roundQuantity(drag.y); saveState(); }
+                suppressClick = true;
+                window.setTimeout(function () { suppressClick = false; }, 0);
+            }
+            drag = null;
+        }
+        document.addEventListener('pointerup', finish);
+        document.addEventListener('pointercancel', finish);
+        document.addEventListener('click', function (event) {
+            if (suppressClick && event.target.closest('[data-room-layout-rack]')) {
+                event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false;
+            }
+        }, true);
+    }
+
+    function bindRoomTabReorder() {
+        let draggedTab = null;
+        let suppressClick = false;
+        document.addEventListener('dragstart', function (event) {
+            const tab = event.target.closest('[data-room-tab]');
+            if (!tab || workspaceReadOnly || event.target.closest('[data-edit-animal-room],[data-edit-plant-room]')) return;
+            draggedTab = tab;
+            tab.classList.add('is-reordering');
+            if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tab.dataset.roomTab); }
+        });
+        document.addEventListener('dragover', function (event) {
+            const target = event.target.closest('[data-room-tab]');
+            if (!draggedTab || !target || target.dataset.roomKind !== draggedTab.dataset.roomKind) return;
+            event.preventDefault();
+            target.classList.add('is-drop-target');
+        });
+        document.addEventListener('dragleave', function (event) {
+            const target = event.target.closest('[data-room-tab]');
+            if (target) target.classList.remove('is-drop-target');
+        });
+        document.addEventListener('drop', function (event) {
+            const target = event.target.closest('[data-room-tab]');
+            if (!draggedTab || !target || target === draggedTab || target.dataset.roomKind !== draggedTab.dataset.roomKind) return;
+            event.preventDefault();
+            const collection = draggedTab.dataset.roomKind === 'animal' ? state.animalRooms : state.plantRooms;
+            const from = collection.findIndex(function (item) { return item.id === draggedTab.dataset.roomTab; });
+            const to = collection.findIndex(function (item) { return item.id === target.dataset.roomTab; });
+            if (from >= 0 && to >= 0) {
+                const moved = collection.splice(from, 1)[0];
+                collection.splice(to, 0, moved);
+                saveState();
+                draggedTab.dataset.roomKind === 'animal' ? renderMice() : renderPlants();
+                suppressClick = true;
+            }
+            target.classList.remove('is-drop-target');
+        });
+        document.addEventListener('dragend', function () {
+            document.querySelectorAll('[data-room-tab]').forEach(function (tab) { tab.classList.remove('is-reordering', 'is-drop-target'); });
+            draggedTab = null;
+            window.setTimeout(function () { suppressClick = false; }, 0);
+        });
+        document.addEventListener('click', function (event) {
+            if (suppressClick && event.target.closest('[data-room-tab]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
+        }, true);
+    }
+
     function bindEvents() {
         bindDirectDragScroll();
+        bindRoomLayoutDrag();
+        bindRoomTabReorder();
         document.addEventListener('click', function (event) {
             if (event.target.closest('[data-open-sync]')) {
                 const syncControl = document.getElementById('syncControl');
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -1465,6 +1655,35 @@
             const deleteTask = event.target.closest('[data-delete-task]');
             if (deleteTask) {
                 requestRecordDelete('task', deleteTask.dataset.deleteTask);
+                return;
+            }
+
+            const editAnimalRoom = event.target.closest('[data-edit-animal-room]');
+            if (editAnimalRoom) {
+                const room = state.animalRooms.find(function (item) { return item.id === editAnimalRoom.dataset.editAnimalRoom; });
+                if (room) openEntryDialog('animalRoom', { edit: true, key: room.id, record: room });
+                return;
+            }
+            const editPlantRoom = event.target.closest('[data-edit-plant-room]');
+            if (editPlantRoom) {
+                const room = state.plantRooms.find(function (item) { return item.id === editPlantRoom.dataset.editPlantRoom; });
+                if (room) openEntryDialog('plantRoom', { edit: true, key: room.id, record: room });
+                return;
+            }
+
+            const animalRoom = event.target.closest('[data-animal-room]');
+            if (animalRoom) {
+                const roomId = animalRoom.dataset.animalRoom;
+                zoomedAnimalRoomId = roomId === activeAnimalRoomId && zoomedAnimalRoomId === roomId ? '' : roomId;
+                selectAnimalRoom(roomId);
+                return;
+            }
+
+            const plantRoom = event.target.closest('[data-plant-room]');
+            if (plantRoom) {
+                const roomId = plantRoom.dataset.plantRoom;
+                zoomedPlantRoomId = roomId === activePlantRoomId && zoomedPlantRoomId === roomId ? '' : roomId;
+                selectPlantRoom(roomId);
                 return;
             }
 
@@ -2259,30 +2478,84 @@
         }).join('') || '<tr><td colspan="8">暂无植物材料记录。</td></tr>';
     }
 
+    function applyHousingRoomGeometry(map, room) {
+        const shapes = { '矩形': 'rectangle', '圆角': 'rounded', '斜角': 'angled', 'L 形': 'l-shape' };
+        const entrances = { '左侧': 'left', '右侧': 'right', '上侧': 'top', '下侧': 'bottom' };
+        map.dataset.roomShape = shapes[room.shape] || 'rectangle';
+        map.dataset.entranceSide = entrances[room.entranceSide] || 'right';
+        map.style.setProperty('--room-entrance-position', number(room.entrancePosition, 12, 88) + '%');
+    }
+
+    function housingRoomTabHtml(kind, item, index, active, detail, expanded) {
+        const editAttribute = kind === 'animal' ? 'data-edit-animal-room' : 'data-edit-plant-room';
+        const selectAttribute = kind === 'animal' ? 'data-animal-room' : 'data-plant-room';
+        return '<article class="housing-room-tab' + (active ? ' active' : '') + (expanded ? ' is-expanded' : '') + '" role="button" tabindex="0" aria-expanded="' + (expanded ? 'true' : 'false') + '" draggable="true" data-room-tab="' + esc(item.id) + '" data-room-kind="' + kind + '" ' + selectAttribute + '="' + esc(item.id) + '">' +
+            '<span>ROOM ' + String(index + 1).padStart(2, '0') + '</span><strong>' + esc(interfaceText(item.name)) + '</strong><small>' + esc(detail) + '</small>' +
+            '<button class="housing-room-edit" type="button" ' + editAttribute + '="' + esc(item.id) + '" draggable="false" aria-label="' + esc(interfaceText('编辑房间')) + '" title="' + esc(interfaceText('编辑房间')) + '">✎</button>' +
+            '<i class="housing-room-toggle" aria-hidden="true">' + (expanded ? '−' : '+') + '</i>' +
+            '<i class="housing-room-grip" aria-hidden="true">⋮⋮</i></article>';
+    }
+
+    function housingRackInlineStyle(rack) {
+        const x = housingLayoutCoordinate(rack.layoutX, 0, 'x');
+        const y = housingLayoutCoordinate(rack.layoutY, 0, 'y');
+        return 'left:' + x + '%;top:' + y + '%;transform:translate(-' + x + '%,-' + y + '%)';
+    }
+
     function renderPlantHousing() {
-        const tabs = document.getElementById('plantRackTabs');
+        const roomTabs = document.getElementById('plantRoomTabs');
+        const roomMap = document.getElementById('plantRoomMap');
+        const roomTitle = document.getElementById('plantRoomTitle');
+        const roomMeta = document.getElementById('plantRoomMeta');
         const grid = document.getElementById('plantRackGrid');
         const title = document.getElementById('plantRackTitle');
         const meta = document.getElementById('plantRackMeta');
-        if (!tabs || !grid) return;
-        const rack = state.plantRacks.find(function (item) { return item.id === activePlantRackId; }) || state.plantRacks[0];
-        if (!rack) {
-            activePlantRackId = ''; selectedPlantId = '';
-            tabs.innerHTML = '<span class="animal-rack-empty-tabs">尚无培养架</span>';
-            title.textContent = '尚未建立培养架'; meta.textContent = '建立培养架后，可为每株植物分配准确位置。';
-            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="plantRack"><strong>＋ 新建第一个培养架</strong><span>设置培养室、行数和列数</span></button>';
+        if (!roomTabs || !roomMap || !grid) return;
+        const room = state.plantRooms.find(function (item) { return item.id === activePlantRoomId; }) || state.plantRooms[0];
+        if (!room) {
+            activePlantRoomId = ''; activePlantRackId = ''; selectedPlantId = '';
+            roomMap.classList.remove('is-zoomed');
+            roomMap.closest('.housing-room-overview')?.classList.remove('is-expanded');
+            roomTabs.classList.remove('has-expanded-room');
+            roomTabs.innerHTML = '<span class="housing-room-empty-tabs">尚无培养室</span>';
+            roomTitle.textContent = '尚未建立培养室'; roomMeta.textContent = '先建立培养室，再在房间布局中放置培养架。';
+            roomMap.innerHTML = '<button class="housing-room-empty" type="button" data-add="plantRoom"><strong>＋ 新建第一个培养室</strong><span>建立可容纳多个培养架的房间布局</span></button>';
+            title.textContent = '尚未选择培养架'; meta.textContent = '点击房间布局中的培养架查看位置。';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="plantRoom"><strong>＋ 新建培养室</strong></button>';
             renderPlantPositionInspector(); return;
         }
-        activePlantRackId = rack.id;
-        tabs.innerHTML = state.plantRacks.map(function (item) {
-            const count = state.plants.filter(function (plant) { return plant.rackId === item.id; }).length;
-            return '<div class="plant-rack-tab-wrap"><button class="plant-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-plant-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + count + ' 株已定位</small></button><button class="plant-rack-delete" type="button" data-delete-plant-rack="' + esc(item.id) + '" aria-label="删除培养架" title="删除培养架">×</button></div>';
+        activePlantRoomId = room.id; localStorage.setItem('rhineLabActivePlantRoom', room.id);
+        roomTabs.innerHTML = state.plantRooms.map(function (item, index) {
+            const racks = state.plantRacks.filter(function (rack) { return rack.roomId === item.id; });
+            return housingRoomTabHtml('plant', item, index, item.id === room.id, interfaceText(racks.length + ' 个培养架'), item.id === zoomedPlantRoomId);
         }).join('');
+        const racks = state.plantRacks.filter(function (item) { return item.roomId === room.id; });
+        let rack = racks.find(function (item) { return item.id === activePlantRackId; }) || racks[0];
+        activePlantRackId = rack ? rack.id : '';
+        localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
+        roomTitle.textContent = interfaceText(room.name);
+        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个培养架 · 可拖动调整布局');
+        applyHousingRoomGeometry(roomMap, room);
+        const plantRoomExpanded = room.id === zoomedPlantRoomId;
+        roomMap.classList.toggle('is-zoomed', plantRoomExpanded);
+        roomMap.closest('.housing-room-overview')?.classList.toggle('is-expanded', plantRoomExpanded);
+        roomTabs.classList.toggle('has-expanded-room', plantRoomExpanded);
+        roomMap.innerHTML = racks.map(function (item) {
+            const count = state.plants.filter(function (plant) { return plant.rackId === item.id; }).length;
+            const selected = Boolean(rack && item.id === rack.id);
+            const detail = interfaceText(item.rows + ' × ' + item.columns + ' · ' + count + ' 株');
+            return '<div class="housing-layout-rack plant' + (selected ? ' active' : '') + '" role="button" aria-pressed="' + String(selected) + '" tabindex="0" data-room-layout-rack="plant" data-plant-rack="' + esc(item.id) + '" style="' + housingRackInlineStyle(item) + '"><span>GROWTH RACK</span><strong>' + esc(item.name) + '</strong><small>' + esc(detail) + '</small><button class="housing-layout-rack-delete" type="button" data-delete-plant-rack="' + esc(item.id) + '" aria-label="删除培养架" title="删除培养架">×</button></div>';
+        }).join('') || '<button class="housing-room-empty" type="button" data-add="plantRack"><strong>＋ 在此房间新建培养架</strong><span>新建后可拖动到实际位置</span></button>';
+        if (!rack) {
+            selectedPlantId = ''; title.textContent = '尚未建立培养架'; meta.textContent = room.name + ' · 点击上方按钮建立培养架';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="plantRack"><strong>＋ 新建培养架</strong></button>';
+            renderPlantPositionInspector(); return;
+        }
         const plants = state.plants.filter(function (item) { return item.rackId === rack.id; });
         const plantByPosition = new Map(plants.map(function (item) { return [item.position,item]; }));
         if (!plants.some(function (item) { return item.id === selectedPlantId; })) selectedPlantId = plants[0] ? plants[0].id : '';
-        title.textContent = rack.name; meta.textContent = rack.facility + ' · ' + rack.rows + ' 行 × ' + rack.columns + ' 列';
-        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(70px, 1fr))';
+        title.textContent = interfaceText(rack.name); meta.textContent = interfaceText(room.name) + ' · ' + interfaceText(rack.rows + ' 行 × ' + rack.columns + ' 列');
+        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(64px, 1fr))';
         let cells = '';
         for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) {
             const position = String.fromCharCode(65 + row) + column; const plant = plantByPosition.get(position);
@@ -2291,7 +2564,6 @@
         }
         grid.innerHTML = cells; renderPlantPositionInspector();
     }
-
     function renderPlantPositionInspector() {
         const inspector = document.getElementById('plantPositionInspector');
         if (!inspector) return;
@@ -2300,9 +2572,20 @@
         inspector.innerHTML = '<div class="plant-position-summary"><header><div><small>' + esc(plant.id) + '</small><h3>' + esc(plant.name) + '</h3></div><span>' + esc(plant.position) + '</span></header><div class="plant-position-meta"><div><small>物种</small><strong><i>' + esc(plant.scientificName || '未填写') + '</i></strong></div><div><small>生长阶段</small><strong>' + esc(plant.growthStage || '未填写') + '</strong></div><div><small>培养条件</small><strong>' + esc(plant.growthConditions || '未填写') + '</strong></div><div><small>状态</small><strong>' + esc(plant.status || '未填写') + '</strong></div></div><p class="plant-position-notes">' + esc(plant.phenotype || plant.notes || '尚未记录表型或备注。') + '</p><div class="plant-position-buttons"><button class="button primary" type="button" data-plant-id="' + esc(plant.id) + '">查看植物详情</button></div></div>';
     }
 
+    function selectPlantRoom(id) {
+        const room = state.plantRooms.find(function (item) { return item.id === id; });
+        if (!room) return;
+        activePlantRoomId = room.id; localStorage.setItem('rhineLabActivePlantRoom', room.id);
+        const rack = state.plantRacks.find(function (item) { return item.roomId === room.id; });
+        activePlantRackId = rack ? rack.id : ''; localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
+        selectedPlantId = rack ? ((state.plants.find(function (item) { return item.rackId === rack.id; }) || {}).id || '') : '';
+        renderPlants();
+    }
+
     function selectPlantRack(id) {
         const rack = state.plantRacks.find(function (item) { return item.id === id; });
         if (!rack) return;
+        activePlantRoomId = rack.roomId; localStorage.setItem('rhineLabActivePlantRoom', activePlantRoomId);
         activePlantRackId = rack.id; localStorage.setItem('rhineLabActivePlantRack', rack.id);
         selectedPlantId = (state.plants.find(function (item) { return item.rackId === rack.id; }) || {}).id || '';
         renderPlants();
@@ -2435,51 +2718,74 @@
     function bioDatasetLabel(id) { const item = state.bioDatasets.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.id : (id || '未关联'); }
     function bioPipelineLabel(id) { const item = state.bioPipelines.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.version : (id || '未关联'); }
     function renderAnimalHousing() {
-        const tabs = document.getElementById('animalRackTabs');
+        const roomTabs = document.getElementById('animalRoomTabs');
+        const roomMap = document.getElementById('animalRoomMap');
+        const roomTitle = document.getElementById('animalRoomTitle');
+        const roomMeta = document.getElementById('animalRoomMeta');
         const grid = document.getElementById('animalRackGrid');
         const title = document.getElementById('animalRackTitle');
         const meta = document.getElementById('animalRackMeta');
-        const rack = state.animalRacks.find(item => item.id === activeAnimalRackId) || state.animalRacks[0];
-        if (!rack) {
-            activeAnimalRackId = '';
-            selectedAnimalCageId = '';
-            tabs.innerHTML = '<span class="animal-rack-empty-tabs">尚无笼架</span>';
-            title.textContent = '尚未建立笼架';
-            meta.textContent = '新建笼架后，可逐个添加笼位和动物。';
-            grid.removeAttribute('style');
-            grid.innerHTML = '<button class="empty-card" type="button" data-add="animalRack"><strong>＋ 新建第一个笼架</strong><span>设置位置、行数和列数</span></button>';
-            renderAnimalCageInspector();
-            return;
+        if (!roomTabs || !roomMap || !grid) return;
+        const room = state.animalRooms.find(function (item) { return item.id === activeAnimalRoomId; }) || state.animalRooms[0];
+        if (!room) {
+            activeAnimalRoomId = ''; activeAnimalRackId = ''; selectedAnimalCageId = '';
+            roomMap.classList.remove('is-zoomed');
+            roomMap.closest('.housing-room-overview')?.classList.remove('is-expanded');
+            roomTabs.classList.remove('has-expanded-room');
+            roomTabs.innerHTML = '<span class="housing-room-empty-tabs">尚无动物房间</span>';
+            roomTitle.textContent = '尚未建立动物房间'; roomMeta.textContent = '先建立房间，再在房间布局中放置笼架。';
+            roomMap.innerHTML = '<button class="housing-room-empty" type="button" data-add="animalRoom"><strong>＋ 新建第一个动物房间</strong><span>建立可容纳多个笼架的房间布局</span></button>';
+            title.textContent = '尚未选择笼架'; meta.textContent = '点击房间布局中的笼架查看笼位。';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="animalRoom"><strong>＋ 新建动物房间</strong></button>';
+            renderAnimalCageInspector(); return;
         }
-        activeAnimalRackId = rack.id;
-        tabs.innerHTML = state.animalRacks.map(function (item) {
-            const cages = state.animalCages.filter(cage => cage.rackId === item.id);
-            const animals = state.mice.filter(animal => cages.some(cage => cage.id === animal.cageId)).length;
-            return '<div class="animal-rack-tab-wrap"><button class="animal-rack-tab' + (item.id === rack.id ? ' active' : '') + '" type="button" data-animal-rack="' + esc(item.id) + '"><strong>' + esc(item.name) + '</strong><small>' + esc(item.facility) + ' · ' + cages.length + ' 笼位 · ' + animals + ' 个体</small></button><button class="animal-rack-delete" type="button" data-delete-animal-rack="' + esc(item.id) + '" aria-label="删除笼架" title="删除笼架">×</button></div>';
+        activeAnimalRoomId = room.id; localStorage.setItem('rhineLabActiveAnimalRoom', room.id);
+        roomTabs.innerHTML = state.animalRooms.map(function (item, index) {
+            const racks = state.animalRacks.filter(function (rack) { return rack.roomId === item.id; });
+            const cages = state.animalCages.filter(function (cage) { return racks.some(function (rack) { return rack.id === cage.rackId; }); });
+            return housingRoomTabHtml('animal', item, index, item.id === room.id, interfaceText(racks.length + ' 个笼架 · ' + cages.length + ' 个笼位'), item.id === zoomedAnimalRoomId);
         }).join('');
-        const cages = state.animalCages.filter(item => item.rackId === rack.id);
-        const cageByPosition = new Map(cages.map(item => [item.position, item]));
-        if (!cages.some(item => item.id === selectedAnimalCageId)) selectedAnimalCageId = cages[0] ? cages[0].id : '';
-        title.textContent = rack.name;
-        meta.textContent = rack.facility + ' · ' + rack.rows + ' 行 × ' + rack.columns + ' 列';
-        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(56px, 1fr))';
+        const racks = state.animalRacks.filter(function (item) { return item.roomId === room.id; });
+        let rack = racks.find(function (item) { return item.id === activeAnimalRackId; }) || racks[0];
+        activeAnimalRackId = rack ? rack.id : '';
+        localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
+        roomTitle.textContent = interfaceText(room.name);
+        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个笼架 · 可拖动调整布局');
+        applyHousingRoomGeometry(roomMap, room);
+        const animalRoomExpanded = room.id === zoomedAnimalRoomId;
+        roomMap.classList.toggle('is-zoomed', animalRoomExpanded);
+        roomMap.closest('.housing-room-overview')?.classList.toggle('is-expanded', animalRoomExpanded);
+        roomTabs.classList.toggle('has-expanded-room', animalRoomExpanded);
+        roomMap.innerHTML = racks.map(function (item) {
+            const cages = state.animalCages.filter(function (cage) { return cage.rackId === item.id; });
+            const animals = state.mice.filter(function (animal) { return cages.some(function (cage) { return cage.id === animal.cageId; }); }).length;
+            const selected = Boolean(rack && item.id === rack.id);
+            const detail = interfaceText(item.rows + ' × ' + item.columns + ' · ' + cages.length + ' 笼位 · ' + animals + ' 个体');
+            return '<div class="housing-layout-rack animal' + (selected ? ' active' : '') + '" role="button" aria-pressed="' + String(selected) + '" tabindex="0" data-room-layout-rack="animal" data-animal-rack="' + esc(item.id) + '" style="' + housingRackInlineStyle(item) + '"><span>ANIMAL RACK</span><strong>' + esc(item.name) + '</strong><small>' + esc(detail) + '</small><button class="housing-layout-rack-delete" type="button" data-delete-animal-rack="' + esc(item.id) + '" aria-label="删除笼架" title="删除笼架">×</button></div>';
+        }).join('') || '<button class="housing-room-empty" type="button" data-add="animalRack"><strong>＋ 在此房间新建笼架</strong><span>新建后可拖动到实际位置</span></button>';
+        if (!rack) {
+            selectedAnimalCageId = ''; title.textContent = '尚未建立笼架'; meta.textContent = room.name + ' · 点击上方按钮建立笼架';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="animalRack"><strong>＋ 新建笼架</strong></button>';
+            renderAnimalCageInspector(); return;
+        }
+        const cages = state.animalCages.filter(function (item) { return item.rackId === rack.id; });
+        const cageByPosition = new Map(cages.map(function (item) { return [item.position, item]; }));
+        if (!cages.some(function (item) { return item.id === selectedAnimalCageId; })) selectedAnimalCageId = cages[0] ? cages[0].id : '';
+        title.textContent = interfaceText(rack.name); meta.textContent = interfaceText(room.name) + ' · ' + interfaceText(rack.rows + ' 行 × ' + rack.columns + ' 列');
+        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(60px, 1fr))';
         let cells = '';
         for (let row = 0; row < rack.rows; row += 1) {
             for (let column = 1; column <= rack.columns; column += 1) {
                 const position = String.fromCharCode(65 + row) + column;
                 const cage = cageByPosition.get(position);
-                if (!cage) {
-                    cells += '<button class="animal-rack-position empty" type="button" data-animal-position="' + position + '" aria-label="在 ' + position + ' 新建笼位"><span>' + position + '</span><strong>＋</strong></button>';
-                    continue;
-                }
-                const count = state.mice.filter(animal => animal.cageId === cage.id).length;
+                if (!cage) { cells += '<button class="animal-rack-position empty" type="button" data-animal-position="' + position + '" aria-label="在 ' + position + ' 新建笼位"><span>' + position + '</span><strong>＋</strong></button>'; continue; }
+                const count = state.mice.filter(function (animal) { return animal.cageId === cage.id; }).length;
                 cells += '<button class="animal-rack-position occupied' + (cage.id === selectedAnimalCageId ? ' active' : '') + '" type="button" data-animal-cage="' + esc(cage.id) + '"><span>' + position + '</span><strong>' + esc(cage.label) + '</strong><small>' + count + ' / ' + cage.capacity + ' 个体</small></button>';
             }
         }
         grid.innerHTML = cells;
         renderAnimalCageInspector();
     }
-
     function renderAnimalCageInspector() {
         const inspector = document.getElementById('animalCageInspector');
         const cage = state.animalCages.find(item => item.id === selectedAnimalCageId);
@@ -2494,15 +2800,25 @@
         inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><div class="animal-cage-buttons"><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button><button class="button danger" type="button" data-delete-animal-cage="' + esc(cage.id) + '">删除笼位</button></div></div>';
     }
 
-    function selectAnimalRack(id) {
-        const rack = state.animalRacks.find(item => item.id === id);
-        if (!rack) return;
-        activeAnimalRackId = rack.id;
-        localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
-        selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === rack.id) || {}).id || '';
+    function selectAnimalRoom(id) {
+        const room = state.animalRooms.find(function (item) { return item.id === id; });
+        if (!room) return;
+        activeAnimalRoomId = room.id; localStorage.setItem('rhineLabActiveAnimalRoom', room.id);
+        const rack = state.animalRacks.find(function (item) { return item.roomId === room.id; });
+        activeAnimalRackId = rack ? rack.id : ''; localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
+        selectedAnimalCageId = rack ? ((state.animalCages.find(function (cage) { return cage.rackId === rack.id; }) || {}).id || '') : '';
         renderMice();
     }
 
+    function selectAnimalRack(id) {
+        const rack = state.animalRacks.find(function (item) { return item.id === id; });
+        if (!rack) return;
+        activeAnimalRoomId = rack.roomId; localStorage.setItem('rhineLabActiveAnimalRoom', activeAnimalRoomId);
+        activeAnimalRackId = rack.id;
+        localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
+        selectedAnimalCageId = (state.animalCages.find(function (cage) { return cage.rackId === rack.id; }) || {}).id || '';
+        renderMice();
+    }
     function selectAnimalCage(id) {
         const cage = state.animalCages.find(item => item.id === id);
         if (!cage) return;
@@ -2735,7 +3051,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRack: '动物笼架', animalCage: '动物笼位', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRoom: '动物房间', animalRack: '动物笼架', animalCage: '动物笼位', plantRoom: '植物培养室', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -2751,8 +3067,10 @@
         if (type === 'sample') return state.samples;
         if (type === 'cell') return state.cellCultures;
         if (type === 'result') return state.results;
+        if (type === 'animalRoom') return state.animalRooms;
         if (type === 'animalRack') return state.animalRacks;
         if (type === 'animalCage') return state.animalCages;
+        if (type === 'plantRoom') return state.plantRooms;
         if (type === 'plantRack') return state.plantRacks;
         if (type === 'bioProject') return state.bioProjects;
         if (type === 'bioDataset') return state.bioDatasets;
@@ -2846,7 +3164,7 @@
                     animal.cage = '未分配';
                 }
             });
-            const nextRack = state.animalRacks[0];
+            const nextRack = state.animalRacks.find(function (item) { return item.roomId === activeAnimalRoomId; }) || null;
             activeAnimalRackId = nextRack ? nextRack.id : '';
             const nextCage = nextRack ? state.animalCages.find(item => item.rackId === nextRack.id) : null;
             selectedAnimalCageId = nextCage ? nextCage.id : '';
@@ -2859,7 +3177,7 @@
                     plant.location = '未分配位置';
                 }
             });
-            const nextRack = state.plantRacks[0];
+            const nextRack = state.plantRacks.find(function (item) { return item.roomId === activePlantRoomId; }) || null;
             activePlantRackId = nextRack ? nextRack.id : '';
             selectedPlantId = state.plants.find(function (plant) { return plant.rackId === activePlantRackId; })?.id || '';
             localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
@@ -2891,9 +3209,11 @@
             experiments: [],
             results: [],
             mice: [],
+            animalRooms: [],
             animalRacks: [],
             animalCages: [],
             plants: [],
+            plantRooms: [],
             plantRacks: [],
             microbes: [],
             plasmids: [],
@@ -2923,7 +3243,8 @@
             lineageLinks: [],
             plateLayouts: [],
             security: { labKeys: {} },
-            exampleSeedVersion: 999
+            exampleSeedVersion: 999,
+            housingSchemaVersion: 2
         };
     }
 
@@ -5140,11 +5461,22 @@ function getReagentDisplayStatus(reagent) {
                 field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
                 field('notes', '备注', 'textarea', '记录包装体系、质控、冻融次数或使用限制…', false, true)
             ]
-        },        animalRack: {
+        },
+        animalRoom: {
+            kicker: 'ANIMAL FACILITY', title: '新建动物房间',
+            fields: [
+                field('name', '房间名称', 'text', '例：动物中心 A 区', true),
+                field('shape', '房间形状', 'select', ['矩形', '圆角', '斜角', 'L 形'], true),
+                field('entranceSide', '入口方向', 'select', ['左侧', '右侧', '上侧', '下侧'], true),
+                field('entrancePosition', '入口位置（%）', 'number', '50', true),
+                field('notes', '房间说明', 'textarea', '记录屏障级别、温湿度或房间用途…', false, true)
+            ]
+        },
+        animalRack: {
             kicker: 'ANIMAL HOUSING', title: '新建动物笼架',
             fields: [
-                field('name', '笼架名称', 'text', '例：屏障设施 A 区笼架', true),
-                field('facility', '所在位置', 'text', '例：动物中心 · A 区', true),
+                field('name', '笼架名称', 'text', '例：A 区笼架 1', true),
+                field('roomId', '所属房间', 'animal-room-select', '', true),
                 field('rows', '笼架行数（最多 12 行）', 'number', '4', true),
                 field('columns', '每行笼位数', 'number', '8', true)
             ]
@@ -5161,11 +5493,21 @@ function getReagentDisplayStatus(reagent) {
                 field('notes', '饲养条件与备注', 'textarea', '记录垫料、光照、饲料、温度或特殊照护要求…', false, true)
             ]
         },
+        plantRoom: {
+            kicker: 'PLANT GROWTH ROOM', title: '新建植物培养室',
+            fields: [
+                field('name', '培养室名称', 'text', '例：植物房 GR-01', true),
+                field('shape', '房间形状', 'select', ['矩形', '圆角', '斜角', 'L 形'], true),
+                field('entranceSide', '入口方向', 'select', ['左侧', '右侧', '上侧', '下侧'], true),
+                field('entrancePosition', '入口位置（%）', 'number', '50', true),
+                field('notes', '培养室说明', 'textarea', '记录光周期、温湿度或培养用途…', false, true)
+            ]
+        },
         plantRack: {
             kicker: 'PLANT GROWTH HOUSING', title: '新建植物培养架',
             fields: [
-                field('name', '培养架名称', 'text', '例：植物房 GR-01 培养架', true),
-                field('facility', '培养室 / 位置', 'text', '例：植物房 GR-01', true),
+                field('name', '培养架名称', 'text', '例：GR-01 培养架 1', true),
+                field('roomId', '所属培养室', 'plant-room-select', '', true),
                 field('rows', '培养架行数（最多 12 行）', 'number', '5', true),
                 field('columns', '每行位置数', 'number', '10', true)
             ]
@@ -5359,10 +5701,14 @@ function getReagentDisplayStatus(reagent) {
             defaultsForEntry = { status: '在库' };
         } else if (type === 'virus') {
             defaultsForEntry = { biosafetyLevel: 'BSL-1', status: '在库' };
+        } else if (type === 'animalRoom') {
+            defaultsForEntry = { shape: '矩形', entranceSide: '右侧', entrancePosition: 50 };
         } else if (type === 'animalRack') {
-            defaultsForEntry = { rows: '4', columns: '8' };
+            defaultsForEntry = { roomId: activeAnimalRoomId || (state.animalRooms[0] ? state.animalRooms[0].id : ''), rows: '4', columns: '8' };
+        } else if (type === 'plantRoom') {
+            defaultsForEntry = { shape: '矩形', entranceSide: '右侧', entrancePosition: 50 };
         } else if (type === 'plantRack') {
-            defaultsForEntry = { rows: '5', columns: '10' };
+            defaultsForEntry = { roomId: activePlantRoomId || (state.plantRooms[0] ? state.plantRooms[0].id : ''), rows: '5', columns: '10' };
         } else if (type === 'bioProject') {
             defaultsForEntry = { status: '准备中' };
         } else if (type === 'bioDataset') {
@@ -5396,6 +5742,13 @@ function getReagentDisplayStatus(reagent) {
         pendingPhotoData = editOptions && editOptions.record.photoData ? editOptions.record.photoData : '';
         pendingResultAttachments = type === 'result' && editOptions ? clone(editOptions.record.attachments || []) : [];
         activeDialogType = type;
+        els.entryDialog.dataset.entryType = type;
+        if (els.entrySaveStatus) {
+            const saveStatusRow = els.entrySaveStatus.closest('p');
+            const hideRoomStatus = type === 'animalRoom' || type === 'plantRoom';
+            els.entrySaveStatus.hidden = hideRoomStatus;
+            if (saveStatusRow) saveStatusRow.hidden = hideRoomStatus;
+        }
         els.dialogKicker.textContent = editOptions ? 'EDITABLE DATABASE RECORD' : schema.kicker;
         els.dialogTitle.textContent = editOptions ? '编辑' + recordTypeLabel(type) + '信息' : schema.title;
         els.entrySubmitButton.textContent = editOptions ? '保存修改' : '确认保存';
@@ -5540,6 +5893,12 @@ function getReagentDisplayStatus(reagent) {
                 return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(interfaceText(box.storageLocation)) + '</option>';
             }).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select>';
+        } else if (config.type === 'animal-room-select') {
+            const options = state.animalRooms.map(function (room) { return '<option value="' + esc(room.id) + '">' + esc(interfaceText(room.name)) + '</option>'; }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建动物房间</option>') + '</select>';
+        } else if (config.type === 'plant-room-select') {
+            const options = state.plantRooms.map(function (room) { return '<option value="' + esc(room.id) + '">' + esc(interfaceText(room.name)) + '</option>'; }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建植物培养室</option>') + '</select>';
         } else if (config.type === 'animal-rack-select') {
             const options = state.animalRacks.map(function (rack) {
                 return '<option value="' + esc(rack.id) + '">' + esc(interfaceText(rack.name)) + ' · ' + esc(interfaceText(rack.facility)) + '</option>';
@@ -5790,7 +6149,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'plant', 'microbe', 'plasmid', 'virus', 'reagent', 'sample', 'cell', 'result', 'bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
+        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'plant', 'microbe', 'plasmid', 'virus', 'reagent', 'sample', 'cell', 'result', 'animalRoom', 'plantRoom', 'bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -5834,35 +6193,56 @@ function getReagentDisplayStatus(reagent) {
             data.history = [createdHistoryEntry()];
             state.results.unshift(data);
             activityText = '填写“' + experiment.title + '”的实验结果';
+        } else if (activeDialogType === 'animalRoom') {
+            const room = { id: generatedRecordId('AROOM'), name: displayOr(data.name, '未命名动物房间'), shape: displayOr(data.shape, '矩形'), entranceSide: displayOr(data.entranceSide, '右侧'), entrancePosition: number(data.entrancePosition, 12, 88) || 50, notes: String(data.notes || '').trim(), createdBy: data.createdBy, history: [createdHistoryEntry()] };
+            state.animalRooms.push(room);
+            activeAnimalRoomId = room.id; activeAnimalRackId = ''; selectedAnimalCageId = '';
+            localStorage.setItem('rhineLabActiveAnimalRoom', room.id);
+            localStorage.setItem('rhineLabActiveAnimalRack', '');
+            activityText = '新建动物房间“' + room.name + '”';
         } else if (activeDialogType === 'animalRack') {
+            const room = state.animalRooms.find(function (item) { return item.id === data.roomId; });
+            if (!room) { showToast('请先新建并选择一个动物房间'); return; }
+            const roomRacks = state.animalRacks.filter(function (item) { return item.roomId === room.id; });
             const rack = {
-                id: generatedRecordId('RACK'),
-                name: displayOr(data.name, '未命名笼架'),
-                facility: displayOr(data.facility, '位置待设置'),
+                id: generatedRecordId('RACK'), roomId: room.id,
+                name: displayOr(data.name, '未命名笼架'), facility: room.name,
                 rows: Math.min(12, Math.max(1, Math.round(positiveNumber(data.rows, 4)))),
                 columns: Math.min(48, Math.max(1, Math.round(positiveNumber(data.columns, 8)))),
-                createdBy: data.createdBy
+                layoutX: housingLayoutCoordinate(undefined, roomRacks.length, 'x'),
+                layoutY: housingLayoutCoordinate(undefined, roomRacks.length, 'y'),
+                createdBy: data.createdBy, history: [createdHistoryEntry()]
             };
             state.animalRacks.push(rack);
-            activeAnimalRackId = rack.id;
-            selectedAnimalCageId = '';
+            activeAnimalRoomId = room.id; activeAnimalRackId = rack.id; selectedAnimalCageId = '';
+            localStorage.setItem('rhineLabActiveAnimalRoom', room.id);
             localStorage.setItem('rhineLabActiveAnimalRack', rack.id);
-            activityText = '新建动物笼架“' + rack.name + '”';
+            activityText = '在“' + room.name + '”新建动物笼架“' + rack.name + '”';
+        } else if (activeDialogType === 'plantRoom') {
+            const room = { id: generatedRecordId('PROOM'), name: displayOr(data.name, '未命名植物培养室'), shape: displayOr(data.shape, '矩形'), entranceSide: displayOr(data.entranceSide, '右侧'), entrancePosition: number(data.entrancePosition, 12, 88) || 50, notes: String(data.notes || '').trim(), createdBy: data.createdBy, history: [createdHistoryEntry()] };
+            state.plantRooms.push(room);
+            activePlantRoomId = room.id; activePlantRackId = ''; selectedPlantId = '';
+            localStorage.setItem('rhineLabActivePlantRoom', room.id);
+            localStorage.setItem('rhineLabActivePlantRack', '');
+            activityText = '新建植物培养室“' + room.name + '”';
         } else if (activeDialogType === 'plantRack') {
+            const room = state.plantRooms.find(function (item) { return item.id === data.roomId; });
+            if (!room) { showToast('请先新建并选择一个植物培养室'); return; }
+            const roomRacks = state.plantRacks.filter(function (item) { return item.roomId === room.id; });
             const rack = {
-                id: generatedRecordId('PLANT-RACK'),
-                name: displayOr(data.name, '未命名培养架'),
-                facility: displayOr(data.facility, '位置待设置'),
+                id: generatedRecordId('PLANT-RACK'), roomId: room.id,
+                name: displayOr(data.name, '未命名培养架'), facility: room.name,
                 rows: Math.min(12, Math.max(1, Math.round(positiveNumber(data.rows, 5)))),
                 columns: Math.min(48, Math.max(1, Math.round(positiveNumber(data.columns, 10)))),
-                createdBy: data.createdBy,
-                history: [createdHistoryEntry()]
+                layoutX: housingLayoutCoordinate(undefined, roomRacks.length, 'x'),
+                layoutY: housingLayoutCoordinate(undefined, roomRacks.length, 'y'),
+                createdBy: data.createdBy, history: [createdHistoryEntry()]
             };
             state.plantRacks.push(rack);
-            activePlantRackId = rack.id;
-            selectedPlantId = '';
+            activePlantRoomId = room.id; activePlantRackId = rack.id; selectedPlantId = '';
+            localStorage.setItem('rhineLabActivePlantRoom', room.id);
             localStorage.setItem('rhineLabActivePlantRack', rack.id);
-            activityText = '新建植物培养架“' + rack.name + '”';
+            activityText = '在“' + room.name + '”新建植物培养架“' + rack.name + '”';
         } else if (activeDialogType === 'animalCage') {
             const rack = state.animalRacks.find(item => item.id === data.rackId);
             if (!rack) {
@@ -6244,6 +6624,15 @@ function getReagentDisplayStatus(reagent) {
                 if (!linkedExperiment) updated.experimentId = '';
                 else if (linkedExperiment.protocolId) updated.protocolId = linkedExperiment.protocolId;
             }
+        } else if (target.type === 'animalRoom' || target.type === 'plantRoom') {
+            updated.id = current.id;
+            updated.name = displayOr(data.name, current.name || (target.type === 'animalRoom' ? '未命名动物房间' : '未命名植物培养室'));
+            updated.shape = displayOr(data.shape, current.shape || '矩形');
+            updated.entranceSide = displayOr(data.entranceSide, current.entranceSide || '右侧');
+            updated.entrancePosition = number(data.entrancePosition, 12, 88) || 50;
+            updated.notes = String(data.notes || '').trim();
+            const racks = target.type === 'animalRoom' ? state.animalRacks : state.plantRacks;
+            racks.filter(function (rack) { return rack.roomId === current.id; }).forEach(function (rack) { rack.facility = updated.name; });
         } else if (target.type === 'mouse') {
             updated.id = current.id;
             const cage = state.animalCages.find(item => item.id === data.cageId);
@@ -6349,6 +6738,12 @@ function getReagentDisplayStatus(reagent) {
             localStorage.setItem('rhineLabActiveFreezerBox', updated.boxId);
         } else if (target.type === 'cell') {
             activeCellId = updated.id;
+        } else if (target.type === 'animalRoom') {
+            activeAnimalRoomId = updated.id;
+            localStorage.setItem('rhineLabActiveAnimalRoom', updated.id);
+        } else if (target.type === 'plantRoom') {
+            activePlantRoomId = updated.id;
+            localStorage.setItem('rhineLabActivePlantRoom', updated.id);
         } else if (target.type === 'plant') {
             selectedPlantId = updated.id;
             if (updated.rackId) {

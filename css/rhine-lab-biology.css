@@ -352,3 +352,139 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active {
 body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.biology-tab-icon, .biology-tab-copy, .biology-tab-copy b) {
     color: var(--theme-heading) !important;
 }
+
+/* Housing room hierarchy 2026-08-26 */
+#animalRoomTabs,.animal-room-overview{--room-accent:#c3a15d}#plantRoomTabs,.plant-room-overview{--room-accent:#8fb83f}.animal-rack-actions,.plant-rack-actions{gap:8px;flex-wrap:wrap}.housing-room-tabs{display:flex;gap:9px;min-height:86px;padding:0 18px 14px;overflow-x:auto;border-bottom:1px solid var(--line)}.housing-room-tab{position:relative;flex:0 0 220px;display:grid;gap:4px;min-height:68px;padding:11px 14px;overflow:hidden;text-align:left;color:var(--ink);background:color-mix(in srgb,var(--soft) 92%,var(--room-accent) 8%);border:1px solid color-mix(in srgb,var(--line) 76%,var(--room-accent) 24%);border-radius:11px;cursor:pointer}.housing-room-tab::after{content:"";position:absolute;right:-22px;bottom:-30px;width:76px;height:76px;border:1px solid color-mix(in srgb,var(--room-accent) 42%,transparent);transform:rotate(18deg)}.housing-room-tab>*{position:relative;z-index:1}.housing-room-tab span{color:color-mix(in srgb,var(--ink) 52%,var(--room-accent) 48%);font:800 9px/1 Helvetica,Arial,sans-serif;letter-spacing:.13em}.housing-room-tab strong{font-size:13px;line-height:1.25}.housing-room-tab small{color:var(--muted);font-size:10px}.housing-room-tab:hover{border-color:color-mix(in srgb,var(--room-accent) 62%,var(--line))}.housing-room-tab.active{background:color-mix(in srgb,var(--paper) 78%,var(--room-accent) 22%);border-color:color-mix(in srgb,var(--room-accent) 72%,var(--line));box-shadow:inset 4px 0 0 var(--room-accent)}.housing-room-empty-tabs{align-self:center;padding:8px 2px;color:var(--muted);font-size:11px}.housing-room-overview{padding:17px 18px 19px;background:color-mix(in srgb,var(--soft) 76%,transparent);border-bottom:1px solid var(--line)}.housing-room-overview>header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px}.housing-room-overview h3{margin:4px 0;font-size:18px}.housing-room-overview header small{color:var(--muted);font-size:11px}.housing-room-drag-hint{flex:0 0 auto;padding:6px 9px;color:color-mix(in srgb,var(--ink) 72%,var(--room-accent) 28%);background:color-mix(in srgb,var(--paper) 84%,var(--room-accent) 16%);border:1px solid color-mix(in srgb,var(--line) 72%,var(--room-accent) 28%);border-radius:999px;font-size:10px;font-weight:800}.housing-room-map{position:relative;min-height:276px;overflow:hidden;background:linear-gradient(90deg,color-mix(in srgb,var(--line) 58%,transparent) 1px,transparent 1px),linear-gradient(color-mix(in srgb,var(--line) 58%,transparent) 1px,transparent 1px),color-mix(in srgb,var(--paper) 91%,var(--room-accent) 9%);background-size:32px 32px;border:1px solid color-mix(in srgb,var(--line) 78%,var(--room-accent) 22%);border-radius:13px;box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--paper) 72%,transparent);touch-action:none}.housing-room-map::before,.housing-room-map::after{content:"";position:absolute;pointer-events:none}.housing-room-map::before{inset:12px;border:1px solid color-mix(in srgb,var(--room-accent) 24%,transparent)}.housing-room-map::after{right:18px;bottom:0;width:58px;height:9px;border:solid color-mix(in srgb,var(--room-accent) 42%,var(--line));border-width:1px 1px 0;background:var(--paper)}.housing-layout-rack{position:absolute;z-index:2;display:grid;gap:3px;width:148px;min-height:66px;padding:10px 33px 9px 11px;color:var(--ink);background:color-mix(in srgb,var(--paper) 84%,var(--room-accent) 16%);border:1px solid color-mix(in srgb,var(--line-dark) 62%,var(--room-accent) 38%);border-radius:9px;box-shadow:0 8px 18px color-mix(in srgb,var(--ink) 10%,transparent);cursor:grab;user-select:none;touch-action:none}.housing-layout-rack::before{content:"";position:absolute;top:0;bottom:0;left:0;width:4px;background:var(--room-accent);border-radius:8px 0 0 8px}.housing-layout-rack>span{color:color-mix(in srgb,var(--ink) 54%,var(--room-accent) 46%);font:800 8px/1 Helvetica,Arial,sans-serif;letter-spacing:.12em}.housing-layout-rack>strong{overflow:hidden;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.housing-layout-rack>small{overflow:hidden;color:var(--muted);font-size:9px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.housing-layout-rack:hover,.housing-layout-rack.active{border-color:var(--room-accent);box-shadow:0 10px 22px color-mix(in srgb,var(--room-accent) 18%,transparent),inset 0 0 0 1px var(--room-accent)}.housing-layout-rack.is-dragging{z-index:8;cursor:grabbing;box-shadow:0 16px 30px color-mix(in srgb,var(--ink) 20%,transparent)}.housing-layout-rack-delete{position:absolute;top:7px;right:7px;display:grid;place-items:center;width:23px;height:23px;padding:0;color:#c65c4c;background:color-mix(in srgb,var(--paper) 92%,transparent);border:1px solid color-mix(in srgb,#e96b5a 34%,var(--line));border-radius:50%;font:700 14px/1 Helvetica,Arial,sans-serif;cursor:pointer}.housing-room-empty{position:absolute;z-index:2;inset:50% auto auto 50%;display:grid;gap:5px;min-width:230px;padding:17px 22px;color:var(--ink);background:color-mix(in srgb,var(--paper) 90%,var(--room-accent) 10%);border:1px dashed color-mix(in srgb,var(--room-accent) 58%,var(--line));border-radius:11px;transform:translate(-50%,-50%);cursor:pointer}.housing-room-empty strong{font-size:13px}.housing-room-empty span{color:var(--muted);font-size:10px}:is(.animal-housing-layout,.plant-housing-layout){display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.72fr);border-top:0}:is(.animal-rack-board,.plant-rack-board){min-width:0;padding:18px;border-right:1px solid var(--line)}:is(.animal-rack-grid,.plant-rack-grid){display:grid;gap:7px;max-height:460px;padding:2px;overflow:auto}:is(.animal-rack-position,.plant-rack-position){min-width:60px;min-height:60px}.dark-theme .housing-room-tab,.dark-theme .housing-layout-rack,.dark-theme .housing-room-empty{color:var(--ink);background:color-mix(in srgb,var(--paper) 90%,var(--room-accent) 10%)}.dark-theme .housing-room-map{background:linear-gradient(90deg,color-mix(in srgb,var(--line) 64%,transparent) 1px,transparent 1px),linear-gradient(color-mix(in srgb,var(--line) 64%,transparent) 1px,transparent 1px),color-mix(in srgb,var(--paper) 93%,var(--room-accent) 7%);background-size:32px 32px}body.background-all-lives :is(.housing-room-tab,.housing-room-map,.housing-layout-rack,.housing-room-empty){border-radius:0}body.background-all-lives .housing-room-map{box-shadow:inset 0 0 0 5px color-mix(in srgb,var(--theme-paper) 76%,transparent)}body.background-all-lives .housing-layout-rack{background:color-mix(in srgb,var(--theme-paper) 82%,var(--room-accent) 18%)}@media(max-width:980px){:is(.animal-housing-layout,.plant-housing-layout){grid-template-columns:1fr}:is(.animal-rack-board,.plant-rack-board){border-right:0;border-bottom:1px solid var(--line)}}@media(max-width:700px){.housing-room-tabs{min-height:78px;padding-inline:12px}.housing-room-tab{flex-basis:190px;min-height:62px}.housing-room-overview{padding:14px 12px 15px}.housing-room-overview>header{align-items:flex-start;flex-direction:column;gap:7px}.housing-room-drag-hint{align-self:flex-start}.housing-room-map{min-height:240px}.housing-layout-rack{width:132px;min-height:62px;padding-left:10px}.housing-room-empty{min-width:200px}:is(.animal-rack-board,.plant-rack-board){padding:13px;overflow-x:auto}:is(.animal-rack-grid,.plant-rack-grid){min-width:540px;max-height:390px}}
+/* Housing room refinement 2026-08-26 */
+.housing-room-tabs{min-height:96px;padding:0 22px 16px}
+.housing-room-tab{flex-basis:232px;min-height:76px;padding:12px 52px 11px 15px;cursor:grab}
+.housing-room-tab:active{cursor:grabbing}
+.housing-room-tab.active{background:color-mix(in srgb,var(--paper) 64%,var(--room-accent) 36%);border:2px solid color-mix(in srgb,var(--room-accent) 86%,var(--line));box-shadow:inset 6px 0 0 var(--room-accent),0 8px 22px color-mix(in srgb,var(--room-accent) 20%,transparent)}
+.housing-room-tab:not(.active){opacity:.76;filter:saturate(.72)}
+.housing-room-tab:hover{opacity:1;filter:none}
+.housing-room-tab::after{right:10px;bottom:8px;width:45px;height:42px;border:0;opacity:.2;transform:none;background:repeating-linear-gradient(0deg,transparent 0 7px,var(--room-accent) 7px 9px),linear-gradient(90deg,transparent 43%,var(--room-accent) 43% 50%,transparent 50%)}
+#plantRoomTabs .housing-room-tab::after{background:repeating-linear-gradient(0deg,transparent 0 8px,var(--room-accent) 8px 10px),radial-gradient(ellipse at 62% 30%,transparent 0 26%,var(--room-accent) 28% 36%,transparent 38%)}
+.housing-room-edit{position:absolute;z-index:3;top:8px;right:8px;display:grid;place-items:center;width:28px;height:28px;padding:0;color:var(--ink);background:color-mix(in srgb,var(--paper) 86%,var(--room-accent) 14%);border:1px solid color-mix(in srgb,var(--line) 68%,var(--room-accent) 32%);border-radius:50%;font:800 14px/1 Helvetica,Arial,sans-serif;cursor:pointer}
+.housing-room-edit:hover{background:color-mix(in srgb,var(--paper) 68%,var(--room-accent) 32%);border-color:var(--room-accent)}
+.housing-room-grip{position:absolute;right:13px;bottom:7px;color:color-mix(in srgb,var(--muted) 58%,var(--room-accent) 42%);font:800 12px/1 Helvetica,Arial,sans-serif;letter-spacing:-2px}
+.housing-room-tab.is-reordering{opacity:.42}
+.housing-room-tab.is-drop-target{outline:3px solid var(--room-accent);outline-offset:2px}
+.housing-room-overview{padding:24px 26px 28px}
+.housing-room-overview>header{margin-bottom:16px}
+.housing-room-overview header small,.housing-room-empty-tabs{font-family:var(--font-interface);font-size:12px;font-weight:700;line-height:1.5}
+.housing-room-map{min-height:clamp(430px,52vh,620px);border-width:2px;border-radius:14px}
+.housing-room-map[data-room-shape="rounded"]{border-radius:72px}
+.housing-room-map[data-room-shape="angled"]{border-radius:0;clip-path:polygon(0 0,94% 0,100% 12%,100% 100%,6% 100%,0 88%)}
+.housing-room-map[data-room-shape="l-shape"]{border-radius:0;clip-path:polygon(0 0,100% 0,100% 68%,72% 68%,72% 100%,0 100%)}
+.housing-room-map::after{z-index:5;background:color-mix(in srgb,var(--paper) 96%,var(--room-accent) 4%);border-color:color-mix(in srgb,var(--room-accent) 72%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--paper) 88%,transparent)}
+.housing-room-map[data-entrance-side="right"]::after{right:-2px;left:auto;top:var(--room-entrance-position);bottom:auto;width:11px;height:74px;border-width:1px 0 1px 1px;transform:translateY(-50%)}
+.housing-room-map[data-entrance-side="left"]::after{right:auto;left:-2px;top:var(--room-entrance-position);bottom:auto;width:11px;height:74px;border-width:1px 1px 1px 0;transform:translateY(-50%)}
+.housing-room-map[data-entrance-side="top"]::after{right:auto;left:var(--room-entrance-position);top:-2px;bottom:auto;width:74px;height:11px;border-width:0 1px 1px;transform:translateX(-50%)}
+.housing-room-map[data-entrance-side="bottom"]::after{right:auto;left:var(--room-entrance-position);top:auto;bottom:-2px;width:74px;height:11px;border-width:1px 1px 0;transform:translateX(-50%)}
+.housing-layout-rack{width:158px;min-height:74px;padding:11px 36px 10px 13px;transition:border-color .18s ease,box-shadow .18s ease,opacity .18s ease,filter .18s ease}
+.housing-layout-rack::after{content:"";position:absolute;z-index:-1;inset:8px 30px 8px 40%;opacity:.12;pointer-events:none;background:repeating-linear-gradient(0deg,var(--room-accent) 0 2px,transparent 2px 8px),linear-gradient(90deg,var(--room-accent) 0 2px,transparent 2px)}
+.housing-layout-rack.plant::after{inset:8px 30px 8px 48%;background:repeating-linear-gradient(0deg,var(--room-accent) 0 2px,transparent 2px 10px),radial-gradient(ellipse at 50% 30%,transparent 0 25%,var(--room-accent) 27% 36%,transparent 38%)}
+.housing-layout-rack:not(.active){opacity:.62;filter:saturate(.46)}
+.housing-layout-rack:not(.active):hover{opacity:.9;filter:saturate(.82)}
+.housing-layout-rack.active{z-index:4;opacity:1;filter:none;background:color-mix(in srgb,var(--paper) 67%,var(--room-accent) 33%);border:2px solid var(--room-accent);box-shadow:0 12px 28px color-mix(in srgb,var(--room-accent) 26%,transparent),inset 0 0 0 2px color-mix(in srgb,var(--paper) 70%,transparent)}
+.housing-layout-rack.active::before{width:7px}
+.housing-layout-rack-state{position:absolute;right:32px;bottom:7px;padding:2px 5px;color:color-mix(in srgb,var(--ink) 72%,var(--room-accent) 28%);background:color-mix(in srgb,var(--paper) 72%,var(--room-accent) 28%);border:1px solid color-mix(in srgb,var(--room-accent) 58%,var(--line));border-radius:999px;font-family:var(--font-interface);font-size:9px;font-style:normal;font-weight:800;line-height:1}
+.housing-layout-rack>small{font-family:var(--font-interface);font-size:10px;font-weight:700}
+.dark-theme .housing-room-tab.active,.dark-theme .housing-layout-rack.active{background:color-mix(in srgb,var(--paper) 72%,var(--room-accent) 28%)}
+@media(max-width:700px){.housing-room-overview{padding:17px 13px 19px}.housing-room-map{min-height:360px}.housing-room-tab{flex-basis:208px}.housing-layout-rack{width:144px}}
+/* Housing room simplification and card zoom 2026-08-26 */
+.housing-room-tabs{
+    min-height:0;
+    padding:0 22px 8px;
+    border-bottom:0;
+}
+.housing-room-tab{padding-right:48px;cursor:zoom-in}
+.housing-room-tab:active{cursor:grabbing}
+.housing-room-tab::after,
+#plantRoomTabs .housing-room-tab::after,
+.housing-layout-rack::after,
+.housing-layout-rack.plant::after{display:none!important}
+.housing-room-overview{padding:0 22px 24px;background:transparent}
+.housing-room-overview>header{display:none!important}
+.housing-room-map{
+    min-height:clamp(430px,52vh,620px);
+    transition:min-height .28s ease,box-shadow .28s ease;
+}
+.housing-room-map.is-zoomed{
+    min-height:clamp(650px,78vh,900px);
+    box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--paper) 72%,transparent),0 16px 38px color-mix(in srgb,var(--ink) 12%,transparent);
+}
+@media(max-width:700px){
+    .housing-room-tabs{padding:0 12px 7px}
+    .housing-room-overview{padding:0 12px 18px}
+    .housing-room-map.is-zoomed{min-height:70vh}
+}
+
+/* Fully collapsible room plans 2026-08-26 */
+.animal-rack-manager>.compact-resource-toolbar,
+.plant-rack-manager>.compact-resource-toolbar{border-bottom:0!important}
+.housing-room-tabs{
+    padding:14px 22px 14px;
+}
+.housing-room-tabs.has-expanded-room{padding-bottom:0}
+.housing-room-overview{
+    display:none;
+    padding:0 22px 24px;
+}
+.housing-room-overview.is-expanded{display:block}
+.housing-layout-rack-delete{
+    width:25px;
+    height:25px;
+    padding:0;
+    border-width:2px;
+    font-size:0;
+    line-height:1;
+}
+.housing-layout-rack-delete::before{
+    content:"×";
+    display:block;
+    color:inherit;
+    font:900 18px/1 Arial,Helvetica,sans-serif;
+    transform:translateY(-.5px);
+}
+@media(max-width:700px){
+    .housing-room-tabs{padding:12px 12px 12px}
+    .housing-room-tabs.has-expanded-room{padding-bottom:0}
+    .housing-room-overview{padding:0 12px 18px}
+}
+
+/* Explicit room-card expansion state and standard pointer interaction */
+.housing-room-tab{
+    cursor:pointer;
+    transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.housing-room-tab:active{cursor:grabbing}
+.housing-room-tab.is-expanded{
+    background:color-mix(in srgb,var(--paper) 72%,var(--room-accent) 28%);
+    border-color:var(--room-accent);
+    box-shadow:inset 6px 0 0 var(--room-accent),inset 0 -3px 0 color-mix(in srgb,var(--room-accent) 72%,transparent),0 7px 18px color-mix(in srgb,var(--room-accent) 18%,transparent);
+}
+.housing-room-toggle{
+    position:absolute;
+    right:10px;
+    bottom:7px;
+    display:grid;
+    place-items:center;
+    width:21px;
+    height:21px;
+    color:var(--ink);
+    background:color-mix(in srgb,var(--paper) 82%,var(--room-accent) 18%);
+    border:1.5px solid color-mix(in srgb,var(--line) 54%,var(--room-accent) 46%);
+    border-radius:50%;
+    font:900 15px/1 Arial,Helvetica,sans-serif;
+    font-style:normal;
+    pointer-events:none;
+}
+.housing-room-tab.is-expanded .housing-room-toggle{
+    color:color-mix(in srgb,var(--ink) 76%,var(--room-accent) 24%);
+    border-color:var(--room-accent);
+}
+.housing-room-grip{right:39px}
+.dark-theme .housing-room-tab.is-expanded{
+    background:color-mix(in srgb,var(--paper) 70%,var(--room-accent) 30%);
+}
