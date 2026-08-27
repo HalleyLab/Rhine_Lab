@@ -156,3 +156,78 @@ body.background-all-lives .bio-flow-connector i::after{border-color:var(--atlas-
   .bio-dataset-location{display:none}.bio-dataset-glyph{width:42px}
   .bio-dataset-map-body{padding:10px}
 }
+/* File-browser hierarchy for projects, datasets, workflows and run scripts. */
+.bio-project-flow-list{display:block;padding:0;background:var(--paper)}
+.bio-file-browser{min-height:360px;padding:18px;background:color-mix(in srgb,var(--soft) 56%,var(--paper))}
+.bio-file-breadcrumb{display:flex;align-items:center;gap:9px;min-height:38px;margin-bottom:18px;padding:0 4px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}
+.bio-file-breadcrumb :is(button,b){color:var(--ink);font:800 13px var(--font-interface);background:none;border:0}
+.bio-file-breadcrumb button{padding:0;cursor:pointer}.bio-file-breadcrumb button:hover{color:var(--accent-deep)}
+.bio-file-breadcrumb>span:last-child{margin-left:auto}
+.bio-folder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 16px;padding-top:9px}
+.bio-folder-card{position:relative;min-width:0;min-height:148px;margin-top:12px;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 11%,var(--paper)),var(--paper) 64%);box-shadow:0 8px 19px rgba(42,54,48,.055);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.bio-folder-card::before{content:"";position:absolute;left:-1px;top:-13px;width:42%;height:18px;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));border-bottom:0;border-radius:8px 13px 0 0;background:color-mix(in srgb,var(--accent) 13%,var(--paper));clip-path:polygon(0 0,82% 0,100% 100%,0 100%)}
+.bio-folder-card:hover{z-index:1;transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 72%,var(--line));box-shadow:0 13px 25px rgba(42,54,48,.1)}
+.bio-folder-open{position:relative;z-index:1;display:grid;align-content:start;gap:8px;width:100%;min-height:146px;padding:20px 42px 14px 16px;color:var(--ink);text-align:left;background:transparent;border:0;font:inherit;cursor:pointer}
+.bio-folder-kind{color:var(--accent-deep);font:800 9px/1.2 Helvetica,Arial,sans-serif;letter-spacing:.13em}
+.bio-folder-open>strong{overflow:hidden;font-size:16px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+.bio-folder-open>small{overflow:hidden;color:var(--muted);font-size:11px;line-height:1.45;text-overflow:ellipsis;white-space:nowrap}
+.bio-folder-footer{align-self:end;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:10px}
+.bio-folder-footer i{overflow:hidden;color:var(--muted);font-style:normal;text-overflow:ellipsis;white-space:nowrap}.bio-folder-footer b{flex:none;color:var(--accent-deep)}
+.bio-folder-detail{position:absolute;right:10px;top:12px;z-index:3;display:grid;place-items:center;width:29px;height:29px;padding:0;color:var(--muted);background:color-mix(in srgb,var(--paper) 86%,transparent);border:1px solid var(--line);border-radius:50%;font:800 12px Helvetica,Arial,sans-serif;cursor:pointer}
+.bio-folder-detail:hover{color:var(--ink);border-color:var(--accent)}
+.bio-workflow-folder{border-color:color-mix(in srgb,#51aaa6 52%,var(--line));background:linear-gradient(145deg,color-mix(in srgb,#51aaa6 14%,var(--paper)),var(--paper) 64%)}
+.bio-workflow-folder::before{border-color:color-mix(in srgb,#51aaa6 52%,var(--line));background:color-mix(in srgb,#51aaa6 17%,var(--paper))}
+.bio-workflow-folder .bio-folder-kind{color:#397e78}
+.bio-folder-summary{display:flex;align-items:center;gap:10px;margin:0 0 20px;padding:14px 16px;border:1px solid var(--line);background:var(--paper)}
+.bio-folder-summary>div{display:grid;gap:4px;min-width:0;margin-right:auto}.bio-folder-summary>div>span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-folder-summary>div>strong{font-size:16px}.bio-folder-summary>div>small{color:var(--muted);font-size:11px}
+.bio-dataset-profile{border:1px solid var(--line);background:var(--paper)}
+.bio-dataset-profile>header{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--line)}
+.bio-dataset-profile>header>div{display:grid;gap:4px;margin-right:auto}.bio-dataset-profile>header span,.bio-method-heading span,.bio-workflow-library-head span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-dataset-profile h3,.bio-method-heading h3,.bio-workflow-library-head h3{margin:0;font-size:18px}.bio-dataset-profile>header small{color:var(--muted);font-size:10px}
+.bio-dataset-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line)}
+.bio-dataset-facts>div{display:grid;gap:6px;min-height:100px;padding:15px;background:color-mix(in srgb,var(--soft) 58%,var(--paper))}
+.bio-dataset-facts span{color:var(--muted);font-size:11px}.bio-dataset-facts strong{overflow-wrap:anywhere;font-size:14px}.bio-dataset-facts small{color:var(--muted);font-size:10px}
+.bio-method-heading,.bio-workflow-library-head{display:flex;align-items:center;gap:14px;margin:22px 0 12px;padding:0 2px}.bio-method-heading>div,.bio-workflow-library-head>div{display:grid;gap:4px;margin-right:auto}
+.bio-method-file-list{display:grid;gap:9px}
+.bio-method-file{display:grid;grid-template-columns:54px minmax(0,1fr) minmax(128px,.42fr) 34px auto;align-items:center;gap:14px;min-height:88px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid color-mix(in srgb,var(--accent) 70%,#51aaa6);background:var(--paper)}
+.bio-method-file.is-running{box-shadow:inset 0 0 0 1px color-mix(in srgb,#51aaa6 22%,transparent)}
+.bio-method-file-icon{display:grid;place-items:center;width:48px;height:38px;color:#397e78;background:color-mix(in srgb,#51aaa6 12%,var(--paper));border:1px solid color-mix(in srgb,#51aaa6 42%,var(--line));font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.08em}
+.bio-method-file>div:nth-child(2){display:grid;gap:4px;min-width:0}.bio-method-file>div:nth-child(2)>span{color:var(--accent-deep);font-size:10px}.bio-method-file>div:nth-child(2)>strong{overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}.bio-method-file>div:nth-child(2)>small{color:var(--muted);font-size:10px}
+.bio-method-status{display:grid;justify-items:start;gap:5px}.bio-method-status>small{color:var(--muted);font-size:10px}.bio-method-status>b{color:var(--muted);font-size:9px}
+.bio-method-file>button{display:grid;place-items:center;min-width:32px;height:32px;padding:0 8px;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:800 10px Helvetica,Arial,sans-serif;cursor:pointer}.bio-method-file>button:hover{border-color:var(--accent);color:var(--accent-deep)}
+.bio-script-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bio-script-file{display:grid;gap:10px;min-width:0;padding:16px;border:1px solid var(--line);border-top:3px solid color-mix(in srgb,#51aaa6 58%,var(--accent));background:var(--paper)}
+.bio-script-file header,.bio-script-file footer{display:flex;align-items:center;justify-content:space-between;gap:10px}.bio-script-file header>span{color:#397e78;font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-script-file header>button{width:29px;height:29px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:50%;cursor:pointer}.bio-script-file>strong{font-size:15px}.bio-script-file>small{color:var(--muted);font-size:10px}.bio-script-file pre{max-height:94px;margin:0;padding:11px;overflow:auto;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:600 10px/1.55 Consolas,'Courier New',monospace;white-space:pre-wrap}.bio-script-file footer{padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}.bio-script-file footer b{color:var(--accent-deep)}
+.dark-theme .bio-file-browser{background:color-mix(in srgb,var(--soft) 80%,#08110d)}
+.dark-theme :is(.bio-folder-card,.bio-folder-summary,.bio-dataset-profile,.bio-method-file,.bio-script-file){box-shadow:none}
+body.background-all-lives :is(.bio-folder-card,.bio-folder-summary,.bio-dataset-profile,.bio-method-file,.bio-script-file,.bio-method-file>button){border-radius:0}
+body.background-all-lives .bio-folder-card{box-shadow:4px 4px 0 color-mix(in srgb,var(--atlas-blue) 12%,transparent)}
+body.background-all-lives .bio-folder-card:hover{box-shadow:5px 5px 0 color-mix(in srgb,var(--atlas-red) 14%,transparent)}
+@media(max-width:960px){.bio-folder-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bio-script-grid{grid-template-columns:1fr}.bio-method-file{grid-template-columns:48px minmax(0,1fr) auto}.bio-method-status{grid-column:2}.bio-method-file>button{grid-row:1/3;grid-column:3}}
+@media(max-width:700px){.bio-file-browser{padding:12px}.bio-folder-grid{grid-template-columns:1fr;gap:17px}.bio-folder-card,.bio-folder-open{min-height:132px}.bio-folder-summary{align-items:flex-start;flex-wrap:wrap}.bio-folder-summary>div{flex:1 1 100%}.bio-dataset-facts{grid-template-columns:1fr}.bio-dataset-facts>div{min-height:82px}.bio-method-heading,.bio-workflow-library-head{align-items:flex-start;flex-wrap:wrap}.bio-method-heading>div,.bio-workflow-library-head>div{flex:1 1 100%}.bio-method-file{grid-template-columns:42px minmax(0,1fr) auto;gap:9px;padding:10px}.bio-method-file-icon{width:40px}.bio-method-file>div:nth-child(2)>strong{white-space:normal}.bio-method-file>button:last-child{grid-row:auto;grid-column:2/4;justify-self:stretch}}
+
+/* Stronger project archive surface and true folder silhouettes. */
+.bioinfo-flow-workspace{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,var(--paper)),color-mix(in srgb,#51aaa6 6%,var(--paper)) 54%,var(--paper))}
+.bioinfo-flow-toolbar{background:linear-gradient(100deg,color-mix(in srgb,var(--accent) 12%,var(--paper)),color-mix(in srgb,var(--paper) 88%,transparent) 58%,color-mix(in srgb,#51aaa6 8%,var(--paper)))}
+.bio-file-browser{position:relative;background:radial-gradient(circle at 89% 15%,color-mix(in srgb,#51aaa6 12%,transparent) 0 2px,transparent 3px),linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,var(--paper)),color-mix(in srgb,var(--soft) 76%,var(--paper)) 42%,color-mix(in srgb,#51aaa6 8%,var(--paper)));background-size:26px 26px,auto;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,var(--line))}
+.bio-folder-grid{gap:26px 18px;padding-top:17px}
+.bio-folder-card{isolation:isolate;min-height:160px;margin-top:0;border:0;border-radius:0;background:transparent;box-shadow:none;filter:drop-shadow(0 9px 9px rgba(42,54,48,.09));transition:transform .18s ease,filter .18s ease}
+.bio-folder-card::before,.bio-folder-card::after{content:"";position:absolute;inset:0;width:auto;height:auto;border:0;border-radius:0;clip-path:polygon(0 17%,31% 17%,37% 2%,64% 2%,70% 17%,100% 17%,100% 100%,0 100%)}
+.bio-folder-card::before{z-index:-2;background:color-mix(in srgb,var(--accent) 52%,var(--line))}
+.bio-folder-card::after{z-index:-1;inset:1.5px;background:linear-gradient(148deg,color-mix(in srgb,var(--accent) 18%,var(--paper)),color-mix(in srgb,var(--paper) 96%,transparent) 60%,color-mix(in srgb,#51aaa6 7%,var(--paper)))}
+.bio-folder-card:hover{transform:translateY(-3px);border:0;box-shadow:none;filter:drop-shadow(0 14px 13px rgba(42,54,48,.15))}
+.bio-folder-open{min-height:160px;padding:38px 44px 15px 17px}
+.bio-folder-open::after{content:"";position:absolute;right:14px;bottom:14px;width:38px;height:6px;border-top:2px solid color-mix(in srgb,var(--accent) 55%,var(--line));border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));opacity:.7}
+.bio-folder-detail{top:31px;right:11px;background:color-mix(in srgb,var(--paper) 76%,transparent)}
+.bio-folder-footer{position:relative}
+.bio-folder-footer::before{content:"";position:absolute;left:0;top:-11px;width:54px;height:2px;background:linear-gradient(90deg,var(--accent),#51aaa6)}
+.bio-workflow-folder::before{background:color-mix(in srgb,#51aaa6 58%,var(--line))}
+.bio-workflow-folder::after{background:linear-gradient(148deg,color-mix(in srgb,#51aaa6 21%,var(--paper)),color-mix(in srgb,var(--paper) 96%,transparent) 62%,color-mix(in srgb,var(--accent) 8%,var(--paper)))}
+.dark-theme .bioinfo-flow-workspace{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 10%,var(--paper)),color-mix(in srgb,#51aaa6 6%,var(--paper)) 58%,var(--paper))}
+.dark-theme .bioinfo-flow-toolbar{background:linear-gradient(100deg,color-mix(in srgb,var(--accent) 10%,var(--paper)),var(--paper) 62%,color-mix(in srgb,#51aaa6 7%,var(--paper)))}
+.dark-theme .bio-file-browser{background:radial-gradient(circle at 89% 15%,color-mix(in srgb,#71b8af 17%,transparent) 0 2px,transparent 3px),linear-gradient(135deg,color-mix(in srgb,var(--accent) 11%,var(--paper)),color-mix(in srgb,var(--soft) 78%,#08110d) 48%,color-mix(in srgb,#51aaa6 8%,var(--paper)));background-size:26px 26px,auto}
+.dark-theme .bio-folder-card{filter:drop-shadow(0 10px 12px rgba(0,0,0,.2))}
+.dark-theme .bio-folder-card::before{background:color-mix(in srgb,var(--accent) 48%,var(--line))}
+.dark-theme .bio-folder-card::after{background:linear-gradient(148deg,color-mix(in srgb,var(--accent) 14%,var(--paper)),color-mix(in srgb,var(--paper) 96%,#0b1511) 62%,color-mix(in srgb,#51aaa6 8%,var(--paper)))}
+body.background-all-lives .bio-folder-card,body.background-all-lives .bio-folder-card:hover{box-shadow:none}
+body.background-all-lives .bio-folder-card::before,body.background-all-lives .bio-folder-card::after{clip-path:polygon(0 18%,29% 18%,35% 3%,66% 3%,72% 18%,100% 18%,100% 100%,0 100%)}
+@media(max-width:700px){.bio-folder-grid{gap:24px}.bio-folder-card,.bio-folder-open{min-height:146px}.bio-folder-open{padding-top:34px}}
