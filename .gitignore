@@ -450,3 +450,4 @@ android/local.properties
 android/app/build/
 *.jks
 *.keystore
+.rhine-private/

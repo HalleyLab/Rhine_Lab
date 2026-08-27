@@ -2,24 +2,6 @@ name: Build Android internal APK
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "android/**"
-      - "css/**"
-      - "data/**"
-      - "images/**"
-      - "js/**"
-      - "scripts/**"
-      - "index.html"
-      - "app.webmanifest"
-      - "capacitor.config.json"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/android-internal.yml"
-
   push:
     branches:
       - main
@@ -46,6 +28,12 @@ jobs:
     name: Android internal test package
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      RHINE_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/rhine-lab-release.jks
+      RHINE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      RHINE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      RHINE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     steps:
       - name: Check out source
@@ -72,11 +60,14 @@ jobs:
       - name: Configure Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Restore internal debug signing identity
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: rhine-lab-android-debug-keystore-v1
+      - name: Restore release signing identity
+        shell: bash
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo "ANDROID_KEYSTORE_BASE64 is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEYSTORE_PASSWORD" || { echo "ANDROID_KEYSTORE_PASSWORD is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEY_ALIAS" || { echo "ANDROID_KEY_ALIAS is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEY_PASSWORD" || { echo "ANDROID_KEY_PASSWORD is not configured"; exit 1; }
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RHINE_ANDROID_KEYSTORE_PATH"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -84,22 +75,31 @@ jobs:
       - name: Synchronize Capacitor
         run: pnpm mobile:sync
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Verify release signing certificate
+        shell: bash
+        run: |
+          expected=$(tr -d ':[:space:]' < android/release-signing-certificate.sha256 | tr '[:lower:]' '[:upper:]')
+          actual=$(keytool -printcert -jarfile android/app/build/outputs/apk/release/app-release.apk | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
+          test -n "$actual" || { echo "Unable to read APK signing certificate"; exit 1; }
+          test "$actual" = "$expected" || { echo "Unexpected APK signing certificate: $actual"; exit 1; }
 
       - name: Prepare downloadable package
         run: |
-          mkdir -p dist/release-0.2.3
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/release-0.2.3/Rhine-Lab-0.2.3-Android.apk
-          sha256sum dist/release-0.2.3/Rhine-Lab-0.2.3-Android.apk > dist/release-0.2.3/Rhine-Lab-0.2.3-Android.apk.sha256
+          version=$(node -p "require('./package.json').version")
+          mkdir -p "dist/release-${version}"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/release-${version}/Rhine-Lab-${version}-Android.apk"
+          sha256sum "dist/release-${version}/Rhine-Lab-${version}-Android.apk" > "dist/release-${version}/Rhine-Lab-${version}-Android.apk.sha256"
 
       - name: Upload internal test package
         uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Android-Internal
-          path: dist/release-0.2.3/*
+          path: dist/release-*/*
           retention-days: 30
           if-no-files-found: error

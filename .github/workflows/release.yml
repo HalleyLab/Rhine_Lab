@@ -6,9 +6,6 @@ on:
     tags:
       - "v*"
 
-env:
-  RELEASE_TAG: v0.2.1
-
 permissions:
   contents: write
 
@@ -16,10 +13,22 @@ jobs:
   release:
     name: Create release
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.metadata.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
-      - name: Validate version tag
-        run: node -e "const p=require('./package.json'); if ('v'+p.version !== process.env.RELEASE_TAG) { console.error('Release tag and package version differ'); process.exit(1); }"
+      - name: Resolve release metadata
+        id: metadata
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          release_tag="v${version}"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "$release_tag" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $release_tag"
+            exit 1
+          fi
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -32,6 +41,7 @@ jobs:
     timeout-minutes: 35
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      RELEASE_TAG: ${{ needs.release.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -70,6 +80,13 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      RELEASE_TAG: ${{ needs.release.outputs.release_tag }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      RHINE_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/rhine-lab-release.jks
+      RHINE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      RHINE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      RHINE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -85,11 +102,14 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Restore internal signing identity
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: rhine-lab-android-debug-keystore-v1
+      - name: Restore release signing identity
+        shell: bash
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo "ANDROID_KEYSTORE_BASE64 is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEYSTORE_PASSWORD" || { echo "ANDROID_KEYSTORE_PASSWORD is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEY_ALIAS" || { echo "ANDROID_KEY_ALIAS is not configured"; exit 1; }
+          test -n "$RHINE_ANDROID_KEY_PASSWORD" || { echo "ANDROID_KEY_PASSWORD is not configured"; exit 1; }
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RHINE_ANDROID_KEYSTORE_PATH"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Synchronize Capacitor
@@ -98,12 +118,19 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleRelease --stacktrace
+      - name: Verify release signing certificate
+        shell: bash
+        run: |
+          expected=$(tr -d ':[:space:]' < android/release-signing-certificate.sha256 | tr '[:lower:]' '[:upper:]')
+          actual=$(keytool -printcert -jarfile android/app/build/outputs/apk/release/app-release.apk | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
+          test -n "$actual" || { echo "Unable to read APK signing certificate"; exit 1; }
+          test "$actual" = "$expected" || { echo "Unexpected APK signing certificate: $actual"; exit 1; }
       - name: Prepare release files
         run: |
           version=$(node -p "require('./package.json').version")
           mkdir -p "dist/release-${version}"
-          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/release-${version}/Rhine-Lab-${version}-Android.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/release-${version}/Rhine-Lab-${version}-Android.apk"
           sha256sum "dist/release-${version}/Rhine-Lab-${version}-Android.apk" > "dist/release-${version}/Rhine-Lab-${version}-Android.apk.sha256"
       - name: Upload APK to GitHub release
         env:

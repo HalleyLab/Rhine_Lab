@@ -1,5 +1,21 @@
 apply plugin: 'com.android.application'
 
+def localSigningProperties = new Properties()
+def localSigningPropertiesFile = rootProject.file('../.rhine-private/android/signing.properties')
+if (localSigningPropertiesFile.exists()) {
+    localSigningPropertiesFile.withInputStream { localSigningProperties.load(it) }
+}
+
+def releaseKeystorePath = System.getenv('RHINE_ANDROID_KEYSTORE_PATH') ?: localSigningProperties.getProperty('storeFile')
+def releaseKeystorePassword = System.getenv('RHINE_ANDROID_KEYSTORE_PASSWORD') ?: localSigningProperties.getProperty('storePassword')
+def releaseKeyAlias = System.getenv('RHINE_ANDROID_KEY_ALIAS') ?: localSigningProperties.getProperty('keyAlias')
+def releaseKeyPassword = System.getenv('RHINE_ANDROID_KEY_PASSWORD') ?: localSigningProperties.getProperty('keyPassword')
+def releaseSigningConfigured = releaseKeystorePath && releaseKeystorePassword && releaseKeyAlias && releaseKeyPassword
+
+if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') } && !releaseSigningConfigured) {
+    throw new GradleException('Release signing is not configured. Provide RHINE_ANDROID_* variables or .rhine-private/android/signing.properties.')
+}
+
 android {
     namespace = "com.halleylab.rhinelab"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +32,25 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (releaseSigningConfigured) {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+                enableV1Signing true
+                enableV2Signing true
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (releaseSigningConfigured) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
