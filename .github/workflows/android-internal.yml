@@ -30,7 +30,6 @@ jobs:
     timeout-minutes: 30
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      RHINE_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/rhine-lab-release.jks
       RHINE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       RHINE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       RHINE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -67,7 +66,9 @@ jobs:
           test -n "$RHINE_ANDROID_KEYSTORE_PASSWORD" || { echo "ANDROID_KEYSTORE_PASSWORD is not configured"; exit 1; }
           test -n "$RHINE_ANDROID_KEY_ALIAS" || { echo "ANDROID_KEY_ALIAS is not configured"; exit 1; }
           test -n "$RHINE_ANDROID_KEY_PASSWORD" || { echo "ANDROID_KEY_PASSWORD is not configured"; exit 1; }
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RHINE_ANDROID_KEYSTORE_PATH"
+          keystore_path="$RUNNER_TEMP/rhine-lab-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          echo "RHINE_ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
