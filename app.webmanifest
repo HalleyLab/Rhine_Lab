@@ -12,7 +12,7 @@
   "theme_color": "#d8ff45",
   "icons": [
     {
-      "src": "images/rhine-life-app-icon.png?v=0.2.2",
+      "src": "images/rhine-life-app-icon.png?v=0.2.3",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

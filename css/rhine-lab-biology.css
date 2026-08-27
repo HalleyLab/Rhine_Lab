@@ -488,3 +488,18 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.bi
 .dark-theme .housing-room-tab.is-expanded{
     background:color-mix(in srgb,var(--paper) 70%,var(--room-accent) 30%);
 }
+
+/* Room-plan scale refinement */
+.housing-room-map{
+    min-height:clamp(380px,46vh,520px);
+}
+.housing-room-map.is-zoomed{
+    min-height:clamp(560px,68vh,760px);
+}
+.housing-layout-rack{
+    width:190px;
+}
+@media(max-width:700px){
+    .housing-room-map.is-zoomed{min-height:60vh}
+    .housing-layout-rack{width:168px}
+}
