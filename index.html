@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.3f">
     <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.3h">
     <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.3m">
+    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.2.3c">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -121,6 +122,30 @@
                     <div class="notification-empty"><div><i aria-hidden="true">○</i><strong>暂无通知</strong><p>当库存、日程或实验需要关注时，会显示在这里。</p></div></div>
                 </div>
                 <footer><span><i class="pulse-dot"></i> 系统信息实时更新</span><button id="markAllRead" type="button" disabled>全部标为已读</button></footer>
+            </aside>
+
+            <button class="assistant-character-trigger" id="assistantToggle" type="button" aria-label="打开克里斯滕科研助理" aria-controls="assistantDrawer" aria-expanded="false" title="克里斯滕科研助理">
+                <img src="images/assistant/kristen-wright.png" alt="" draggable="false">
+                <span class="assistant-character-label" aria-hidden="true"><b>KRISTEN</b><small id="assistantRole" data-i18n-skip>科研助理</small></span>
+            </button>
+
+            <div class="assistant-scrim" id="assistantScrim" hidden></div>
+            <aside class="assistant-drawer" id="assistantDrawer" aria-labelledby="assistantTitle" hidden>
+                <header class="assistant-drawer-head">
+                    <div class="assistant-orbit" aria-hidden="true"><i></i><span>K</span></div>
+                    <div><p>RHINE INTELLIGENCE</p><h2 id="assistantTitle">克里斯滕</h2></div>
+                    <span class="assistant-mode" id="assistantMode">LOCAL</span>
+                    <button id="assistantClose" type="button" aria-label="关闭科研助理">×</button>
+                </header>
+                <div class="assistant-quick-actions" id="assistantQuickActions" aria-label="常用指令">
+                    <button type="button" data-assistant-prompt="总结我今天的工作">总结今天</button>
+                    <button type="button" data-assistant-prompt="新建一条实验记录">登记实验</button>
+                    <button type="button" data-assistant-prompt="添加一项今天的日程">添加日程</button>
+                </div>
+                <div class="assistant-messages" id="assistantMessages" role="log" aria-live="polite" aria-label="与克里斯滕的对话"></div>
+                <form class="assistant-compose" id="assistantForm">
+                    <div><textarea id="assistantInput" rows="2" maxlength="1800" placeholder="例如：BV2 今天传代到 P19，1:4，汇合度 82%"></textarea><button id="assistantSend" type="submit" aria-label="发送">↑</button></div>
+                </form>
             </aside>
 
             <main id="mainContent" tabindex="-1">
@@ -688,12 +713,13 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.2.3g"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.3h"></script>
     <script src="js/rhine-lab-cloudflare-client.js?v=0.2.3-cloudflare3"></script>
-    <script src="js/rhine-lab-config.js?v=0.2.3-cloudflare2"></script>
+    <script src="js/rhine-lab-config.js?v=0.2.3-ai-ready"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.2.3-cloudflare6"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.3-ai-ready"></script>
     <script src="js/rhine-lab-pwa.js?v=0.2.3f"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.2.3k"></script>
+    <script src="js/rhine-lab-assistant.js?v=0.2.3e"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.2.3m"></script>
 </body>
 </html>

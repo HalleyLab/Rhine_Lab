@@ -502,7 +502,159 @@
         ,selectedWellCount: document.getElementById('selectedWellCount')
     };
 
+    window.RhineLabAssistantBridge = {
+        getContext: getAssistantContext,
+        getTodaySummary: getAssistantTodaySummary,
+        applyAction: applyAssistantAction,
+        isReadOnly: function () { return Boolean(workspaceReadOnly); },
+        getLocale: function () { return document.documentElement.lang === 'en' ? 'en' : 'zh'; }
+    };
+
     init();
+
+    function getAssistantContext() {
+        const today = todayIso();
+        return {
+            today: today,
+            workspace: workspaceMode,
+            readOnly: Boolean(workspaceReadOnly),
+            experiments: state.experiments.slice(0, 24).map(function (item) { return { id: item.id, title: item.title, project: item.project, status: item.status, date: item.date, protocolId: item.protocolId || '' }; }),
+            cells: state.cellCultures.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, passage: item.passage, medium: item.medium, container: item.container, incubator: item.incubator, confluence: item.confluence, status: item.status }; }),
+            reagents: state.reagents.slice(0, 30).map(function (item) { return { id: item.catalog, name: item.name, currentQty: item.currentQty, totalQty: item.totalQty, unit: item.unit, location: item.location, status: getReagentDisplayStatus(item) }; }),
+            protocols: state.protocols.slice(0, 24).map(function (item) { return { id: item.id, title: item.title }; }),
+            schedule: state.schedule.filter(function (item) { return item.date === today; }).slice(0, 20).map(function (item) { return { id: item.id, title: item.title, time: item.time, end: item.end, done: Boolean(item.done), protocolId: item.protocolId || '' }; })
+        };
+    }
+
+    function getAssistantTodaySummary() {
+        const today = todayIso();
+        const tasks = state.schedule.filter(function (item) { return item.date === today; }).sort(byTime);
+        const completed = tasks.filter(function (item) { return item.done; });
+        const experiments = state.experiments.filter(function (item) { return item.date === today; });
+        const recent = state.activities.slice(0, 6).map(function (item) { return item.text; });
+        const english = document.documentElement.lang === 'en';
+        if (english) {
+            const lines = ['Today: ' + completed.length + ' of ' + tasks.length + ' scheduled items completed; ' + experiments.length + ' experiment records dated today.'];
+            if (tasks.length) lines.push('Schedule: ' + tasks.map(function (item) { return item.time + ' ' + item.title + (item.done ? ' (done)' : ' (pending)'); }).join('; '));
+            if (recent.length) lines.push('Recent entries: ' + recent.join('; '));
+            return lines.join('\n');
+        }
+        const lines = ['今天共有 ' + tasks.length + ' 项日程，已完成 ' + completed.length + ' 项；今天日期下有 ' + experiments.length + ' 条实验记录。'];
+        if (tasks.length) lines.push('日程：' + tasks.map(function (item) { return item.time + ' ' + item.title + (item.done ? '（已完成）' : '（待处理）'); }).join('；'));
+        if (recent.length) lines.push('最近登记：' + recent.join('；'));
+        return lines.join('\n');
+    }
+
+    function applyAssistantAction(action) {
+        if (denyReadOnlyMutation()) return { ok: false, message: '当前工作区只读，未执行任何修改。' };
+        const kind = String(action && action.kind || '');
+        const payload = action && action.payload && typeof action.payload === 'object' ? action.payload : {};
+        const creator = 'AI 辅助 · 用户确认';
+        let activity = '';
+        let recordType = '';
+        let recordId = '';
+        let changes = {};
+
+        if (kind === 'create_experiment') {
+            const title = displayOr(payload.title, '未命名实验');
+            const record = {
+                id: generatedRecordId('RL-EXP'), title: title, project: String(payload.project || '').trim(),
+                status: displayOr(payload.status, '进行中'), type: displayOr(payload.type, '未分类'),
+                date: payload.date || todayIso(), protocolId: String(payload.protocolId || ''),
+                description: String(payload.description || '').trim(), progress: String(payload.status || '') === '已完成' ? 100 : 12,
+                reagentUsage: [], usageOverridden: false, photoData: '', createdBy: creator, history: [createdHistoryEntry()]
+            };
+            if (record.protocolId && !state.protocols.some(function (item) { return item.id === record.protocolId; })) record.protocolId = '';
+            state.experiments.unshift(record);
+            activity = 'AI 辅助登记实验“' + record.title + '”';
+            recordType = 'experiment'; recordId = record.id; changes = clone(record);
+        } else if (kind === 'create_task') {
+            const start = /^\d{2}:\d{2}$/.test(String(payload.time || '')) ? payload.time : '09:00';
+            const end = /^\d{2}:\d{2}$/.test(String(payload.end || '')) && timeToMinutes(payload.end) > timeToMinutes(start) ? payload.end : addMinutes(start, 60);
+            const record = {
+                id: generatedRecordId('T'), date: payload.date || todayIso(), time: start, end: end,
+                title: displayOr(payload.title, '未命名日程'), resource: String(payload.resource || '').trim(),
+                type: displayOr(payload.taskType || payload.type, 'cell'), protocolId: String(payload.protocolId || ''),
+                experimentId: String(payload.experimentId || ''), shareWithLab: payload.shareWithLab !== 'no',
+                done: false, createdBy: creator, history: [createdHistoryEntry()]
+            };
+            state.schedule.push(record);
+            activity = 'AI 辅助添加日程“' + record.title + '”';
+            recordType = 'task'; recordId = record.id; changes = clone(record);
+        } else if (kind === 'create_reagent') {
+            const catalog = displayOr(payload.catalog, generatedRecordId('REAG'));
+            if (state.reagents.some(function (item) { return item.catalog === catalog; })) return { ok: false, message: '该试剂货号已经存在，未创建重复条目。' };
+            const total = positiveNumber(payload.totalQty, 0);
+            const current = number(payload.currentQty === '' || payload.currentQty == null ? total : payload.currentQty, 0, Math.max(total, Number(payload.currentQty) || 0));
+            const record = {
+                catalog: catalog, name: displayOr(payload.name, '未命名试剂'), category: displayOr(payload.category, '未分类'),
+                lot: String(payload.lot || '').trim(), location: String(payload.location || '').trim(), totalQty: total,
+                currentQty: current, unit: displayOr(payload.unit, 'mL'), expiry: String(payload.expiry || '').trim(),
+                amount: total ? number(current / total * 100, 0, 100) : 0,
+                status: total <= 0 ? '待补充' : current / total < .25 ? '余量低' : '正常',
+                createdBy: creator, history: [createdHistoryEntry()]
+            };
+            state.reagents.unshift(record);
+            activity = 'AI 辅助录入试剂“' + record.name + '”';
+            recordType = 'reagent'; recordId = record.catalog; changes = clone(record);
+        } else if (kind === 'record_cell_operation') {
+            const identifier = String(payload.cellId || payload.recordId || action.targetId || '').trim().toLowerCase();
+            const name = String(payload.cellName || payload.name || '').trim().toLowerCase();
+            const matches = state.cellCultures.filter(function (item) { return String(item.id).toLowerCase() === identifier || String(item.name).toLowerCase() === identifier || (name && String(item.name).toLowerCase() === name); });
+            if (!matches.length) return { ok: false, message: '没有找到要记录操作的细胞条目。' };
+            if (matches.length > 1) return { ok: false, message: '匹配到多个细胞条目，请在指令中写明记录编号。' };
+            const culture = matches[0];
+            const log = {
+                id: 'CELLLOG-' + Date.now(), date: payload.date || todayIso(), action: displayOr(payload.action, '培养操作'),
+                passage: Math.max(0, Math.round(positiveNumber(payload.passage, culture.passage || 0))),
+                ratio: String(payload.ratio || ''), container: displayOr(payload.container, culture.container || ''),
+                confluence: number(payload.confluence === '' || payload.confluence == null ? culture.confluence : payload.confluence, 0, 100),
+                medium: displayOr(payload.medium, culture.medium || ''), notes: String(payload.notes || '').trim(), photoData: ''
+            };
+            culture.history = Array.isArray(culture.history) ? culture.history : [];
+            culture.history.unshift(log);
+            culture.passage = log.passage; culture.container = log.container; culture.confluence = log.confluence; culture.medium = log.medium;
+            activity = 'AI 辅助记录“' + culture.name + '”的' + log.action + '操作';
+            recordType = 'cell'; recordId = culture.id; changes = clone(log);
+        } else if (kind === 'update_record') {
+            const type = String(payload.recordType || action.targetType || '');
+            const key = String(payload.recordId || action.targetId || '');
+            const field = String(payload.field || '');
+            const allowed = {
+                experiment: ['title', 'project', 'status', 'type', 'date', 'description'],
+                reagent: ['name', 'category', 'lot', 'location', 'currentQty', 'totalQty', 'unit', 'expiry'],
+                cell: ['name', 'species', 'medium', 'container', 'incubator', 'passage', 'confluence', 'notes', 'status'],
+                task: ['title', 'date', 'time', 'end', 'resource', 'type', 'done']
+            };
+            if (!allowed[type] || !allowed[type].includes(field)) return { ok: false, message: '这项字段不允许由助理修改。' };
+            const record = findRecord(type, key);
+            if (!record) return { ok: false, message: '没有找到要修改的条目。' };
+            const before = record[field];
+            let value = payload.value;
+            if (['currentQty', 'totalQty', 'passage', 'confluence'].includes(field)) value = positiveNumber(value, Number(before) || 0);
+            if (field === 'done') value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value) === '已完成';
+            record[field] = value;
+            if (type === 'reagent') {
+                record.amount = record.totalQty ? number(record.currentQty / record.totalQty * 100, 0, 100) : 0;
+                record.status = record.totalQty <= 0 ? '待补充' : record.amount < 25 ? '余量低' : isExpiringSoon(record.expiry) ? '临期' : '正常';
+            }
+            const historyEntry = { at: new Date().toISOString(), action: 'updated', changes: [{ label: field, from: before, to: value }] };
+            const historyKey = type === 'cell' ? 'changeHistory' : 'history';
+            record[historyKey] = Array.isArray(record[historyKey]) ? record[historyKey] : [];
+            record[historyKey].push(historyEntry);
+            activity = 'AI 辅助修改' + recordTypeLabel(type) + '“' + (record.title || record.name || key) + '”';
+            recordType = type; recordId = key; changes = historyEntry.changes;
+        } else {
+            return { ok: false, message: '未识别的操作类型，未执行任何修改。' };
+        }
+
+        state.activities.unshift({ text: activity, time: '刚刚' });
+        appendAuditLog({ action: kind.indexOf('create_') === 0 ? 'created' : 'updated', source: 'assistant-confirmed', recordType: recordType, recordId: recordId, changes: changes });
+        saveState();
+        renderAll();
+        showToast('已确认执行：' + activity.replace(/^AI 辅助/, ''));
+        return { ok: true, message: activity + '，并已写入修改记录。', recordType: recordType, recordId: recordId };
+    }
 
     function init() {
         applySavedTheme();
@@ -1996,8 +2148,10 @@
             if (searchResult) {
                 if (searchResult.dataset.resultBiologyTab) activeBiologyTab = searchResult.dataset.resultBiologyTab;
                 if (searchResult.dataset.resultBioinfoTab) activeBioinfoTab = searchResult.dataset.resultBioinfoTab;
+                if (searchResult.dataset.resultProtocolTab) activeProtocolTab = searchResult.dataset.resultProtocolTab;
                 switchView(searchResult.dataset.resultView);
                 closeSearch();
+                if (searchResult.dataset.resultType && searchResult.dataset.resultId) openRecordDetail(searchResult.dataset.resultType, searchResult.dataset.resultId);
                 showToast('已定位到“' + searchResult.dataset.resultTitle + '”');
                 return;
             }
@@ -5400,28 +5554,28 @@ function getReagentDisplayStatus(reagent) {
     function renderSearchResults(query) {
         const term = query.trim().toLowerCase();
         const entries = [];
-        state.experiments.forEach(item => entries.push({ view: 'experiments', category: 'EXPERIMENT', title: item.title, detail: item.id + ' · ' + item.project, search: Object.values(item).join(' ') }));
+        state.experiments.forEach(item => entries.push({ view: 'experiments', type: 'experiment', id: item.id, category: 'EXPERIMENT', title: item.title, detail: item.id + ' · ' + item.project, search: Object.values(item).join(' ') }));
         state.results.forEach(function (item) {
             const experiment = state.experiments.find(record => record.id === item.experimentId);
-            entries.push({ view: 'experiments', category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
+            entries.push({ view: 'experiments', type: 'result', id: item.id, category: 'RESULT', title: experiment ? experiment.title : item.id, detail: item.date + ' · ' + item.attachments.length + ' 个附件', search: [item.id, item.experimentId, item.summary, item.conclusion, item.nextStep, experiment && experiment.title].join(' ') });
         });
-        state.mice.forEach(item => entries.push({ view: 'mice', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
-        state.plants.forEach(item => entries.push({ view: 'mice', biologyTab: 'plants', category: 'PLANT', title: item.name + ' · ' + item.id, detail: [item.scientificName, item.accession, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.microbes.forEach(item => entries.push({ view: 'mice', biologyTab: 'microbes', category: 'MICROBIAL STRAIN', title: item.name + ' · ' + item.id, detail: [item.species, item.strain, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.plasmids.forEach(item => entries.push({ view: 'mice', biologyTab: 'microbes', category: 'PLASMID', title: item.name + ' · ' + item.id, detail: [item.backbone, item.insert, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.viruses.forEach(item => entries.push({ view: 'mice', biologyTab: 'viruses', category: 'VIRUS', title: item.name + ' · ' + item.id, detail: [item.virusType, item.serotype, item.titer].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.reagents.forEach(item => entries.push({ view: 'reagents', category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
-        state.samples.forEach(item => entries.push({ view: 'samples', category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
-        state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
-        state.formulations.forEach(item => entries.push({ view: 'protocols', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
-        state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
-        state.bioProjects.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'projects', category: 'BIOINFORMATICS PROJECT', title: item.name, detail: [item.id, item.referenceGenome].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.bioDatasets.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'datasets', category: 'DATASET', title: item.name, detail: [item.id, item.dataType, item.accession].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.bioPipelines.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'pipelines', category: 'WORKFLOW', title: item.name, detail: [item.id, item.version, item.environment].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
-        state.bioRuns.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'runs', category: 'ANALYSIS RUN', title: item.name || item.id, detail: [item.id, item.status, item.compute].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.mice.forEach(item => entries.push({ view: 'mice', type: 'mouse', id: item.id, biologyTab: 'animals', category: 'ANIMAL', title: item.id + ' · ' + (item.species || '动物') + ' · ' + item.strain, detail: item.genotype + ' · 笼位 ' + item.cage, search: Object.values(item).join(' ') }));
+        state.plants.forEach(item => entries.push({ view: 'mice', type: 'plant', id: item.id, biologyTab: 'plants', category: 'PLANT', title: item.name + ' · ' + item.id, detail: [item.scientificName, item.accession, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.microbes.forEach(item => entries.push({ view: 'mice', type: 'microbe', id: item.id, biologyTab: 'microbes', category: 'MICROBIAL STRAIN', title: item.name + ' · ' + item.id, detail: [item.species, item.strain, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.plasmids.forEach(item => entries.push({ view: 'mice', type: 'plasmid', id: item.id, biologyTab: 'microbes', category: 'PLASMID', title: item.name + ' · ' + item.id, detail: [item.backbone, item.insert, item.location].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.viruses.forEach(item => entries.push({ view: 'mice', type: 'virus', id: item.id, biologyTab: 'viruses', category: 'VIRUS', title: item.name + ' · ' + item.id, detail: [item.virusType, item.serotype, item.titer].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.reagents.forEach(item => entries.push({ view: 'reagents', type: 'reagent', id: item.catalog, category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
+        state.samples.forEach(item => entries.push({ view: 'samples', type: 'sample', id: item.id, category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
+        state.protocols.forEach(item => entries.push({ view: 'protocols', type: 'protocol', id: item.id, protocolTab: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
+        state.formulations.forEach(item => entries.push({ view: 'protocols', type: 'formulation', id: item.id, protocolTab: 'formulations', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
+        state.cellCultures.forEach(item => entries.push({ view: 'cells', type: 'cell', id: item.id, category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
+        state.bioProjects.forEach(item => entries.push({ view: 'bioinformatics', type: 'bioProject', id: item.id, bioinfoTab: 'projects', category: 'BIOINFORMATICS PROJECT', title: item.name, detail: [item.id, item.referenceGenome].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioDatasets.forEach(item => entries.push({ view: 'bioinformatics', type: 'bioDataset', id: item.id, bioinfoTab: 'projects', category: 'DATASET', title: item.name, detail: [item.id, item.dataType, item.accession].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioPipelines.forEach(item => entries.push({ view: 'bioinformatics', type: 'bioPipeline', id: item.id, bioinfoTab: 'pipelines', category: 'WORKFLOW', title: item.name, detail: [item.id, item.version, item.environment].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioRuns.forEach(item => entries.push({ view: 'bioinformatics', type: 'bioRun', id: item.id, bioinfoTab: 'projects', category: 'ANALYSIS RUN', title: item.name || item.id, detail: [item.id, item.status, item.compute].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         const results = entries.filter(item => !term || item.search.toLowerCase().includes(term)).slice(0, 12);
         els.searchResults.innerHTML = results.map(function (item) {
-            return '<button class="search-result" type="button" data-result-view="' + item.view + '"' + (item.biologyTab ? ' data-result-biology-tab="' + item.biologyTab + '"' : '') + (item.bioinfoTab ? ' data-result-bioinfo-tab="' + item.bioinfoTab + '"' : '') + ' data-result-title="' + esc(item.title) + '"><span>' + esc(item.category) + '</span><span><strong>' + esc(item.title) + '</strong><small>' + esc(item.detail) + '</small></span><b>→</b></button>';
+            return '<button class="search-result" type="button" data-result-view="' + item.view + '" data-result-type="' + item.type + '" data-result-id="' + esc(item.id) + '"' + (item.biologyTab ? ' data-result-biology-tab="' + item.biologyTab + '"' : '') + (item.bioinfoTab ? ' data-result-bioinfo-tab="' + item.bioinfoTab + '"' : '') + (item.protocolTab ? ' data-result-protocol-tab="' + item.protocolTab + '"' : '') + ' data-result-title="' + esc(item.title) + '"><span>' + esc(item.category) + '</span><span><strong>' + esc(item.title) + '</strong><small>' + esc(item.detail) + '</small></span><b>→</b></button>';
         }).join('') || '<div class="search-empty">数据库中没有与“' + esc(query) + '”匹配的记录。</div>';
     }
 
@@ -6876,6 +7030,8 @@ function getReagentDisplayStatus(reagent) {
     }
 
     function openRecordDetail(type, key) {
+        if (type === 'experiment') openExperimentDetail(key);
+        if (type === 'protocol') openProtocolDetail(key);
         if (type === 'mouse') openAnimalDetail(key);
         if (type === 'plant') openPlantDetail(key);
         if (type === 'microbe') openMicrobeDetail(key);

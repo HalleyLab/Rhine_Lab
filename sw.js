@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v94-bio-theme';
+const CACHE_NAME = 'rhine-lab-pages-v100-search-focus';
 const APP_SHELL = [
     './',
     './index.html',
@@ -11,17 +11,20 @@ const APP_SHELL = [
     './css/rhine-lab-workflow-refine.css?v=0.2.3f',
     './css/rhine-lab-biology.css?v=0.2.3h',
     './css/rhine-lab-bioinformatics.css?v=0.2.3m',
-    './js/rhine-lab-config.js?v=0.2.3-cloudflare2',
-    './js/rhine-lab-i18n.js?v=0.2.3g',
+    './css/rhine-lab-assistant.css?v=0.2.3c',
+    './js/rhine-lab-config.js?v=0.2.3-ai-ready',
+    './js/rhine-lab-i18n.js?v=0.2.3h',
     './js/rhine-lab-cloudflare-client.js?v=0.2.3-cloudflare3',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
-    './js/rhine-lab-sync-v019.js?v=0.2.3-cloudflare6',
+    './js/rhine-lab-sync-v019.js?v=0.2.3-ai-ready',
     './js/rhine-lab-pwa.js?v=0.2.3f',
-    './js/rhine-lab-bootstrap.js?v=0.2.3k',
-    './js/rhine-lab.js?v=0.2.3k',
+    './js/rhine-lab-assistant.js?v=0.2.3e',
+    './js/rhine-lab-bootstrap.js?v=0.2.3m',
+    './js/rhine-lab.js?v=0.2.3m',
     './data/seed.json',
     './images/rhine-life-logo.png',
     './images/rhine-life-app-icon.png?v=0.2.3',
+    './images/assistant/kristen-wright.png',
     './images/theme-atlas/all-lives-bioinformatics-collage-v1.svg'
 ];
 

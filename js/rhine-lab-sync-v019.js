@@ -869,5 +869,31 @@
         return message + ' (' + translate(error.message) + ')';
     }
 
-    window.RhineLabSync = { start: start, switchScope: switchScope, queueState: queueState, isConfigured: configured };
+    async function assistantChat(message, locale) {
+        const endpoint = String(config.assistantApiUrl || '').trim();
+        if (!endpoint) throw new Error('AI server is not configured.');
+        if (!supabase || !user || !supabase.token) throw new Error('Authentication required.');
+        const url = new URL(endpoint);
+        if (url.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(url.hostname)) throw new Error('AI server must use HTTPS.');
+        const controller = new AbortController();
+        const timeout = window.setTimeout(function () { controller.abort(); }, 30000);
+        try {
+            const response = await fetch(url.href, {
+                method: 'POST',
+                headers: { 'authorization': 'Bearer ' + supabase.token, 'content-type': 'application/json' },
+                body: JSON.stringify({ message: String(message || '').slice(0, 1800), locale: locale || 'zh-CN' }),
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            const data = await response.json().catch(function () { return {}; });
+            if (!response.ok) throw new Error(data.error || 'AI server request failed.');
+            const content = String(data.content || '').trim();
+            if (!content) throw new Error('AI server returned an empty response.');
+            return content;
+        } finally {
+            window.clearTimeout(timeout);
+        }
+    }
+
+    window.RhineLabSync = { start: start, switchScope: switchScope, queueState: queueState, isConfigured: configured, assistantChat: assistantChat };
 }());
