@@ -2677,24 +2677,41 @@
         root.innerHTML = renderBioFileRoot(projects);
     }
 
+    let bioFolderArtworkSeq = 0;
+
+    function bioFolderArtwork() {
+        bioFolderArtworkSeq += 1;
+        const backGradientId = 'bio-folder-back-' + bioFolderArtworkSeq;
+        const frontGradientId = 'bio-folder-front-' + bioFolderArtworkSeq;
+        return '<span class="bio-folder-art" aria-hidden="true" data-i18n-skip>' +
+            '<svg viewBox="0 0 320 180" preserveAspectRatio="none" focusable="false">' +
+                '<defs>' +
+                    '<linearGradient id="' + backGradientId + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7db7b"></stop><stop offset=".58" stop-color="#e5b84d"></stop><stop offset="1" stop-color="#c9922d"></stop></linearGradient>' +
+                    '<linearGradient id="' + frontGradientId + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe89a"></stop><stop offset=".55" stop-color="#f1c75e"></stop><stop offset="1" stop-color="#d9a43b"></stop></linearGradient>' +
+                '</defs>' +
+                '<path class="bio-folder-back" style="fill:url(#' + backGradientId + ')" vector-effect="non-scaling-stroke" d="M5 169V35Q5 18 22 18H101Q111 18 119 27L137 46H299Q315 46 315 62V169Z"></path>' +
+                '<path class="bio-folder-front" style="fill:url(#' + frontGradientId + ')" vector-effect="non-scaling-stroke" d="M6 70Q6 59 17 58L300 42Q318 41 315 61L302 165Q300 176 289 176H18Q6 176 6 164Z"></path>' +
+            '</svg>' +
+        '</span>';
+    }
+
     function renderBioFileRoot(projects) {
         const projectFolders = projects.map(function (project) {
             const datasets = state.bioDatasets.filter(function (item) { return item.projectId === project.id; });
             const runs = state.bioRuns.filter(function (item) { return item.projectId === project.id; });
             const runningCount = runs.filter(function (item) { return /运行|running/i.test(item.status || ''); }).length;
-            return '<article class="bio-folder-card bio-project-folder">' +
+            return '<article class="bio-folder-card bio-project-folder">' + bioFolderArtwork() +
                 '<button class="bio-folder-open" type="button" data-bio-project-toggle="' + esc(project.id) + '">' +
                     '<span class="bio-folder-kind">PROJECT</span><strong>' + esc(project.name || '未命名项目') + '</strong>' +
                     '<small>' + esc(project.id) + ' · ' + datasets.length + ' 个数据集</small>' +
-                    '<span class="bio-folder-footer"><i>' + esc(project.organism || '研究对象未填写') + '</i><b>' + (runningCount ? runningCount + ' 个运行中' : esc(project.status || '准备中')) + '</b></span>' +
                 '</button>' +
                 '<button class="bio-folder-detail" type="button" data-bioinfo-record="' + esc(project.id) + '" data-bioinfo-type="bioProject" aria-label="查看项目详情">···</button>' +
             '</article>';
         }).join('');
         return '<div class="bio-file-browser">' +
-            '<div class="bio-file-breadcrumb"><b>项目文件</b><span>' + projects.length + ' 个项目</span></div>' +
+            '<div class="bio-file-breadcrumb"><b>root</b><span>' + projects.length + ' 个项目</span></div>' +
             '<div class="bio-folder-grid">' +
-                '<article class="bio-folder-card bio-workflow-folder">' +
+                '<article class="bio-folder-card bio-workflow-folder">' + bioFolderArtwork() +
                     '<button class="bio-folder-open" type="button" data-bioinfo-tab="pipelines"><span class="bio-folder-kind">WORKFLOW</span><strong>分析流程</strong><small>' + state.bioPipelines.length + ' 个分析方法</small><span class="bio-folder-footer"><i>RUN SCRIPT</i><b>打开 →</b></span></button>' +
                 '</article>' +
                 projectFolders +
@@ -2708,7 +2725,7 @@
         const folders = datasets.map(function (dataset) {
             const runs = state.bioRuns.filter(function (item) { return item.datasetId === dataset.id; });
             const running = runs.find(function (item) { return /运行|running/i.test(item.status || ''); });
-            return '<article class="bio-folder-card bio-dataset-folder">' +
+            return '<article class="bio-folder-card bio-dataset-folder">' + bioFolderArtwork() +
                 '<button class="bio-folder-open" type="button" data-bio-dataset-toggle="' + esc(dataset.id) + '">' +
                     '<span class="bio-folder-kind">DATASET</span><strong>' + esc(dataset.name || '未命名数据集') + '</strong>' +
                     '<small>' + esc(dataset.dataType || '类型未填写') + ' · ' + esc(dataset.format || '格式未填写') + '</small>' +
@@ -2718,8 +2735,8 @@
             '</article>';
         }).join('');
         return '<div class="bio-file-browser bio-folder-level">' +
-            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>项目文件</button><span>›</span><b>' + esc(project.name || project.id) + '</b></div>' +
-            '<div class="bio-folder-summary"><div><span>PROJECT</span><strong>' + esc(project.id) + '</strong><small>' + esc(project.organism || '研究对象未填写') + ' · ' + esc(project.referenceGenome || '参考基因组未设置') + '</small></div><span class="status-chip ' + statusClass(project.status) + '">' + esc(project.status || '准备中') + '</span><button class="button ghost compact" type="button" data-bioinfo-record="' + esc(project.id) + '" data-bioinfo-type="bioProject">项目信息</button><button class="button primary compact" type="button" data-add="bioDataset" data-bio-project-context="' + esc(project.id) + '"><span>＋</span> 登记数据集</button></div>' +
+            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>root</button><span>›</span><b>' + esc(project.name || project.id) + '</b></div>' +
+            '<div class="bio-folder-summary"><div><span>PROJECT</span><strong>' + esc(project.id) + '</strong><small>' + esc(project.referenceGenome || '参考基因组未设置') + '</small></div><span class="status-chip ' + statusClass(project.status) + '">' + esc(project.status || '准备中') + '</span><button class="button ghost compact" type="button" data-bioinfo-record="' + esc(project.id) + '" data-bioinfo-type="bioProject">项目信息</button><button class="button primary compact" type="button" data-add="bioDataset" data-bio-project-context="' + esc(project.id) + '"><span>＋</span> 登记数据集</button></div>' +
             '<div class="bio-folder-grid">' + folders + '</div>' +
             (!folders ? '<div class="bio-flow-empty bio-flow-empty-main">该项目还没有登记数据集。</div>' : '') +
         '</div>';
@@ -2736,13 +2753,13 @@
             return renderBioMethodFile(pipeline, run);
         }).concat(availablePipelines.map(function (pipeline) { return renderBioMethodFile(pipeline, null); })).join('');
         return '<div class="bio-file-browser bio-folder-level bio-dataset-level">' +
-            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>项目文件</button><span>›</span><button type="button" data-bio-dataset-toggle="">' + esc(project.name || project.id) + '</button><span>›</span><b>' + esc(dataset.name || dataset.id) + '</b></div>' +
+            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>root</button><span>›</span><button type="button" data-bio-dataset-toggle="">' + esc(project.name || project.id) + '</button><span>›</span><b>' + esc(dataset.name || dataset.id) + '</b></div>' +
             '<section class="bio-dataset-profile">' +
                 '<header><div><span>DATASET</span><h3>' + esc(dataset.name || '未命名数据集') + '</h3><small>' + esc(dataset.id) + '</small></div><button class="button ghost compact" type="button" data-bioinfo-record="' + esc(dataset.id) + '" data-bioinfo-type="bioDataset">编辑信息</button></header>' +
                 '<div class="bio-dataset-facts"><div><span>数据集来源</span><strong>' + esc(dataset.sampleSource || '来源未填写') + '</strong><small>' + esc(dataset.accession || '登录号未填写') + '</small></div><div><span>数据类型</span><strong>' + esc(dataset.dataType || '类型未填写') + '</strong><small>' + esc(dataset.format || '格式未填写') + '</small></div><div><span>数据位置</span><strong>' + esc(dataset.location || '位置未设置') + '</strong><small>' + esc(dataset.size || '规模未记录') + '</small></div></div>' +
             '</section>' +
             '<div class="bio-method-heading"><div><span>ANALYSIS</span><h3>分析方法与运行状态</h3></div><button class="button primary compact" type="button" data-add="bioRun" data-bio-project-context="' + esc(project.id) + '" data-bio-dataset-context="' + esc(dataset.id) + '"><span>＋</span> 新建分析任务</button></div>' +
-            '<div class="bio-method-file-list">' + (methodFiles || '<div class="bio-flow-empty">尚未关联分析方法。</div>') + '</div>' +
+            '<div class="bio-folder-grid bio-analysis-folder-grid">' + (methodFiles || '<div class="bio-flow-empty">尚未关联分析方法。</div>') + '</div>' +
         '</div>';
     }
 
@@ -2751,17 +2768,19 @@
             const project = state.bioProjects.find(function (item) { return item.id === pipeline.projectId; });
             const runs = state.bioRuns.filter(function (item) { return item.pipelineId === pipeline.id; });
             const runningCount = runs.filter(function (item) { return /运行|running/i.test(item.status || ''); }).length;
-            return '<article class="bio-script-file">' +
-                '<header><span>RUN SCRIPT</span><button type="button" data-bioinfo-record="' + esc(pipeline.id) + '" data-bioinfo-type="bioPipeline">···</button></header>' +
-                '<strong>' + esc(pipeline.name || '未命名分析流程') + '</strong><small>' + esc(pipeline.version || '版本未填写') + ' · ' + esc(pipeline.environment || '环境未设置') + '</small>' +
-                '<pre>' + esc(pipeline.command || '# 尚未填写运行命令') + '</pre>' +
-                '<footer><span>' + esc(project ? project.name : '通用分析方法') + '</span><b>' + (runningCount ? runningCount + ' 个运行中' : runs.length + ' 个运行记录') + '</b></footer>' +
+            return '<article class="bio-folder-card bio-pipeline-folder">' + bioFolderArtwork() +
+                '<button class="bio-folder-open" type="button" data-bioinfo-record="' + esc(pipeline.id) + '" data-bioinfo-type="bioPipeline">' +
+                    '<span class="bio-folder-kind">RUN SCRIPT</span><strong>' + esc(pipeline.name || '未命名分析流程') + '</strong>' +
+                    '<small>' + esc(pipeline.version || '版本未填写') + ' · ' + esc(pipeline.environment || '环境未设置') + '</small>' +
+                    '<span class="bio-folder-footer"><i>' + esc(project ? project.name : '通用分析方法') + '</i><b>' + (runningCount ? runningCount + ' 个运行中' : runs.length + ' 个运行记录') + '</b></span>' +
+                '</button>' +
+                '<button class="bio-folder-detail" type="button" data-bioinfo-record="' + esc(pipeline.id) + '" data-bioinfo-type="bioPipeline" aria-label="查看分析流程详情">···</button>' +
             '</article>';
         }).join('');
         return '<div class="bio-file-browser bio-workflow-library">' +
-            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>项目文件</button><span>›</span><b>分析流程</b></div>' +
+            '<div class="bio-file-breadcrumb"><button type="button" data-bio-folder-home>root</button><span>›</span><b>分析流程</b></div>' +
             '<div class="bio-workflow-library-head"><div><span>WORKFLOW LIBRARY</span><h3>运行脚本</h3></div><button class="button primary compact" type="button" data-add="bioPipeline"><span>＋</span> 新建分析方法</button></div>' +
-            '<div class="bio-script-grid">' + files + '</div>' +
+            '<div class="bio-folder-grid bio-pipeline-folder-grid">' + files + '</div>' +
             (!files ? '<div class="bio-flow-empty bio-flow-empty-main">暂无分析流程。</div>' : '') +
         '</div>';
     }
@@ -2771,12 +2790,15 @@
         const pipelineName = pipeline ? pipeline.name : '未关联分析流程';
         const method = pipeline ? (pipeline.analysisType || pipeline.inputType || '分析方法未填写') : '流程信息未找到';
         const status = run ? (run.status || '排队中') : '未运行';
-        return '<article class="bio-method-file' + (/运行|running/i.test(status) ? ' is-running' : '') + '">' +
-            '<div class="bio-method-file-icon">' + (run ? 'RUN' : 'FLOW') + '</div>' +
-            '<div><span>' + esc(method) + '</span><strong>' + esc(pipelineName) + '</strong><small>' + esc(pipeline ? (pipeline.version || pipeline.environment || '版本未填写') : '流程信息未找到') + '</small></div>' +
-            '<div class="bio-method-status"><small>运行状态</small><span class="status-chip ' + statusClass(status) + '">' + esc(status) + '</span>' + (run ? '<b>' + esc(run.compute || '计算资源未设置') + '</b>' : '') + '</div>' +
-            (pipeline ? '<button type="button" data-bioinfo-record="' + esc(pipelineId) + '" data-bioinfo-type="bioPipeline" aria-label="查看分析方法">→</button>' : '') +
-            (run ? '<button type="button" data-bioinfo-record="' + esc(run.id) + '" data-bioinfo-type="bioRun" aria-label="查看运行任务">' + esc(run.id) + '</button>' : '') +
+        const recordId = run ? run.id : pipelineId;
+        const recordType = run ? 'bioRun' : 'bioPipeline';
+        return '<article class="bio-folder-card bio-analysis-folder' + (/运行|running/i.test(status) ? ' is-running' : '') + '">' + bioFolderArtwork() +
+            '<button class="bio-folder-open" type="button" data-bioinfo-record="' + esc(recordId) + '" data-bioinfo-type="' + recordType + '">' +
+                '<span class="bio-folder-kind">' + (run ? 'RUN' : 'FLOW') + ' · ' + esc(method) + '</span><strong>' + esc(pipelineName) + '</strong>' +
+                '<small>' + esc(pipeline ? (pipeline.version || pipeline.environment || '版本未填写') : '流程信息未找到') + '</small>' +
+                '<span class="bio-folder-footer"><i>' + esc(run ? (run.compute || run.id) : pipelineId) + '</i><b>' + esc(status) + '</b></span>' +
+            '</button>' +
+            (run && pipeline ? '<button class="bio-folder-detail" type="button" data-bioinfo-record="' + esc(pipelineId) + '" data-bioinfo-type="bioPipeline" aria-label="查看关联分析方法">···</button>' : '') +
         '</article>';
     }
     function bioProjectLabel(id) { const item = state.bioProjects.find(function (entry) { return entry.id === id; }); return item ? item.name + ' · ' + item.id : (id || '未关联'); }
@@ -5393,7 +5415,7 @@ function getReagentDisplayStatus(reagent) {
         state.protocols.forEach(item => entries.push({ view: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
         state.formulations.forEach(item => entries.push({ view: 'protocols', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
         state.cellCultures.forEach(item => entries.push({ view: 'cells', category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
-        state.bioProjects.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'projects', category: 'BIOINFORMATICS PROJECT', title: item.name, detail: [item.id, item.organism, item.referenceGenome].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
+        state.bioProjects.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'projects', category: 'BIOINFORMATICS PROJECT', title: item.name, detail: [item.id, item.referenceGenome].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         state.bioDatasets.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'datasets', category: 'DATASET', title: item.name, detail: [item.id, item.dataType, item.accession].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         state.bioPipelines.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'pipelines', category: 'WORKFLOW', title: item.name, detail: [item.id, item.version, item.environment].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         state.bioRuns.forEach(item => entries.push({ view: 'bioinformatics', bioinfoTab: 'runs', category: 'ANALYSIS RUN', title: item.name || item.id, detail: [item.id, item.status, item.compute].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
@@ -5581,8 +5603,8 @@ function getReagentDisplayStatus(reagent) {
             kicker: 'COMPUTATIONAL PROJECT', title: '新建生物信息项目',
             fields: [
                 field('id','项目编号','text','例：BIO-PRJ-001',true), field('name','项目名称','text','例：空间转录组图谱',true),
-                field('organism','研究对象','memory-text','例：Mus musculus',false), field('referenceGenome','参考基因组','memory-text','例：GRCm39 / mm39',false),
-                field('objective','研究目标','textarea','记录核心问题与分析范围…',false,true), field('organization','负责组织','text','例：神经基因组工作组',false),
+                field('referenceGenome','参考基因组','memory-text','例：GRCm39 / mm39',false),
+                field('objective','研究目标','textarea','记录核心问题与分析范围…',false,true),
                 field('repository','数据 / 项目位置','memory-text','例：DATA-01 / projects/demo',false), field('status','项目状态','select',['准备中','进行中','暂停','已完成','已归档'],true),
                 field('notes','备注','textarea','记录访问权限、关键版本或协作说明…',false,true)
             ]
@@ -6887,7 +6909,7 @@ function getReagentDisplayStatus(reagent) {
             return detailFieldHtml(config.label, value, ['objective', 'notes', 'command'].includes(config.name));
         }).join('');
         const command = type === 'bioPipeline' && record.command ? '<section class="record-detail-section bioinfo-command"><div class="record-detail-section-title"><p class="micro-label">REPRODUCIBLE ENTRYPOINT</p><h3>运行入口</h3></div><pre class="bioinfo-code-block"><code>' + esc(record.command) + '</code></pre></section>' : '';
-        els.recordDetailBody.innerHTML = '<section class="record-detail-hero bioinfo-detail-hero"><div><span class="record-detail-code">' + esc(record.id) + '</span><h3>' + esc(title) + '</h3><p>' + esc(record.organism || record.dataType || record.analysisType || bioProjectLabel(record.projectId)) + '</p></div><span class="status-chip ' + statusClass(record.status) + '">' + esc(record.status || labels[type]) + '</span></section><section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">COMPUTATIONAL RECORD</p><h3>记录详情</h3></div><div class="record-detail-grid">' + fields + '</div></section>' + command + recordHistoryHtml(record);
+        els.recordDetailBody.innerHTML = '<section class="record-detail-hero bioinfo-detail-hero"><div><span class="record-detail-code">' + esc(record.id) + '</span><h3>' + esc(title) + '</h3><p>' + esc(record.referenceGenome || record.dataType || record.analysisType || bioProjectLabel(record.projectId)) + '</p></div><span class="status-chip ' + statusClass(record.status) + '">' + esc(record.status || labels[type]) + '</span></section><section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">COMPUTATIONAL RECORD</p><h3>记录详情</h3></div><div class="record-detail-grid">' + fields + '</div></section>' + command + recordHistoryHtml(record);
         if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
     }
 

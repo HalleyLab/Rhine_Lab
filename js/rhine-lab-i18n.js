@@ -541,6 +541,7 @@
         '例：FZ-03 / C2': 'Example: FZ-03 / C2',
         '例：-80°C 冰箱 FZ-03 · 第 3 层 · C 位': 'Example: -80°C freezer FZ-03 · shelf 3 · position C',
         '“可科学本该是理性的。”': '“But science is supposed to be rational.”',
+        '“科学将拓宽我们的视野、延展我们的脚步、丰富我们的形态。”': '“Science will broaden our horizons, extend our reach, and enrich the forms we take.”',
         '“可我从来都无法赞同理所当然的牺牲。”': '“But I could never accept sacrifice as something to be taken for granted.”',
         '“递质的数据分析结果怎么样？”': '“How did the analysis of the Transmitter data turn out?”',
         '“我会留下你的研究记录。”': '“I will preserve your research records.”',

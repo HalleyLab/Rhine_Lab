@@ -133,13 +133,31 @@ async function passwordRecord(password, env) {
   return { salt: bytesToBase64(salt), hash: bytesToBase64(await derivePassword(password, salt, PASSWORD_ITERATIONS, env.AUTH_PEPPER || '')), iterations: PASSWORD_ITERATIONS };
 }
 
-async function passwordMatches(password, saltValue, hashValue, iterations, env) {
-  const actual = await derivePassword(password, base64ToBytes(saltValue), Number(iterations || PASSWORD_ITERATIONS), env.AUTH_PEPPER || '');
+async function passwordMatchesWithPepper(password, saltValue, hashValue, iterations, pepper) {
+  const actual = await derivePassword(password, base64ToBytes(saltValue), Number(iterations || PASSWORD_ITERATIONS), pepper);
   const expected = base64ToBytes(hashValue);
   if (actual.length !== expected.length) return false;
   let difference = 0;
   for (let i = 0; i < actual.length; i += 1) difference |= actual[i] ^ expected[i];
   return difference === 0;
+}
+
+async function verifyPassword(password, user, env) {
+  const current = String(env.AUTH_PEPPER || '');
+  const candidates = [current]
+    .concat(String(env.AUTH_PEPPER_PREVIOUS || '').split(',').map((value) => value.trim()).filter(Boolean))
+    .concat([''])
+    .filter((value, index, values) => values.indexOf(value) === index);
+  for (const pepper of candidates) {
+    if (await passwordMatchesWithPepper(password, user.password_salt, user.password_hash, user.password_iterations, pepper)) {
+      return { matched: true, needsUpgrade: pepper !== current || Number(user.password_iterations) !== PASSWORD_ITERATIONS };
+    }
+  }
+  return { matched: false, needsUpgrade: false };
+}
+
+async function passwordMatches(password, saltValue, hashValue, iterations, env) {
+  return (await verifyPassword(password, { password_salt: saltValue, password_hash: hashValue, password_iterations: iterations }, env)).matched;
 }
 
 function randomOtp() {
@@ -154,16 +172,27 @@ function randomToken() { return base64Url(crypto.getRandomValues(new Uint8Array(
 async function sendOtp(env, email, code, purpose) {
   if (!env.BREVO_API_KEY) throw new HttpError(503, 'Email service is not configured.');
   const subject = purpose === 'register' ? 'Verify your Rhine Lab account' : 'Your Rhine Lab sign-in code';
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'api-key': env.BREVO_API_KEY },
-    body: JSON.stringify({
-      sender: { email: env.MAIL_FROM_EMAIL || 'noreply@rh1nelab.com', name: env.MAIL_FROM_NAME || 'Rhine Lab' },
-      to: [{ email }],
-      subject,
-      htmlContent: `<div style="font-family:Arial,Helvetica,sans-serif;color:#17201d"><h2>Rhine Lab</h2><p>Your verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:.18em">${code}</p><p>This code expires in ${OTP_MINUTES} minutes. If you did not request it, ignore this email.</p></div>`
-    })
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let response;
+  try {
+    response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'api-key': env.BREVO_API_KEY },
+      body: JSON.stringify({
+        sender: { email: env.MAIL_FROM_EMAIL || 'noreply@rh1nelab.com', name: env.MAIL_FROM_NAME || 'Rhine Lab' },
+        to: [{ email }],
+        subject,
+        htmlContent: `<div style="font-family:Arial,Helvetica,sans-serif;color:#17201d"><h2>Rhine Lab</h2><p>Your verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:.18em">${code}</p><p>This code expires in ${OTP_MINUTES} minutes. If you did not request it, ignore this email.</p></div>`
+      }),
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error && error.name === 'AbortError') throw new HttpError(504, 'Email service timed out. Please try again.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!response.ok) {
     const detail = await response.text();
     console.error('Brevo error', response.status, detail);
@@ -272,15 +301,19 @@ async function passwordLogin(request, env, cors) {
     const password = String(body.password || '');
     const ipHash = await enforcePasswordRateLimit(env, email, request);
     const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND email_verified = 1').bind(email).first();
-    if (!user || !(await passwordMatches(password, user.password_salt, user.password_hash, user.password_iterations, env))) {
+    const verification = user ? await verifyPassword(password, user, env) : { matched: false, needsUpgrade: false };
+    if (!verification.matched) {
       await recordPasswordFailure(env, email, ipHash);
       throw new HttpError(401, 'Email or password is incorrect.');
+    }
+    if (verification.needsUpgrade) {
+      const upgraded = await passwordRecord(password, env);
+      await env.DB.prepare('UPDATE users SET password_salt = ?, password_hash = ?, password_iterations = ?, updated_at = ? WHERE id = ?').bind(upgraded.salt, upgraded.hash, upgraded.iterations, nowIso(), user.id).run();
     }
     await env.DB.prepare('DELETE FROM login_attempts WHERE email = ?').bind(email).run();
     return createSessionResponse(user.id, env, cors);
   } catch (error) { return errorResponse(error, cors); }
 }
-
 async function loginCodeRequest(request, env, cors) {
   try {
     const body = await readJson(request, 20_000);

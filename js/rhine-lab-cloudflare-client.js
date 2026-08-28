@@ -132,12 +132,18 @@
             let networkError = null;
             const candidates = [this.baseUrl].concat(this.baseUrls.filter((url) => url !== this.baseUrl));
             for (const baseUrl of candidates) {
+                const controller = new AbortController();
+                const timeout = window.setTimeout(function () { controller.abort(); }, Number(settings.timeoutMs || 15000));
                 try {
-                    response = await fetch(baseUrl + path, { method: settings.method || 'GET', headers, body, cache: 'no-store' });
+                    response = await fetch(baseUrl + path, { method: settings.method || 'GET', headers, body, cache: 'no-store', signal: controller.signal });
                     this.baseUrl = baseUrl;
                     break;
                 } catch (error) {
-                    networkError = error;
+                    networkError = error && error.name === 'AbortError'
+                        ? new Error('Request timed out. Please try again.')
+                        : error;
+                } finally {
+                    window.clearTimeout(timeout);
                 }
             }
             if (!response) {

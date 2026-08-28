@@ -760,12 +760,20 @@
             event.preventDefault();
             const email = String(ui.codeEmail.value || '').trim();
             if (!ui.codeLoginForm.reportValidity() || !supabase || !email) return;
-            setStatus('connecting', '发送中', '正在发送验证码…');
-            const result = await supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
-            if (result.error) { setStatus('error', '发送失败', readableError(result.error, '验证码发送失败。')); return; }
-            codeLoginEmail = email;
-            updateAccountUi();
-            setStatus('local', '输入验证码', '验证码已发送至邮箱。');
+            const submit = event.submitter || ui.codeSend;
+            if (submit) { submit.disabled = true; submit.setAttribute('aria-busy', 'true'); }
+            try {
+                setStatus('connecting', '发送中', '正在发送验证码…');
+                const result = await supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+                if (result.error) { setStatus('error', '发送失败', readableError(result.error, '验证码发送失败。')); return; }
+                codeLoginEmail = email;
+                updateAccountUi();
+                setStatus('local', '输入验证码', '验证码已发送至邮箱。');
+            } catch (error) {
+                setStatus('error', '发送失败', readableError(error, '验证码发送失败。'));
+            } finally {
+                if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); }
+            }
         });
         if (ui.codeOtpForm) ui.codeOtpForm.addEventListener('submit', async function (event) {
             event.preventDefault();
