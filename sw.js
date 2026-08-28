@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v100-search-focus';
+const CACHE_NAME = 'rhine-lab-pages-v101-search-style';
 const APP_SHELL = [
     './',
     './index.html',
@@ -8,7 +8,7 @@ const APP_SHELL = [
     './css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
     './css/rhine-lab-theme-atlas-v2.css?v=20260818-8',
-    './css/rhine-lab-workflow-refine.css?v=0.2.3f',
+    './css/rhine-lab-workflow-refine.css?v=0.2.3g',
     './css/rhine-lab-biology.css?v=0.2.3h',
     './css/rhine-lab-bioinformatics.css?v=0.2.3m',
     './css/rhine-lab-assistant.css?v=0.2.3c',
