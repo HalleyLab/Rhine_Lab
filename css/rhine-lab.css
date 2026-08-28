@@ -10295,7 +10295,7 @@ textarea::placeholder {
 .app-shell small,
 dialog small,
 .notification-panel small {
-    font-size: max(11px, .72em) !important;
+    font-size: max(12px, .76em) !important;
     line-height: 1.5;
 }
 
@@ -10330,7 +10330,7 @@ dialog small,
 .drag-hint,
 .calendar-time-label,
 .record-detail-code {
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.45;
 }
 
@@ -10349,8 +10349,17 @@ dialog small,
 .photo-capture-button small,
 .data-table small,
 .amount-meter span {
-    font-size: 11.5px !important;
+    font-size: 12px !important;
     line-height: 1.5;
+}
+
+.load-item header {
+    font-size: 12px !important;
+    line-height: 1.45;
+}
+
+.load-item header span:last-child {
+    font-size: 12px !important;
 }
 
 .filter-tabs button,

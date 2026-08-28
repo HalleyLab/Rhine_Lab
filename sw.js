@@ -1,9 +1,9 @@
-const CACHE_NAME = 'rhine-lab-pages-v101-search-style';
+const CACHE_NAME = 'rhine-lab-pages-v102-readable-small-text';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
-    './css/rhine-lab.css?v=20260826-3',
+    './css/rhine-lab.css?v=20260828-1',
     './css/rhine-dashboard-refresh.css?v=20260814-1',
     './css/rhine-lab-v019.css?v=0.1.9-account-transfer-entry',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
