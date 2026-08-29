@@ -313,8 +313,11 @@
 .sync-transfer-head small { color: var(--accent-deep); font: 800 10px/1.2 Helvetica, Arial, sans-serif; letter-spacing: .12em; }
 .sync-transfer-head strong { color: var(--text); font-size: 16px; }
 .sync-transfer-head span,
-.sync-transfer-message,
-.sync-transfer-file { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.sync-transfer-message { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.sync-transfer-file {
+    color: var(--text);
+    font: 700 14px/1.45 "SimHei", "Heiti SC", "Microsoft YaHei", Arial, sans-serif;
+}
 
 .sync-transfer-head > b {
     display: grid;
@@ -331,7 +334,7 @@
 
 .sync-transfer-password { display: grid; gap: 5px; }
 .sync-transfer-password > span { color: var(--text); font-size: 12px; font-weight: 700; }
-.sync-transfer-password input {
+.sync-transfer-password :is(input, select) {
     width: 100%;
     min-height: 40px;
     padding: 0 12px;
@@ -348,9 +351,25 @@
 .sync-transfer-file { overflow-wrap: anywhere; }
 .sync-transfer-message[data-state="error"] { color: var(--danger, #cf4e38); }
 
+.usb-sync-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--card) 88%, var(--accent) 12%);
+}
+.usb-sync-panel[hidden] { display: none; }
+.usb-sync-panel > div { display: grid; gap: 2px; }
+.usb-sync-panel strong { color: var(--text); font-size: 13px; }
+.usb-sync-panel span { color: var(--muted); font: 700 12px/1.35 "SimHei", "Heiti SC", "Microsoft YaHei", Arial, sans-serif; }
+
 @media (max-width: 640px) {
     .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
     .sync-transfer-actions .button { width: 100%; }
+    .usb-sync-panel { align-items: stretch; flex-direction: column; }
 }
 .sync-local-transfer-entry {
     display: flex;

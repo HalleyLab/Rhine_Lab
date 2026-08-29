@@ -6,7 +6,7 @@
 .bioinfo-subpage-tabs button.active{color:var(--ink);background:color-mix(in srgb,var(--accent) 13%,var(--paper));box-shadow:inset 0 -3px 0 var(--accent)}
 .bioinfo-subpage[hidden]{display:none!important}
 .bioinfo-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;width:min(100%,620px);margin-left:auto}
-.bioinfo-toolbar-actions .inline-search{flex:1;max-width:390px}
+.bioinfo-toolbar-actions .inline-search{flex:0 1 min(300px,40vw);width:min(300px,40vw);max-width:none}
 .bioinfo-table-panel{overflow:hidden}
 .bioinfo-table-panel .data-table{min-width:1050px}
 .bioinfo-table-panel .data-table tbody tr{cursor:pointer}
@@ -280,6 +280,30 @@ body.background-all-lives .bio-folder-card,body.background-all-lives .bio-folder
   background:transparent;
 }
 #view-bioinformatics .inline-search>span{color:var(--muted)}
+#view-bioinformatics .bio-file-breadcrumb{padding-top:4px}
+#view-bioinformatics .bio-folder-card{
+  --bio-folder-back:color-mix(in srgb,var(--surface-2) 78%,var(--accent) 22%);
+  --bio-folder-front:color-mix(in srgb,var(--surface) 72%,var(--accent) 28%);
+  --bio-folder-line:color-mix(in srgb,var(--ink) 34%,var(--accent) 66%);
+}
+#view-bioinformatics .bio-folder-back{
+  fill:var(--bio-folder-back)!important;
+  fill-opacity:.72;
+  stroke:var(--bio-folder-line);
+}
+#view-bioinformatics .bio-folder-front{
+  fill:var(--bio-folder-front)!important;
+  fill-opacity:.78;
+  stroke:var(--bio-folder-line);
+}
+#view-bioinformatics .bio-folder-open{color:var(--ink)}
+#view-bioinformatics .bio-folder-card :is(.bio-folder-kind,.bio-folder-open>small){color:var(--muted)}
+#view-bioinformatics .bio-folder-open::after{border-color:color-mix(in srgb,var(--ink) 32%,transparent)}
+#view-bioinformatics .bio-folder-detail{
+  color:var(--ink);
+  background:color-mix(in srgb,var(--surface) 72%,transparent);
+  border-color:var(--line-dark);
+}
 #view-bioinformatics .bioinfo-protein-structure .protein-nodes{fill:var(--surface)}
 body #recordDetailDialog .bioinfo-detail-hero:is(.bioinfo-detail-hero){
   color:var(--ink)!important;
@@ -299,4 +323,10 @@ body.dark-theme #recordDetailDialog{
 }
 body.dark-theme #view-bioinformatics .bio-file-browser{
   background:color-mix(in srgb,var(--surface-2) 78%,var(--surface));
+}
+
+@media(min-width:701px){
+  #view-bioinformatics .bio-file-breadcrumb,
+  #view-bioinformatics .bio-workflow-library-head{padding-left:18px}
+  #view-bioinformatics .bio-folder-grid{padding-left:18px}
 }

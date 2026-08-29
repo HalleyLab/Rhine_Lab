@@ -331,15 +331,15 @@
         defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 4;
     }
 
-    let publicDemoUnlocked = false;
+    let publicDemoUnlocked = true;
     let workspaceMode = localStorage.getItem('rhineLabWorkspaceMode') === 'lab' ? 'lab' : 'personal';
     let state = migrateState(loadState(workspaceMode));
     let activeView = getInitialView();
     let experimentFilter = '全部';
     let reagentFilter = '全部';
     const publicDemoMode = isPublicDemoRuntime();
-    let workspaceAccess = { authenticated: false, labReadOnly: true };
-    let workspaceReadOnly = publicDemoMode || workspaceMode === 'lab';
+    let workspaceAccess = { authenticated: true, labReadOnly: false };
+    let workspaceReadOnly = workspaceMode === 'lab';
     let selectedSampleId = state.samples[0] ? state.samples[0].id : '';
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
     let activeAnimalRoomId = state.animalRooms.some(function (room) { return room.id === localStorage.getItem('rhineLabActiveAnimalRoom'); }) ? localStorage.getItem('rhineLabActiveAnimalRoom') : (state.animalRooms[0] ? state.animalRooms[0].id : '');
@@ -430,6 +430,7 @@
         monthCalendarGrid: document.getElementById('monthCalendarGrid'),
         monthAgendaTitle: document.getElementById('monthAgendaTitle'),
         monthAgendaList: document.getElementById('monthAgendaList'),
+        untimedScheduleList: document.getElementById('untimedScheduleList'),
         monthAgendaAdd: document.getElementById('monthAgendaAdd'),
         freezerBoxTabs: document.getElementById('freezerBoxTabs'),
         freezerBoxTitle: document.getElementById('freezerBoxTitle'),
@@ -535,12 +536,12 @@
         const english = document.documentElement.lang === 'en';
         if (english) {
             const lines = ['Today: ' + completed.length + ' of ' + tasks.length + ' scheduled items completed; ' + experiments.length + ' experiment records dated today.'];
-            if (tasks.length) lines.push('Schedule: ' + tasks.map(function (item) { return item.time + ' ' + item.title + (item.done ? ' (done)' : ' (pending)'); }).join('; '));
+            if (tasks.length) lines.push('Schedule: ' + tasks.map(function (item) { return scheduleTimeLabel(item) + ' ' + item.title + (item.done ? ' (done)' : ' (pending)'); }).join('; '));
             if (recent.length) lines.push('Recent entries: ' + recent.join('; '));
             return lines.join('\n');
         }
         const lines = ['今天共有 ' + tasks.length + ' 项日程，已完成 ' + completed.length + ' 项；今天日期下有 ' + experiments.length + ' 条实验记录。'];
-        if (tasks.length) lines.push('日程：' + tasks.map(function (item) { return item.time + ' ' + item.title + (item.done ? '（已完成）' : '（待处理）'); }).join('；'));
+        if (tasks.length) lines.push('日程：' + tasks.map(function (item) { return scheduleTimeLabel(item) + ' ' + item.title + (item.done ? '（已完成）' : '（待处理）'); }).join('；'));
         if (recent.length) lines.push('最近登记：' + recent.join('；'));
         return lines.join('\n');
     }
@@ -569,8 +570,8 @@
             activity = 'AI 辅助登记实验“' + record.title + '”';
             recordType = 'experiment'; recordId = record.id; changes = clone(record);
         } else if (kind === 'create_task') {
-            const start = /^\d{2}:\d{2}$/.test(String(payload.time || '')) ? payload.time : '09:00';
-            const end = /^\d{2}:\d{2}$/.test(String(payload.end || '')) && timeToMinutes(payload.end) > timeToMinutes(start) ? payload.end : addMinutes(start, 60);
+            const start = /^\d{2}:\d{2}$/.test(String(payload.time || '')) ? payload.time : '';
+            const end = start && /^\d{2}:\d{2}$/.test(String(payload.end || '')) && timeToMinutes(payload.end) > timeToMinutes(start) ? payload.end : (start ? addMinutes(start, 60) : '');
             const record = {
                 id: generatedRecordId('T'), date: payload.date || todayIso(), time: start, end: end,
                 title: displayOr(payload.title, '未命名日程'), resource: String(payload.resource || '').trim(),
@@ -648,7 +649,7 @@
             return { ok: false, message: '未识别的操作类型，未执行任何修改。' };
         }
 
-        state.activities.unshift({ text: activity, time: '刚刚' });
+        addActivity(activity);
         appendAuditLog({ action: kind.indexOf('create_') === 0 ? 'created' : 'updated', source: 'assistant-confirmed', recordType: recordType, recordId: recordId, changes: changes });
         saveState();
         renderAll();
@@ -662,6 +663,7 @@
         applyWorkspaceMode();
         setTodayLabels();
         startUiTimers();
+        resolveLatestDesktopDownload();
         if (!(publicDemoMode && !publicDemoUnlocked)) saveState();
         applyNotificationState();
         switchView(activeView, false);
@@ -725,7 +727,7 @@
             const secureValue = window.RhineLabCrypto ? window.RhineLabCrypto.readLocal(storageKey) : null;
             const raw = secureValue == null ? localStorage.getItem(storageKey) : null;
             if (secureValue == null && !raw) {
-                const emptyFirstRun = isInstalledAppRuntime() || (isPublicDemoRuntime() && publicDemoUnlocked);
+                const emptyFirstRun = mode === 'lab' || isInstalledAppRuntime() || (isPublicDemoRuntime() && publicDemoUnlocked);
                 return normalizeStateShape(emptyFirstRun ? emptyWorkspaceState() : clone(defaults));
             }
             const stored = secureValue == null ? JSON.parse(raw) : secureValue;
@@ -777,7 +779,7 @@
             schedule: Array.isArray(stored.schedule) ? stored.schedule : clone(defaults.schedule),
             protocols: Array.isArray(stored.protocols) ? stored.protocols : clone(defaults.protocols),
             formulations: Array.isArray(stored.formulations) ? stored.formulations : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.formulations)),
-            activities: Array.isArray(stored.activities) ? stored.activities : clone(defaults.activities),
+            activities: (Array.isArray(stored.activities) ? stored.activities : clone(defaults.activities)).map(normalizeActivityEntry),
             auditLog: Array.isArray(stored.auditLog) ? stored.auditLog : [],
             lineageLinks: Array.isArray(stored.lineageLinks) ? stored.lineageLinks : [],
             plateLayouts: Array.isArray(stored.plateLayouts) ? stored.plateLayouts : [],
@@ -983,9 +985,11 @@
             '类器官 ROS 成像': 'RL-EXP-030'
         };
         data.schedule = data.schedule.map(function (task) {
+            const start = /^\d{2}:\d{2}$/.test(String(task.time || '')) ? task.time : '';
             return Object.assign({}, task, {
                 date: task.date || todayIso(),
-                end: task.end || addMinutes(task.time || '09:00', 60),
+                time: start,
+                end: start ? (task.end || addMinutes(start, 60)) : '',
                 experimentId: task.experimentId || experimentByTaskTitle[task.title] || '',
                 protocolId: task.protocolId == null ? (protocolByTitle[task.title] || '') : task.protocolId,
                 done: Boolean(task.done),
@@ -1196,6 +1200,33 @@
         return JSON.parse(JSON.stringify(value));
     }
 
+    function resolveLatestDesktopDownload() {
+        const button = document.getElementById('desktopDownloadButton');
+        if (!button || isInstalledAppRuntime()) return;
+        fetch('https://api.github.com/repos/HalleyLab/Rhine_Lab/releases/latest', { cache: 'no-store' })
+            .then(function (response) { if (!response.ok) throw new Error('Release lookup failed'); return response.json(); })
+            .then(function (release) {
+                const assets = Array.isArray(release.assets) ? release.assets : [];
+                const installer = assets.find(function (asset) { return /-Windows-Setup\.exe$/i.test(String(asset.name || '')); });
+                if (!installer || !installer.browser_download_url) throw new Error('Windows installer missing');
+                button.href = installer.browser_download_url;
+                button.download = installer.name;
+            })
+            .catch(function () { button.removeAttribute('download'); });
+    }
+
+    function normalizeActivityEntry(activity) {
+        const item = Object.assign({}, activity);
+        if (!item.at && item.time === '刚刚') item.at = new Date().toISOString();
+        return item;
+    }
+
+    function addActivity(text) {
+        if (!Array.isArray(state.activities)) state.activities = [];
+        state.activities.unshift({ text: String(text || ''), at: new Date().toISOString() });
+        state.activities = state.activities.slice(0, 300);
+    }
+
     function saveState(options) {
         const storageKey = scopeStorageKey(workspaceMode);
         if (!window.RHINE_LAB_STORAGE_LOCKED) {
@@ -1219,6 +1250,9 @@
             buildSharedProjection: buildSharedProjection,
             getPersonalState: function () { return clone(personalStateSnapshot()); },
             setPersonalState: setPersonalState,
+            getLabState: function () { return clone(workspaceMode === 'lab' ? state : migrateState(loadState('lab'))); },
+            setLabState: setLabState,
+            selectScope: setWorkspaceMode,
             getEmptyState: function () { return clone(emptyWorkspaceState()); },
             isPublicShowcase: isPublicDemoRuntime
         });
@@ -1232,10 +1266,22 @@
         const personal = migrateState(normalizeStateShape(payload));
         if (workspaceMode === 'personal') {
             applyCloudState(personal, 'personal');
-            return;
+            return Promise.resolve();
         }
-        if (window.RhineLabCrypto) window.RhineLabCrypto.writeLocal(scopeStorageKey('personal'), personal);
-        else localStorage.setItem(scopeStorageKey('personal'), JSON.stringify(personal));
+        if (window.RhineLabCrypto) return window.RhineLabCrypto.writeLocal(scopeStorageKey('personal'), personal);
+        localStorage.setItem(scopeStorageKey('personal'), JSON.stringify(personal));
+        return Promise.resolve();
+    }
+
+    function setLabState(payload) {
+        const lab = migrateState(normalizeStateShape(payload));
+        if (workspaceMode === 'lab') {
+            applyCloudState(lab, 'lab');
+            return Promise.resolve();
+        }
+        if (window.RhineLabCrypto) return window.RhineLabCrypto.writeLocal(scopeStorageKey('lab'), lab);
+        localStorage.setItem(scopeStorageKey('lab'), JSON.stringify(lab));
+        return Promise.resolve();
     }
 
     function getLabKey(labId) {
@@ -1255,8 +1301,8 @@
         if (window.RhineLabSync) window.RhineLabSync.queueState(personal, 'personal');
     }
 
-    function buildSharedProjection() {
-        const projection = clone(personalStateSnapshot());
+    function buildSharedProjection(source) {
+        const projection = clone(source || personalStateSnapshot());
         delete projection.security;
         delete projection.auditLog;
         projection.schedule = (projection.schedule || []).filter(function (task) { return task.shareWithLab !== false; });
@@ -1306,7 +1352,6 @@
     }
 
     function computeWorkspaceReadOnly() {
-        if (publicDemoMode && !workspaceAccess.authenticated) return true;
         return workspaceMode === 'lab';
     }
 
@@ -1382,15 +1427,15 @@
         document.body.classList.toggle('public-demo-locked', publicDemoMode && !workspaceAccess.authenticated);
         const publicBanner = document.getElementById('publicDemoBanner');
         if (publicBanner) publicBanner.hidden = !(publicDemoMode && !workspaceAccess.authenticated);
-        els.workspaceModeToggle.querySelectorAll('[data-workspace-mode]').forEach(function (button) {
+        if (els.workspaceModeToggle) els.workspaceModeToggle.querySelectorAll('[data-workspace-mode]').forEach(function (button) {
             const active = button.dataset.workspaceMode === workspaceMode;
             button.classList.toggle('active', active);
             button.setAttribute('aria-pressed', String(active));
         });
-        els.workspaceScopeBanner.hidden = workspaceMode !== 'lab';
-        if (workspaceMode === 'lab') {
+        if (els.workspaceScopeBanner) els.workspaceScopeBanner.hidden = workspaceMode !== 'lab';
+        if (workspaceMode === 'lab' && els.workspaceScopeBanner) {
             const description = els.workspaceScopeBanner.querySelector('div:first-child > span');
-            if (description) description.textContent = '集中查看成员主动共享的信息；共用页面始终为只读。';
+            if (description) description.textContent = '通过 .rhinelab 文件合并实验室成员共享记录；此界面只读。';
         }
     }
 
@@ -1960,7 +2005,6 @@
                 capture.querySelector('input[type="file"]').value = '';
                 capture.querySelector('input[type="hidden"]').value = '';
                 capture.querySelector('[data-photo-preview]').innerHTML = '<span>尚未选择照片</span>';
-                capture.querySelector('[data-photo-status]').textContent = '照片只在当前设备中压缩保存';
                 pendingPhotoData = '';
                 return;
             }
@@ -2146,13 +2190,7 @@
 
             const searchResult = event.target.closest('[data-result-view]');
             if (searchResult) {
-                if (searchResult.dataset.resultBiologyTab) activeBiologyTab = searchResult.dataset.resultBiologyTab;
-                if (searchResult.dataset.resultBioinfoTab) activeBioinfoTab = searchResult.dataset.resultBioinfoTab;
-                if (searchResult.dataset.resultProtocolTab) activeProtocolTab = searchResult.dataset.resultProtocolTab;
-                switchView(searchResult.dataset.resultView);
-                closeSearch();
-                if (searchResult.dataset.resultType && searchResult.dataset.resultId) openRecordDetail(searchResult.dataset.resultType, searchResult.dataset.resultId);
-                showToast('已定位到“' + searchResult.dataset.resultTitle + '”');
+                navigateToSearchResult(searchResult);
                 return;
             }
 
@@ -2323,7 +2361,7 @@
         els.freezerScanSensitivity.addEventListener('input', applyFreezerScanSensitivity);
         els.monthAgendaAdd.addEventListener('click', function () {
             if (denyReadOnlyMutation()) return;
-            pendingTaskDefaults = { date: toIsoDate(calendarDate), time: '09:00', end: '10:00' };
+            pendingTaskDefaults = { date: toIsoDate(calendarDate), time: '', end: '' };
             openEntryDialog('task');
         });
         els.editProtocolButton.addEventListener('click', function () {
@@ -2380,7 +2418,7 @@
         const pendingTasks = todaysTasks.filter(function (task) { return !task.done; });
         pendingTasks.forEach(function (task) { task.done = true; });
         if (pendingTasks.length) {
-            state.activities.unshift({ text: '结束今日工作并完成 ' + pendingTasks.length + ' 项日程', time: '刚刚' });
+            addActivity('结束今日工作并完成 ' + pendingTasks.length + ' 项日程');
             saveState();
             renderSchedule();
         }
@@ -2502,7 +2540,8 @@
         const pendingToday = todayTasks.filter(item => !item.done);
         const daySummary = document.getElementById('dashboardDaySummary');
         if (pendingToday.length) {
-            daySummary.innerHTML = '今天有 <strong id="todayTaskCount">' + pendingToday.length + ' 项任务</strong> 等待处理，下一项将在 <strong>' + esc(pendingToday[0].time) + '</strong> 开始。';
+            const nextTimedTask = pendingToday.find(hasScheduleTime);
+            daySummary.innerHTML = '今天有 <strong id="todayTaskCount">' + pendingToday.length + ' 项任务</strong> 等待处理' + (nextTimedTask ? '，下一项将在 <strong>' + esc(nextTimedTask.time) + '</strong> 开始。' : '。');
         } else {
             daySummary.innerHTML = '今天还没有待处理任务。可前往 <strong>日程排班</strong> 添加安排。';
         }
@@ -2529,7 +2568,7 @@
         }).join('') || '<tr><td colspan="5">当前没有库存或样本预警。</td></tr>';
 
         document.getElementById('activityStream').innerHTML = state.activities.slice(0, 4).map(function (activity) {
-            return '<div class="activity-item"><i></i><div><p>' + esc(activityDisplayText(activity.text)) + '</p><time>' + esc(activity.time) + '</time></div></div>';
+            return '<div class="activity-item"><i></i><div><p>' + esc(activityDisplayText(activity.text)) + '</p><time>' + esc(activity.at ? formatHistoryTime(activity.at) : activity.time) + '</time></div></div>';
         }).join('');
     }
 
@@ -3423,7 +3462,7 @@
             selectedPlantId = state.plants.find(function (plant) { return plant.rackId === activePlantRackId; })?.id || '';
             localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
         }
-        state.activities.unshift({ text: '删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录', time: '刚刚' });
+        addActivity('删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录');
         saveState();
         renderAll();
         if (target.type === 'result' && els.experimentDetailDialog.open) {
@@ -4215,6 +4254,8 @@
     function renderSchedule() {
         const selectedIso = toIsoDate(calendarDate);
         const dayTasks = state.schedule.filter(item => item.date === selectedIso).sort(byTime);
+        const timedTasks = dayTasks.filter(hasScheduleTime);
+        const untimedTasks = dayTasks.filter(function (item) { return !hasScheduleTime(item); });
         document.querySelectorAll('[data-calendar-mode]').forEach(function (button) {
             button.classList.toggle('active', button.dataset.calendarMode === calendarMode);
         });
@@ -4233,13 +4274,17 @@
         let gridHtml = '';
         const startMinutes = 8 * 60;
         const slotCount = 24;
-        const overlapLayout = calculateScheduleOverlap(dayTasks);
+        if (els.untimedScheduleList) {
+            els.untimedScheduleList.hidden = untimedTasks.length === 0;
+            els.untimedScheduleList.innerHTML = untimedTasks.length ? '<header><span>UNSCHEDULED</span><strong>无固定时间</strong></header><div>' + untimedTasks.map(scheduleItemHtml).join('') + '</div>' : '';
+        }
+        const overlapLayout = calculateScheduleOverlap(timedTasks);
         for (let index = 0; index < slotCount; index += 1) {
             const time = minutesToTime(startMinutes + index * 30);
             const label = index % 2 === 0 ? time : '';
             gridHtml += '<time class="calendar-time-label" style="grid-row:' + (index + 1) + '">' + label + '</time><button class="calendar-time-slot" type="button" style="grid-row:' + (index + 1) + '" data-calendar-slot="' + index + '" data-time="' + time + '" aria-label="' + time + ' 开始的空白时间段"></button>';
         }
-        dayTasks.forEach(function (item) {
+        timedTasks.forEach(function (item) {
             const start = Math.max(0, Math.min(slotCount - 1, Math.floor((timeToMinutes(item.time) - startMinutes) / 30)));
             const end = Math.max(start + 1, Math.min(slotCount, Math.ceil((timeToMinutes(item.end) - startMinutes) / 30)));
             const span = Math.max(1, end - start);
@@ -4248,7 +4293,7 @@
             const left = placement.index / placement.count * 100;
             const width = 100 / placement.count;
             const runButton = scheduleRunButtonHtml(item, protocol, true);
-            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
+            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" data-task-id="' + esc(item.id) + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
         });
         document.getElementById('dayTimeline').innerHTML = gridHtml;
 
@@ -4311,7 +4356,7 @@
             if (iso === selectedIso) classes.push('selected');
             if (iso === today) classes.push('today');
             const chips = tasks.slice(0, 3).map(function (task) {
-                return '<span class="month-task ' + esc(task.type) + (task.done ? ' done' : '') + '"><i></i>' + esc(task.time) + ' ' + esc(task.title) + '</span>';
+                return '<span class="month-task ' + esc(task.type) + (task.done ? ' done' : '') + '"><i></i>' + esc(scheduleTimeLabel(task)) + ' ' + esc(task.title) + '</span>';
             }).join('');
             const more = tasks.length > 3 ? '<small>+' + (tasks.length - 3) + ' 项</small>' : '';
             html += '<button class="' + classes.join(' ') + '" type="button" data-calendar-date="' + iso + '"><time>' + date.getDate() + '</time><div>' + chips + more + '</div></button>';
@@ -4325,7 +4370,7 @@
 
     function scheduleItemHtml(item) {
         const protocol = state.protocols.find(entry => entry.id === item.protocolId);
-        return '<article class="today-item ' + (item.done ? 'done' : '') + '"><time>' + esc(item.time) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
+        return '<article class="today-item ' + (item.done ? 'done' : '') + '" data-task-id="' + esc(item.id) + '"><time>' + esc(scheduleTimeLabel(item)) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
     }
 
     function scheduleRunButtonHtml(item, protocol, compact) {
@@ -4604,7 +4649,7 @@
         experiment.history = Array.isArray(experiment.history) ? experiment.history : [];
         experiment.history.push({ at: new Date().toISOString(), action: 'updated', changes: detailChanges });
         appendAuditLog({ action: 'updated', recordType: 'experiment', recordId: experiment.id, changes: clone(detailChanges) });
-        state.activities.unshift({ text: '更新实验“' + experiment.title + '”的本次试剂用量', time: '刚刚' });
+        addActivity('更新实验“' + experiment.title + '”的本次试剂用量');
         saveState();
         renderAll();
         els.experimentDetailDialog.close();
@@ -4723,7 +4768,7 @@
                 type: task.type === 'animal' ? '动物实验' : task.type === 'analysis' ? '分析实验' : '计划实验',
                 date: task.date,
                 progress: 0,
-                description: '由 ' + task.date + ' ' + task.time + ' 的日程启动。',
+                description: '由 ' + task.date + ' ' + scheduleTimeLabel(task) + ' 的日程启动。',
                 protocolId: protocol.id,
                 reagentUsage: clone(protocol.reagents || []),
                 usageOverridden: false,
@@ -4737,7 +4782,7 @@
         experiment.protocolId = protocol.id;
         experiment.scheduleId = task.id;
         ensureRunSession(experiment, protocol);
-        state.activities.unshift({ text: (created ? '从日程创建并开始实验“' : '从日程继续实验“') + experiment.title + '”', time: '刚刚' });
+        addActivity((created ? '从日程创建并开始实验“' : '从日程继续实验“') + experiment.title + '”');
         saveState();
         renderAll();
         openExperimentRun(experiment.id);
@@ -5303,7 +5348,7 @@
             scheduledTask.experimentId = context.experiment.id;
             scheduledTask.done = true;
         }
-        state.activities.unshift({ text: '完成实验“' + context.experiment.title + '”并归档执行步骤', time: '刚刚' });
+        addActivity('完成实验“' + context.experiment.title + '”并归档执行步骤');
         saveState();
         renderAll();
         els.experimentRunDialog.close();
@@ -5551,6 +5596,91 @@ function getReagentDisplayStatus(reagent) {
         els.globalSearch.blur();
     }
 
+    function navigateToSearchResult(result) {
+        const type = result.dataset.resultType || '';
+        const id = result.dataset.resultId || '';
+        if (result.dataset.resultBiologyTab) {
+            activeBiologyTab = result.dataset.resultBiologyTab;
+            localStorage.setItem('rhineLabBiologyTab', activeBiologyTab);
+        }
+        if (result.dataset.resultProtocolTab) activeProtocolTab = result.dataset.resultProtocolTab;
+        if (result.dataset.resultBioinfoTab) activeBioinfoTab = result.dataset.resultBioinfoTab;
+
+        if (type === 'bioProject') {
+            activeBioinfoTab = 'projects';
+            activeBioProjectId = '';
+            activeBioDatasetId = '';
+        } else if (type === 'bioDataset') {
+            const dataset = state.bioDatasets.find(function (item) { return item.id === id; });
+            activeBioinfoTab = 'projects';
+            activeBioProjectId = dataset ? dataset.projectId : '';
+            activeBioDatasetId = '';
+        } else if (type === 'bioRun') {
+            const run = state.bioRuns.find(function (item) { return item.id === id; });
+            activeBioinfoTab = 'projects';
+            activeBioProjectId = run ? run.projectId : '';
+            activeBioDatasetId = run ? run.datasetId : '';
+        } else if (type === 'bioPipeline') {
+            activeBioinfoTab = 'pipelines';
+            activeBioProjectId = '';
+            activeBioDatasetId = '';
+        } else if (type === 'task') {
+            const task = state.schedule.find(function (item) { return item.id === id; });
+            if (task) calendarDate = parseLocalDate(task.date);
+            calendarMode = 'day';
+            localStorage.setItem('rhineLabCalendarMode', calendarMode);
+        }
+        localStorage.setItem('rhineLabBioinfoTab', activeBioinfoTab);
+        localStorage.setItem('rhineLabActiveBioProject', activeBioProjectId);
+        localStorage.setItem('rhineLabActiveBioDataset', activeBioDatasetId);
+
+        closeSearch();
+        switchView(result.dataset.resultView);
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+                const target = findSearchResultElement(type, id);
+                if (!target) return;
+                target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                target.classList.add('search-target-highlight');
+                window.setTimeout(function () { target.classList.remove('search-target-highlight'); }, 2200);
+            });
+        });
+        showToast('已定位到“' + result.dataset.resultTitle + '”');
+    }
+
+    function findSearchResultElement(type, id) {
+        let targetType = type;
+        let targetId = id;
+        if (type === 'result') {
+            const result = state.results.find(function (item) { return item.id === id; });
+            targetType = 'experiment';
+            targetId = result ? result.experimentId : id;
+        }
+        const lookup = {
+            experiment: ['#experimentGrid [data-experiment-id]', 'data-experiment-id'],
+            mouse: ['#mouseTable [data-mouse-id]', 'data-mouse-id'],
+            plant: ['#plantTable [data-plant-id]', 'data-plant-id'],
+            microbe: ['#bioresourceTable [data-bioresource-id]', 'data-bioresource-id'],
+            plasmid: ['#bioresourceTable [data-bioresource-id]', 'data-bioresource-id'],
+            virus: ['#virusTable [data-virus-id]', 'data-virus-id'],
+            reagent: ['#reagentTable [data-reagent-catalog]', 'data-reagent-catalog'],
+            sample: ['#sampleTable [data-sample-id]', 'data-sample-id'],
+            protocol: ['#protocolGrid [data-protocol-id]', 'data-protocol-id'],
+            formulation: ['#formulationGrid [data-formulation-id]', 'data-formulation-id'],
+            cell: ['#cellCultureGrid [data-cell-id]', 'data-cell-id'],
+            task: ['#view-schedule [data-task-id]', 'data-task-id'],
+            bioProject: ['#bioProjectFlow [data-bio-project-toggle]', 'data-bio-project-toggle'],
+            bioDataset: ['#bioProjectFlow [data-bio-dataset-toggle]', 'data-bio-dataset-toggle'],
+            bioPipeline: ['#bioProjectFlow [data-bioinfo-record]', 'data-bioinfo-record'],
+            bioRun: ['#bioProjectFlow [data-bioinfo-record]', 'data-bioinfo-record']
+        }[targetType];
+        if (!lookup) return null;
+        const element = Array.from(document.querySelectorAll(lookup[0])).find(function (item) {
+            return item.getAttribute(lookup[1]) === targetId;
+        });
+        return element && (element.closest('article,tr,button') || element);
+    }
+
     function renderSearchResults(query) {
         const term = query.trim().toLowerCase();
         const entries = [];
@@ -5566,6 +5696,7 @@ function getReagentDisplayStatus(reagent) {
         state.viruses.forEach(item => entries.push({ view: 'mice', type: 'virus', id: item.id, biologyTab: 'viruses', category: 'VIRUS', title: item.name + ' · ' + item.id, detail: [item.virusType, item.serotype, item.titer].filter(Boolean).join(' · '), search: Object.values(item).join(' ') }));
         state.reagents.forEach(item => entries.push({ view: 'reagents', type: 'reagent', id: item.catalog, category: 'REAGENT', title: item.name, detail: item.catalog + ' · ' + item.location, search: Object.values(item).join(' ') }));
         state.samples.forEach(item => entries.push({ view: 'samples', type: 'sample', id: item.id, category: 'SAMPLE', title: item.id + ' · ' + item.type, detail: item.source + ' · ' + item.location, search: Object.values(item).join(' ') }));
+        state.schedule.forEach(item => entries.push({ view: 'schedule', type: 'task', id: item.id, category: 'SCHEDULE', title: item.title, detail: item.date + ' · ' + (hasScheduleTime(item) ? item.time + '–' + item.end : '无固定时间'), search: Object.values(item).join(' ') }));
         state.protocols.forEach(item => entries.push({ view: 'protocols', type: 'protocol', id: item.id, protocolTab: 'protocols', category: 'PROTOCOL', title: item.title, detail: item.number, search: [item.number, item.title, item.summary, item.steps.join(' '), item.literatureTitle, item.literatureCitation, item.literatureId].join(' ') }));
         state.formulations.forEach(item => entries.push({ view: 'protocols', type: 'formulation', id: item.id, protocolTab: 'formulations', category: 'FORMULATION', title: item.name, detail: item.physicalForm + ' · ' + formulationAmountLabel(item), search: [item.id, item.name, item.physicalForm, item.purpose, item.concentration, item.storage, item.components.map(component => [component.name, component.amount, component.unit].join(' ')).join(' ')].join(' ') }));
         state.cellCultures.forEach(item => entries.push({ view: 'cells', type: 'cell', id: item.id, category: 'CELL CULTURE', title: item.name + ' · P' + item.passage, detail: item.container + ' · ' + item.incubator, search: [item.id, item.name, item.species, item.medium, item.container, item.incubator].join(' ') }));
@@ -5856,14 +5987,13 @@ function getReagentDisplayStatus(reagent) {
             kicker: 'SCHEDULE ENTRY', title: '添加实验日程',
             fields: [
                 field('date', '日期', 'date', '', true),
-                field('time', '开始时间', 'time', '09:00', true),
-                field('end', '结束时间', 'time', '10:00', true),
+                field('time', '开始时间（可选）', 'time', '09:00', false),
+                field('end', '结束时间（可选）', 'time', '10:00', false),
                 field('title', '任务名称', 'text', '例：细胞传代', true),
                 field('resource', '地点 / 仪器', 'text', '细胞房 · BSC-01', true),
                 field('type', '任务类型', 'select', ['cell|细胞 / 成像', 'animal|动物操作', 'analysis|数据分析', 'meeting|会议'], true),
                 field('experimentId', '关联实验（用于开始与继续）', 'experiment-select', '', false, true),
-                field('protocolId', '关联 Protocol（用于理论耗量）', 'protocol-select', '', false, true),
-                field('shareWithLab', 'LAB 日程可见性', 'select', ['yes|在 LAB 共用日程显示', 'no|仅个人可见'], true, true)
+                field('protocolId', '关联 Protocol（用于理论耗量）', 'protocol-select', '', false, true)
             ]
         },
         protocol: {
@@ -5927,7 +6057,7 @@ function getReagentDisplayStatus(reagent) {
             });
             defaultsForEntry = { experimentId: preferred ? preferred.id : '', date: preferred ? preferred.date : todayIso() };
         } else if (type === 'task') {
-            defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '09:00', end: '10:00', experimentId: '', protocolId: '', shareWithLab: 'yes' }, pendingTaskDefaults || {});
+            defaultsForEntry = Object.assign({ date: toIsoDate(calendarDate), time: '', end: '', experimentId: '', protocolId: '', shareWithLab: 'yes' }, pendingTaskDefaults || {});
         } else if (type === 'sample') {
             defaultsForEntry = Object.assign({ boxId: activeFreezerBoxId, date: todayIso(), status: '在库' }, pendingSampleDefaults || {});
         } else if (type === 'mouse') {
@@ -6029,10 +6159,8 @@ function getReagentDisplayStatus(reagent) {
                 if (capture) {
                     const hidden = capture.querySelector('input[type="hidden"]');
                     const preview = capture.querySelector('[data-photo-preview]');
-                    const status = capture.querySelector('[data-photo-status]');
                     if (hidden) hidden.value = pendingPhotoData;
                     if (preview) preview.innerHTML = '<img src="' + esc(pendingPhotoData) + '" alt="当前记录照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
-                    if (status) status.textContent = '当前记录已有照片；可重新拍摄或移除';
                 }
             }
         }
@@ -6167,8 +6295,7 @@ function getReagentDisplayStatus(reagent) {
             control = '<div class="formulation-component-editor" id="field-' + config.name + '"><div class="formulation-component-head"><span>组分</span><span>用量</span><span>单位</span><i></i></div><div id="formulationComponentRows"><p class="field-note" data-empty-formulation-components>尚未添加组分。</p></div><button class="add-reagent-row" type="button" data-add-formulation-component>＋ 添加组分</button></div>';        } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
-            const protocolNote = activeDialogType === 'protocol' ? '<small class="field-note">照片作为附件保留，不会自动填写表单。</small>' : '';
-            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong><small>' + esc(config.placeholderOrOptions) + '</small></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div><p class="photo-capture-status" data-photo-status>照片只在当前设备中压缩保存</p>' + protocolNote + '</div>';
+            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div></div>';
         } else if (config.type === 'file-attachments') {
             control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
@@ -6305,18 +6432,11 @@ function getReagentDisplayStatus(reagent) {
         if (!file) return;
         const capture = input.closest('.photo-capture');
         const preview = capture.querySelector('[data-photo-preview]');
-        const status = capture.querySelector('[data-photo-status]');
-        status.textContent = '正在压缩并分析照片…';
         try {
             const dataUrl = await compressPhoto(file, 900, .68);
             pendingPhotoData = dataUrl;
             capture.querySelector('input[type="hidden"]').value = dataUrl;
             preview.innerHTML = '<img src="' + dataUrl + '" alt="待保存的录入照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
-            if (activeDialogType === 'protocol') {
-                status.textContent = '照片已作为附件保留；Protocol 内容请手动填写';
-            } else {
-                status.textContent = '照片已附加；文字内容请在保存前核对';
-            }
             if (activeDialogType === 'reagent' && 'BarcodeDetector' in window) {
                 try {
                     const detector = new window.BarcodeDetector();
@@ -6326,14 +6446,11 @@ function getReagentDisplayStatus(reagent) {
                     if (codes.length) {
                         const catalogInput = els.entryForm.elements.namedItem('catalog');
                         if (catalogInput && !catalogInput.value.trim()) catalogInput.value = codes[0].rawValue;
-                        status.textContent = '已识别条码 ' + codes[0].rawValue + '，请核对货号与批次';
                     }
-                } catch (error) {
-                    status.textContent = '照片已附加；当前浏览器未能识别条码，请手动核对';
-                }
+                } catch (error) {}
             }
         } catch (error) {
-            status.textContent = '无法读取这张照片，请换一张图片重试';
+            preview.innerHTML = '<span>无法读取图片</span>';
         }
     }
 
@@ -6737,12 +6854,7 @@ function getReagentDisplayStatus(reagent) {
             activityText = '记录“' + culture.name + '”的' + data.action + '操作';
         } else if (activeDialogType === 'task') {
             data.date = data.date || todayIso();
-            data.time = data.time || '09:00';
-            data.end = data.end || addMinutes(data.time, 60);
-            if (timeToMinutes(data.end) <= timeToMinutes(data.time)) {
-                showToast('结束时间需要晚于开始时间');
-                return;
-            }
+            if (!normalizeScheduleTimes(data)) return;
             data.title = displayOr(data.title, '未命名日程');
             data.resource = String(data.resource || '').trim();
             data.type = displayOr(data.type, 'cell');
@@ -6777,7 +6889,7 @@ function getReagentDisplayStatus(reagent) {
         }
 
         rememberEntryValues(activeDialogType, data);
-        if (activityText) state.activities.unshift({ text: activityText, time: '刚刚' });
+        if (activityText) addActivity(activityText);
         saveState();
         renderAll();
         els.entryDialog.close();
@@ -6853,13 +6965,10 @@ function getReagentDisplayStatus(reagent) {
             updated.id = current.id;
             updated.done = current.done;
             updated.date = data.date || current.date || todayIso();
-            updated.time = data.time || current.time || '09:00';
-            updated.end = data.end || current.end || addMinutes(updated.time, 60);
+            updated.time = data.time;
+            updated.end = data.end;
             updated.shareWithLab = data.shareWithLab !== 'no';
-            if (timeToMinutes(updated.end) <= timeToMinutes(updated.time)) {
-                showToast('结束时间需要晚于开始时间');
-                return;
-            }
+            if (!normalizeScheduleTimes(updated)) return;
             if (updated.experimentId) {
                 const linkedExperiment = state.experiments.find(item => item.id === updated.experimentId);
                 if (!linkedExperiment) updated.experimentId = '';
@@ -6972,7 +7081,7 @@ function getReagentDisplayStatus(reagent) {
         collection[index] = updated;
         if (['plant', 'microbe', 'plasmid', 'virus'].includes(target.type)) syncFrozenSampleLineage(target.type, updated.id, updated.frozenSampleId);
         appendAuditLog({ action: 'updated', recordType: target.type, recordId: target.key, changes: clone(changes) });
-        state.activities.unshift({ text: '更新' + recordTypeLabel(target.type) + '记录“' + (updated.name || updated.id || updated.catalog) + '”', time: '刚刚' });
+        addActivity('更新' + recordTypeLabel(target.type) + '记录“' + (updated.name || updated.id || updated.catalog) + '”');
         if (target.type === 'sample') {
             activeFreezerBoxId = updated.boxId;
             selectedSampleId = updated.id;
@@ -7157,8 +7266,40 @@ function getReagentDisplayStatus(reagent) {
         return minutesToTime(timeToMinutes(time) + minutes);
     }
 
+    function hasScheduleTime(item) {
+        return /^\d{2}:\d{2}$/.test(String(item && item.time || '')) && /^\d{2}:\d{2}$/.test(String(item && item.end || ''));
+    }
+
+    function scheduleTimeLabel(item) {
+        return hasScheduleTime(item) ? item.time : '未定';
+    }
+
+    function normalizeScheduleTimes(item) {
+        const start = String(item.time || '').trim();
+        const end = String(item.end || '').trim();
+        if (!start && !end) {
+            item.time = '';
+            item.end = '';
+            return true;
+        }
+        if (!start || !end) {
+            showToast('请同时填写开始和结束时间，或都留空');
+            return false;
+        }
+        if (timeToMinutes(end) <= timeToMinutes(start)) {
+            showToast('结束时间需要晚于开始时间');
+            return false;
+        }
+        item.time = start;
+        item.end = end;
+        return true;
+    }
+
     function byTime(a, b) {
-        return a.time.localeCompare(b.time);
+        const aTimed = hasScheduleTime(a);
+        const bTimed = hasScheduleTime(b);
+        if (aTimed !== bTimed) return aTimed ? 1 : -1;
+        return aTimed ? a.time.localeCompare(b.time) : String(a.title || '').localeCompare(String(b.title || ''));
     }
 
     function number(value, min, max) {

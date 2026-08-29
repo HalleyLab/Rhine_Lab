@@ -1,13 +1,42 @@
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
+const { createUsbSyncBridge, isSnapshot } = require('./usb-sync.cjs');
 
 const isDevelopment = !app.isPackaged;
 let mainWindow = null;
 let updateCheckTimer = null;
 let updatePromptOpen = false;
 let updateInstallQueued = false;
+let desktopUsbSync = null;
+let usbSyncBridge = null;
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+ipcMain.on('rhine-usb-sync-snapshot', function (_event, configuration) {
+    const authKey = configuration && String(configuration.authKey || '');
+    const snapshot = configuration && configuration.snapshot;
+    desktopUsbSync = /^[a-f0-9]{64}$/.test(authKey) && isSnapshot(snapshot) ? { authKey, snapshot } : null;
+    if (!usbSyncBridge) return;
+    if (desktopUsbSync) {
+        usbSyncBridge.start().catch(function (error) {
+            console.warn('Rhine Lab USB sync bridge failed:', error && error.message ? error.message : error);
+        });
+    } else {
+        usbSyncBridge.stop();
+    }
+});
+
+function setupUsbSyncBridge() {
+    usbSyncBridge = createUsbSyncBridge({
+        getLocal: function () { return desktopUsbSync; },
+        onRemote: function (snapshot) {
+            if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('rhine-usb-sync-remote', snapshot);
+        },
+        onError: function (error) {
+            console.warn('Rhine Lab USB sync bridge failed:', error && error.message ? error.message : error);
+        }
+    });
+}
 
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-smooth-scrolling');
@@ -163,6 +192,7 @@ app.whenReady().then(function () {
     }
     Menu.setApplicationMenu(applicationMenu);
     if (singleInstance) createWindow();
+    setupUsbSyncBridge();
     setupAutomaticUpdates();
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -171,6 +201,7 @@ app.whenReady().then(function () {
 
 app.on('before-quit', function () {
     if (updateCheckTimer) clearInterval(updateCheckTimer);
+    if (usbSyncBridge) usbSyncBridge.stop();
 });
 
 app.on('window-all-closed', function () {

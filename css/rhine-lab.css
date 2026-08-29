@@ -10299,6 +10299,21 @@ dialog small,
     line-height: 1.5;
 }
 
+.untimed-schedule-list {
+    margin: 0 20px 12px;
+    overflow: hidden;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface-2) 82%, var(--surface));
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--acid-strong);
+}
+
+.untimed-schedule-list[hidden] { display: none !important; }
+.untimed-schedule-list > header { padding: 10px 14px 5px; }
+.untimed-schedule-list > header span { color: var(--muted); font: 800 9px/1 Helvetica, Arial, sans-serif; letter-spacing: .12em; }
+.untimed-schedule-list > header strong { display: block; margin-top: 4px; font-size: 13px; }
+.untimed-schedule-list .today-item:last-child { border-bottom: 0; }
+
 .search-empty,
 .empty-card,
 .record-history-empty,

@@ -1,0 +1,111 @@
+/* Static shared controls. Motion is intentionally disabled. */
+.sidebar-foot .system-status {
+    box-sizing: border-box;
+    min-height: 58px;
+    padding-block: 12px;
+}
+
+:is(.global-search, .inline-search, .dialog-search),
+:is(.global-search, .inline-search, .dialog-search) input {
+    transition: none !important;
+}
+
+.search-dialog {
+    animation: none !important;
+}
+
+body:not(.dark-theme) :is(.global-search, .dialog-search) {
+    background: color-mix(in srgb, #fff 84%, var(--surface-2) 16%) !important;
+}
+
+.utilization-panel h2 {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+}
+
+.load-item header span {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+}
+
+html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
+    font-family: "Microsoft YaHei", "SimHei", Arial, sans-serif !important;
+}
+
+/* The global header search is the only page-level search entry. */
+.inline-search {
+    display: none !important;
+}
+
+.cell-search-toolbar {
+    display: none !important;
+}
+
+.entry-dialog footer > div {
+    margin-left: auto;
+}
+
+.search-target-highlight {
+    outline: 3px solid var(--accent, var(--acid));
+    outline-offset: 4px;
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent, var(--acid)) 16%, transparent) !important;
+}
+
+/* Optically centered, heavier close mark without hover animation. */
+:where(
+    .dialog-close,
+    .notification-close,
+    .housing-layout-rack-delete,
+    .schedule-delete-button,
+    .embedded-lineage-remove,
+    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="删除"]
+) {
+    position: relative;
+    display: grid;
+    place-items: center;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    transition: none !important;
+}
+
+:where(
+    .dialog-close,
+    .notification-close,
+    .housing-layout-rack-delete,
+    .schedule-delete-button,
+    .embedded-lineage-remove,
+    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="删除"]
+)::before,
+:where(
+    .dialog-close,
+    .notification-close,
+    .housing-layout-rack-delete,
+    .schedule-delete-button,
+    .embedded-lineage-remove,
+    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="删除"]
+)::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 2.4px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+:where(
+    .dialog-close,
+    .notification-close,
+    .housing-layout-rack-delete,
+    .schedule-delete-button,
+    .embedded-lineage-remove,
+    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="删除"]
+)::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}

@@ -422,7 +422,7 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.bi
 
 /* Fully collapsible room plans 2026-08-26 */
 .animal-rack-manager>.compact-resource-toolbar,
-.plant-rack-manager>.compact-resource-toolbar{border-bottom:0!important}
+.plant-rack-manager>.compact-resource-toolbar{border-bottom:1px solid var(--line)!important}
 .housing-room-tabs{
     padding:14px 22px 14px;
 }
@@ -452,6 +452,14 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.bi
     .housing-room-tabs.has-expanded-room{padding-bottom:0}
     .housing-room-overview{padding:0 12px 18px}
 }
+
+/* Resource detail headers follow the active light/dark workspace palette. */
+body #recordDetailDialog :is(.microbe-detail-hero,.plasmid-detail-hero,.virus-detail-hero){
+    color:var(--ink)!important;
+    background:linear-gradient(110deg,color-mix(in srgb,var(--surface-2) 84%,var(--accent) 16%),var(--surface) 58%,color-mix(in srgb,var(--surface-2) 90%,var(--warning) 10%))!important;
+    border-color:var(--line)!important;
+}
+body #recordDetailDialog :is(.microbe-detail-hero,.plasmid-detail-hero,.virus-detail-hero) :is(h3,p){color:var(--ink)!important}
 
 /* Explicit room-card expansion state and standard pointer interaction */
 .housing-room-tab{
