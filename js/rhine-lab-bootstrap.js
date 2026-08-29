@@ -6,7 +6,7 @@
     async function startApplication() {
         try {
             if (window.RhineLabCrypto) {
-                const secureStorageKeys = ['rhineLabWorkspaceV1', 'rhineLabWorkspaceV1:lab', 'rhineLabPendingInvite'];
+                const secureStorageKeys = ['rhineLabWorkspaceV2', 'rhineLabWorkspaceV2:lab', 'rhineLabPendingInvite'];
                 for (let index = 0; index < localStorage.length; index += 1) {
                     const storageKey = localStorage.key(index);
                     if (storageKey && storageKey.startsWith('rhineLabSecureAuth:') && !storageKey.includes(':recovery')) secureStorageKeys.push(storageKey);

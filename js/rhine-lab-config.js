@@ -10,6 +10,6 @@
         // and returns { content }; it must validate the Rhine Lab bearer token.
         assistantApiUrl: '',
         publicAppUrl: 'https://halleylab.github.io/Rhine_Lab/',
-        seedUrl: './data/seed.json'
+        seedUrl: './data/showcase.json'
     }, window.RHINE_LAB_CONFIG || {});
 }());

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v112-latest-download';
+const CACHE_NAME = 'rhine-lab-pages-v113-public-showcase';
 const APP_SHELL = [
     './',
     './index.html',
@@ -21,7 +21,7 @@ const APP_SHELL = [
     './js/rhine-lab-assistant.js?v=0.2.3e',
     './js/rhine-lab-bootstrap.js?v=0.2.3t',
     './js/rhine-lab.js?v=0.2.3t',
-    './data/seed.json',
+    './data/showcase.json',
     './images/rhine-life-logo.png',
     './images/rhine-life-app-icon.png?v=0.2.3',
     './images/assistant/kristen-wright.png',

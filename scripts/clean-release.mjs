@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const dist = path.join(root, 'dist');
-const release = path.join(dist, `release-${pkg.version}`);
+const currentReleaseName = `release-${pkg.version}`;
+const release = path.join(dist, currentReleaseName);
 const semanticVersion = /\d+\.\d+\.\d+/;
 await mkdir(dist, { recursive: true });
 for (const entry of await readdir(dist, { withFileTypes: true })) {
-  if (semanticVersion.test(entry.name)) continue;
+  if (semanticVersion.test(entry.name) && entry.name !== currentReleaseName) continue;
   await rm(path.join(dist, entry.name), {
     recursive: true,
     force: true,

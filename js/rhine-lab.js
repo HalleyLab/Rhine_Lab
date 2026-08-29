@@ -1,8 +1,8 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'rhineLabWorkspaceV1';
-    const INPUT_MEMORY_KEY = 'rhineLabInputMemoryV1';
+    const STORAGE_KEY = 'rhineLabWorkspaceV2';
+    const INPUT_MEMORY_KEY = 'rhineLabInputMemoryV2';
 
     const defaults = {
         experiments: [
@@ -727,7 +727,7 @@
             const secureValue = window.RhineLabCrypto ? window.RhineLabCrypto.readLocal(storageKey) : null;
             const raw = secureValue == null ? localStorage.getItem(storageKey) : null;
             if (secureValue == null && !raw) {
-                const emptyFirstRun = mode === 'lab' || isInstalledAppRuntime() || (isPublicDemoRuntime() && publicDemoUnlocked);
+                const emptyFirstRun = mode === 'lab' || isInstalledAppRuntime();
                 return normalizeStateShape(emptyFirstRun ? emptyWorkspaceState() : clone(defaults));
             }
             const stored = secureValue == null ? JSON.parse(raw) : secureValue;
