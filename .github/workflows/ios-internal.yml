@@ -1,45 +1,36 @@
-name: Build iOS internal IPA
+name: Deploy iOS to TestFlight
 
 on:
   workflow_dispatch:
-    inputs:
-      export_method:
-        description: Apple export method for the supplied provisioning profile
-        required: true
-        default: release-testing
-        type: choice
-        options:
-          - release-testing
-          - debugging
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: Signed iOS 0.2.3 IPA
+  deploy:
+    name: Build and upload Rhine Lab iOS
     runs-on: macos-15
     timeout-minutes: 45
-
     env:
-      APP_VERSION: 0.2.3
-      APP_BUILD: 23
       APP_BUNDLE_ID: com.halleylab.rhinelab
-      IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-      IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-      IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Validate Apple signing secrets
+      - name: Validate Apple credentials
         shell: bash
         run: |
           missing=0
-          for name in IOS_CERTIFICATE_BASE64 IOS_CERTIFICATE_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 IOS_KEYCHAIN_PASSWORD APPLE_TEAM_ID; do
+          for name in APPLE_TEAM_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_PRIVATE_KEY; do
             if [[ -z "${!name}" ]]; then
               echo "::error::$name is not configured in repository Actions secrets."
               missing=1
@@ -47,14 +38,22 @@ jobs:
           done
           exit "$missing"
 
+      - name: Select Xcode 26
+        shell: bash
+        run: |
+          xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' | sort -V | tail -n 1)
+          test -n "$xcode_path" || { echo '::error::Xcode 26 is unavailable on this runner.'; exit 1; }
+          sudo xcode-select -s "$xcode_path/Contents/Developer"
+          xcodebuild -version
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11.16.0
+          version: 11.19.0
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
@@ -69,47 +68,23 @@ jobs:
           pnpm exec cap sync ios
           pnpm exec capacitor-assets generate --ios
 
-      - name: Import Apple signing identity and profile
-        id: signing
+      - name: Prepare App Store Connect key and build metadata
         shell: bash
         run: |
-          certificate_path="$RUNNER_TEMP/rhine-lab-signing.p12"
-          profile_path="$RUNNER_TEMP/rhine-lab.mobileprovision"
-          keychain_path="$RUNNER_TEMP/rhine-lab-signing.keychain-db"
-          profile_plist="$RUNNER_TEMP/rhine-lab-profile.plist"
+          key_path="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          printf '%s\n' "$APP_STORE_CONNECT_PRIVATE_KEY" | tr -d '\r' > "$key_path"
+          chmod 600 "$key_path"
+          grep -q 'BEGIN PRIVATE KEY' "$key_path" || { echo '::error::APP_STORE_CONNECT_PRIVATE_KEY is not a valid p8 key.'; exit 1; }
 
-          printf '%s' "$IOS_CERTIFICATE_BASE64" | base64 -D > "$certificate_path"
-          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -D > "$profile_path"
-
-          security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$keychain_path"
-          security set-keychain-settings -lut 21600 "$keychain_path"
-          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$keychain_path"
-          security import "$certificate_path" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain_path"
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$IOS_KEYCHAIN_PASSWORD" "$keychain_path"
-          security list-keychain -d user -s "$keychain_path"
-
-          security cms -D -i "$profile_path" > "$profile_plist"
-          profile_uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$profile_plist")
-          profile_name=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$profile_plist")
-          profile_app_id=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$profile_plist")
-          if [[ "$profile_app_id" != "$APPLE_TEAM_ID.$APP_BUNDLE_ID" ]]; then
-            echo "::error::Provisioning profile is for $profile_app_id, expected $APPLE_TEAM_ID.$APP_BUNDLE_ID."
-            exit 1
-          fi
-
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          cp "$profile_path" "$HOME/Library/MobileDevice/Provisioning Profiles/$profile_uuid.mobileprovision"
-          identity=$(security find-identity -v -p codesigning "$keychain_path" | sed -n 's/.*"\(.*\)"/\1/p' | head -n 1)
-          if [[ -z "$identity" ]]; then
-            echo "::error::No usable Apple signing identity was found."
-            exit 1
-          fi
-
-          echo "profile_name=$profile_name" >> "$GITHUB_OUTPUT"
-          echo "identity=$identity" >> "$GITHUB_OUTPUT"
-          echo "keychain_path=$keychain_path" >> "$GITHUB_OUTPUT"
+          version=$(node -p "require('./package.json').version")
+          base_build=$(grep -m 1 'CURRENT_PROJECT_VERSION = ' ios/App/App.xcodeproj/project.pbxproj | sed -E 's/.*= ([0-9]+);/\1/')
+          build=$((base_build + GITHUB_RUN_NUMBER))
+          echo "ASC_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "APP_BUILD=$build" >> "$GITHUB_ENV"
 
       - name: Archive signed iOS app
+        shell: bash
         run: |
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -117,17 +92,18 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/RhineLab.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             archive \
-            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
             MARKETING_VERSION="$APP_VERSION" \
-            CURRENT_PROJECT_VERSION="$APP_BUILD" \
-            PROVISIONING_PROFILE_SPECIFIER="${{ steps.signing.outputs.profile_name }}" \
-            CODE_SIGN_IDENTITY="${{ steps.signing.outputs.identity }}" \
-            OTHER_CODE_SIGN_FLAGS="--keychain ${{ steps.signing.outputs.keychain_path }}"
+            CURRENT_PROJECT_VERSION="$APP_BUILD"
 
-      - name: Export signed IPA
+      - name: Upload to TestFlight
         shell: bash
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
@@ -135,41 +111,22 @@ jobs:
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-            <key>method</key><string>${{ inputs.export_method }}</string>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
             <key>teamID</key><string>$APPLE_TEAM_ID</string>
-            <key>signingStyle</key><string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>$APP_BUNDLE_ID</key><string>${{ steps.signing.outputs.profile_name }}</string>
-            </dict>
+            <key>signingStyle</key><string>automatic</string>
             <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
           </dict>
           </plist>
           PLIST
 
-          mkdir -p dist/release-0.2.3
-          xcodebuild -exportArchive \
+          xcodebuild \
+            -exportArchive \
             -archivePath "$RUNNER_TEMP/RhineLab.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
-          ipa=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' -print -quit)
-          test -n "$ipa"
-          cp "$ipa" dist/release-0.2.3/Rhine-Lab-0.2.3-iOS.ipa
-          shasum -a 256 dist/release-0.2.3/Rhine-Lab-0.2.3-iOS.ipa > dist/release-0.2.3/Rhine-Lab-0.2.3-iOS.ipa.sha256
-
-      - name: Upload signed IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Rhine-Lab-iOS-Internal-0.2.3
-          path: dist/release-0.2.3/*
-          retention-days: 30
-          if-no-files-found: error
-
-      - name: Add IPA beside the APK in v0.2.3 Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload v0.2.3 \
-            "dist/release-0.2.3/Rhine-Lab-0.2.3-iOS.ipa#Rhine Lab 0.2.3 signed iOS IPA" \
-            "dist/release-0.2.3/Rhine-Lab-0.2.3-iOS.ipa.sha256#iOS IPA SHA-256" \
-            --clobber
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
