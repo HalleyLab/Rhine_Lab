@@ -333,6 +333,7 @@
         '图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。': 'Images are compressed; other files must be under 1 MB each, up to 6 attachments.',
         '尚未上传附件': 'No attachments uploaded',
         '添加结果': 'Add result',
+        '已录入结果': 'Result recorded',
         '编辑结果': 'Edit result',
         '删除': 'Delete',
         '编辑实验结果信息': 'Edit Experiment Result',

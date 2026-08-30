@@ -29,9 +29,7 @@
     }
 
     function initialMessage() {
-        return english()
-            ? 'I am here. Tell me what you completed today, or describe a record to create or revise. Every write is shown as a preview first and requires your confirmation.'
-            : '我在。告诉我今天完成了什么，或直接说明要登记、修改的条目。任何写入都会先展示预览，并由你逐条确认。';
+        return english() ? 'I am here.' : '我在。';
     }
 
     function bindEvents() {

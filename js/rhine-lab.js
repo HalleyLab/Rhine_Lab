@@ -454,7 +454,6 @@
         experimentDetailDescription: document.getElementById('experimentDetailDescription'),
         experimentUsageRows: document.getElementById('experimentUsageRows'),
         experimentUsageSource: document.getElementById('experimentUsageSource'),
-        experimentUsageImpact: document.getElementById('experimentUsageImpact'),
         experimentPhotoPanel: document.getElementById('experimentPhotoPanel'),
         experimentResultSection: document.getElementById('experimentResultSection'),
         experimentHistorySection: document.getElementById('experimentHistorySection'),
@@ -2402,7 +2401,6 @@
         });
         els.experimentDetailStatus.addEventListener('change', function () {
             toggleCustomSelectInput(els.experimentDetailStatus, '', true);
-            updateExperimentUsageImpact();
         });
         els.experimentUsageRows.addEventListener('input', updateExperimentUsageSource);
         els.experimentUsageRows.addEventListener('change', updateExperimentUsageSource);
@@ -2583,7 +2581,7 @@
     function renderDashboard() {
         const projects = state.experiments.filter(item => item.status !== '已完成').slice(0, 4);
         document.getElementById('dashboardProjects').innerHTML = projects.map(function (item, index) {
-            return '<article class="project-row" data-view-target="experiments"><span class="project-code">P' + String(index + 1).padStart(2, '0') + '</span><div><h3>' + esc(item.title) + '</h3><p>' + esc(item.project) + contributorInline(item) + '</p></div><div class="project-progress"><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><small>最近更新 ' + esc(shortDate(item.date)) + '</small></div><span class="project-percent">' + number(item.progress, 0, 100) + '%</span></article>';
+            return '<article class="project-row" data-view-target="experiments"><span class="project-code">P' + String(index + 1).padStart(2, '0') + '</span><div><h3>' + esc(item.title) + '</h3></div><div class="project-progress"><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><small>最近更新 ' + esc(shortDate(item.date)) + '</small></div><span class="project-percent">' + number(item.progress, 0, 100) + '%</span></article>';
         }).join('') || '<p class="search-empty">当前没有进行中的实验。</p>';
 
         const todayTasks = state.schedule.filter(item => item.date === todayIso()).sort(byTime);
@@ -2648,7 +2646,7 @@
         const usage = getEffectiveExperimentUsage(item);
         const usageLabel = item.usageOverridden ? '本次用量已调整' : protocol ? '按 ' + protocol.id : '未关联 Protocol';
         const photoBadge = item.photoData ? '<span class="photo-badge">照片</span>' : '';
-        const record = '<button class="record-card" type="button" data-experiment-id="' + esc(item.id) + '" data-code="' + esc(item.id.replace('RL-EXP-', '')) + '"><div class="record-card-top"><span class="micro-label">' + esc(item.id) + ' · ' + esc(item.type) + contributorInline(item) + '</span><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></div><h2>' + esc(item.title) + '</h2><p>' + esc(item.description) + '</p><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><div class="record-usage-line"><span>' + photoBadge + esc(usageLabel) + '</span><strong>' + usage.length + ' 种试剂 →</strong></div><div class="record-meta"><div><small>PROJECT</small><strong>' + esc(item.project) + '</strong></div><div><small>DATE</small><strong>' + esc(shortDate(item.date)) + '</strong></div></div></button>';
+        const record = '<button class="record-card" type="button" data-experiment-id="' + esc(item.id) + '" data-code="' + esc(item.id.replace('RL-EXP-', '')) + '"><div class="record-card-top"><span class="micro-label">' + esc(item.id) + ' · ' + esc(item.type) + contributorInline(item) + '</span><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status) + '</span></div><h2>' + esc(item.title) + '</h2><div class="progress-track"><i style="width:' + number(item.progress, 0, 100) + '%"></i></div><div class="record-usage-line"><span>' + photoBadge + esc(usageLabel) + '</span><strong>' + usage.length + ' 种试剂 →</strong></div><div class="record-meta"><div><small>PROJECT</small><strong>' + esc(item.project) + '</strong></div><div><small>DATE</small><strong>' + esc(shortDate(item.date)) + '</strong></div></div></button>';
         return '<article class="experiment-record-entry">' + record + experimentResultInlineHtml(item, false) + '</article>';
     }
 
@@ -2657,8 +2655,11 @@
         if (!result) {
             return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
         }
-        const attachments = result.attachments.slice(0, detailed ? 6 : 3).map(resultAttachmentLinkHtml).join('');
-        return '<section class="experiment-inline-result completed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><p class="result-summary">' + esc(result.summary || '尚未填写主要结果。') + '</p><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '尚未填写结论。') + '</strong></div>' + (result.nextStep ? '<p class="experiment-result-next"><strong>下一步：</strong>' + esc(result.nextStep) + '</p>' : '') + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '<p class="result-no-attachments">尚未上传附件</p>') + '<footer><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></section>';
+        if (!detailed) {
+            return '<section class="experiment-inline-result completed"><strong class="result-recorded">已录入结果</strong></section>';
+        }
+        const attachments = result.attachments.slice(0, 6).map(resultAttachmentLinkHtml).join('');
+        return '<section class="experiment-inline-result completed detailed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><div class="result-conclusion"><small>主要结果</small><strong>' + esc(result.summary || '') + '</strong></div><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '') + '</strong></div><div class="result-conclusion"><small>下一步</small><strong>' + esc(result.nextStep || '') + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '') + '<footer><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></section>';
     }
 
     function groupByDate(items) {
@@ -4592,7 +4593,6 @@
         renderExperimentResultSection(experiment);
         els.experimentHistorySection.innerHTML = recordHistoryHtml(experiment);
         updateExperimentUsageSource();
-        updateExperimentUsageImpact();
         if (!els.experimentDetailDialog.open) els.experimentDetailDialog.showModal();
     }
 
@@ -4659,12 +4659,6 @@
         }
         els.experimentUsageSource.textContent = matches ? '按 Protocol 默认' : '本次用量已调整';
         els.experimentUsageSource.classList.toggle('modified', !matches);
-    }
-
-    function updateExperimentUsageImpact() {
-        const completed = els.experimentDetailStatus.value === '已完成';
-        els.experimentUsageImpact.textContent = completed ? '保存后将立即按本次用量更新试剂余量' : '未完成的记录不会计入库存消耗';
-        els.experimentUsageImpact.classList.toggle('will-consume', completed);
     }
 
     function saveExperimentDetail(event) {
