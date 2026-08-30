@@ -12,7 +12,9 @@
     border: 0;
     cursor: grab;
     touch-action: none;
-    user-select: none;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none;
     transform-origin: 55% 100%;
     animation: assistant-character-float 4.8s ease-in-out infinite;
     transition: opacity .2s ease, transform .24s ease, filter .24s ease;
@@ -40,7 +42,9 @@
     object-fit: contain;
     object-position: 50% 100%;
     pointer-events: none;
-    user-select: none;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none;
     filter: drop-shadow(0 13px 17px rgba(4, 12, 10, .2));
 }
 

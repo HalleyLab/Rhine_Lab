@@ -1394,7 +1394,8 @@
         const current = currentBackground();
         toggle.dataset.backgroundMode = current;
         toggle.setAttribute('aria-pressed', String(current !== 'default'));
-        toggle.textContent = interfaceText('切换背景');
+        const text = toggle.querySelector('.utility-label');
+        if (text) text.textContent = interfaceText('切换背景');
         toggle.setAttribute('aria-label', interfaceText('切换背景'));
         toggle.setAttribute('title', interfaceText('切换背景'));
     }
@@ -1406,8 +1407,6 @@
         const label = interfaceText(open ? '关闭工具导航' : '打开工具导航');
         els.utilityNavToggle.setAttribute('aria-label', label);
         els.utilityNavToggle.setAttribute('title', label);
-        const text = els.utilityNavToggle.querySelector('span');
-        if (text) text.textContent = interfaceText('工具');
     }
 
     function themeFromSystemTime(date) {
@@ -1438,7 +1437,8 @@
         const toggle = document.getElementById('themeToggle');
         if (!toggle) return;
         const label = document.body.classList.contains('dark-theme') ? '日间模式☀️' : '夜间模式🌙';
-        toggle.textContent = interfaceText(label);
+        const text = toggle.querySelector('.utility-label');
+        if (text) text.textContent = interfaceText(label);
         toggle.setAttribute('aria-label', interfaceText(label));
         toggle.setAttribute('title', interfaceText(label));
     }
@@ -1454,7 +1454,9 @@
             if (button) {
                 const target = workspaceMode === 'lab' ? 'personal' : 'lab';
                 button.dataset.workspaceMode = target;
-                button.textContent = interfaceText(target === 'lab' ? '切换到Lab' : '切换到个人');
+                const text = button.querySelector('.utility-label');
+                const source = target === 'lab' ? '切换LAB' : '切换个人';
+                if (text) text.textContent = interfaceText(source);
                 button.classList.remove('active');
                 button.setAttribute('aria-pressed', 'false');
             }

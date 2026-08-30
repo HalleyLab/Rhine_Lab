@@ -550,7 +550,7 @@ body.dark-theme .boot-logo-symbols {
 html.native-app .app-boot-screen,
 body.dark-theme .app-boot-screen {
     color: #111615;
-    background: #f5f6f1;
+    background: #eef5d3;
 }
 .boot-brand {
     contain: layout;

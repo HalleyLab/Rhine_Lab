@@ -12063,88 +12063,115 @@ html[lang="zh-CN"] .activity-item time{
     line-height:1.55!important;
 }
 
-/* Collapsible utility navigation */
+/* Pull-out utility toolbar */
 .top-actions {
     position: relative;
     display: flex;
     align-items: center;
+    gap: 7px;
     overflow: visible !important;
 }
-.utility-menu { position: relative; display: flex; align-items: center; }
-.utility-nav-toggle {
-    display: inline-flex;
+.utility-menu {
+    position: relative;
+    display: flex;
+    flex-direction: row-reverse;
     align-items: center;
-    justify-content: center;
     gap: 7px;
-    min-height: 38px;
-    padding: 0 13px;
+}
+.utility-nav-toggle {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line-dark);
-    border-radius: 999px;
+    border-radius: 50%;
     cursor: pointer;
-    font: 800 12px/1 var(--font-interface);
 }
 .utility-nav-toggle[aria-expanded="true"] {
     background: color-mix(in srgb, var(--surface) 76%, var(--acid));
     border-color: var(--acid-strong);
 }
-.utility-nav-toggle i { font-style: normal; font-size: 16px; line-height: 1; }
+.utility-nav-toggle-icon {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 .utility-nav {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-    z-index: 1300;
-    display: grid;
+    position: static;
+    display: flex;
+    align-items: center;
     gap: 7px;
-    width: 238px;
-    padding: 10px;
+    width: auto;
+    padding: 0;
     color: var(--ink);
-    background: color-mix(in srgb, var(--surface) 96%, transparent);
-    border: 1px solid var(--line-dark);
-    border-radius: 14px;
-    box-shadow: 0 18px 48px rgba(17, 27, 23, .18);
-    backdrop-filter: blur(18px);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    animation: utility-drawer-in .2s ease both;
 }
 .utility-nav[hidden] { display: none !important; }
+@keyframes utility-drawer-in {
+    from { opacity: 0; transform: translateX(12px) scaleX(.96); }
+}
 .utility-nav .sync-control,
 .utility-nav .utility-nav-item,
 .utility-nav .workspace-mode-toggle > button,
 .topbar .utility-nav .language-dock > button {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 9px;
-    width: 100%;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
     min-width: 0;
-    min-height: 42px;
-    height: auto;
+    min-height: 38px;
+    height: 38px;
     margin: 0;
-    padding: 0 12px;
+    padding: 0 11px;
     color: var(--ink);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: 9px;
+    background: var(--surface);
+    border: 1px solid var(--line-dark);
+    border-radius: 999px;
     box-shadow: none;
     cursor: pointer;
-    font: 800 12px/1.25 var(--font-interface);
-    text-align: left;
+    font: 800 11px/1 var(--font-interface);
+    text-align: center;
     text-decoration: none;
+    white-space: nowrap;
 }
+.utility-nav #syncControl { background: transparent; }
 .utility-nav .sync-control:hover,
 .utility-nav .utility-nav-item:hover,
 .utility-nav .workspace-mode-toggle > button:hover,
 .topbar .utility-nav .language-dock > button:hover {
     color: var(--ink);
-    background: color-mix(in srgb, var(--surface-2) 80%, var(--acid));
+    background: color-mix(in srgb, var(--surface) 80%, var(--acid));
     border-color: var(--acid-strong);
 }
 .utility-nav .sync-control span { display: inline !important; }
+.utility-item-icon {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 .utility-nav .workspace-mode-toggle,
 .topbar .utility-nav .language-dock {
     position: static !important;
     display: block;
-    width: 100%;
+    width: auto;
     min-height: 0;
     margin: 0;
     padding: 0;
@@ -12156,4 +12183,3 @@ html[lang="zh-CN"] .activity-item time{
 }
 .topbar .utility-nav .language-dock::before,
 .topbar .utility-nav .language-dock-label { display: none; }
-.dark-theme .utility-nav { box-shadow: 0 18px 48px rgba(0, 0, 0, .42); }

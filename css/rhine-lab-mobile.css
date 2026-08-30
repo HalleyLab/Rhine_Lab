@@ -539,7 +539,6 @@
         padding: 0;
         border-radius: 13px;
     }
-    .top-actions .utility-nav-toggle span { display: none; }
     .top-actions .notice-button {
         flex: 0 0 42px;
         width: 42px !important;
@@ -554,6 +553,8 @@
         z-index: 1700;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 50px;
+        align-items: stretch;
         gap: 8px;
         width: auto;
         max-height: calc(100dvh - var(--mobile-topbar-height) - 14px);
@@ -562,29 +563,40 @@
         border-radius: 16px;
     }
     .top-actions .utility-nav[hidden] { display: none !important; }
-    .top-actions .utility-nav .desktop-download-button,
-    .top-actions .utility-nav .background-toggle,
-    .top-actions .utility-nav .sync-control {
-        display: flex !important;
+    .top-actions .utility-nav .desktop-download-button { display: none !important; }
+    .top-actions .utility-nav > .sync-control,
+    .top-actions .utility-nav > .utility-nav-item,
+    .top-actions .utility-nav > .workspace-mode-toggle,
+    .top-actions .utility-nav > .language-dock {
         width: 100%;
         min-width: 0;
-        min-height: 48px;
-        height: auto;
-        padding: 0 12px;
-        border-radius: 10px;
+        height: 50px;
+        min-height: 50px;
+        margin: 0;
     }
     .top-actions .utility-nav .sync-control span { display: inline !important; }
     .top-actions .utility-nav .workspace-mode-toggle,
     .topbar .utility-nav .language-dock {
         width: 100%;
-        min-height: 0;
+        height: 50px;
+        min-height: 50px;
     }
+    .top-actions .utility-nav > .sync-control,
     .top-actions .utility-nav .workspace-mode-toggle > button,
     .topbar .utility-nav .language-dock > button,
     .top-actions .utility-nav .utility-nav-item {
-        min-height: 48px;
+        display: flex !important;
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        height: 50px;
+        min-height: 50px;
+        padding: 0 12px;
         border-radius: 10px;
+        font-size: 11px;
+        white-space: nowrap;
     }
+    .top-actions .utility-nav #syncControl { background: transparent !important; }
 
     .assistant-character-trigger {
         touch-action: pan-y;
