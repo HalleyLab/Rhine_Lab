@@ -566,8 +566,7 @@
     .top-actions .utility-nav .desktop-download-button { display: none !important; }
     .top-actions .utility-nav > .sync-control,
     .top-actions .utility-nav > .utility-nav-item,
-    .top-actions .utility-nav > .workspace-mode-toggle,
-    .top-actions .utility-nav > .language-dock {
+    .top-actions .utility-nav > .workspace-mode-toggle {
         width: 100%;
         min-width: 0;
         height: 50px;
@@ -576,14 +575,13 @@
     }
     .top-actions .utility-nav .sync-control span { display: inline !important; }
     .top-actions .utility-nav .workspace-mode-toggle,
-    .topbar .utility-nav .language-dock {
+    .topbar .utility-nav .workspace-mode-toggle {
         width: 100%;
         height: 50px;
         min-height: 50px;
     }
     .top-actions .utility-nav > .sync-control,
     .top-actions .utility-nav .workspace-mode-toggle > button,
-    .topbar .utility-nav .language-dock > button,
     .top-actions .utility-nav .utility-nav-item {
         display: flex !important;
         justify-content: center;
@@ -601,6 +599,33 @@
     .top-actions .utility-nav span.mobile-utility-control { display: inline !important; }
     .top-actions .utility-nav svg.mobile-utility-control { display: block !important; }
     .top-actions .utility-nav button.mobile-utility-control { display: flex !important; }
+    .top-actions .topbar-language,
+    .dark-theme .top-actions .topbar-language {
+        display: inline-flex;
+        width: auto;
+        min-height: 0;
+        padding: 2px;
+        color: var(--ink);
+        background: var(--surface);
+        border: 1px solid var(--line-dark);
+        border-radius: 999px;
+    }
+    .top-actions .topbar-language > button,
+    .dark-theme .top-actions .topbar-language > button {
+        min-width: 68px;
+        height: 38px;
+        min-height: 38px;
+        padding: 2px;
+        color: var(--ink);
+        background: transparent;
+    }
+    .top-actions .topbar-language > button .desktop-language-option,
+    .dark-theme .top-actions .topbar-language > button .desktop-language-option {
+        min-width: 26px;
+        min-height: 30px;
+        padding: 0 4px;
+        color: var(--muted);
+    }
 
     .assistant-character-trigger {
         touch-action: pan-y;

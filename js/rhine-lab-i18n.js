@@ -216,7 +216,6 @@
         '数据同步': 'Data Sync',
         '切换LAB': 'Switch to LAB',
         '切换个人': 'Switch to Personal',
-        '切换语言': 'Switch Language',
         '切换到Lab': 'Switch to LAB',
         '切换到个人': 'Switch to Personal',
         '切换工作区范围': 'Switch workspace scope',
@@ -1858,8 +1857,6 @@
         const button = document.getElementById('languageToggle');
         if (!button) return;
         const label = language === 'zh' ? '切换为英文' : 'Switch to Chinese';
-        const text = button.querySelector('.utility-label');
-        if (text) text.textContent = language === 'zh' ? '切换语言' : 'Switch Language';
         button.setAttribute('aria-label', label);
         button.setAttribute('title', label);
         button.setAttribute('aria-pressed', String(language === 'en'));

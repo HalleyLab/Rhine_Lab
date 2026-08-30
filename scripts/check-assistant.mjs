@@ -25,6 +25,8 @@ assert.match(css, /-webkit-touch-callout:\s*none/);
 assert.match(assistant, /Summarize today/);
 assert.match(html, /id="notificationToggle"[\s\S]*id="utilityNav"/);
 assert.match(html, /id="utilityNavMorphPath"/);
+assert.match(html, /class="top-actions">[\s\S]*id="languageToggle"[\s\S]*id="notificationToggle"[\s\S]*id="utilityNavToggle"/);
+assert.doesNotMatch(html, /id="utilityNav"[\s\S]*id="languageToggle"/);
 assert.doesNotMatch(html, />工具<\/span>/);
 assert.match(mobile, /desktop-download-button \{ display: none !important; \}/);
 assert.match(mobile, /grid-auto-rows:\s*50px/);
@@ -45,6 +47,6 @@ assert.doesNotMatch(html, /<label for="assistantInput">/);
 assert.match(html, /id="assistantRole" data-i18n-skip/);
 assert.match(worker, /rhine-lab-assistant\.css\?v=0\.2\.4e/);
 assert.match(worker, /rhine-lab-assistant\.js\?v=0\.2\.4f/);
-assert.match(worker, /rhine-lab-utility-icon\.js\?v=0\.2\.4a/);
+assert.match(worker, /rhine-lab-utility-icon\.js\?v=0\.2\.4b/);
 
 console.log('assistant UI check passed');
