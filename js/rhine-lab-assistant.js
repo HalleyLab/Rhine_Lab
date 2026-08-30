@@ -93,15 +93,8 @@
         if (event.button !== 0 || dragState) return;
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
-        const touch = event.pointerType === 'touch';
-        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, touch: touch, active: false, moved: false, holdTimer: 0 };
-        if (touch) {
-            dragState.holdTimer = window.setTimeout(function () {
-                if (dragState && dragState.pointerId === event.pointerId) activateCharacterDrag();
-            }, 180);
-        } else {
-            try { toggle.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
-        }
+        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false };
+        try { toggle.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
     }
 
     function activateCharacterDrag() {
@@ -115,13 +108,6 @@
     function moveCharacter(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
         const distance = Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY);
-        if (dragState.touch && !dragState.active) {
-            if (distance > 8) {
-                window.clearTimeout(dragState.holdTimer);
-                dragState = null;
-            }
-            return;
-        }
         if (!dragState.active && distance < 5) return;
         activateCharacterDrag();
         dragState.moved = true;
@@ -131,7 +117,6 @@
 
     function endCharacterDrag(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
-        window.clearTimeout(dragState.holdTimer);
         const toggle = byId('assistantToggle');
         if (toggle.hasPointerCapture(event.pointerId)) toggle.releasePointerCapture(event.pointerId);
         toggle.classList.remove('is-dragging');

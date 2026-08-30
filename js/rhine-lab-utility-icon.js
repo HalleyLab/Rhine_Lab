@@ -5,12 +5,10 @@ const path = document.getElementById('utilityNavMorphPath');
 
 if (toggle && path) {
     const closedIcon = [
-        ['path', { d: 'm11 17-5-5 5-5' }],
-        ['path', { d: 'm18 17-5-5 5-5' }]
+        ['path', { d: 'M15 18 9 12l6-6' }]
     ];
     const openIcon = [
-        ['path', { d: 'm13 7 5 5-5 5' }],
-        ['path', { d: 'm6 7 5 5-5 5' }]
+        ['path', { d: 'm9 6 6 6-6 6' }]
     ];
     const iconForState = () => toggle.getAttribute('aria-expanded') === 'true' ? openIcon : closedIcon;
     const morph = createMorph(path, iconForState(), { reducedMotion: 'user' });
