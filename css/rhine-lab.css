@@ -12442,32 +12442,9 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-overview > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .cold-storage-overview h2 { margin: 3px 0; font-size: 18px; }
 .cold-storage-overview small { color: var(--muted); font-weight: 800; }
-.cold-storage-layout-overview {
-    display: grid;
-    gap: 10px;
-    padding: 14px;
-    background: color-mix(in srgb, var(--surface-2) 82%, transparent);
-    border: 1px solid var(--line);
-    border-radius: 15px 4px 15px 4px;
-}
-.cold-storage-layout-overview > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
-.cold-storage-layout-overview h3 { margin: 3px 0; font-size: 17px; }
-.cold-storage-layout-overview header small { color: var(--muted); font-size: 11px; font-weight: 800; }
-.housing-room-map.cold-storage-room-map { --room-accent: var(--acid-strong); min-height: 330px; }
-.housing-layout-rack.cold-storage-layout-unit { width: 172px; min-height: 76px; padding-right: 12px; }
-.housing-layout-rack.cold-storage-layout-unit.vertical {
-    width: 112px;
-    min-height: 142px;
-    align-content: center;
-    border-radius: 52px 52px 13px 13px;
-    text-align: center;
-}
-.housing-layout-rack.cold-storage-layout-unit.vertical::before { top: 14px; right: 14px; bottom: auto; left: 14px; width: auto; height: 4px; border-radius: 999px; }
-.housing-layout-rack.cold-storage-layout-unit.vertical > strong,
-.housing-layout-rack.cold-storage-layout-unit.vertical > small { white-space: normal; }
 .cold-storage-apparatus {
     display: grid;
-    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    grid-template-columns: minmax(420px, 1.2fr) minmax(300px, .8fr);
     align-items: stretch;
     gap: 16px;
 }
@@ -12527,8 +12504,17 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     background: var(--line-dark);
     border-radius: 0 0 8px 8px;
 }
-.cold-storage-shelf-tabs { display: grid; align-content: stretch; gap: 7px; }
-.cold-storage-shelf-tabs button {
+.cold-storage-shelf-tabs { display: grid; align-content: stretch; gap: 7px; min-width: 0; overflow: auto; }
+.cold-storage-device-level {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 7px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 8px 3px 8px 3px;
+}
+.cold-storage-device-level-head {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas: "level type" "level meta";
@@ -12537,16 +12523,27 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     min-height: 48px;
     padding: 7px 11px;
     color: var(--muted);
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    border: 1px solid var(--line);
-    border-radius: 6px 2px 6px 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
     cursor: pointer;
     text-align: left;
 }
-.cold-storage-shelf-tabs button span { grid-area: level; font-size: 11px; font-weight: 900; }
-.cold-storage-shelf-tabs button strong { grid-area: type; color: var(--ink); font-size: 13px; }
-.cold-storage-shelf-tabs button small { grid-area: meta; font-size: 10px; }
-.cold-storage-shelf-tabs button.active { color: var(--ink); background: var(--acid-soft); border-color: var(--acid-strong); box-shadow: inset 4px 0 var(--acid-strong); }
+.cold-storage-device-level-head span { grid-area: level; font-size: 11px; font-weight: 900; }
+.cold-storage-device-level-head strong { grid-area: type; color: var(--ink); font-size: 13px; }
+.cold-storage-device-level-head small { grid-area: meta; font-size: 10px; }
+.cold-storage-device-level.active { color: var(--ink); background: var(--acid-soft); border-color: var(--acid-strong); box-shadow: inset 4px 0 var(--acid-strong); }
+.cold-storage-device-level-slots { display: grid; gap: 4px; min-width: 0; overflow: auto; }
+.cold-storage-device-level-slots .cold-storage-slot { min-height: 48px; padding: 5px 6px; border-radius: 7px 2px 7px 2px; }
+.cold-storage-device-level-slots .cold-storage-slot span { font-size: 8px; }
+.cold-storage-device-level-slots .cold-storage-slot strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.cold-storage-shelf-tabs.vertical-racks {
+    grid-template-columns: repeat(var(--rack-count), minmax(210px, 1fr));
+    align-items: stretch;
+    align-content: stretch;
+}
+.cold-storage-shelf-tabs.vertical-racks .cold-storage-device-level { grid-template-rows: auto 1fr; min-width: 210px; }
+.cold-storage-shelf-tabs.vertical-racks .cold-storage-device-level-head { grid-template-columns: 1fr; grid-template-areas: "level" "type" "meta"; align-content: start; }
 .cold-storage-level-panel {
     display: grid;
     grid-template-rows: auto 1fr;
@@ -12608,6 +12605,23 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-slot.occupied { cursor: grab; touch-action: none; }
 .cold-storage-slot.occupied.is-dragging { opacity: .48; cursor: grabbing; }
 .cold-storage-slot.drop-target { outline: 3px solid var(--acid-strong); outline-offset: -3px; background: var(--acid-soft); }
+.cold-storage-box-drag-ghost {
+    position: fixed;
+    z-index: 10000;
+    width: 132px;
+    min-height: 58px;
+    padding: 8px;
+    pointer-events: none;
+    transform: translate(-50%, -58%);
+    color: var(--ink);
+    background: var(--acid-soft);
+    border: 2px solid var(--acid-strong);
+    border-radius: 10px 3px 10px 3px;
+    box-shadow: 0 14px 28px rgba(20, 28, 23, .22);
+    text-align: left;
+}
+.cold-storage-box-drag-ghost span { display: block; color: var(--muted); font-size: 9px; font-weight: 900; }
+.cold-storage-box-drag-ghost strong { display: block; margin-top: 4px; font-size: 11px; }
 .housing-layout-rack-delete { overflow: hidden; }
 .cold-storage-empty { margin: 0; padding: 14px; color: var(--muted); font-weight: 800; }
 .freezer-manager-actions { align-self: flex-end; }
