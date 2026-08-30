@@ -9,8 +9,8 @@ const worker = read('sw.js');
 const bioCss = read('css/rhine-lab-bioinformatics.css');
 const main = read('js/rhine-lab.js');
 
-assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.2\.3g/);
-assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.2\.3g/);
+assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.2\.4g/);
+assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.2\.4g/);
 assert.match(html, /id="searchTitle">搜索<\/h2>/);
 assert.match(html, /data-close-search aria-label="关闭搜索">×<\/button>/);
 assert.match(css, /body:not\(\.dark-theme\) :is\(\.global-search, \.dialog-search\)/);

@@ -39,6 +39,8 @@ assert.match(main, /function setUtilityNav\(open\)/);
 assert.match(main, /'切换LAB' : '切换个人'/);
 assert.match(i18n, /'数据同步': 'Data Sync'/);
 assert.match(utilityIcon, /createMorph\(path, iconForState\(\), \{ reducedMotion: 'user' \}\)/);
+assert.doesNotMatch(utilityIcon, /\['rect'/);
+assert.match(utilityIcon, /m11 17-5-5 5-5[\s\S]*m13 7 5 5-5 5/);
 assert.match(html, /rhine-lab-assistant\.css\?v=0\.2\.4e/);
 assert.match(html, /rhine-lab-assistant\.js\?v=0\.2\.4f/);
 assert.doesNotMatch(html, /id="assistantPrivacy"/);
@@ -47,6 +49,6 @@ assert.doesNotMatch(html, /<label for="assistantInput">/);
 assert.match(html, /id="assistantRole" data-i18n-skip/);
 assert.match(worker, /rhine-lab-assistant\.css\?v=0\.2\.4e/);
 assert.match(worker, /rhine-lab-assistant\.js\?v=0\.2\.4f/);
-assert.match(worker, /rhine-lab-utility-icon\.js\?v=0\.2\.4b/);
+assert.match(worker, /rhine-lab-utility-icon\.js\?v=0\.2\.4c/);
 
 console.log('assistant UI check passed');

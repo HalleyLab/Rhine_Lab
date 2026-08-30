@@ -611,31 +611,32 @@ body.background-all-lives .global-search kbd {
 }
 
 body.background-all-lives .topbar .language-dock {
-    color: #eef3f1 !important;
-    background: #1d2d34 !important;
-    border: 1px solid #1d2d34 !important;
+    color: var(--theme-text) !important;
+    background: rgba(248,249,245,.95) !important;
+    border: 1px solid var(--theme-rule) !important;
     box-shadow: none !important;
 }
 body.background-all-lives .topbar .language-dock button,
 body.dark-theme.background-all-lives .topbar .language-dock button {
-    color: #eef3f1 !important;
+    color: var(--theme-text) !important;
     background: transparent !important;
     border: 0 !important;
 }
 body.background-all-lives .topbar .language-dock button span,
 body.dark-theme.background-all-lives .topbar .language-dock button span {
-    color: #e8eeeb !important;
-    background: transparent;
-    opacity: .82 !important;
+    color: var(--theme-muted) !important;
+    background: transparent !important;
+    opacity: 1 !important;
 }
 body.background-all-lives .topbar .language-dock button span.active,
 body.dark-theme.background-all-lives .topbar .language-dock button span.active {
-    color: #fff !important;
-    background: var(--atlas-collage-blue) !important;
+    color: var(--theme-heading) !important;
+    background: var(--theme-rule) !important;
     opacity: 1 !important;
 }
-body.background-all-lives .topbar .language-dock button i {
-    color: #9db0b4 !important;
+body.background-all-lives .topbar .language-dock button i,
+body.dark-theme.background-all-lives .topbar .language-dock button i {
+    color: var(--theme-muted) !important;
     opacity: 1 !important;
 }
 
@@ -676,8 +677,9 @@ body.dark-theme.background-all-lives .global-search kbd {
     border-color: rgba(220,235,228,.2);
 }
 body.dark-theme.background-all-lives .topbar .language-dock {
-    background: #121d1a !important;
-    border-color: rgba(220,235,228,.48) !important;
+    color: var(--theme-text) !important;
+    background: #1b2723 !important;
+    border-color: var(--theme-rule) !important;
 }
 
 @media (max-width:700px) {

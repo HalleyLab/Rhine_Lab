@@ -27,7 +27,7 @@ assert.doesNotMatch(sync, /signInWithPassword|signInWithOtp|createLab|joinLab|la
 assert.match(main, /let workspaceMode = localStorage\.getItem\('rhineLabWorkspaceMode'\) === 'lab'/);
 assert.doesNotMatch(main, /LAB 日程可见性/);
 assert.match(worker, /rhine-lab-sync-v019\.js\?v=0\.2\.4-usb-tether-nav/);
-assert.match(worker, /rhine-lab-bootstrap\.js\?v=0\.2\.4u/);
+assert.match(worker, /rhine-lab-bootstrap\.js\?v=0\.2\.4w/);
 assert.match(html, /https:\/\/api\.github\.com/);
 assert.match(html, /href="https:\/\/github\.com\/HalleyLab\/Rhine_Lab\/releases\/latest"/);
 assert.match(main, /function resolveLatestDesktopDownload\(\)/);

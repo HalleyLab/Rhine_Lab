@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v119-0.2.4';
+const CACHE_NAME = 'rhine-lab-pages-v120-0.2.4';
 const APP_SHELL = [
     './',
     './index.html',
@@ -7,7 +7,7 @@ const APP_SHELL = [
     './css/rhine-dashboard-refresh.css?v=20260814-1',
     './css/rhine-lab-v019.css?v=0.2.4-usb-tether',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
-    './css/rhine-lab-theme-atlas-v2.css?v=20260818-8',
+    './css/rhine-lab-theme-atlas-v2.css?v=20260830-1',
     './css/rhine-lab-workflow-refine.css?v=0.2.4h',
     './css/rhine-lab-biology.css?v=0.2.4i',
     './css/rhine-lab-bioinformatics.css?v=0.2.4p',
@@ -22,7 +22,7 @@ const APP_SHELL = [
     './js/rhine-lab-assistant.js?v=0.2.4f',
     './js/rhine-lab-bootstrap.js?v=0.2.4w',
     './js/rhine-lab.js?v=0.2.4w',
-    './js/rhine-lab-utility-icon.js?v=0.2.4b',
+    './js/rhine-lab-utility-icon.js?v=0.2.4c',
     './js/vendor/morphicons/dom.js',
     './js/vendor/morphicons/spring-CFHloqPP.js',
     './js/vendor/morphicons/normalize-CYnN3Npw.js',
