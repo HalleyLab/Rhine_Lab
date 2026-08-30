@@ -7,7 +7,7 @@
 1. 打开仓库的 Actions 页面。
 2. 选择最新成功的 Build Android internal APK 任务。
 3. 下载 Rhine-Lab-Android-Internal 构建产物。
-4. 解压 ZIP，得到 Rhine-Lab-0.2.4-Android.apk。
+4. 解压 ZIP，得到 Rhine-Lab-0.2.5-Android.apk。
 5. 将 APK 发送到 Android 手机并安装。
 6. 如果系统阻止安装，请只对当前文件管理器临时允许“安装未知应用”。
 

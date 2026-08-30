@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'rhineLabWorkspaceV2';
+    const STORAGE_KEY = 'rhineLabWorkspaceV3';
     const INPUT_MEMORY_KEY = 'rhineLabInputMemoryV2';
 
     const defaults = {
@@ -62,10 +62,14 @@
             { id: 'RL-S-0837', type: '蛋白裂解液', source: 'HEK293T / A17', processing: 'RIPA 裂解', location: 'FZ-03/B2 · F2', date: '2026-08-03', status: '剩余少' },
             { id: 'RL-S-0829', type: '切片', source: 'M-23987 / PFC', processing: '30 μm 冠状切片', location: 'FZ-03/B2 · F7', date: '2026-08-01', status: '在库' }
         ],
+        coldStorageUnits: [
+            { id: 'COLD-FZ03', name: '-80°C 超低温冰箱 FZ-03', type: '超低温冰箱', temperature: '-80°C', shelves: 4, rows: 3, columns: 4 },
+            { id: 'COLD-LN02', name: '气相液氮罐 LN-02', type: '液氮罐', temperature: '液氮', shelves: 3, rows: 1, columns: 4 }
+        ],
         freezerBoxes: [
-            { id: 'FB-FZ03-B2', name: 'FZ-03 / B2', storageLocation: '-80°C 冰箱 FZ-03 · 第 2 层 · B 位', temperature: '-80°C', rows: 9, columns: 9 },
-            { id: 'FB-FZ03-C1', name: 'FZ-03 / C1', storageLocation: '-80°C 冰箱 FZ-03 · 第 3 层 · C 位', temperature: '-80°C', rows: 9, columns: 9 },
-            { id: 'FB-LN02-A1', name: 'LN-02 / A1', storageLocation: '液氮罐 LN-02 · 提篮 A · 第 1 层', temperature: '液氮', rows: 9, columns: 9 }
+            { id: 'FB-FZ03-B2', name: 'FZ-03-S2-R1C1', storageUnitId: 'COLD-FZ03', shelf: 2, storageRow: 1, storageColumn: 1, storageLocation: '-80°C 超低温冰箱 FZ-03 · 第 2 层 · 第 1 行第 1 位', temperature: '-80°C', rows: 9, columns: 9 },
+            { id: 'FB-FZ03-C1', name: 'FZ-03-S3-R1C1', storageUnitId: 'COLD-FZ03', shelf: 3, storageRow: 1, storageColumn: 1, storageLocation: '-80°C 超低温冰箱 FZ-03 · 第 3 层 · 第 1 行第 1 位', temperature: '-80°C', rows: 9, columns: 9 },
+            { id: 'FB-LN02-A1', name: 'LN02-S1-R1C1', storageUnitId: 'COLD-LN02', shelf: 1, storageRow: 1, storageColumn: 1, storageLocation: '气相液氮罐 LN-02 · 第 1 层 · 第 1 位', temperature: '液氮', rows: 9, columns: 9 }
         ],
         schedule: [
             { id: 'T-101', date: '2026-08-08', time: '09:00', end: '10:00', title: 'BV2 细胞换液', resource: '细胞房 · BSC-02', type: 'cell', protocolId: 'SOP-CC-014', done: true },
@@ -261,7 +265,7 @@
             notes: '', createdBy: 'LOCAL-NODE', history: []
         }
     ];
-    defaults.exampleSeedVersion = 4;
+    defaults.exampleSeedVersion = 5;
     defaults.auditLog = [];
     defaults.lineageLinks = [
         { id: 'LIN-DEMO-001', sourceType: 'animal', sourceId: 'M-24121', targetType: 'sample', targetId: 'RL-S-0869', relation: '取材', quantity: 1, unit: '份', notes: '视觉皮层取材后立即低温处理。', date: '2026-08-08' },
@@ -320,7 +324,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'coldStorageUnits', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -328,7 +332,7 @@
             protocols.push.apply(protocols, clone(seed.protocols));
             defaults.protocols = clone(seed.protocols);
         }
-        defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 4;
+        defaults.exampleSeedVersion = Number(seed.exampleSeedVersion) || 5;
     }
 
     let publicDemoUnlocked = true;
@@ -342,6 +346,8 @@
     let workspaceReadOnly = workspaceMode === 'lab';
     let selectedSampleId = state.samples[0] ? state.samples[0].id : '';
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
+    let activeColdStorageId = state.coldStorageUnits.some(unit => unit.id === localStorage.getItem('rhineLabActiveColdStorage')) ? localStorage.getItem('rhineLabActiveColdStorage') : ((state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || {}).storageUnitId || state.coldStorageUnits[0].id);
+    let activeColdStorageShelf = Math.max(1, Number(localStorage.getItem('rhineLabActiveColdStorageShelf')) || Number((state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || {}).shelf) || 1);
     let activeAnimalRoomId = state.animalRooms.some(function (room) { return room.id === localStorage.getItem('rhineLabActiveAnimalRoom'); }) ? localStorage.getItem('rhineLabActiveAnimalRoom') : (state.animalRooms[0] ? state.animalRooms[0].id : '');
     let activeAnimalRackId = state.animalRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActiveAnimalRack') && (!activeAnimalRoomId || rack.roomId === activeAnimalRoomId); }) ? localStorage.getItem('rhineLabActiveAnimalRack') : ((state.animalRacks.find(function (rack) { return rack.roomId === activeAnimalRoomId; }) || {}).id || '');
     let selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
@@ -351,6 +357,7 @@
     let selectedPlantId = state.plants[0] ? state.plants[0].id : '';
     let zoomedPlantRoomId = '';
     let pendingPlantDefaults = null;
+    let pendingFreezerDefaults = null;
     let activeBioinfoTab = localStorage.getItem('rhineLabBioinfoTab') === 'pipelines' ? 'pipelines' : 'projects';
     let activeBioProjectId = localStorage.getItem('rhineLabActiveBioProject') || '';
     let activeBioDatasetId = localStorage.getItem('rhineLabActiveBioDataset') || '';
@@ -434,6 +441,12 @@
         monthAgendaList: document.getElementById('monthAgendaList'),
         untimedScheduleList: document.getElementById('untimedScheduleList'),
         monthAgendaAdd: document.getElementById('monthAgendaAdd'),
+        coldStorageTabs: document.getElementById('coldStorageTabs'),
+        coldStorageType: document.getElementById('coldStorageType'),
+        coldStorageTitle: document.getElementById('coldStorageTitle'),
+        coldStorageMeta: document.getElementById('coldStorageMeta'),
+        coldStorageShelfTabs: document.getElementById('coldStorageShelfTabs'),
+        coldStorageMap: document.getElementById('coldStorageMap'),
         freezerBoxTabs: document.getElementById('freezerBoxTabs'),
         freezerBoxTitle: document.getElementById('freezerBoxTitle'),
         freezerBoxTemperature: document.getElementById('freezerBoxTemperature'),
@@ -779,6 +792,7 @@
                 if (!sample || sample.status !== '质控中') return sample;
                 return Object.assign({}, sample, { status: '在库' });
             }),
+            coldStorageUnits: Array.isArray(stored.coldStorageUnits) ? stored.coldStorageUnits : clone(defaults.coldStorageUnits),
             freezerBoxes: Array.isArray(stored.freezerBoxes) ? stored.freezerBoxes : clone(defaults.freezerBoxes),
             schedule: Array.isArray(stored.schedule) ? stored.schedule : clone(defaults.schedule),
             protocols: Array.isArray(stored.protocols) ? stored.protocols : clone(defaults.protocols),
@@ -810,19 +824,39 @@
             mergeExampleRecords(data.results, additionalExamples.results, 'experimentId');
             data.exampleSeedVersion = 4;
         }
+        data.coldStorageUnits = (Array.isArray(data.coldStorageUnits) && data.coldStorageUnits.length ? data.coldStorageUnits : clone(defaults.coldStorageUnits)).map(function (unit, index) {
+            return {
+                id: unit.id || 'COLD-' + String(index + 1).padStart(3, '0'),
+                name: unit.name || '冻存设备 ' + (index + 1),
+                type: unit.type || '超低温冰箱',
+                temperature: unit.temperature || (unit.type === '液氮罐' ? '液氮' : '-80°C'),
+                shelves: Math.round(number(unit.shelves, 0, 12)),
+                rows: Number(unit.shelves) > 0 ? (Math.round(number(unit.rows, 1, 12)) || 1) : 1,
+                columns: Math.round(number(unit.columns, 1, 12)) || 1,
+                createdBy: anonymousContributor(unit.createdBy),
+                history: Array.isArray(unit.history) ? unit.history : []
+            };
+        });
         data.freezerBoxes = Array.isArray(data.freezerBoxes) && data.freezerBoxes.length ? data.freezerBoxes : clone(defaults.freezerBoxes);
         data.freezerBoxes = data.freezerBoxes.map(function (box, index) {
             const seededLegacyBox = ['FB-FZ03-B2', 'FB-FZ03-C1', 'FB-LN02-A1'].includes(box.id) && Number(box.rows) === 6 && Number(box.columns) === 8;
-            return {
+            const unit = data.coldStorageUnits.find(function (item) { return item.id === box.storageUnitId; }) || data.coldStorageUnits.find(function (item) { return String(box.temperature || '').includes('液氮') === String(item.temperature || '').includes('液氮'); }) || data.coldStorageUnits[0];
+            const normalized = {
                 id: box.id || 'FB-USR-' + String(index + 1).padStart(3, '0'),
                 name: box.name || '冻存盒 ' + (index + 1),
-                storageLocation: box.storageLocation || '位置待补充',
-                temperature: box.temperature || '-80°C',
+                storageUnitId: unit.id,
+                shelf: Math.round(number(box.shelf, 1, Math.max(1, unit.shelves))) || 1,
+                storageRow: Math.round(number(box.storageRow, 1, unit.rows)) || 1,
+                storageColumn: Math.round(number(box.storageColumn, 1, unit.columns)) || 1,
+                temperature: box.temperature || unit.temperature,
                 rows: seededLegacyBox ? 9 : (Math.round(number(box.rows, 4, 12)) || 9),
                 columns: seededLegacyBox ? 9 : (Math.round(number(box.columns, 4, 12)) || 9),
                 lastScanPhoto: box.lastScanPhoto || '',
-                createdBy: anonymousContributor(box.createdBy)
+                createdBy: anonymousContributor(box.createdBy),
+                history: Array.isArray(box.history) ? box.history : []
             };
+            normalized.storageLocation = formatColdStorageBoxLocation(normalized, data.coldStorageUnits);
+            return normalized;
         });
 
         data.protocols = Array.isArray(data.protocols) ? data.protocols : clone(defaults.protocols);
@@ -1021,6 +1055,25 @@
         if (Number.isFinite(parsed)) return Math.min(100, Math.max(0, parsed));
         const columns = axis === 'x' ? [10, 38, 66, 24, 52, 80] : [18, 18, 18, 62, 62, 62];
         return columns[index % columns.length];
+    }
+
+    function formatColdStorageBoxLocation(box, units) {
+        const unit = (units || state.coldStorageUnits || []).find(function (item) { return item.id === box.storageUnitId; });
+        if (!unit) return '位置待设置';
+        const shelf = Math.max(1, Number(box.shelf) || 1);
+        const row = Math.max(1, Number(box.storageRow) || 1);
+        const column = Math.max(1, Number(box.storageColumn) || 1);
+        return unit.name + ' · 第 ' + shelf + ' 层 · 第 ' + row + ' 行第 ' + column + ' 位';
+    }
+
+    function firstAvailableColdStorageSlot(unit, shelf, excludedBoxId) {
+        const occupied = new Set(state.freezerBoxes.filter(function (box) {
+            return box.id !== excludedBoxId && box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf;
+        }).map(function (box) { return Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1); }));
+        for (let row = 1; row <= unit.rows; row += 1) for (let column = 1; column <= unit.columns; column += 1) {
+            if (!occupied.has(row + ':' + column)) return { row: row, column: column };
+        }
+        return { row: 1, column: 1 };
     }
 
     function normalizeHousingRooms(items, prefix, fallbackName) {
@@ -1327,6 +1380,9 @@
         if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) {
             activeFreezerBoxId = state.freezerBoxes[0].id;
         }
+        const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
+        if (!state.coldStorageUnits.some(unit => unit.id === activeColdStorageId)) activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
+        activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || activeColdStorageShelf || 1);
         if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
         if (!state.animalCages.some(cage => cage.id === selectedAnimalCageId)) selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
         saveState({ remote: true });
@@ -1347,6 +1403,9 @@
                 : migrateState(normalizeStateShape(clone(defaults)));
             selectedSampleId = state.samples[0] ? state.samples[0].id : '';
             if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) activeFreezerBoxId = state.freezerBoxes[0].id;
+            const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
+            activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
+            activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || 1);
             if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
             selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
         }
@@ -1480,6 +1539,9 @@
         state = migrateState(loadState(mode));
         selectedSampleId = state.samples[0] ? state.samples[0].id : '';
         if (!state.freezerBoxes.some(box => box.id === activeFreezerBoxId)) activeFreezerBoxId = state.freezerBoxes[0].id;
+        const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
+        activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
+        activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || 1);
         if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
         selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
         workspaceReadOnly = computeWorkspaceReadOnly();
@@ -1752,6 +1814,12 @@
                     activeBioDatasetId = add.dataset.bioDatasetContext;
                     localStorage.setItem('rhineLabActiveBioDataset', activeBioDatasetId);
                 }
+                if (add.dataset.add === 'freezer') {
+                    pendingFreezerDefaults = {
+                        storageRow: add.dataset.storageRow || '',
+                        storageColumn: add.dataset.storageColumn || ''
+                    };
+                }
                 openEntryDialog(add.dataset.add);
                 return;
             }
@@ -2015,6 +2083,23 @@
             const freezerBoxTab = event.target.closest('[data-freezer-box]');
             if (freezerBoxTab) {
                 selectFreezerBox(freezerBoxTab.dataset.freezerBox);
+                return;
+            }
+
+            const coldStorageTab = event.target.closest('[data-cold-storage]');
+            if (coldStorageTab) {
+                activeColdStorageId = coldStorageTab.dataset.coldStorage;
+                activeColdStorageShelf = 1;
+                selectedSampleId = '';
+                renderSamples();
+                return;
+            }
+
+            const coldStorageShelf = event.target.closest('[data-cold-storage-shelf]');
+            if (coldStorageShelf) {
+                activeColdStorageShelf = Math.max(1, Number(coldStorageShelf.dataset.coldStorageShelf) || 1);
+                selectedSampleId = '';
+                renderSamples();
                 return;
             }
 
@@ -2656,10 +2741,10 @@
             return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
         }
         if (!detailed) {
-            return '<section class="experiment-inline-result completed"><strong class="result-recorded">已录入结果</strong></section>';
+            return '<section class="experiment-inline-result completed"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><div class="result-recorded-row"><strong class="result-recorded">已录入结果</strong><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">修改结果</button></div></section>';
         }
         const attachments = result.attachments.slice(0, 6).map(resultAttachmentLinkHtml).join('');
-        return '<section class="experiment-inline-result completed detailed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><div class="result-conclusion"><small>主要结果</small><strong>' + esc(result.summary || '') + '</strong></div><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '') + '</strong></div><div class="result-conclusion"><small>下一步</small><strong>' + esc(result.nextStep || '') + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '') + '<footer><span>' + esc(result.date) + ' · ' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">编辑结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></section>';
+        return '<section class="experiment-inline-result completed detailed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><details class="result-date-accordion" open><summary><span>登记日期</span><strong>' + esc(result.date) + '</strong><b aria-hidden="true">⌄</b></summary><div class="result-date-content"><div class="result-conclusion"><small>主要结果</small><strong>' + esc(result.summary || '') + '</strong></div><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '') + '</strong></div><div class="result-conclusion"><small>下一步</small><strong>' + esc(result.nextStep || '') + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '') + '<footer><span>' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">修改结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></div></details></section>';
     }
 
     function groupByDate(items) {
@@ -3168,7 +3253,7 @@
         document.getElementById('reagentTable').innerHTML = items.map(function (item) {
             const low = item.amount < 25 ? ' low' : '';
             const displayStatus = getReagentDisplayStatus(item);
-            return '<tr class="clickable-data-row" data-reagent-catalog="' + esc(item.catalog) + '" tabindex="0" aria-label="查看试剂 ' + esc(item.name) + ' 的详细信息"><td><strong>' + esc(item.name) + (item.photoData ? ' <span class="table-photo-mark" title="附有录入照片">⌑</span>' : '') + '</strong><small>' + esc(item.catalog) + contributorInline(item) + '</small></td><td>' + esc(item.category) + '</td><td>' + esc(item.lot) + '</td><td>' + esc(item.location) + '</td><td><div class="amount-meter' + low + '"><div><i style="width:' + number(item.amount, 0, 100) + '%"></i></div><span>' + formatQuantity(item.currentQty) + ' / ' + formatQuantity(item.totalQty) + ' ' + esc(item.unit) + '</span></div></td><td>' + esc(item.expiry) + '</td><td><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+            return '<tr class="clickable-data-row" data-reagent-catalog="' + esc(item.catalog) + '" tabindex="0" aria-label="查看试剂 ' + esc(item.name) + ' 的详细信息"><td><strong>' + esc(item.name) + (item.photoData ? ' <span class="table-photo-mark" title="附有录入照片">⌑</span>' : '') + '</strong>' + contributorInline(item) + '</td><td><strong>' + esc(item.category) + '</strong><small>' + esc(item.catalog) + '</small></td><td>' + esc(item.lot) + '</td><td>' + esc(item.location) + '</td><td><div class="amount-meter' + low + '"><div><i style="width:' + number(item.amount, 0, 100) + '%"></i></div><span>' + formatQuantity(item.currentQty) + ' / ' + formatQuantity(item.totalQty) + ' ' + esc(item.unit) + '</span></div></td><td>' + esc(item.expiry) + '</td><td><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
         }).join('') || '<tr><td colspan="8">没有找到匹配的试剂记录。</td></tr>';
     }
 
@@ -3301,7 +3386,7 @@
         els.recordDetailTitle.textContent = item.name || item.id;
         els.recordDetailBody.innerHTML =
             '<section class="record-detail-hero biology-detail-hero virus-detail-hero"><div><span class="record-detail-code">' + esc(item.id) + '</span><h3>' + esc(item.name || '未命名病毒') + '</h3><p>' + esc(item.virusType || '类型未填写') + ' · ' + esc(item.serotype || '株系 / 血清型未填写') + '</p></div><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.biosafetyLevel || '未设置') + '</span></section>' +
-            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">VECTOR IDENTITY</p><h3>病毒与载体信息</h3></div><div class="record-detail-grid">' + detailFieldHtml('病毒编号', item.id) + detailFieldHtml('名称', item.name) + detailFieldHtml('病毒 / 载体类型', item.virusType) + detailFieldHtml('株系 / 血清型', item.serotype) + detailFieldHtml('基因组类型', item.genome) + detailFieldHtml('表达载荷', item.cargo, true) + detailFieldHtml('宿主 / 嗜性', item.hostRange, true) + detailFieldHtml('生物安全等级', item.biosafetyLevel) + '</div></section>' +
+            '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">VECTOR IDENTITY</p><h3>病毒与载体信息</h3></div><div class="record-detail-grid">' + detailFieldHtml('病毒编号', item.id) + detailFieldHtml('名称', item.name) + detailFieldHtml('病毒 / 载体类型', item.virusType) + detailFieldHtml('株系 / 血清型', item.serotype) + detailFieldHtml('基因组类型', item.genome) + detailFieldHtml('表达载荷', item.cargo, true) + detailFieldHtml('宿主', item.hostRange, true) + detailFieldHtml('生物安全等级', item.biosafetyLevel) + '</div></section>' +
             '<section class="record-detail-section"><div class="record-detail-section-title"><p class="micro-label">BATCH & STORAGE</p><h3>批次、滴度与保藏</h3></div><div class="record-detail-grid">' + detailFieldHtml('滴度', item.titer) + detailFieldHtml('批次', item.batch) + detailFieldHtml('制备日期', item.productionDate) + detailFieldHtml('存储位置', item.location) + detailFieldHtml('状态', item.status) + detailFieldHtml('冻存样本', linkedFrozenSampleLabel(item.frozenSampleId), true) + detailFieldHtml('备注', item.notes, true) + '</div></section>' + embeddedLineageHtml('virus', item.id) + recordHistoryHtml(item);
         if (!els.recordDetailDialog.open) els.recordDetailDialog.showModal();
         scheduleEmbeddedLineageLayout();
@@ -3383,7 +3468,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', animalRoom: '动物房间', animalRack: '动物笼架', animalCage: '动物笼位', plantRoom: '植物培养室', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', coldStorage: '冻存设备', freezer: '冻存盒', animalRoom: '动物房间', animalRack: '动物笼架', animalCage: '动物笼位', plantRoom: '植物培养室', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -3399,6 +3484,8 @@
         if (type === 'sample') return state.samples;
         if (type === 'cell') return state.cellCultures;
         if (type === 'result') return state.results;
+        if (type === 'coldStorage') return state.coldStorageUnits;
+        if (type === 'freezer') return state.freezerBoxes;
         if (type === 'animalRoom') return state.animalRooms;
         if (type === 'animalRack') return state.animalRacks;
         if (type === 'animalCage') return state.animalCages;
@@ -3557,10 +3644,24 @@
             cellCultures: [],
             reagents: [],
             samples: [],
+            coldStorageUnits: [{
+                id: 'COLD-LOCAL-001',
+                name: '-80°C 超低温冰箱 FZ-01',
+                type: '超低温冰箱',
+                temperature: '-80°C',
+                shelves: 0,
+                rows: 1,
+                columns: 1,
+                createdBy: 'LOCAL-NODE'
+            }],
             freezerBoxes: [{
                 id: 'FB-LOCAL-001',
-                name: '冻存盒 1',
-                storageLocation: '位置待设置',
+                name: 'FZ-01-R1C1',
+                storageUnitId: 'COLD-LOCAL-001',
+                shelf: 1,
+                storageRow: 1,
+                storageColumn: 1,
+                storageLocation: '-80°C 超低温冰箱 FZ-01 · 第 1 层 · 第 1 行第 1 位',
                 temperature: '-80°C',
                 rows: 9,
                 columns: 9,
@@ -3593,7 +3694,11 @@
         activeRunExperimentId = '';
         activeProtocolId = '';
         activeFreezerBoxId = state.freezerBoxes[0].id;
+        activeColdStorageId = state.coldStorageUnits[0].id;
+        activeColdStorageShelf = 1;
         localStorage.setItem('rhineLabActiveFreezerBox', activeFreezerBoxId);
+        localStorage.setItem('rhineLabActiveColdStorage', activeColdStorageId);
+        localStorage.setItem('rhineLabActiveColdStorageShelf', '1');
         localStorage.removeItem('rhineLabReadNotifications');
         saveState();
         renderAll();
@@ -3624,18 +3729,51 @@
     function renderSamples() {
         const search = valueOf('sampleSearch').toLowerCase();
         const items = state.samples.filter(item => [item.id, item.type, item.source, item.processing, item.location, item.status].join(' ').toLowerCase().includes(search));
-        const activeBox = getActiveFreezerBox();
-        const boxSamples = state.samples.filter(item => item.boxId === activeBox.id);
+        const activeUnit = state.coldStorageUnits.find(unit => unit.id === activeColdStorageId) || state.coldStorageUnits[0];
+        activeColdStorageId = activeUnit.id;
+        const shelfCount = Math.max(1, Number(activeUnit.shelves) || 0);
+        activeColdStorageShelf = Math.min(shelfCount, Math.max(1, Number(activeColdStorageShelf) || 1));
+        localStorage.setItem('rhineLabActiveColdStorage', activeColdStorageId);
+        localStorage.setItem('rhineLabActiveColdStorageShelf', String(activeColdStorageShelf));
+        const visibleBoxes = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === activeColdStorageShelf);
+        const activeBox = visibleBoxes.find(item => item.id === activeFreezerBoxId) || visibleBoxes[0] || null;
+        if (activeBox) {
+            activeFreezerBoxId = activeBox.id;
+            localStorage.setItem('rhineLabActiveFreezerBox', activeBox.id);
+        }
+        const boxSamples = activeBox ? state.samples.filter(item => item.boxId === activeBox.id) : [];
         const positions = new Map(boxSamples.map(item => [item.position || samplePosition(item.location), item]));
-        const rows = Array.from({ length: activeBox.rows }, (_, index) => String.fromCharCode(65 + index));
+        const rows = activeBox ? Array.from({ length: activeBox.rows }, (_, index) => String.fromCharCode(65 + index)) : [];
 
-        els.freezerBoxTabs.innerHTML = state.freezerBoxes.map(function (box) {
-            const count = state.samples.filter(item => item.boxId === box.id).length;
-            return '<button class="freezer-box-tab' + (box.id === activeBox.id ? ' active' : '') + '" type="button" data-freezer-box="' + esc(box.id) + '"><span><strong>' + esc(box.name) + (box.lastScanPhoto ? ' <em>已扫描</em>' : '') + '</strong><small>' + esc(interfaceText(box.storageLocation)) + contributorInline(box) + '</small></span><b>' + count + ' / ' + (box.rows * box.columns) + '</b></button>';
+        els.coldStorageTabs.innerHTML = state.coldStorageUnits.map(function (unit) {
+            const count = state.freezerBoxes.filter(box => box.storageUnitId === unit.id).length;
+            return '<button class="cold-storage-tab' + (unit.id === activeUnit.id ? ' active' : '') + '" type="button" data-cold-storage="' + esc(unit.id) + '"><span>' + esc(unit.type) + '</span><strong>' + esc(unit.name) + '</strong><small>' + count + ' 个冻存盒</small></button>';
         }).join('');
-        els.freezerBoxTitle.textContent = '冻存盒 ' + activeBox.name;
-        els.freezerBoxTemperature.textContent = 'FREEZER MAP · ' + activeBox.temperature;
-        els.freezerBoxLocation.textContent = activeBox.storageLocation + (activeBox.lastScanPhoto ? ' · 最近已完成照片识别' : '') + ' · 点击空位可登记';
+        els.coldStorageType.textContent = (activeUnit.type === '液氮罐' ? 'LIQUID NITROGEN TANK' : 'FREEZER') + ' · ' + activeUnit.temperature;
+        els.coldStorageTitle.textContent = activeUnit.name;
+        els.coldStorageMeta.textContent = (activeUnit.shelves ? activeUnit.shelves + ' 个层架' : '无独立层架，使用默认第 1 层') + ' · 每层 ' + activeUnit.rows + ' 行 × ' + activeUnit.columns + ' 列盒位';
+        els.coldStorageShelfTabs.innerHTML = Array.from({ length: shelfCount }, function (_, index) {
+            const shelf = index + 1;
+            return '<button class="' + (shelf === activeColdStorageShelf ? 'active' : '') + '" type="button" data-cold-storage-shelf="' + shelf + '">第 ' + shelf + ' 层</button>';
+        }).join('');
+        const boxesBySlot = new Map(visibleBoxes.map(box => [Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1), box]));
+        let storageMap = '';
+        for (let row = 1; row <= activeUnit.rows; row += 1) for (let column = 1; column <= activeUnit.columns; column += 1) {
+            const box = boxesBySlot.get(row + ':' + column);
+            storageMap += box
+                ? '<button class="cold-storage-slot occupied' + (activeBox && box.id === activeBox.id ? ' active' : '') + '" type="button" data-freezer-box="' + esc(box.id) + '"><span>R' + row + '-C' + column + '</span><strong>' + esc(box.name) + '</strong></button>'
+                : '<button class="cold-storage-slot empty" type="button" data-add="freezer" data-storage-row="' + row + '" data-storage-column="' + column + '"><span>R' + row + '-C' + column + '</span><strong>＋ 放置冻存盒</strong></button>';
+        }
+        els.coldStorageMap.style.gridTemplateColumns = 'repeat(' + activeUnit.columns + ', minmax(108px, 1fr))';
+        els.coldStorageMap.innerHTML = storageMap;
+
+        els.freezerBoxTabs.innerHTML = visibleBoxes.map(function (box) {
+            const count = state.samples.filter(item => item.boxId === box.id).length;
+            return '<button class="freezer-box-tab' + (activeBox && box.id === activeBox.id ? ' active' : '') + '" type="button" data-freezer-box="' + esc(box.id) + '"><span><strong>' + esc(box.name) + (box.lastScanPhoto ? ' <em>已扫描</em>' : '') + '</strong><small>' + esc(interfaceText(box.storageLocation)) + contributorInline(box) + '</small></span><b>' + count + ' / ' + (box.rows * box.columns) + '</b></button>';
+        }).join('') || '<p class="cold-storage-empty">这一层还没有冻存盒，点击上方空盒位进行放置。</p>';
+        els.freezerBoxTitle.textContent = activeBox ? '冻存盒 ' + activeBox.name : '尚未选择冻存盒';
+        els.freezerBoxTemperature.textContent = activeBox ? 'FREEZER BOX MAP · ' + activeBox.temperature : 'FREEZER BOX MAP';
+        els.freezerBoxLocation.textContent = activeBox ? activeBox.storageLocation + (activeBox.lastScanPhoto ? ' · 最近已完成照片识别' : '') + ' · 点击空位可登记' : '先在设备示意图中放置或选择冻存盒';
 
         let matrixHtml = '';
         rows.forEach(function (row) {
@@ -3650,8 +3788,8 @@
             }
         });
         const matrix = document.getElementById('cryoMatrix');
-        matrix.style.gridTemplateColumns = 'repeat(' + activeBox.columns + ', minmax(24px, 1fr))';
-        matrix.innerHTML = matrixHtml;
+        matrix.style.gridTemplateColumns = activeBox ? 'repeat(' + activeBox.columns + ', minmax(24px, 1fr))' : '1fr';
+        matrix.innerHTML = matrixHtml || '<button class="empty-card" type="button" data-add="freezer"><strong>＋ 放置冻存盒</strong></button>';
 
         const selected = boxSamples.find(item => item.id === selectedSampleId) || boxSamples[0];
         selectedSampleId = selected ? selected.id : '';
@@ -3660,7 +3798,7 @@
             const photo = selected.photoData ? '<img class="sample-record-photo" src="' + selected.photoData + '" alt="' + esc(selected.id) + ' 的录入照片">' : '<div class="sample-vial" data-code="' + esc(selected.id) + '"></div>';
             detail.innerHTML = '<p class="micro-label">SELECTED SAMPLE' + contributorInline(selected) + '</p>' + photo + '<h2>' + esc(selected.type) + '</h2><p>' + esc(selected.id) + ' · ' + esc(selected.status) + '</p><dl class="detail-list"><div><dt>样本来源</dt><dd>' + esc(selected.source) + '</dd></div><div><dt>处理方式</dt><dd>' + esc(selected.processing) + '</dd></div><div><dt>冻存盒位置</dt><dd>' + esc(selected.location) + '</dd></div><div><dt>设备 / 层架</dt><dd>' + esc(activeBox.storageLocation) + '</dd></div><div><dt>入库日期</dt><dd>' + esc(selected.date) + '</dd></div></dl><button class="sample-detail-open" type="button" data-open-sample-detail><span>查看详情、修改与记录</span><b>→</b></button>';
         } else {
-            detail.innerHTML = '<p class="search-empty">这个冻存盒尚未登记样本。可点击左侧空位或使用拍照识别。</p>';
+            detail.innerHTML = '<p class="search-empty">' + (activeBox ? '这个冻存盒尚未登记样本。可点击左侧空位或使用拍照识别。' : '这一层还没有冻存盒。') + '</p>';
         }
 
         document.getElementById('sampleTable').innerHTML = items.map(function (item) {
@@ -4613,7 +4751,7 @@
     }
 
     function renderExperimentUsageRows(usages) {
-        els.experimentUsageRows.innerHTML = (usages || []).map(experimentReagentRowHtml).join('') || '<p class="experiment-usage-empty">当前没有试剂用量，点击下方按钮添加。</p>';
+        els.experimentUsageRows.innerHTML = (usages || []).map(experimentReagentRowHtml).join('');
     }
 
     function experimentReagentRowHtml(usage) {
@@ -5434,14 +5572,18 @@ function getReagentDisplayStatus(reagent) {
 }
 
     function getActiveFreezerBox() {
-        return state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || state.freezerBoxes[0];
+        return state.freezerBoxes.find(box => box.id === activeFreezerBoxId && box.storageUnitId === activeColdStorageId && Number(box.shelf || 1) === activeColdStorageShelf) || null;
     }
 
     function selectFreezerBox(id) {
         const box = state.freezerBoxes.find(item => item.id === id);
         if (!box) return;
         activeFreezerBoxId = box.id;
+        activeColdStorageId = box.storageUnitId;
+        activeColdStorageShelf = Math.max(1, Number(box.shelf) || 1);
         localStorage.setItem('rhineLabActiveFreezerBox', box.id);
+        localStorage.setItem('rhineLabActiveColdStorage', activeColdStorageId);
+        localStorage.setItem('rhineLabActiveColdStorageShelf', String(activeColdStorageShelf));
         const firstSample = state.samples.find(item => item.boxId === box.id);
         selectedSampleId = firstSample ? firstSample.id : '';
         renderSamples();
@@ -5461,6 +5603,7 @@ function getReagentDisplayStatus(reagent) {
 
     function openFreezerScan() {
         const box = getActiveFreezerBox();
+        if (!box) { showToast('请先选择一个冻存盒'); return; }
         freezerScanScores = [];
         freezerScanDetected = new Set();
         freezerScanPhotoData = '';
@@ -5868,7 +6011,7 @@ function getReagentDisplayStatus(reagent) {
                 field('serotype', '株系 / 血清型', 'text', '例：AAV9 / VSV-G 假型', false),
                 field('genome', '基因组类型', 'select', ['ssDNA', 'dsDNA', 'ssRNA', 'dsRNA', '逆转录 RNA', '其他'], false),
                 field('cargo', '表达载荷', 'text', '例：hSyn-GCaMP6s', false, true),
-                field('hostRange', '宿主 / 嗜性', 'text', '例：神经元 / 哺乳动物细胞', false, true),
+                field('hostRange', '宿主', 'text', '例：神经元 / 哺乳动物细胞', false, true),
                 field('titer', '滴度', 'text', '例：2.1 × 10¹³ vg/mL', false),
                 field('batch', '制备批次', 'text', '例：AAV9-2607', false),
                 field('biosafetyLevel', '生物安全等级', 'select', ['BSL-1', 'BSL-2', 'BSL-3', '其他'], true),
@@ -6071,12 +6214,25 @@ function getReagentDisplayStatus(reagent) {
                 field('notes', '备注', 'textarea', '记录安全要求、稳定期、质量检查或替代组分…', false, true)
             ]
         },
+        coldStorage: {
+            kicker: 'COLD STORAGE EQUIPMENT', title: '新增冰箱 / 液氮罐',
+            fields: [
+                field('name', '设备名称', 'text', '例：-80°C 超低温冰箱 FZ-01', true),
+                field('type', '设备类型', 'select', ['超低温冰箱', '-20°C 冰箱', '4°C 冰箱', '液氮罐'], true),
+                field('temperature', '存储条件', 'select', ['-80°C', '-20°C', '4°C', '液氮'], true),
+                field('shelves', '层架数量（0 表示无独立层架）', 'number', '4', false),
+                field('rows', '每层盒位行数', 'number', '3', true),
+                field('columns', '每行盒位数', 'number', '4', true)
+            ]
+        },
         freezer: {
             kicker: 'FREEZER BOX REGISTRATION', title: '新增冻存盒',
             fields: [
                 field('name', '冻存盒名称', 'text', '例：FZ-03 / C2', true),
-                field('storageLocation', '设备 / 层架位置', 'text', '例：-80°C 冰箱 FZ-03 · 第 3 层 · C 位', true),
-                field('temperature', '存储条件', 'select', ['-80°C', '-20°C', '液氮', '4°C'], true),
+                field('storageUnitId', '所属冰箱 / 液氮罐', 'cold-storage-select', '', true),
+                field('shelf', '层架', 'number', '1', true),
+                field('storageRow', '盒位行', 'number', '1', true),
+                field('storageColumn', '盒位列', 'number', '1', true),
                 field('rows', '行数', 'select', ['4', '5', '6', '7', '8', '9', '10'], true),
                 field('columns', '列数', 'select', ['6', '7', '8', '9', '10', '12'], true)
             ]
@@ -6138,8 +6294,13 @@ function getReagentDisplayStatus(reagent) {
             defaultsForEntry = Object.assign({ rackId: rack ? rack.id : '', position: rack ? firstAvailableAnimalPosition(rack, state.animalCages) : '', species: '小鼠', capacity: 5, status: '在用' }, pendingAnimalCageDefaults || {});
         } else if (type === 'formulation') {
             defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
+        } else if (type === 'coldStorage') {
+            defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', shelves: 4, rows: 3, columns: 4 };
         } else if (type === 'freezer') {
-            defaultsForEntry = { rows: '9', columns: '9', temperature: '-80°C' };
+            const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
+            const requestedShelf = Math.min(Math.max(1, Number(activeColdStorageShelf) || 1), Math.max(1, Number(unit.shelves) || 1));
+            const slot = firstAvailableColdStorageSlot(unit, requestedShelf, editOptions && editOptions.key);
+            defaultsForEntry = Object.assign({ storageUnitId: unit.id, shelf: requestedShelf, storageRow: slot.row, storageColumn: slot.column, rows: '9', columns: '9' }, pendingFreezerDefaults || {});
         } else if (type === 'cell') {
             defaultsForEntry = { passage: 1, confluence: 50 };
         } else if (type === 'passage') {
@@ -6213,6 +6374,7 @@ function getReagentDisplayStatus(reagent) {
         pendingSampleDefaults = null;
         pendingAnimalCageDefaults = null;
         pendingPlantDefaults = null;
+        pendingFreezerDefaults = null;
         els.entryDialog.showModal();
         const first = els.dialogFields.querySelector('input, select, textarea');
         if (first) first.focus();
@@ -6302,7 +6464,12 @@ function getReagentDisplayStatus(reagent) {
             const options = ['<option value="">不关联冻存样本</option>'].concat(state.samples.map(function (sample) {
                 return '<option value="' + esc(sample.id) + '">' + esc(sample.id + ' · ' + sample.type + ' · ' + sample.location) + '</option>';
             })).join('');
-            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';        } else if (config.type === 'freezer-select') {
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';        } else if (config.type === 'cold-storage-select') {
+            const options = state.coldStorageUnits.map(function (unit) {
+                return '<option value="' + esc(unit.id) + '">' + esc(unit.name) + ' · ' + esc(unit.temperature) + '</option>';
+            }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + options + '</select>';
+        } else if (config.type === 'freezer-select') {
             const options = state.freezerBoxes.map(function (box) {
                 return '<option value="' + esc(box.id) + '">' + esc(box.name) + ' · ' + esc(interfaceText(box.storageLocation)) + '</option>';
             }).join('');
@@ -6915,20 +7082,56 @@ function getReagentDisplayStatus(reagent) {
             state.schedule.push(data);
             calendarDate = parseLocalDate(data.date);
             activityText = '添加日程“' + data.title + '”';
+        } else if (activeDialogType === 'coldStorage') {
+            const unit = {
+                id: generatedRecordId('COLD'),
+                name: displayOr(data.name, '未命名冻存设备'),
+                type: displayOr(data.type, '超低温冰箱'),
+                temperature: displayOr(data.temperature, '-80°C'),
+                shelves: Math.round(number(data.shelves, 0, 12)),
+                rows: Number(data.shelves) > 0 ? (Math.round(number(data.rows, 1, 12)) || 1) : 1,
+                columns: Math.round(number(data.columns, 1, 12)) || 1,
+                createdBy: data.createdBy,
+                history: [createdHistoryEntry()]
+            };
+            state.coldStorageUnits.push(unit);
+            activeColdStorageId = unit.id;
+            activeColdStorageShelf = 1;
+            selectedSampleId = '';
+            localStorage.setItem('rhineLabActiveColdStorage', unit.id);
+            localStorage.setItem('rhineLabActiveColdStorageShelf', '1');
+            activityText = '新增冻存设备“' + unit.name + '”';
         } else if (activeDialogType === 'freezer') {
+            const unit = state.coldStorageUnits.find(item => item.id === data.storageUnitId) || state.coldStorageUnits[0];
+            const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
+            const storageRow = Math.round(number(data.storageRow, 1, unit.rows)) || 1;
+            const storageColumn = Math.round(number(data.storageColumn, 1, unit.columns)) || 1;
+            if (state.freezerBoxes.some(box => box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn)) {
+                showToast('该设备盒位已经放置冻存盒');
+                return;
+            }
             const box = {
                 id: generatedRecordId('FB-USR'),
                 name: displayOr(data.name, '未命名冻存盒'),
-                storageLocation: String(data.storageLocation || '').trim(),
-                temperature: displayOr(data.temperature, '-80°C'),
+                storageUnitId: unit.id,
+                shelf: shelf,
+                storageRow: storageRow,
+                storageColumn: storageColumn,
+                temperature: unit.temperature,
                 rows: Math.round(number(data.rows || 9, 4, 12)),
                 columns: Math.round(number(data.columns || 9, 4, 12)),
                 lastScanPhoto: '',
-                createdBy: data.createdBy
+                createdBy: data.createdBy,
+                history: [createdHistoryEntry()]
             };
+            box.storageLocation = formatColdStorageBoxLocation(box, state.coldStorageUnits);
             state.freezerBoxes.push(box);
             activeFreezerBoxId = box.id;
+            activeColdStorageId = unit.id;
+            activeColdStorageShelf = shelf;
             localStorage.setItem('rhineLabActiveFreezerBox', box.id);
+            localStorage.setItem('rhineLabActiveColdStorage', unit.id);
+            localStorage.setItem('rhineLabActiveColdStorageShelf', String(shelf));
             selectedSampleId = '';
             activityText = '新增冻存盒“' + box.name + '”';
         }

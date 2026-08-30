@@ -29,8 +29,8 @@ const splash = (name, color) => sharp({
 }).png().toFile(path.join(assets, name));
 
 await Promise.all([
-  splash('splash.png', '#eef5d3'),
-  splash('splash-dark.png', '#eef5d3')
+  splash('splash.png', '#f5f7ed'),
+  splash('splash-dark.png', '#f5f7ed')
 ]);
 
 console.log('Created Android assets from the shared Rhine Lab app icon.');

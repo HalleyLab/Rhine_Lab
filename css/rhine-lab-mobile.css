@@ -533,6 +533,19 @@
     .assistant-drawer-head { min-height: 58px; }
 }
 
+@media (max-width: 700px) {
+    .cold-storage-tab { flex-basis: min(72vw, 250px); }
+    .cold-storage-overview { padding: 11px; }
+    .cold-storage-overview > header { align-items: flex-start; flex-direction: column; }
+    .cold-storage-overview > header .button { width: 100%; }
+    .cold-storage-map { grid-auto-columns: minmax(108px, 1fr); }
+    .freezer-manager-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .freezer-manager-actions .button { width: 100%; }
+    .result-date-accordion { margin: 10px; }
+    .result-date-accordion > summary { grid-template-columns: minmax(84px, 1fr) auto 16px; padding: 0 10px; }
+    .result-recorded-row { padding: 12px; }
+}
+
 @media (max-width: 820px), (max-width: 1200px) and (max-height: 700px) and (orientation: landscape) {
     .top-actions {
         max-width: none !important;
