@@ -9,8 +9,8 @@ const worker = read('sw.js');
 const bioCss = read('css/rhine-lab-bioinformatics.css');
 const main = read('js/rhine-lab.js');
 
-assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.2\.4g/);
-assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.2\.4g/);
+assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.2\.4h/);
+assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.2\.4h/);
 assert.match(html, /id="searchTitle">搜索<\/h2>/);
 assert.match(html, /data-close-search aria-label="关闭搜索">×<\/button>/);
 assert.match(css, /body:not\(\.dark-theme\) :is\(\.global-search, \.dialog-search\)/);
@@ -18,6 +18,7 @@ assert.match(css, /\.load-item header span\s*\{[^}]*font-size:\s*13px/s);
 assert.match(css, /\.sidebar-foot \.system-status\s*\{[^}]*min-height:\s*58px/s);
 assert.match(css, /\.search-dialog\s*\{\s*animation:\s*none\s*!important/s);
 assert.match(css, /\.dialog-close[\s\S]*::before/);
+assert.match(css, /button\[aria-label\^="关闭"\]:not\(\.search-backdrop\):not\(#utilityNavToggle\)/);
 assert.match(css, /\.inline-search\s*\{\s*display:\s*none\s*!important/s);
 assert.match(css, /\.cell-search-toolbar\s*\{\s*display:\s*none\s*!important/s);
 assert.doesNotMatch(css, /:hover|:active|@keyframes|transition:(?!\s*none)/);

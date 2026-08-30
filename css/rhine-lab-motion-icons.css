@@ -58,7 +58,7 @@ html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
     .housing-layout-rack-delete,
     .schedule-delete-button,
     .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
     button[aria-label^="删除"]
 ) {
     position: relative;
@@ -75,7 +75,7 @@ html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
     .housing-layout-rack-delete,
     .schedule-delete-button,
     .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
     button[aria-label^="删除"]
 )::before,
 :where(
@@ -84,7 +84,7 @@ html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
     .housing-layout-rack-delete,
     .schedule-delete-button,
     .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
     button[aria-label^="删除"]
 )::after {
     content: "";
@@ -104,7 +104,7 @@ html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
     .housing-layout-rack-delete,
     .schedule-delete-button,
     .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop),
+    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
     button[aria-label^="删除"]
 )::after {
     transform: translate(-50%, -50%) rotate(-45deg);
