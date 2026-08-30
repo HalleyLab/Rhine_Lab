@@ -12103,6 +12103,10 @@ html[lang="zh-CN"] .activity-item time{
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transition: transform .2s ease;
+}
+.utility-nav-toggle[aria-expanded="true"] .utility-nav-toggle-icon {
+    transform: rotate(180deg);
 }
 .utility-nav {
     position: static;
