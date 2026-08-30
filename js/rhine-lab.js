@@ -1450,7 +1450,7 @@
         const publicBanner = document.getElementById('publicDemoBanner');
         if (publicBanner) publicBanner.hidden = !(publicDemoMode && !workspaceAccess.authenticated);
         if (els.workspaceModeToggle) {
-            const button = els.workspaceModeToggle.querySelector('[data-workspace-mode]');
+            const button = els.workspaceModeToggle.querySelector('.mobile-workspace-action');
             if (button) {
                 const target = workspaceMode === 'lab' ? 'personal' : 'lab';
                 button.dataset.workspaceMode = target;
@@ -1460,6 +1460,11 @@
                 button.classList.remove('active');
                 button.setAttribute('aria-pressed', 'false');
             }
+            els.workspaceModeToggle.querySelectorAll('.desktop-workspace-options [data-workspace-mode]').forEach(function (option) {
+                const active = option.dataset.workspaceMode === workspaceMode;
+                option.classList.toggle('active', active);
+                option.setAttribute('aria-pressed', String(active));
+            });
         }
         if (els.workspaceScopeBanner) els.workspaceScopeBanner.hidden = workspaceMode !== 'lab';
         if (workspaceMode === 'lab' && els.workspaceScopeBanner) {

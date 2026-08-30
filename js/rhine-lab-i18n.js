@@ -1863,6 +1863,9 @@
         button.setAttribute('aria-label', label);
         button.setAttribute('title', label);
         button.setAttribute('aria-pressed', String(language === 'en'));
+        button.querySelectorAll('[data-language-option]').forEach(function (option) {
+            option.classList.toggle('active', option.dataset.languageOption === language);
+        });
     }
 
     function setLanguage(nextLanguage, notify) {

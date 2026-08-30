@@ -597,6 +597,10 @@
         white-space: nowrap;
     }
     .top-actions .utility-nav #syncControl { background: transparent !important; }
+    .top-actions .utility-nav .desktop-utility-control { display: none !important; }
+    .top-actions .utility-nav span.mobile-utility-control { display: inline !important; }
+    .top-actions .utility-nav svg.mobile-utility-control { display: block !important; }
+    .top-actions .utility-nav button.mobile-utility-control { display: flex !important; }
 
     .assistant-character-trigger {
         touch-action: pan-y;
