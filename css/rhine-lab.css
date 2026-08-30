@@ -12536,6 +12536,13 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-rack-handle span { color: var(--muted); font-size: 9px; font-weight: 900; }
 .cold-storage-rack.is-dragging { opacity: .58; outline: 3px solid var(--acid-strong); cursor: grabbing; }
 .cold-storage-racks.is-rack-drop-target { outline: 3px solid color-mix(in srgb, var(--acid-strong) 72%, transparent); outline-offset: 3px; }
+.cold-storage-rack-destinations { position: fixed; right: 16px; bottom: 16px; z-index: 1900; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); max-height: min(42dvh, 360px); padding: 12px; overflow: auto; color: var(--ink); background: color-mix(in srgb, var(--surface) 96%, var(--acid) 4%); border: 1px solid var(--line-dark); border-radius: 14px; box-shadow: 0 18px 48px rgba(20, 31, 25, .24); touch-action: none; }
+.cold-storage-rack-destinations > strong { font-size: 12px; }
+.cold-storage-rack-destinations > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.cold-storage-rack-destinations button { display: grid; gap: 3px; padding: 10px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px 3px 8px 3px; text-align: left; }
+.cold-storage-rack-destinations button strong { font-size: 11px; }
+.cold-storage-rack-destinations button span { color: var(--muted); font-size: 10px; }
+.cold-storage-rack-destinations button.is-rack-drop-target { color: #17200d; background: var(--acid); border-color: var(--acid-strong); outline: 3px solid color-mix(in srgb, var(--acid-strong) 45%, transparent); }
 .cold-storage-level-panel {
     display: grid;
     grid-template-rows: auto 1fr;

@@ -548,6 +548,8 @@
     .cold-storage-racks.vertical,
     .cold-storage-map > .cold-storage-racks.vertical { grid-template-columns: repeat(var(--rack-count), minmax(160px, 1fr)); }
     .cold-storage-rack-handle { min-height: 44px; padding-inline: 10px; }
+    .cold-storage-rack-destinations { right: max(8px, var(--mobile-safe-right)); bottom: max(8px, var(--mobile-safe-bottom)); width: calc(100vw - max(16px, var(--mobile-safe-left) + var(--mobile-safe-right))); max-height: 38dvh; }
+    .cold-storage-rack-destinations > div { grid-template-columns: 1fr; }
     .cold-storage-device-level-slots .cold-storage-slot { min-height: 52px; }
     .cold-storage-level-panel { padding: 10px; }
     .cold-storage-level-panel > header { align-items: flex-start; flex-direction: column; gap: 3px; }
@@ -623,7 +625,9 @@
     .top-actions .utility-nav .utility-nav-item {
         display: flex !important;
         flex: 0 0 50px;
+        align-items: center;
         justify-content: center;
+        gap: 7px;
         width: 100%;
         min-width: 0;
         height: 50px;
@@ -642,22 +646,24 @@
     .top-actions .utility-nav :is(button, .utility-label) { color: var(--ink) !important; }
     .top-actions .utility-nav > .sync-control > span,
     .top-actions .utility-nav .utility-label {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
+        width: auto;
+        height: auto;
         font: inherit !important;
         text-align: center;
     }
     .top-actions .utility-nav .utility-item-icon,
-    .top-actions .utility-nav > .sync-control > i {
-        position: absolute;
-        top: 50%;
-        right: 13px;
+    .top-actions .utility-nav > .sync-control > i,
+    .top-actions .utility-nav .utility-theme-icon {
+        position: static;
+        flex: 0 0 auto;
+        order: -1;
         margin: 0;
-        transform: translateY(-50%);
+        transform: none;
     }
+    .top-actions .utility-nav .utility-theme-icon { font-size: 15px; line-height: 1; }
     .top-actions .utility-nav svg { color: currentColor; stroke: currentColor; }
     .top-actions .utility-nav #backgroundToggle,
     .top-actions .utility-nav #themeToggle {
@@ -671,7 +677,7 @@
     }
     .top-actions .utility-nav #syncControl { background: transparent !important; }
     .top-actions .utility-nav .desktop-utility-control { display: none !important; }
-    .top-actions .utility-nav span.mobile-utility-control { display: inline !important; }
+    .top-actions .utility-nav span.mobile-utility-control { display: inline-flex !important; }
     .top-actions .utility-nav svg.mobile-utility-control { display: block !important; }
     .top-actions .utility-nav button.mobile-utility-control { display: flex !important; }
     .top-actions .topbar-language,

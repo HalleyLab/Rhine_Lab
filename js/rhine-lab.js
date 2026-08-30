@@ -1581,9 +1581,12 @@
     function updateThemeToggleLabel() {
         const toggle = document.getElementById('themeToggle');
         if (!toggle) return;
-        const label = document.body.classList.contains('dark-theme') ? '日间模式☀️' : '夜间模式🌙';
+        const dark = document.body.classList.contains('dark-theme');
+        const label = dark ? '日间模式' : '夜间模式';
         const text = toggle.querySelector('.utility-label');
         if (text) text.textContent = interfaceText(label);
+        const icon = toggle.querySelector('.utility-theme-icon');
+        if (icon) icon.textContent = dark ? '☀️' : '🌙';
         toggle.setAttribute('aria-label', interfaceText(label));
         toggle.setAttribute('title', interfaceText(label));
     }
@@ -1845,20 +1848,61 @@
 
     function bindColdStorageRackDrag() {
         let drag = null;
+        function detachColdStorageRack(unitId, shelf, rack, level) {
+            const remaining = level.rackOrder.filter(function (item) { return item !== rack; });
+            if (!remaining.length) {
+                level.mode = 'direct';
+                level.rackOrder = [1];
+                level.rackCount = 1;
+                return;
+            }
+            const rackNumbers = new Map(remaining.map(function (item, index) { return [item, index + 1]; }));
+            state.freezerBoxes.filter(function (box) { return box.storageUnitId === unitId && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) !== rack; }).forEach(function (box) {
+                box.storageRack = rackNumbers.get(Number(box.storageRack || 1)) || 1;
+                box.storageLocation = formatColdStorageBoxLocation(box);
+            });
+            level.rackOrder = remaining.map(function (_, index) { return index + 1; });
+            level.rackCount = level.rackOrder.length;
+        }
         document.addEventListener('pointerdown', function (event) {
             const handle = event.target.closest('[data-cold-storage-rack-handle]');
             const rack = handle?.closest('[data-cold-storage-rack]');
             if (!rack || event.button !== 0 || workspaceReadOnly) return;
             event.preventDefault();
             event.stopPropagation();
+            const sourceUnitId = rack.dataset.storageUnit;
+            const sourceShelf = Number(rack.dataset.storageShelf);
+            const sourceRack = Number(rack.dataset.storageRack);
+            const sourceUnit = state.coldStorageUnits.find(function (item) { return item.id === sourceUnitId; });
+            const sourceLevel = sourceUnit && coldStorageLevel(sourceUnit, sourceShelf);
+            const movingBoxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === sourceUnitId && Number(box.shelf || 1) === sourceShelf && Number(box.storageRack || 1) === sourceRack; });
+            const destinations = sourceLevel ? state.coldStorageUnits.flatMap(function (unit) {
+                if (unit.id === sourceUnitId) return [];
+                return Array.from({ length: Math.max(1, Number(unit.shelves) || 1) }, function (_, index) {
+                    const shelf = index + 1;
+                    const level = coldStorageLevel(unit, shelf);
+                    const fits = level.mode === 'rack' && level.rackOrder.length < 8 && movingBoxes.every(function (box) { return Number(box.storageRow || 1) <= level.rows && Number(box.storageColumn || 1) <= level.columns; });
+                    return fits ? '<button type="button" data-cold-storage-rack-destination data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '"><strong>' + esc(unit.name) + '</strong><span>' + esc(unit.type) + ' · 第 ' + shelf + ' 层</span></button>' : '';
+                }).filter(Boolean);
+            }) : [];
+            let tray = null;
+            if (destinations.length) {
+                tray = document.createElement('aside');
+                tray.className = 'cold-storage-rack-destinations';
+                tray.innerHTML = '<strong>拖到其他设备的目标层</strong><div>' + destinations.join('') + '</div>';
+                document.body.appendChild(tray);
+            }
             drag = {
                 pointerId: event.pointerId,
                 handle: handle,
                 rack: rack,
                 sourceContainer: rack.parentElement,
-                sourceUnitId: rack.dataset.storageUnit,
-                sourceShelf: Number(rack.dataset.storageShelf),
-                sourceRack: Number(rack.dataset.storageRack),
+                sourceUnitId: sourceUnitId,
+                sourceShelf: sourceShelf,
+                sourceRack: sourceRack,
+                movingBoxes: movingBoxes,
+                tray: tray,
+                destination: null,
                 startX: event.clientX,
                 startY: event.clientY,
                 moved: false,
@@ -1871,7 +1915,18 @@
             if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3) return;
             drag.moved = true;
             drag.rack.classList.add('is-dragging');
+            event.preventDefault();
+            event.stopPropagation();
             const point = document.elementFromPoint(event.clientX, event.clientY);
+            const destination = point?.closest('[data-cold-storage-rack-destination]') || null;
+            drag.destination?.classList.remove('is-rack-drop-target');
+            drag.destination = destination;
+            if (destination) {
+                drag.dropContainer?.classList.remove('is-rack-drop-target');
+                drag.dropContainer = null;
+                destination.classList.add('is-rack-drop-target');
+                return;
+            }
             const target = point?.closest('[data-cold-storage-rack]') || null;
             const container = target?.parentElement || point?.closest('[data-cold-storage-racks]') || null;
             if (!container || container.dataset.rackMode !== 'rack' || container.dataset.storageUnit !== drag.sourceUnitId) return;
@@ -1882,7 +1937,7 @@
                 const sourceLevel = unit && coldStorageLevel(unit, drag.sourceShelf);
                 const targetLevel = unit && coldStorageLevel(unit, targetShelf);
                 const movingBoxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === drag.sourceUnitId && Number(box.shelf || 1) === drag.sourceShelf && Number(box.storageRack || 1) === drag.sourceRack; });
-                if (!sourceLevel || !targetLevel || sourceLevel.rackOrder.length <= 1 || targetLevel.rackOrder.length >= 8 || movingBoxes.some(function (box) { return Number(box.storageRow || 1) > targetLevel.rows || Number(box.storageColumn || 1) > targetLevel.columns; })) return;
+                if (!sourceLevel || !targetLevel || targetLevel.rackOrder.length >= 8 || movingBoxes.some(function (box) { return Number(box.storageRow || 1) > targetLevel.rows || Number(box.storageColumn || 1) > targetLevel.columns; })) return;
             }
             if (target && target !== drag.rack) {
                 const rect = target.getBoundingClientRect();
@@ -1894,44 +1949,72 @@
             drag.dropContainer?.classList.remove('is-rack-drop-target');
             drag.dropContainer = container;
             drag.dropContainer.classList.add('is-rack-drop-target');
-            event.preventDefault();
-            event.stopPropagation();
         }, { passive: false });
         function finish(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
             drag.rack.classList.remove('is-dragging');
             drag.dropContainer?.classList.remove('is-rack-drop-target');
+            drag.destination?.classList.remove('is-rack-drop-target');
             if (drag.moved) {
                 const unit = state.coldStorageUnits.find(function (item) { return item.id === drag.sourceUnitId; });
-                const targetContainer = drag.rack.parentElement;
-                const targetShelf = Number(targetContainer?.dataset.storageShelf);
-                const sourceLevel = unit && coldStorageLevel(unit, drag.sourceShelf);
-                const targetLevel = unit && coldStorageLevel(unit, targetShelf);
-                if (sourceLevel && targetLevel && targetShelf === drag.sourceShelf) {
+                if (drag.destination) {
+                    const targetUnitId = drag.destination.dataset.storageUnit;
+                    const targetShelf = Number(drag.destination.dataset.storageShelf);
+                    const targetUnit = state.coldStorageUnits.find(function (item) { return item.id === targetUnitId; });
+                    const sourceLevel = unit && coldStorageLevel(unit, drag.sourceShelf);
+                    const targetLevel = targetUnit && coldStorageLevel(targetUnit, targetShelf);
+                    if (sourceLevel && targetLevel) {
+                        const targetRack = targetLevel.rackOrder.length + 1;
+                        detachColdStorageRack(drag.sourceUnitId, drag.sourceShelf, drag.sourceRack, sourceLevel);
+                        targetLevel.rackOrder.push(targetRack);
+                        targetLevel.rackCount = targetLevel.rackOrder.length;
+                        drag.movingBoxes.forEach(function (box) {
+                            box.storageUnitId = targetUnitId;
+                            box.shelf = targetShelf;
+                            box.storageRack = targetRack;
+                            box.temperature = targetUnit.temperature;
+                            box.storageLocation = formatColdStorageBoxLocation(box);
+                        });
+                        unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '货架移至“' + targetUnit.name + '”第 ' + targetShelf + ' 层' }] });
+                        targetUnit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '接收“' + unit.name + '”的货架' }] });
+                        activeColdStorageId = targetUnitId;
+                        activeColdStorageShelf = targetShelf;
+                        localStorage.setItem('rhineLabActiveColdStorage', targetUnitId);
+                        localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
+                        addActivity('移动货架到“' + targetUnit.name + '”第 ' + targetShelf + ' 层');
+                        saveState();
+                        renderSamples();
+                    }
+                } else {
+                    const targetContainer = drag.rack.parentElement;
+                    const targetShelf = Number(targetContainer?.dataset.storageShelf);
+                    const sourceLevel = unit && coldStorageLevel(unit, drag.sourceShelf);
+                    const targetLevel = unit && coldStorageLevel(unit, targetShelf);
+                    if (sourceLevel && targetLevel && targetShelf === drag.sourceShelf) {
                     sourceLevel.rackOrder = Array.from(targetContainer.children).map(function (item) { return Number(item.dataset.storageRack); }).filter(Boolean);
                     unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '第 ' + targetShelf + ' 层货架顺序' }] });
                     saveState();
                     renderSamples();
-                } else if (sourceLevel && targetLevel && targetContainer !== drag.sourceContainer) {
-                    let targetRack = 1;
-                    while (targetLevel.rackOrder.includes(targetRack)) targetRack += 1;
-                    sourceLevel.rackOrder = sourceLevel.rackOrder.filter(function (rack) { return rack !== drag.sourceRack; });
-                    sourceLevel.rackCount = sourceLevel.rackOrder.length;
-                    targetLevel.rackOrder = Array.from(targetContainer.children).map(function (item) { return item === drag.rack ? targetRack : Number(item.dataset.storageRack); }).filter(Boolean);
-                    targetLevel.rackCount = targetLevel.rackOrder.length;
-                    state.freezerBoxes.filter(function (box) { return box.storageUnitId === drag.sourceUnitId && Number(box.shelf || 1) === drag.sourceShelf && Number(box.storageRack || 1) === drag.sourceRack; }).forEach(function (box) {
-                        box.shelf = targetShelf;
-                        box.storageRack = targetRack;
-                        box.storageLocation = formatColdStorageBoxLocation(box);
-                    });
-                    unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '货架由第 ' + drag.sourceShelf + ' 层移动到第 ' + targetShelf + ' 层' }] });
-                    activeColdStorageShelf = targetShelf;
-                    localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
-                    addActivity('移动“' + unit.name + '”货架到第 ' + targetShelf + ' 层');
-                    saveState();
-                    renderSamples();
+                    } else if (sourceLevel && targetLevel && targetContainer !== drag.sourceContainer) {
+                        const targetRack = targetLevel.rackOrder.length + 1;
+                        detachColdStorageRack(drag.sourceUnitId, drag.sourceShelf, drag.sourceRack, sourceLevel);
+                        targetLevel.rackOrder = Array.from(targetContainer.children).map(function (item) { return item === drag.rack ? targetRack : Number(item.dataset.storageRack); }).filter(Boolean);
+                        targetLevel.rackCount = targetLevel.rackOrder.length;
+                        drag.movingBoxes.forEach(function (box) {
+                            box.shelf = targetShelf;
+                            box.storageRack = targetRack;
+                            box.storageLocation = formatColdStorageBoxLocation(box);
+                        });
+                        unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '货架由第 ' + drag.sourceShelf + ' 层移动到第 ' + targetShelf + ' 层' }] });
+                        activeColdStorageShelf = targetShelf;
+                        localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
+                        addActivity('移动“' + unit.name + '”货架到第 ' + targetShelf + ' 层');
+                        saveState();
+                        renderSamples();
+                    }
                 }
             }
+            drag.tray?.remove();
             drag = null;
         }
         document.addEventListener('pointerup', finish);
