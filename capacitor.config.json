@@ -12,7 +12,7 @@
     "backgroundColor": "#f2f4ed"
   },
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "backgroundColor": "#f2f4ed"
   },
   "plugins": {
@@ -22,9 +22,9 @@
       "showSpinner": false
     },
     "StatusBar": {
-      "overlaysWebView": false,
-      "backgroundColor": "#252d29",
-      "style": "LIGHT"
+      "overlaysWebView": true,
+      "backgroundColor": "#00000000",
+      "style": "DARK"
     }
   }
 }

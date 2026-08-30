@@ -45,7 +45,7 @@
 .dark-theme .bioinfo-protein-structure{color:#a8b9ae}.dark-theme .bioinfo-protein-structure .protein-nodes{fill:#26302b;stroke:#71b8af}.dark-theme .bioinfo-rnaseq{color:#b8c8bf}.dark-theme .bioinfo-math-symbol.math-log{color:#e1a75e}.dark-theme .bioinfo-math-symbol.math-sum{color:#b3d866}
 
 body.background-all-lives #view-bioinformatics .page-heading{--page-collage-accent:#2457c6}
-body.background-all-lives #view-bioinformatics .heading-visual{background-image:url('../images/theme-atlas/all-lives-bioinformatics-collage-v1.svg?v=0.2.3c')!important;background-size:auto 190%!important;background-position:58% 50%!important;background-repeat:no-repeat!important;filter:saturate(.58) contrast(.94);mix-blend-mode:multiply;opacity:.64}
+body.background-all-lives #view-bioinformatics .heading-visual{background-image:url('../images/theme-atlas/all-lives-bioinformatics-collage-v1.svg?v=0.2.4c')!important;background-size:auto 190%!important;background-position:58% 50%!important;background-repeat:no-repeat!important;filter:saturate(.58) contrast(.94);mix-blend-mode:multiply;opacity:.64}
 body.background-all-lives #view-bioinformatics .heading-visual>*{display:none!important}
 body.background-all-lives :is(.bioinfo-subpage-tabs,.bioinfo-code-block){border-radius:0}
 body.background-all-lives .bioinfo-subpage-tabs button.active{color:#fff;background:var(--atlas-blue);box-shadow:inset 0 -3px 0 var(--atlas-red)}

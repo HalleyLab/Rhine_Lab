@@ -27,6 +27,8 @@
 
     if (nativeApp) {
         document.documentElement.classList.add('native-app', 'native-performance');
+        const platform = typeof capacitor.getPlatform === 'function' ? capacitor.getPlatform() : '';
+        if (platform) document.documentElement.classList.add('platform-' + platform);
 
         const updateVisibilityClass = function () {
             document.documentElement.classList.toggle('app-backgrounded', document.hidden);
@@ -36,9 +38,9 @@
 
         const plugins = capacitor.Plugins || {};
         if (plugins.StatusBar) {
-            plugins.StatusBar.setOverlaysWebView({ overlay: false }).catch(function () {});
-            plugins.StatusBar.setBackgroundColor({ color: '#252d29' }).catch(function () {});
-            plugins.StatusBar.setStyle({ style: 'LIGHT' }).catch(function () {});
+            plugins.StatusBar.setOverlaysWebView({ overlay: true }).catch(function () {});
+            plugins.StatusBar.setBackgroundColor({ color: '#00000000' }).catch(function () {});
+            plugins.StatusBar.setStyle({ style: 'DARK' }).catch(function () {});
         }
         if (plugins.SplashScreen) {
             window.addEventListener('load', function () {
@@ -49,7 +51,7 @@
 
     if (!nativeApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js?v=36', { updateViaCache: 'none' }).then(function (registration) {
+            navigator.serviceWorker.register('./sw.js?v=37', { updateViaCache: 'none' }).then(function (registration) {
                 return registration.update();
             }).catch(function () {
                 // The site remains usable if service worker registration is unavailable.

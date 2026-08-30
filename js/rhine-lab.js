@@ -1409,7 +1409,11 @@
         document.body.classList.toggle('dark-theme', dark);
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
         const themeColor = document.querySelector('meta[name="theme-color"]');
-        if (themeColor) themeColor.setAttribute('content', dark ? '#1b2420' : '#d8ff45');
+        if (themeColor) themeColor.setAttribute('content', dark ? '#1b2420' : '#f2f4ed');
+        const statusBar = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+        if (statusBar) {
+            statusBar.setStyle({ style: dark ? 'LIGHT' : 'DARK' }).catch(function () {});
+        }
         updateThemeToggleLabel();
     }
 
