@@ -440,13 +440,6 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.bi
     font-size:0;
     line-height:1;
 }
-.housing-layout-rack-delete::before{
-    content:"×";
-    display:block;
-    color:inherit;
-    font:900 18px/1 Arial,Helvetica,sans-serif;
-    transform:translateY(-.5px);
-}
 @media(max-width:700px){
     .housing-room-tabs{padding:12px 12px 12px}
     .housing-room-tabs.has-expanded-room{padding-bottom:0}

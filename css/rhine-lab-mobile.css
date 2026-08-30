@@ -535,6 +535,8 @@
 
 @media (max-width: 700px) {
     .cold-storage-tabs-row { align-items: stretch; gap: 7px; }
+    .cold-storage-tabs { touch-action: pan-x; overscroll-behavior-x: contain; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+    .cold-storage-tab { scroll-snap-align: start; }
     .cold-storage-tabs-row > .button { width: auto; padding-inline: 10px; white-space: nowrap; }
     .cold-storage-tab { flex-basis: min(72vw, 250px); }
     .cold-storage-overview { padding: 11px; }
@@ -543,8 +545,9 @@
     .cold-storage-apparatus { grid-template-columns: 1fr; gap: 10px; }
     .cold-storage-device { min-height: 310px; }
     .cold-storage-device[data-device-kind="ln2"] { min-height: 330px; padding-right: 28px; padding-left: 28px; }
-    .cold-storage-shelf-tabs.vertical-racks { grid-template-columns: repeat(var(--rack-count), minmax(190px, 1fr)); }
-    .cold-storage-shelf-tabs.vertical-racks .cold-storage-device-level { min-width: 190px; }
+    .cold-storage-racks.vertical,
+    .cold-storage-map > .cold-storage-racks.vertical { grid-template-columns: repeat(var(--rack-count), minmax(160px, 1fr)); }
+    .cold-storage-rack-handle { min-height: 44px; padding-inline: 10px; }
     .cold-storage-device-level-slots .cold-storage-slot { min-height: 52px; }
     .cold-storage-level-panel { padding: 10px; }
     .cold-storage-level-panel > header { align-items: flex-start; flex-direction: column; gap: 3px; }
@@ -553,7 +556,6 @@
     .freezer-manager-actions .button { width: 100%; }
     .result-date-accordion { margin: 10px; }
     .result-date-accordion > summary { grid-template-columns: minmax(84px, 1fr) auto 16px; padding: 0 10px; }
-    .result-recorded-row { padding: 12px; }
 }
 
 @media (max-width: 820px), (max-width: 1200px) and (max-height: 700px) and (orientation: landscape) {
@@ -628,9 +630,16 @@
         min-height: 50px;
         padding: 0 12px;
         border-radius: 10px;
-        font-size: 11px;
+        color: var(--ink) !important;
+        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-size: 13px;
+        font-weight: 900 !important;
+        line-height: 1.2;
+        text-align: center;
         white-space: nowrap;
     }
+    .top-actions .utility-nav :is(button, .utility-label) { justify-content: center; color: var(--ink) !important; }
+    .top-actions .utility-nav svg { color: currentColor; stroke: currentColor; }
     .top-actions .utility-nav #backgroundToggle,
     .top-actions .utility-nav #themeToggle {
         display: flex !important;
@@ -675,6 +684,7 @@
 
     .assistant-character-trigger {
         touch-action: none;
+        overscroll-behavior: none;
     }
     .assistant-character-trigger img {
         inset: -1% -26% auto auto;

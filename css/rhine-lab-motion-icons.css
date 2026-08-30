@@ -51,61 +51,32 @@ html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
     box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent, var(--acid)) 16%, transparent) !important;
 }
 
-/* Optically centered, heavier close mark without hover animation. */
+/* One Morphicons close/delete control; no pseudo-element crosses. */
 :where(
     .dialog-close,
+    .close-button,
     .notification-close,
+    #assistantClose,
     .housing-layout-rack-delete,
     .schedule-delete-button,
     .embedded-lineage-remove,
     button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
-    button[aria-label^="删除"]
+    button[aria-label^="删除"],
+    button[aria-label^="移除"]
 ) {
-    position: relative;
     display: grid;
     place-items: center;
     font-size: 0 !important;
     line-height: 0 !important;
-    transition: none !important;
 }
-
-:where(
-    .dialog-close,
-    .notification-close,
-    .housing-layout-rack-delete,
-    .schedule-delete-button,
-    .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
-    button[aria-label^="删除"]
-)::before,
-:where(
-    .dialog-close,
-    .notification-close,
-    .housing-layout-rack-delete,
-    .schedule-delete-button,
-    .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
-    button[aria-label^="删除"]
-)::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 12px;
-    height: 2.4px;
-    border-radius: 999px;
-    background: currentColor;
-    transform: translate(-50%, -50%) rotate(45deg);
-}
-
-:where(
-    .dialog-close,
-    .notification-close,
-    .housing-layout-rack-delete,
-    .schedule-delete-button,
-    .embedded-lineage-remove,
-    button[aria-label^="关闭"]:not(.search-backdrop):not(#utilityNavToggle),
-    button[aria-label^="删除"]
-)::after {
-    transform: translate(-50%, -50%) rotate(-45deg);
+.morph-close-icon {
+    width: 18px;
+    height: 18px;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
 }

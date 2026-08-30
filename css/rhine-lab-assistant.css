@@ -12,6 +12,8 @@
     border: 0;
     cursor: grab;
     touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-drag: none;
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none;

@@ -12320,7 +12320,7 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     font-family: Arial, sans-serif !important;
 }
 
-/* 0.2.5: dense inventory typography and physical cold-storage navigation. */
+/* 0.2.6: dense inventory typography and physical cold-storage navigation. */
 html[lang="zh-CN"] #reagentTable td:nth-child(2),
 html[lang="zh-CN"] #reagentTable td:nth-child(3),
 html[lang="zh-CN"] #reagentTable td:nth-child(4),
@@ -12358,20 +12358,9 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     font-weight: 900;
 }
 
-.experiment-inline-result.completed {
-    display: grid;
-    align-content: start;
-}
 .experiment-inline-result.pending .button { border-radius: 10px 3px 10px 3px; }
-.experiment-inline-result.completed > header,
-.result-recorded-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-.result-recorded-row { padding: 14px 18px 16px; }
-.result-recorded-row .button { border-radius: 10px 3px 10px 3px; }
+.result-preview-action { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.result-preview-action :is(span, b) { font-weight: 900; }
 .result-date-accordion {
     margin: 14px 16px 16px;
     overflow: hidden;
@@ -12537,13 +12526,15 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-device-level-slots .cold-storage-slot { min-height: 48px; padding: 5px 6px; border-radius: 7px 2px 7px 2px; }
 .cold-storage-device-level-slots .cold-storage-slot span { font-size: 8px; }
 .cold-storage-device-level-slots .cold-storage-slot strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.cold-storage-shelf-tabs.vertical-racks {
-    grid-template-columns: repeat(var(--rack-count), minmax(210px, 1fr));
-    align-items: stretch;
-    align-content: stretch;
-}
-.cold-storage-shelf-tabs.vertical-racks .cold-storage-device-level { grid-template-rows: auto 1fr; min-width: 210px; }
-.cold-storage-shelf-tabs.vertical-racks .cold-storage-device-level-head { grid-template-columns: 1fr; grid-template-areas: "level" "type" "meta"; align-content: start; }
+.cold-storage-racks { display: grid; gap: 8px; min-width: 0; overflow: auto; }
+.cold-storage-racks.horizontal { grid-template-columns: 1fr; }
+.cold-storage-racks.vertical { grid-template-columns: repeat(var(--rack-count), minmax(150px, 1fr)); align-items: stretch; }
+.cold-storage-rack { display: grid; align-content: start; gap: 6px; min-width: 0; padding: 7px; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 9px 3px 9px 3px; }
+.cold-storage-rack.direct { padding: 0; background: transparent; border: 0; }
+.cold-storage-rack-handle { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 6px 8px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px 2px 7px 2px; cursor: grab; touch-action: none; }
+.cold-storage-rack-handle strong { font-size: 11px; }
+.cold-storage-rack-handle span { color: var(--muted); font-size: 9px; font-weight: 900; }
+.cold-storage-rack.is-dragging { opacity: .58; outline: 3px solid var(--acid-strong); cursor: grabbing; }
 .cold-storage-level-panel {
     display: grid;
     grid-template-rows: auto 1fr;
@@ -12585,6 +12576,8 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     background: var(--line-dark);
     border-radius: 999px;
 }
+.cold-storage-map > .cold-storage-racks { width: 100%; }
+.cold-storage-map > .cold-storage-racks.vertical { grid-template-columns: repeat(var(--rack-count), minmax(190px, 1fr)); }
 .cold-storage-slot {
     display: grid;
     align-content: center;

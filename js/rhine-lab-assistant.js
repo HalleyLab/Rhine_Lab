@@ -38,7 +38,7 @@
             if (suppressOpen) { event.preventDefault(); suppressOpen = false; return; }
             openDrawer();
         });
-        toggle.addEventListener('pointerdown', beginCharacterDrag);
+        toggle.addEventListener('pointerdown', beginCharacterDrag, { passive: false, capture: true });
         document.addEventListener('pointermove', moveCharacter, { passive: false });
         document.addEventListener('pointerup', endCharacterDrag);
         document.addEventListener('pointercancel', endCharacterDrag);
@@ -90,6 +90,8 @@
 
     function beginCharacterDrag(event) {
         if (event.button !== 0 || event.isPrimary === false || dragState) return;
+        event.preventDefault();
+        event.stopPropagation();
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
         dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false };
@@ -106,6 +108,7 @@
 
     function moveCharacter(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
+        event.stopPropagation();
         const distance = Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY);
         if (!dragState.active && distance < 2) return;
         activateCharacterDrag();
@@ -123,6 +126,10 @@
             suppressOpen = true;
             if (dragState.moved) localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
             window.setTimeout(function () { suppressOpen = false; }, 450);
+        } else if (event.type === 'pointerup') {
+            suppressOpen = true;
+            openDrawer();
+            window.setTimeout(function () { suppressOpen = false; }, 0);
         }
         dragState = null;
     }

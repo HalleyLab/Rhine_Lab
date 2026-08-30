@@ -12,19 +12,19 @@
     <meta property="og:image" content="images/rhine-life-logo.png">
     <title>Rhine Lab · 生命科学研究工作台</title>
     <link rel="manifest" href="app.webmanifest">
-    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.5" type="image/png" sizes="512x512">
-    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.5">
+    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.6" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.6">
     <link rel="stylesheet" href="css/rhine-lab.css?v=20260830-10">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
-    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.2.5">
+    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.2.6">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260830-1">
-    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.5">
-    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.5">
-    <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.5">
-    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.2.5">
-    <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.2.5">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.2.5d">
+    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.6">
+    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.6">
+    <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.6">
+    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.2.6">
+    <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.2.6">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.2.6">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -113,7 +113,7 @@
             <aside class="notification-panel" id="notificationPanel" aria-labelledby="notificationTitle" hidden>
                 <header>
                     <div><p class="micro-label">SYSTEM NOTIFICATIONS</p><h2 id="notificationTitle">通知中心</h2></div>
-                    <button class="notification-close" id="notificationClose" type="button" aria-label="关闭通知">×</button>
+                    <button class="notification-close" id="notificationClose" type="button" aria-label="关闭通知"></button>
                 </header>
                 <div class="notification-list">
                     <div class="notification-empty"><div><i aria-hidden="true">○</i><strong>暂无通知</strong><p>当库存、日程或实验需要关注时，会显示在这里。</p></div></div>
@@ -132,7 +132,7 @@
                     <div class="assistant-orbit" aria-hidden="true"><i></i><span>K</span></div>
                     <div><p>RHINE INTELLIGENCE</p><h2 id="assistantTitle">克里斯滕</h2></div>
                     <span class="assistant-mode" id="assistantMode">LOCAL</span>
-                    <button id="assistantClose" type="button" aria-label="关闭科研助理">×</button>
+                    <button id="assistantClose" type="button" aria-label="关闭科研助理"></button>
                 </header>
                 <div class="assistant-quick-actions" id="assistantQuickActions" aria-label="常用指令">
                     <button type="button" data-assistant-prompt="总结我今天的工作">总结今天</button>
@@ -478,7 +478,7 @@
     <div class="search-overlay" id="searchOverlay" hidden>
         <button class="search-backdrop" type="button" aria-label="关闭检索结果"></button>
         <section class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
-            <header><div><p class="micro-label">SEARCH</p><h2 id="searchTitle">搜索</h2></div><button class="close-button" type="button" data-close-search aria-label="关闭搜索">×</button></header>
+            <header><div><p class="micro-label">SEARCH</p><h2 id="searchTitle">搜索</h2></div><button class="close-button" type="button" data-close-search aria-label="关闭搜索"></button></header>
             <label class="dialog-search"><span>⌕</span><input id="overlaySearchInput" type="search" autocomplete="off"></label>
             <div class="search-results" id="searchResults"></div>
         </section>
@@ -486,7 +486,7 @@
 
     <dialog class="entry-dialog" id="entryDialog">
         <form id="entryForm" method="dialog" novalidate>
-            <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭">×</button></header>
+            <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭"></button></header>
             <div class="form-grid" id="dialogFields"></div>
             <footer><div><button class="button ghost" type="button" data-close-dialog>取消</button><button class="button primary" id="entrySubmitButton" type="button">确认保存</button></div></footer>
         </form>
@@ -497,7 +497,7 @@
         <article>
             <header>
                 <div><p class="micro-label">OFFLINE TRANSFER</p><h2>本地数据同步</h2></div>
-                <button class="dialog-close" type="button" data-close-portable-sync aria-label="关闭">×</button>
+                <button class="dialog-close" type="button" data-close-portable-sync aria-label="关闭"></button>
             </header>
             <section class="sync-transfer-panel" aria-labelledby="syncTransferTitle">
                 <div class="sync-transfer-head">
@@ -526,7 +526,7 @@
         <article>
             <header>
                 <div><p class="micro-label" id="recordDetailKicker">DATABASE RECORD</p><h2 id="recordDetailTitle">详细信息</h2></div>
-                <button class="dialog-close" type="button" data-close-record-detail aria-label="关闭">×</button>
+                <button class="dialog-close" type="button" data-close-record-detail aria-label="关闭"></button>
             </header>
             <div class="record-detail-body" id="recordDetailBody"></div>
             <footer>
@@ -569,7 +569,7 @@
 
     <dialog class="end-day-dialog" id="endDayDialog">
         <article>
-            <button class="dialog-close" type="button" data-close-end-day aria-label="关闭">×</button>
+            <button class="dialog-close" type="button" data-close-end-day aria-label="关闭"></button>
             <div class="end-day-orbit" aria-hidden="true">
                 <span class="end-day-core">✓</span>
                 <i></i><i></i><i></i><i></i>
@@ -583,7 +583,7 @@
 
     <dialog class="protocol-detail-dialog" id="protocolDetailDialog">
         <article>
-            <header><div><p class="micro-label" id="protocolDetailNumber">PROTOCOL DETAIL</p><h2 id="protocolDetailTitle">Protocol</h2></div><button class="dialog-close" type="button" data-close-protocol aria-label="关闭">×</button></header>
+            <header><div><p class="micro-label" id="protocolDetailNumber">PROTOCOL DETAIL</p><h2 id="protocolDetailTitle">Protocol</h2></div><button class="dialog-close" type="button" data-close-protocol aria-label="关闭"></button></header>
             <div class="protocol-detail-body" id="protocolDetailBody"></div>
             <footer><span id="protocolDetailUsage">试剂用量按每次执行记录</span><div><button class="button ghost" id="editProtocolButton" type="button">编辑方案</button><button class="button primary" id="scheduleProtocolButton" type="button">安排此 Protocol</button></div></footer>
         </article>
@@ -591,7 +591,7 @@
 
     <dialog class="experiment-detail-dialog" id="experimentDetailDialog">
         <form id="experimentDetailForm" method="dialog">
-            <header><div><p class="micro-label" id="experimentDetailNumber">EXPERIMENT RECORD</p><h2 id="experimentDetailTitle">实验记录</h2></div><button class="dialog-close" type="button" data-close-experiment aria-label="关闭">×</button></header>
+            <header><div><p class="micro-label" id="experimentDetailNumber">EXPERIMENT RECORD</p><h2 id="experimentDetailTitle">实验记录</h2></div><button class="dialog-close" type="button" data-close-experiment aria-label="关闭"></button></header>
             <div class="experiment-detail-body">
                 <section class="experiment-detail-fields">
                     <label><span>记录状态</span><select id="experimentDetailStatus" name="status" data-custom-select required><option>进行中</option><option>待分析</option><option>已完成</option><option value="__custom__">自定义…</option></select><input class="custom-select-input" id="experimentDetailStatusCustom" name="statusCustom" type="text" data-custom-input-for="status" placeholder="输入自定义内容" hidden></label>
@@ -616,7 +616,7 @@
             <header>
                 <div><p class="micro-label" id="experimentRunKicker">LIVE PROTOCOL WORKSPACE</p><h2 id="experimentRunTitle">实验执行工作台</h2><small id="experimentRunProtocol">同步 Protocol 步骤</small></div>
                 <div class="run-live-badge"><i></i><span>实验进行中</span></div>
-                <button class="dialog-close" type="button" data-close-run aria-label="关闭">×</button>
+                <button class="dialog-close" type="button" data-close-run aria-label="关闭"></button>
             </header>
             <div class="experiment-run-body" id="experimentRunBody"></div>
             <footer>
@@ -633,7 +633,7 @@
 
     <dialog class="freezer-scan-dialog" id="freezerScanDialog">
         <article>
-            <header><div><p class="micro-label">PHOTO-ASSISTED INTAKE</p><h2>冻存盒拍照识别</h2><small id="freezerScanBoxName">当前冻存盒</small></div><button class="dialog-close" type="button" data-close-scan aria-label="关闭">×</button></header>
+            <header><div><p class="micro-label">PHOTO-ASSISTED INTAKE</p><h2>冻存盒拍照识别</h2><small id="freezerScanBoxName">当前冻存盒</small></div><button class="dialog-close" type="button" data-close-scan aria-label="关闭"></button></header>
             <div class="freezer-scan-body">
                 <label class="scan-upload" for="freezerScanInput"><input id="freezerScanInput" type="file" accept="image/*" capture="environment"><span>拍照或选择冻存盒照片</span><small>请让冻存盒正对镜头并尽量占满画面</small></label>
                 <div class="scan-workspace">
@@ -652,12 +652,13 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.2.5d"></script>
-    <script src="js/rhine-lab-config.js?v=0.2.5"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.6"></script>
+    <script src="js/rhine-lab-config.js?v=0.2.6"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.2.5"></script>
-    <script src="js/rhine-lab-pwa.js?v=0.2.5"></script>
-    <script src="js/rhine-lab-assistant.js?v=0.2.5d"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.2.5d"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.6"></script>
+    <script src="js/rhine-lab-pwa.js?v=0.2.6"></script>
+    <script src="js/rhine-lab-assistant.js?v=0.2.6"></script>
+    <script type="module" src="js/rhine-lab-close-icons.js?v=0.2.6"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.2.6"></script>
 </body>
 </html>

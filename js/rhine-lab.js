@@ -821,10 +821,19 @@
                 return { mode: unit.type === '液氮罐' || index > 0 ? 'rack' : 'direct', rows: legacyRows, columns: legacyColumns };
             });
         return source.map(function (level) {
+            const mode = level && level.mode === 'rack' ? 'rack' : 'direct';
+            const rackCount = mode === 'rack' ? (Math.round(number(level && level.rackCount, 1, 8)) || (unit.type === '液氮罐' ? 3 : 2)) : 1;
+            const rackOrder = [];
+            (Array.isArray(level && level.rackOrder) ? level.rackOrder : []).concat(Array.from({ length: rackCount }, function (_, index) { return index + 1; })).forEach(function (rack) {
+                rack = Math.round(Number(rack));
+                if (rack >= 1 && rack <= rackCount && !rackOrder.includes(rack)) rackOrder.push(rack);
+            });
             return {
-                mode: level && level.mode === 'rack' ? 'rack' : 'direct',
+                mode: mode,
                 rows: Math.round(number(level && level.rows, 1, 12)) || 1,
-                columns: Math.round(number(level && level.columns, 1, 12)) || 1
+                columns: Math.round(number(level && level.columns, 1, 12)) || 1,
+                rackCount: rackCount,
+                rackOrder: rackOrder
             };
         });
     }
@@ -838,25 +847,29 @@
         const lines = String(value || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
         if (lines.length !== shelfCount) return null;
         const levels = lines.map(function (line) {
-            const match = line.match(/^(直放|货架|direct|rack)\s*[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
+            const match = line.match(/^(直放|货架|direct|rack)\s*(?:(\d+)\s*(?:架|racks?)\s*)?[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
             if (!match) return null;
+            const mode = /^(货架|rack)$/i.test(match[1]) ? 'rack' : 'direct';
+            const rackCount = mode === 'rack' ? (Math.round(number(match[2], 1, 8)) || 1) : 1;
             return {
-                mode: /^(货架|rack)$/i.test(match[1]) ? 'rack' : 'direct',
-                rows: Math.round(number(match[2], 1, 12)) || 1,
-                columns: Math.round(number(match[3], 1, 12)) || 1
+                mode: mode,
+                rows: Math.round(number(match[3], 1, 12)) || 1,
+                columns: Math.round(number(match[4], 1, 12)) || 1,
+                rackCount: rackCount,
+                rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; })
             };
         });
         return levels.every(Boolean) ? levels : null;
     }
 
     function coldStorageLevelsText(levels) {
-        return levels.map(function (level) { return (level.mode === 'rack' ? '货架 ' : '直放 ') + level.rows + 'x' + level.columns; }).join('\n');
+        return levels.map(function (level) { return (level.mode === 'rack' ? '货架 ' + (level.rackCount || 1) + '架 ' : '直放 ') + level.rows + 'x' + level.columns; }).join('\n');
     }
 
     function coldStorageLayoutConflict(unitId, levels) {
         return state.freezerBoxes.find(function (box) {
             const level = levels[Number(box.shelf || 1) - 1];
-            return box.storageUnitId === unitId && (!level || Number(box.storageRow || 1) > level.rows || Number(box.storageColumn || 1) > level.columns);
+            return box.storageUnitId === unitId && (!level || Number(box.storageRack || 1) > (level.rackCount || 1) || Number(box.storageRow || 1) > level.rows || Number(box.storageColumn || 1) > level.columns);
         });
     }
 
@@ -915,6 +928,7 @@
                 name: box.name || '冻存盒 ' + (index + 1),
                 storageUnitId: unit.id,
                 shelf: shelf,
+                storageRack: Math.round(number(box.storageRack, 1, level.rackCount || 1)) || 1,
                 storageRow: Math.round(number(box.storageRow, 1, level.rows)) || 1,
                 storageColumn: Math.round(number(box.storageColumn, 1, level.columns)) || 1,
                 temperature: box.temperature || unit.temperature,
@@ -1131,21 +1145,22 @@
         if (!unit) return '位置待设置';
         const shelf = Math.max(1, Number(box.shelf) || 1);
         const level = coldStorageLevel(unit, shelf);
+        const rack = Math.max(1, Number(box.storageRack) || 1);
         const row = Math.max(1, Number(box.storageRow) || 1);
         const column = Math.max(1, Number(box.storageColumn) || 1);
-        const shelfLabel = unit.orientation === '竖向' && level.mode === 'rack' ? '第 ' + shelf + ' 列货架' : '第 ' + shelf + ' 层';
-        return unit.location + ' / ' + unit.name + ' · ' + shelfLabel + ' · ' + (level.mode === 'rack' ? '货架' : '直放区') + ' · 第 ' + row + ' 行第 ' + column + ' 位';
+        return unit.location + ' / ' + unit.name + ' · 第 ' + shelf + ' 层 · ' + (level.mode === 'rack' ? '第 ' + rack + ' 货架' : '直放区') + ' · 第 ' + row + ' 行第 ' + column + ' 位';
     }
 
     function firstAvailableColdStorageSlot(unit, shelf, excludedBoxId) {
         const level = coldStorageLevel(unit, shelf);
         const occupied = new Set(state.freezerBoxes.filter(function (box) {
             return box.id !== excludedBoxId && box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf;
-        }).map(function (box) { return Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1); }));
-        for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) {
-            if (!occupied.has(row + ':' + column)) return { row: row, column: column };
+        }).map(function (box) { return Number(box.storageRack || 1) + ':' + Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1); }));
+        const racks = level.mode === 'rack' ? level.rackOrder : [1];
+        for (const rack of racks) for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) {
+            if (!occupied.has(rack + ':' + row + ':' + column)) return { rack: rack, row: row, column: column };
         }
-        return { row: 1, column: 1 };
+        return { rack: racks[0] || 1, row: 1, column: 1 };
     }
 
     function normalizeHousingRooms(items, prefix, fallbackName) {
@@ -1677,7 +1692,7 @@
         let suppressClick = false;
         document.addEventListener('pointerdown', function (event) {
             const scroller = event.target.closest('[data-drag-scroll]');
-            if (!scroller || event.button !== 0 || event.target.closest('.animal-rack-delete,.plant-rack-delete')) return;
+            if (!scroller || event.button !== 0 || event.pointerType !== 'mouse' || event.target.closest('.animal-rack-delete,.plant-rack-delete')) return;
             drag = { element: scroller, pointerId: event.pointerId, startX: event.clientX, startScroll: scroller.scrollLeft, moved: false };
         });
         document.addEventListener('pointermove', function (event) {
@@ -1757,6 +1772,7 @@
         document.addEventListener('pointerdown', function (event) {
             const slot = event.target.closest('[data-cold-storage-box]');
             if (!slot || event.button !== 0 || workspaceReadOnly) return;
+            event.stopPropagation();
             drag = { pointerId: event.pointerId, slot: slot, boxId: slot.dataset.coldStorageBox, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
             slot.setPointerCapture?.(event.pointerId);
         });
@@ -1790,16 +1806,17 @@
                 const box = state.freezerBoxes.find(function (item) { return item.id === drag.boxId; });
                 const targetUnitId = drag.target.dataset.storageUnit || activeColdStorageId;
                 const targetShelf = Math.max(1, Number(drag.target.dataset.storageShelf) || activeColdStorageShelf);
+                const targetRack = Math.max(1, Number(drag.target.dataset.storageRack) || 1);
                 const targetRow = Number(drag.target.dataset.storageRow);
                 const targetColumn = Number(drag.target.dataset.storageColumn);
                 const targetUnit = state.coldStorageUnits.find(function (item) { return item.id === targetUnitId; });
-                const other = state.freezerBoxes.find(function (item) { return item.id !== drag.boxId && item.storageUnitId === targetUnitId && Number(item.shelf || 1) === targetShelf && Number(item.storageRow || 1) === targetRow && Number(item.storageColumn || 1) === targetColumn; });
-                if (box && targetUnit && (box.storageUnitId !== targetUnitId || Number(box.shelf || 1) !== targetShelf || Number(box.storageRow) !== targetRow || Number(box.storageColumn) !== targetColumn)) {
-                    const sourceUnitId = box.storageUnitId; const sourceShelf = box.shelf; const sourceRow = box.storageRow; const sourceColumn = box.storageColumn;
-                    box.storageUnitId = targetUnitId; box.shelf = targetShelf; box.storageRow = targetRow; box.storageColumn = targetColumn; box.temperature = targetUnit.temperature;
+                const other = state.freezerBoxes.find(function (item) { return item.id !== drag.boxId && item.storageUnitId === targetUnitId && Number(item.shelf || 1) === targetShelf && Number(item.storageRack || 1) === targetRack && Number(item.storageRow || 1) === targetRow && Number(item.storageColumn || 1) === targetColumn; });
+                if (box && targetUnit && (box.storageUnitId !== targetUnitId || Number(box.shelf || 1) !== targetShelf || Number(box.storageRack || 1) !== targetRack || Number(box.storageRow) !== targetRow || Number(box.storageColumn) !== targetColumn)) {
+                    const sourceUnitId = box.storageUnitId; const sourceShelf = box.shelf; const sourceRack = box.storageRack || 1; const sourceRow = box.storageRow; const sourceColumn = box.storageColumn;
+                    box.storageUnitId = targetUnitId; box.shelf = targetShelf; box.storageRack = targetRack; box.storageRow = targetRow; box.storageColumn = targetColumn; box.temperature = targetUnit.temperature;
                     if (other) {
                         const sourceUnit = state.coldStorageUnits.find(function (item) { return item.id === sourceUnitId; });
-                        other.storageUnitId = sourceUnitId; other.shelf = sourceShelf; other.storageRow = sourceRow; other.storageColumn = sourceColumn;
+                        other.storageUnitId = sourceUnitId; other.shelf = sourceShelf; other.storageRack = sourceRack; other.storageRow = sourceRow; other.storageColumn = sourceColumn;
                         if (sourceUnit) other.temperature = sourceUnit.temperature;
                         other.storageLocation = formatColdStorageBoxLocation(other);
                     }
@@ -1824,6 +1841,51 @@
         document.addEventListener('click', function (event) {
             if (suppressClick && event.target.closest('[data-storage-slot]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
         }, true);
+    }
+
+    function bindColdStorageRackDrag() {
+        let drag = null;
+        document.addEventListener('pointerdown', function (event) {
+            const handle = event.target.closest('[data-cold-storage-rack-handle]');
+            const rack = handle?.closest('[data-cold-storage-rack]');
+            if (!rack || event.button !== 0 || workspaceReadOnly) return;
+            event.preventDefault();
+            event.stopPropagation();
+            drag = { pointerId: event.pointerId, handle: handle, rack: rack, container: rack.parentElement, startX: event.clientX, startY: event.clientY, moved: false };
+            handle.setPointerCapture?.(event.pointerId);
+        }, { passive: false });
+        document.addEventListener('pointermove', function (event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3) return;
+            drag.moved = true;
+            drag.rack.classList.add('is-dragging');
+            const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-cold-storage-rack]');
+            if (target && target !== drag.rack && target.parentElement === drag.container) {
+                const rect = target.getBoundingClientRect();
+                const after = drag.container.classList.contains('vertical') ? event.clientX > rect.left + rect.width / 2 : event.clientY > rect.top + rect.height / 2;
+                drag.container.insertBefore(drag.rack, after ? target.nextSibling : target);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        }, { passive: false });
+        function finish(event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            drag.rack.classList.remove('is-dragging');
+            if (drag.moved) {
+                const unit = state.coldStorageUnits.find(function (item) { return item.id === drag.rack.dataset.storageUnit; });
+                const shelf = Number(drag.rack.dataset.storageShelf);
+                const level = unit && coldStorageLevel(unit, shelf);
+                if (level) {
+                    level.rackOrder = Array.from(drag.container.children).map(function (item) { return Number(item.dataset.storageRack); }).filter(Boolean);
+                    unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '第 ' + shelf + ' 层货架顺序' }] });
+                    saveState();
+                    renderSamples();
+                }
+            }
+            drag = null;
+        }
+        document.addEventListener('pointerup', finish);
+        document.addEventListener('pointercancel', finish);
     }
 
     function bindRoomTabReorder() {
@@ -1876,6 +1938,7 @@
         bindDirectDragScroll();
         bindRoomLayoutDrag();
         bindColdStorageBoxDrag();
+        bindColdStorageRackDrag();
         bindRoomTabReorder();
         document.addEventListener('click', function (event) {
             if (event.target.closest('[data-open-sync]')) {
@@ -1967,6 +2030,7 @@
                     pendingFreezerDefaults = {
                         storageUnitId: add.dataset.storageUnit || activeColdStorageId,
                         shelf: add.dataset.storageShelf || activeColdStorageShelf,
+                        storageRack: add.dataset.storageRack || 1,
                         storageRow: add.dataset.storageRow || '',
                         storageColumn: add.dataset.storageColumn || ''
                     };
@@ -2904,7 +2968,7 @@
             return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip caution">待填写</span></header><button class="button primary compact" type="button" data-add-result-for="' + esc(experiment.id) + '">＋ 添加结果</button></section>';
         }
         if (!detailed) {
-            return '<section class="experiment-inline-result completed"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><div class="result-recorded-row"><strong class="result-recorded">已录入结果</strong><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">修改结果</button></div></section>';
+            return '<section class="experiment-inline-result pending"><header><div><p class="micro-label">EXPERIMENT RESULT</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><button class="button ghost compact result-preview-action" type="button" data-edit-result="' + esc(result.id) + '"><span>已录入结果</span><b>修改结果</b></button></section>';
         }
         const attachments = result.attachments.slice(0, 6).map(resultAttachmentLinkHtml).join('');
         return '<section class="experiment-inline-result completed detailed"><header><div><p class="micro-label">EXPERIMENT RESULT · ' + esc(result.id) + '</p><h3>实验结果</h3></div><span class="status-chip">已填写</span></header><details class="result-date-accordion" open><summary><span>登记日期</span><strong>' + esc(result.date) + '</strong><b aria-hidden="true">⌄</b></summary><div class="result-date-content"><div class="result-conclusion"><small>主要结果</small><strong>' + esc(result.summary || '') + '</strong></div><div class="result-conclusion"><small>结论与解释</small><strong>' + esc(result.conclusion || '') + '</strong></div><div class="result-conclusion"><small>下一步</small><strong>' + esc(result.nextStep || '') + '</strong></div>' + (attachments ? '<div class="result-attachment-strip">' + attachments + '</div>' : '') + '<footer><span>' + result.attachments.length + ' 个附件</span><div><button class="button ghost compact" type="button" data-edit-result="' + esc(result.id) + '">修改结果</button><button class="result-delete-button" type="button" data-delete-result="' + esc(result.id) + '">删除</button></div></footer></div></details></section>';
@@ -3894,19 +3958,14 @@
         return Math.max(1, Math.floor(days / 30.44)) + ' 个月';
     }
 
-    function coldStorageSlotsHtml(unit, shelf, level, compact) {
-        const boxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf; });
+    function coldStorageSlotsHtml(unit, shelf, level, compact, rack) {
+        const boxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) === rack; });
         const boxesBySlot = new Map(boxes.map(function (box) { return [Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1), box]; }));
-        const verticalRack = level.mode === 'rack' && unit.orientation === '竖向';
         const positions = [];
-        if (verticalRack) {
-            for (let column = 1; column <= level.columns; column += 1) for (let row = 1; row <= level.rows; row += 1) positions.push([row, column]);
-        } else {
-            for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) positions.push([row, column]);
-        }
+        for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) positions.push([row, column]);
         return positions.map(function (position) {
             const row = position[0]; const column = position[1]; const box = boxesBySlot.get(row + ':' + column);
-            const attrs = ' data-storage-slot data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-row="' + row + '" data-storage-column="' + column + '"';
+            const attrs = ' data-storage-slot data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '" data-storage-row="' + row + '" data-storage-column="' + column + '"';
             const label = compact ? 'R' + row + ' · C' + column : '第 ' + row + ' 行第 ' + column + ' 位';
             return box
                 ? '<button class="cold-storage-slot occupied' + (box.id === activeFreezerBoxId ? ' active' : '') + '" type="button"' + attrs + ' data-cold-storage-box="' + esc(box.id) + '" data-freezer-box="' + esc(box.id) + '"><span>' + label + '</span><strong>' + esc(box.name) + '</strong></button>'
@@ -3914,10 +3973,18 @@
         }).join('');
     }
 
-    function coldStorageSlotsStyle(level, verticalRack, compact) {
-        const width = compact ? (verticalRack ? 44 : 62) : 108;
-        if (verticalRack) return 'grid-template-rows:repeat(' + level.rows + ',minmax(' + (compact ? 44 : 72) + 'px,auto));grid-template-columns:repeat(' + level.columns + ',minmax(' + width + 'px,1fr));grid-auto-flow:column';
+    function coldStorageSlotsStyle(level, compact) {
+        const width = compact ? 62 : 108;
         return 'grid-template-columns:repeat(' + level.columns + ',minmax(' + width + 'px,1fr))';
+    }
+
+    function coldStorageRacksHtml(unit, shelf, level, compact) {
+        const racks = level.mode === 'rack' ? level.rackOrder : [1];
+        const orientation = level.mode === 'rack' && unit.orientation === '竖向' ? ' vertical' : ' horizontal';
+        return '<div class="cold-storage-racks' + orientation + '" style="--rack-count:' + racks.length + '">' + racks.map(function (rack) {
+            const handle = level.mode === 'rack' ? '<button class="cold-storage-rack-handle" type="button" data-cold-storage-rack-handle><strong>第 ' + rack + ' 货架</strong><span>拖动排序</span></button>' : '';
+            return '<section class="cold-storage-rack' + (level.mode === 'rack' ? '' : ' direct') + '" data-cold-storage-rack data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '">' + handle + '<div class="cold-storage-device-level-slots" style="' + coldStorageSlotsStyle(level, compact) + '">' + coldStorageSlotsHtml(unit, shelf, level, compact, rack) + '</div></section>';
+        }).join('') + '</div>';
     }
 
     function renderSamples() {
@@ -3946,26 +4013,23 @@
         }).join('');
         els.coldStorageType.textContent = (activeUnit.type === '液氮罐' ? 'LIQUID NITROGEN TANK' : 'FREEZER') + ' · ' + activeUnit.temperature;
         els.coldStorageTitle.textContent = activeUnit.name;
-        els.coldStorageMeta.textContent = activeUnit.location + ' · ' + (activeUnit.orientation === '竖向' ? shelfCount + ' 列货架' : shelfCount + ' 层设备结构');
+        els.coldStorageMeta.textContent = activeUnit.location + ' · ' + shelfCount + ' 层设备结构';
         els.coldStorageDevice.dataset.deviceKind = activeUnit.type === '液氮罐' ? 'ln2' : 'freezer';
         els.coldStorageDevice.dataset.rackOrientation = activeUnit.orientation === '竖向' ? 'vertical' : 'horizontal';
-        els.coldStorageShelfTabs.classList.toggle('vertical-racks', activeUnit.orientation === '竖向');
-        els.coldStorageShelfTabs.style.setProperty('--rack-count', String(shelfCount));
+        els.coldStorageShelfTabs.classList.remove('vertical-racks');
+        els.coldStorageShelfTabs.style.removeProperty('--rack-count');
         els.coldStorageShelfTabs.innerHTML = Array.from({ length: shelfCount }, function (_, index) {
             const shelf = index + 1;
             const level = coldStorageLevel(activeUnit, shelf);
             const boxCount = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === shelf).length;
-            const verticalRack = level.mode === 'rack' && activeUnit.orientation === '竖向';
-            const levelLabel = verticalRack ? '第 ' + shelf + ' 列货架' : '第 ' + shelf + ' 层';
-            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + (verticalRack ? ' vertical-rack' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>' + levelLabel + '</span><strong>' + (level.mode === 'rack' ? (verticalRack ? '竖向货架' : '横向货架') : '直放') + '</strong><small>' + level.rows + ' × ' + level.columns + ' 盒位 · ' + boxCount + ' 盒</small></button><div class="cold-storage-device-level-slots" style="' + coldStorageSlotsStyle(level, verticalRack, true) + '">' + coldStorageSlotsHtml(activeUnit, shelf, level, true) + '</div></section>';
+            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>第 ' + shelf + ' 层</span><strong>' + (level.mode === 'rack' ? level.rackCount + ' 个' + (activeUnit.orientation === '竖向' ? '竖向' : '横向') + '货架' : '直放') + '</strong><small>每架 ' + level.rows + ' × ' + level.columns + ' 盒位 · ' + boxCount + ' 盒</small></button>' + coldStorageRacksHtml(activeUnit, shelf, level, true) + '</section>';
         }).join('');
-        const activeVerticalRack = activeLevel.mode === 'rack' && activeUnit.orientation === '竖向';
-        els.coldStorageLevelTitle.textContent = (activeVerticalRack ? '第 ' + activeColdStorageShelf + ' 列货架' : '第 ' + activeColdStorageShelf + ' 层') + ' · ' + (activeLevel.mode === 'rack' ? (activeVerticalRack ? '竖向插入' : '横向排列') : '直放区');
-        els.coldStorageLevelMeta.textContent = activeLevel.rows + ' 行 × ' + activeLevel.columns + ' 列盒位';
+        els.coldStorageLevelTitle.textContent = '第 ' + activeColdStorageShelf + ' 层 · ' + (activeLevel.mode === 'rack' ? (activeUnit.orientation === '竖向' ? '竖向插入' : '横向排列') : '直放区');
+        els.coldStorageLevelMeta.textContent = (activeLevel.mode === 'rack' ? activeLevel.rackCount + ' 个货架 · 每架 ' : '') + activeLevel.rows + ' 行 × ' + activeLevel.columns + ' 列盒位';
         els.coldStorageMap.classList.toggle('is-rack', activeLevel.mode === 'rack');
-        els.coldStorageMap.classList.toggle('vertical-rack', activeVerticalRack);
-        els.coldStorageMap.style.cssText = coldStorageSlotsStyle(activeLevel, activeVerticalRack, false);
-        els.coldStorageMap.innerHTML = coldStorageSlotsHtml(activeUnit, activeColdStorageShelf, activeLevel, false);
+        els.coldStorageMap.classList.toggle('vertical-rack', activeLevel.mode === 'rack' && activeUnit.orientation === '竖向');
+        els.coldStorageMap.style.cssText = '';
+        els.coldStorageMap.innerHTML = coldStorageRacksHtml(activeUnit, activeColdStorageShelf, activeLevel, false);
 
         els.freezerBoxTabs.innerHTML = visibleBoxes.map(function (box) {
             const count = state.samples.filter(item => item.boxId === box.id).length;
@@ -4184,7 +4248,7 @@
             const key = direction === 'incoming' ? edge.source : edge.target;
             const entity = entityMap.get(key);
             if (!entity) return '';
-            const remove = edge.manual ? '<button class="embedded-lineage-remove" type="button" data-delete-embedded-lineage="' + esc(edge.id) + '" aria-label="删除谱系关系">×</button>' : '';
+            const remove = edge.manual ? '<button class="embedded-lineage-remove" type="button" data-delete-embedded-lineage="' + esc(edge.id) + '" aria-label="删除谱系关系"></button>' : '';
             return '<div class="embedded-lineage-branch ' + direction + '"><button class="embedded-lineage-node" type="button" data-lineage-entity="' + esc(key) + '"><small>' + esc(toolsEntityTypeLabel(entity.type)) + '</small><strong>' + esc(entity.label) + '</strong><span>' + esc(entity.meta || edge.relation) + '</span></button><i aria-hidden="true"></i><em>' + esc(edge.relation) + '</em>' + remove + '</div>';
         }
         const incomingHtml = incoming.slice(0, 3).map(function (edge) { return relatedNode(edge, 'incoming'); }).join('');
@@ -4343,7 +4407,7 @@
         els.lineageLinkList.innerHTML = state.lineageLinks.slice().reverse().map(function (link) {
             const source = catalog.find(function (item) { return item.key === toolsEntityKey(link.sourceType, link.sourceId); });
             const target = catalog.find(function (item) { return item.key === toolsEntityKey(link.targetType, link.targetId); });
-            return '<article><div><strong>' + esc(source ? source.label : link.sourceId) + ' → ' + esc(target ? target.label : link.targetId) + '</strong><span>' + esc(link.relation) + (link.quantity !== '' && link.quantity != null ? ' · ' + formatQuantity(link.quantity) + ' ' + esc(link.unit) : '') + '</span></div><button type="button" data-delete-lineage-link="' + esc(link.id) + '" aria-label="删除关系">×</button></article>';
+            return '<article><div><strong>' + esc(source ? source.label : link.sourceId) + ' → ' + esc(target ? target.label : link.targetId) + '</strong><span>' + esc(link.relation) + (link.quantity !== '' && link.quantity != null ? ' · ' + formatQuantity(link.quantity) + ' ' + esc(link.unit) : '') + '</span></div><button type="button" data-delete-lineage-link="' + esc(link.id) + '" aria-label="删除关系"></button></article>';
         }).join('') || '<p class="tools-empty-copy">还没有手动建立的关系。</p>';
     }
 
@@ -4412,7 +4476,7 @@
     }
 
     function masterMixRowHtml(name, amount, unit) {
-        return '<div class="mastermix-row"><input data-mix-name type="text" value="' + esc(name || '') + '" placeholder="组分名称"><input data-mix-amount type="number" min="0" step="any" value="' + esc(amount == null ? '' : amount) + '" aria-label="单个反应用量"><input data-mix-unit type="text" value="' + esc(unit || 'µL') + '" aria-label="单位"><button type="button" data-remove-mix-component aria-label="删除组分">×</button></div>';
+        return '<div class="mastermix-row"><input data-mix-name type="text" value="' + esc(name || '') + '" placeholder="组分名称"><input data-mix-amount type="number" min="0" step="any" value="' + esc(amount == null ? '' : amount) + '" aria-label="单个反应用量"><input data-mix-unit type="text" value="' + esc(unit || 'µL') + '" aria-label="单位"><button type="button" data-remove-mix-component aria-label="删除组分"></button></div>';
     }
 
     function recalculateResearchTools() {
@@ -4683,7 +4747,7 @@
             const left = placement.index / placement.count * 100;
             const width = 100 / placement.count;
             const runButton = scheduleRunButtonHtml(item, protocol, true);
-            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" data-task-id="' + esc(item.id) + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
+            gridHtml += '<article class="schedule-block ' + esc(item.type) + (item.done ? ' done' : '') + '" data-task-id="' + esc(item.id) + '" style="grid-row:' + (start + 1) + ' / span ' + span + ';--event-left:' + left.toFixed(4) + '%;--event-width:' + width.toFixed(4) + '%" data-overlap-count="' + placement.count + '"><div class="schedule-block-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.time) + '–' + esc(item.end) + ' · ' + esc(protocol ? protocol.title : item.resource) + contributorInline(item) + '</small></div><div class="schedule-block-actions">' + runButton + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程"></button><button class="schedule-check-button" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '">' + (item.done ? '✓' : '○') + '</button></div></article>';
         });
         document.getElementById('dayTimeline').innerHTML = gridHtml;
 
@@ -4760,7 +4824,7 @@
 
     function scheduleItemHtml(item) {
         const protocol = state.protocols.find(entry => entry.id === item.protocolId);
-        return '<article class="today-item ' + (item.done ? 'done' : '') + '" data-task-id="' + esc(item.id) + '"><time>' + esc(scheduleTimeLabel(item)) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程">×</button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
+        return '<article class="today-item ' + (item.done ? 'done' : '') + '" data-task-id="' + esc(item.id) + '"><time>' + esc(scheduleTimeLabel(item)) + '</time><i class="task-marker ' + esc(item.type) + '"></i><div><strong>' + esc(item.title) + '</strong><small>' + esc(item.resource) + contributorInline(item) + '</small></div><div class="today-item-actions">' + scheduleRunButtonHtml(item, protocol, false) + '<button class="schedule-edit-button" type="button" data-edit-task="' + esc(item.id) + '" aria-label="编辑日程" title="编辑日程">✎</button><button class="schedule-delete-button" type="button" data-delete-task="' + esc(item.id) + '" aria-label="删除日程" title="删除日程"></button><button class="task-check" type="button" data-task-check="' + esc(item.id) + '" aria-label="' + (item.done ? '标记为未完成' : '标记为完成') + '" title="' + (item.done ? '取消完成' : '标记完成') + '"></button></div></article>';
     }
 
     function scheduleRunButtonHtml(item, protocol, compact) {
@@ -4960,7 +5024,7 @@
         const options = state.reagents.map(function (reagent) {
             return '<option value="' + esc(reagent.catalog) + '"' + (reagent.catalog === selectedCatalog ? ' selected' : '') + '>' + esc(reagent.name) + ' · ' + esc(reagent.catalog) + ' · ' + esc(reagent.unit) + '</option>';
         }).join('');
-        return '<div class="experiment-reagent-row"><select name="actualReagentCatalog" aria-label="本次使用试剂">' + options + '</select><input name="actualReagentAmount" type="number" min="0.001" step="0.001" value="' + esc(amount) + '" aria-label="本次实际用量"><span>库存单位</span><button type="button" data-remove-experiment-reagent aria-label="移除本次试剂">×</button></div>';
+        return '<div class="experiment-reagent-row"><select name="actualReagentCatalog" aria-label="本次使用试剂">' + options + '</select><input name="actualReagentAmount" type="number" min="0.001" step="0.001" value="' + esc(amount) + '" aria-label="本次实际用量"><span>库存单位</span><button type="button" data-remove-experiment-reagent aria-label="移除本次试剂"></button></div>';
     }
 
     function readExperimentUsageRows() {
@@ -5247,7 +5311,7 @@
     function runStepPhotoHtml(stepState) {
         const photos = Array.isArray(stepState.photos) ? stepState.photos : [];
         const items = photos.map(function (photo, index) {
-            return '<figure><img src="' + esc(photo.data) + '" alt="实验步骤照片 ' + (index + 1) + '"><button type="button" data-remove-run-photo="' + esc(photo.id) + '" aria-label="删除步骤照片">×</button><figcaption>步骤照片 ' + (index + 1) + (photo.addedAt ? ' · ' + esc(formatHistoryTime(photo.addedAt)) : '') + '</figcaption></figure>';
+            return '<figure><img src="' + esc(photo.data) + '" alt="实验步骤照片 ' + (index + 1) + '"><button type="button" data-remove-run-photo="' + esc(photo.id) + '" aria-label="删除步骤照片"></button><figcaption>步骤照片 ' + (index + 1) + (photo.addedAt ? ' · ' + esc(formatHistoryTime(photo.addedAt)) : '') + '</figcaption></figure>';
         }).join('');
         return '<section class="run-step-photos"><header><div><p class="micro-label">STEP IMAGES</p><h4>步骤照片记录</h4></div><label class="run-photo-add" for="runStepPhotoInput"><input id="runStepPhotoInput" type="file" accept="image/*" capture="environment" multiple data-run-photo-input><span>＋ 拍照 / 选择图片</span></label></header><div class="run-step-photo-grid">' + (items || '<p>尚未保存本步骤的照片。</p>') + '</div><small>每个步骤最多保存 6 张压缩照片；切换步骤后仍会保留。</small></section>';
     }
@@ -6423,13 +6487,14 @@ function getReagentDisplayStatus(reagent) {
                 field('location', '设备位置', 'text', '例：样本库 A 区 / 北墙 01 位', true),
                 field('orientation', '货架排列', 'select', ['横向', '竖向'], true),
                 field('shelves', '货架 / 层数量', 'number', '5', true),
-                field('levelLayout', '各层结构（每行：直放/货架 行×列）', 'textarea', '直放 1x4\n货架 2x4\n货架 3x4\n直放 1x4\n货架 2x4', true, true)
+                field('levelLayout', '各层结构（每行：直放；或货架 数量架 行×列）', 'textarea', '直放 1x4\n货架 2架 2x4\n货架 3架 3x4\n直放 1x4\n货架 2架 2x4', true, true)
             ]
         },
         coldStorageLevel: {
             kicker: 'COLD STORAGE LEVEL', title: '编辑设备层',
             fields: [
                 field('mode', '层结构', 'select', ['直放', '货架'], true),
+                field('rackCount', '货架数量', 'number', '2', true),
                 field('rows', '盒位行数', 'number', '2', true),
                 field('columns', '盒位列数', 'number', '4', true)
             ]
@@ -6440,6 +6505,7 @@ function getReagentDisplayStatus(reagent) {
                 field('name', '冻存盒名称', 'text', '例：FZ-03 / C2', true),
                 field('storageUnitId', '所属冰箱 / 液氮罐', 'cold-storage-select', '', true),
                 field('shelf', '层架', 'number', '1', true),
+                field('storageRack', '货架编号', 'number', '1', true),
                 field('storageRow', '盒位行', 'number', '1', true),
                 field('storageColumn', '盒位列', 'number', '1', true),
                 field('rows', '行数', 'select', ['4', '5', '6', '7', '8', '9', '10'], true),
@@ -6505,17 +6571,17 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'formulation') {
             defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
         } else if (type === 'coldStorage') {
-            const levels = [{ mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rows: 2, columns: 4 }, { mode: 'rack', rows: 3, columns: 4 }, { mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rows: 2, columns: 4 }];
+            const levels = normalizeColdStorageLevels({ shelves: 5, levels: [{ mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rackCount: 2, rows: 2, columns: 4 }, { mode: 'rack', rackCount: 3, rows: 3, columns: 4 }, { mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rackCount: 2, rows: 2, columns: 4 }] });
             defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', orientation: '横向', shelves: 5, levelLayout: coldStorageLevelsText(levels) };
         } else if (type === 'coldStorageLevel') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const level = coldStorageLevel(unit, editingColdStorageLevel || activeColdStorageShelf);
-            defaultsForEntry = { mode: level.mode === 'rack' ? '货架' : '直放', rows: level.rows, columns: level.columns };
+            defaultsForEntry = { mode: level.mode === 'rack' ? '货架' : '直放', rackCount: level.rackCount || 1, rows: level.rows, columns: level.columns };
         } else if (type === 'freezer') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const requestedShelf = Math.min(Math.max(1, Number(activeColdStorageShelf) || 1), Math.max(1, Number(unit.shelves) || 1));
             const slot = firstAvailableColdStorageSlot(unit, requestedShelf, editOptions && editOptions.key);
-            defaultsForEntry = Object.assign({ storageUnitId: unit.id, shelf: requestedShelf, storageRow: slot.row, storageColumn: slot.column, rows: '9', columns: '9' }, pendingFreezerDefaults || {});
+            defaultsForEntry = Object.assign({ storageUnitId: unit.id, shelf: requestedShelf, storageRack: slot.rack, storageRow: slot.row, storageColumn: slot.column, rows: '9', columns: '9' }, pendingFreezerDefaults || {});
         } else if (type === 'cell') {
             defaultsForEntry = { passage: 1, confluence: 50 };
         } else if (type === 'passage') {
@@ -6581,7 +6647,7 @@ function getReagentDisplayStatus(reagent) {
                     const hidden = capture.querySelector('input[type="hidden"]');
                     const preview = capture.querySelector('[data-photo-preview]');
                     if (hidden) hidden.value = pendingPhotoData;
-                    if (preview) preview.innerHTML = '<img src="' + esc(pendingPhotoData) + '" alt="当前记录照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
+                    if (preview) preview.innerHTML = '<img src="' + esc(pendingPhotoData) + '" alt="当前记录照片"><button type="button" data-clear-photo aria-label="移除照片"></button>';
                 }
             }
         }
@@ -6764,7 +6830,7 @@ function getReagentDisplayStatus(reagent) {
 
     function formulationComponentRowHtml(component) {
         const item = component || {};
-        return '<div class="formulation-component-row"><input name="formulationComponentName" type="text" value="' + esc(item.name || '') + '" placeholder="例：NaCl" aria-label="组分名称"><input name="formulationComponentAmount" type="text" value="' + esc(item.amount || '') + '" placeholder="例：8" aria-label="组分用量"><input name="formulationComponentUnit" type="text" value="' + esc(item.unit || '') + '" placeholder="例：g" aria-label="组分单位"><button type="button" data-remove-formulation-component aria-label="移除此组分">×</button></div>';
+        return '<div class="formulation-component-row"><input name="formulationComponentName" type="text" value="' + esc(item.name || '') + '" placeholder="例：NaCl" aria-label="组分名称"><input name="formulationComponentAmount" type="text" value="' + esc(item.amount || '') + '" placeholder="例：8" aria-label="组分用量"><input name="formulationComponentUnit" type="text" value="' + esc(item.unit || '') + '" placeholder="例：g" aria-label="组分单位"><button type="button" data-remove-formulation-component aria-label="移除此组分"></button></div>';
     }
 
     function renderFormulationComponentEditor(components) {
@@ -6788,7 +6854,7 @@ function getReagentDisplayStatus(reagent) {
             return '<option value="' + esc(reagent.catalog) + '"' + (reagent.catalog === selectedCatalog ? ' selected' : '') + '>' + esc(reagent.name) + ' · ' + esc(reagent.unit) + '</option>';
         }).join('');
         if (!options) return '<p class="field-note">请先在试剂库存中录入试剂。</p>';
-        return '<div class="protocol-reagent-row"><select name="reagentCatalog">' + options + '</select><input name="reagentAmount" type="number" min="0.001" step="0.001" value="' + esc(amount) + '" aria-label="单次用量"><span>库存单位 / 次</span><button type="button" data-remove-reagent-row aria-label="移除此试剂">×</button></div>';
+        return '<div class="protocol-reagent-row"><select name="reagentCatalog">' + options + '</select><input name="reagentAmount" type="number" min="0.001" step="0.001" value="' + esc(amount) + '" aria-label="单次用量"><span>库存单位 / 次</span><button type="button" data-remove-reagent-row aria-label="移除此试剂"></button></div>';
     }
 
     function renderProtocolReagentEditor(usages) {
@@ -6843,7 +6909,7 @@ function getReagentDisplayStatus(reagent) {
         container.innerHTML = pendingResultAttachments.map(function (attachment) {
             const image = String(attachment.type || '').startsWith('image/');
             const preview = image ? '<img src="' + esc(attachment.data) + '" alt="' + esc(attachment.name) + '">' : '<span class="pending-file-icon">FILE</span>';
-            return '<article>' + preview + '<div><strong>' + esc(attachment.name) + '</strong><small>' + formatFileSize(attachment.size) + '</small></div><button type="button" data-remove-result-attachment="' + esc(attachment.id) + '" aria-label="删除附件 ' + esc(attachment.name) + '">×</button></article>';
+            return '<article>' + preview + '<div><strong>' + esc(attachment.name) + '</strong><small>' + formatFileSize(attachment.size) + '</small></div><button type="button" data-remove-result-attachment="' + esc(attachment.id) + '" aria-label="删除附件 ' + esc(attachment.name) + '"></button></article>';
         }).join('') || '<p class="result-attachment-empty">尚未上传附件</p>';
     }
 
@@ -6863,7 +6929,7 @@ function getReagentDisplayStatus(reagent) {
             const dataUrl = await compressPhoto(file, 900, .68);
             pendingPhotoData = dataUrl;
             capture.querySelector('input[type="hidden"]').value = dataUrl;
-            preview.innerHTML = '<img src="' + dataUrl + '" alt="待保存的录入照片"><button type="button" data-clear-photo aria-label="移除照片">×</button>';
+            preview.innerHTML = '<img src="' + dataUrl + '" alt="待保存的录入照片"><button type="button" data-clear-photo aria-label="移除照片"></button>';
             if (activeDialogType === 'reagent' && 'BarcodeDetector' in window) {
                 try {
                     const detector = new window.BarcodeDetector();
@@ -7302,7 +7368,9 @@ function getReagentDisplayStatus(reagent) {
             if (!unit) return;
             const levelIndex = Math.min(unit.levels.length, Math.max(1, editingColdStorageLevel || activeColdStorageShelf)) - 1;
             const levels = unit.levels.map(function (level) { return Object.assign({}, level); });
-            levels[levelIndex] = { mode: data.mode === '货架' ? 'rack' : 'direct', rows: Math.round(number(data.rows, 1, 12)) || 1, columns: Math.round(number(data.columns, 1, 12)) || 1 };
+            const mode = data.mode === '货架' ? 'rack' : 'direct';
+            const rackCount = mode === 'rack' ? (Math.round(number(data.rackCount, 1, 8)) || 1) : 1;
+            levels[levelIndex] = { mode: mode, rackCount: rackCount, rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; }), rows: Math.round(number(data.rows, 1, 12)) || 1, columns: Math.round(number(data.columns, 1, 12)) || 1 };
             if (coldStorageLayoutConflict(unit.id, levels)) {
                 showToast('请先移动超出新范围的冻存盒');
                 return;
@@ -7318,7 +7386,7 @@ function getReagentDisplayStatus(reagent) {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
             const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
             if (!levels) {
-                showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2x4”');
+                showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2架 2x4”');
                 return;
             }
             const unit = {
@@ -7348,9 +7416,10 @@ function getReagentDisplayStatus(reagent) {
             const unit = state.coldStorageUnits.find(item => item.id === data.storageUnitId) || state.coldStorageUnits[0];
             const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
             const level = coldStorageLevel(unit, shelf);
+            const storageRack = level.mode === 'rack' ? (Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1) : 1;
             const storageRow = Math.round(number(data.storageRow, 1, level.rows)) || 1;
             const storageColumn = Math.round(number(data.storageColumn, 1, level.columns)) || 1;
-            if (state.freezerBoxes.some(box => box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn)) {
+            if (state.freezerBoxes.some(box => box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) === storageRack && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn)) {
                 showToast('该设备盒位已经放置冻存盒');
                 return;
             }
@@ -7359,6 +7428,7 @@ function getReagentDisplayStatus(reagent) {
                 name: displayOr(data.name, '未命名冻存盒'),
                 storageUnitId: unit.id,
                 shelf: shelf,
+                storageRack: storageRack,
                 storageRow: storageRow,
                 storageColumn: storageColumn,
                 temperature: unit.temperature,
@@ -7469,7 +7539,7 @@ function getReagentDisplayStatus(reagent) {
         } else if (target.type === 'coldStorage') {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
             const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
-            if (!levels) { showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2x4”'); return; }
+            if (!levels) { showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2架 2x4”'); return; }
             if (coldStorageLayoutConflict(current.id, levels)) { showToast('请先移动超出新范围的冻存盒'); return; }
             updated.id = current.id;
             updated.name = displayOr(data.name, current.name || '未命名冻存设备');
@@ -7484,6 +7554,25 @@ function getReagentDisplayStatus(reagent) {
             updated.layoutX = current.layoutX;
             updated.layoutY = current.layoutY;
             delete updated.levelLayout;
+        } else if (target.type === 'freezer') {
+            const unit = state.coldStorageUnits.find(function (item) { return item.id === data.storageUnitId; }) || state.coldStorageUnits[0];
+            const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
+            const level = coldStorageLevel(unit, shelf);
+            const storageRack = level.mode === 'rack' ? (Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1) : 1;
+            const storageRow = Math.round(number(data.storageRow, 1, level.rows)) || 1;
+            const storageColumn = Math.round(number(data.storageColumn, 1, level.columns)) || 1;
+            if (state.freezerBoxes.some(function (box) { return box.id !== current.id && box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) === storageRack && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn; })) {
+                showToast('该设备盒位已经放置冻存盒');
+                return;
+            }
+            updated.id = current.id;
+            updated.storageUnitId = unit.id;
+            updated.shelf = shelf;
+            updated.storageRack = storageRack;
+            updated.storageRow = storageRow;
+            updated.storageColumn = storageColumn;
+            updated.temperature = unit.temperature;
+            updated.storageLocation = formatColdStorageBoxLocation(updated);
         } else if (target.type === 'animalRoom' || target.type === 'plantRoom') {
             updated.id = current.id;
             updated.name = displayOr(data.name, current.name || (target.type === 'animalRoom' ? '未命名动物房间' : '未命名植物培养室'));
@@ -7603,6 +7692,13 @@ function getReagentDisplayStatus(reagent) {
             activeColdStorageId = updated.id;
             activeColdStorageShelf = Math.min(updated.levels.length, activeColdStorageShelf);
             localStorage.setItem('rhineLabActiveColdStorage', updated.id);
+        } else if (target.type === 'freezer') {
+            activeFreezerBoxId = updated.id;
+            activeColdStorageId = updated.storageUnitId;
+            activeColdStorageShelf = updated.shelf;
+            localStorage.setItem('rhineLabActiveFreezerBox', updated.id);
+            localStorage.setItem('rhineLabActiveColdStorage', updated.storageUnitId);
+            localStorage.setItem('rhineLabActiveColdStorageShelf', String(updated.shelf));
         } else if (target.type === 'animalRoom') {
             activeAnimalRoomId = updated.id;
             localStorage.setItem('rhineLabActiveAnimalRoom', updated.id);
@@ -7635,6 +7731,7 @@ function getReagentDisplayStatus(reagent) {
         if (type === 'protocol' && fieldName === 'stepsText') return (record.steps || []).join('\n');
         if (type === 'formulation' && fieldName === 'components') return record.components || [];
         if (type === 'task' && fieldName === 'shareWithLab') return record.shareWithLab === false ? 'no' : 'yes';
+        if (type === 'coldStorage' && fieldName === 'levelLayout') return coldStorageLevelsText(record.levels || []);
         return record[fieldName];
     }
 
