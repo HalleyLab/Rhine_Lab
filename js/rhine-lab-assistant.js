@@ -7,6 +7,7 @@
     let dragState = null;
     let suppressOpen = false;
     const POSITION_KEY = 'rhineLabAssistantPosition';
+    const HOLD_DELAY = 180;
 
     function byId(id) { return document.getElementById(id); }
     function bridge() { return window.RhineLabAssistantBridge || null; }
@@ -39,9 +40,10 @@
             openDrawer();
         });
         toggle.addEventListener('pointerdown', beginCharacterDrag, { passive: false, capture: true });
-        document.addEventListener('pointermove', moveCharacter, { passive: false });
-        document.addEventListener('pointerup', endCharacterDrag);
-        document.addEventListener('pointercancel', endCharacterDrag);
+        toggle.addEventListener('touchmove', blockCharacterTouchScroll, { passive: false, capture: true });
+        document.addEventListener('pointermove', moveCharacter, { passive: false, capture: true });
+        document.addEventListener('pointerup', endCharacterDrag, { capture: true });
+        document.addEventListener('pointercancel', endCharacterDrag, { capture: true });
         toggle.addEventListener('contextmenu', function (event) { event.preventDefault(); });
         byId('assistantClose').addEventListener('click', closeDrawer);
         byId('assistantScrim').addEventListener('click', closeDrawer);
@@ -94,34 +96,52 @@
         event.stopPropagation();
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
-        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false };
+        const touch = event.pointerType === 'touch' || event.pointerType === 'pen';
+        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false, touch: touch, holdTimer: 0 };
+        toggle.classList.add('is-pressing');
         try { toggle.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
+        if (touch) dragState.holdTimer = window.setTimeout(activateCharacterDrag, HOLD_DELAY);
+    }
+
+    function blockCharacterTouchScroll(event) {
+        if (!dragState) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
     }
 
     function activateCharacterDrag() {
         if (!dragState || dragState.active) return;
+        window.clearTimeout(dragState.holdTimer);
+        dragState.holdTimer = 0;
         dragState.active = true;
         const toggle = byId('assistantToggle');
+        toggle.classList.remove('is-pressing');
         toggle.classList.add('is-dragging', 'has-custom-position');
         try { toggle.setPointerCapture(dragState.pointerId); } catch (_) { /* capture is optional */ }
     }
 
     function moveCharacter(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
+        event.preventDefault();
         event.stopPropagation();
         const distance = Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY);
-        if (!dragState.active && distance < 2) return;
-        activateCharacterDrag();
+        if (!dragState.active) {
+            if (dragState.touch) return;
+            if (distance < 2) return;
+            activateCharacterDrag();
+        }
         dragState.moved = true;
-        event.preventDefault();
         placeCharacter(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
     }
 
     function endCharacterDrag(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
+        event.preventDefault();
+        event.stopPropagation();
         const toggle = byId('assistantToggle');
+        window.clearTimeout(dragState.holdTimer);
         if (toggle.hasPointerCapture(event.pointerId)) toggle.releasePointerCapture(event.pointerId);
-        toggle.classList.remove('is-dragging');
+        toggle.classList.remove('is-pressing', 'is-dragging');
         if (dragState.active) {
             suppressOpen = true;
             if (dragState.moved) localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));

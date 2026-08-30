@@ -95,6 +95,12 @@
     transition: none;
 }
 
+.assistant-character-trigger.is-pressing {
+    animation: none;
+    filter: brightness(1.06);
+    transform: scale(.97) !important;
+}
+
 body.assistant-open .assistant-character-trigger {
     opacity: 0;
     pointer-events: none;

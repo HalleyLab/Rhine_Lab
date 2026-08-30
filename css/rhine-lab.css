@@ -12535,6 +12535,7 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-rack-handle strong { font-size: 11px; }
 .cold-storage-rack-handle span { color: var(--muted); font-size: 9px; font-weight: 900; }
 .cold-storage-rack.is-dragging { opacity: .58; outline: 3px solid var(--acid-strong); cursor: grabbing; }
+.cold-storage-racks.is-rack-drop-target { outline: 3px solid color-mix(in srgb, var(--acid-strong) 72%, transparent); outline-offset: 3px; }
 .cold-storage-level-panel {
     display: grid;
     grid-template-rows: auto 1fr;
