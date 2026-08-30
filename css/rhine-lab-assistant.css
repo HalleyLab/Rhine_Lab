@@ -324,3 +324,13 @@ body.background-black-current .assistant-orbit { background: var(--cyan); }
     .assistant-character-trigger { animation: none; }
     .assistant-message.is-working .assistant-message-body::after { animation: none; }
 }
+
+body.assistant-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+.assistant-drawer {
+    box-sizing: border-box;
+    max-height: 100dvh;
+    overflow: hidden;
+}

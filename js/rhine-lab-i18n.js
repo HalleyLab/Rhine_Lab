@@ -213,10 +213,19 @@
         '登录或管理设备同步': 'Sign in or manage device sync',
         '个人': 'Personal',
         'LAB 共用': 'LAB Shared',
+        '数据同步': 'Data Sync',
+        '切换到Lab': 'Switch to LAB',
+        '切换到个人': 'Switch to Personal',
         '切换工作区范围': 'Switch workspace scope',
         '切换夜间模式': 'Toggle dark mode',
         '切换日间模式': 'Toggle light mode',
+        '夜间模式🌙': 'Dark mode 🌙',
+        '日间模式☀️': 'Light mode ☀️',
         '切换背景': 'Switch background',
+        '工具': 'Tools',
+        '工具导航': 'Tools navigation',
+        '打开工具导航': 'Open tools navigation',
+        '关闭工具导航': 'Close tools navigation',
         '通知': 'Notifications',
         '语言切换': 'Language switch',
         '通知中心': 'Notification Center',
@@ -1846,12 +1855,10 @@
         const button = document.getElementById('languageToggle');
         if (!button) return;
         const label = language === 'zh' ? '切换为英文' : 'Switch to Chinese';
+        button.textContent = '语言/Language';
         button.setAttribute('aria-label', label);
         button.setAttribute('title', label);
         button.setAttribute('aria-pressed', String(language === 'en'));
-        button.querySelectorAll('[data-language-option]').forEach(function (option) {
-            option.classList.toggle('active', option.dataset.languageOption === language);
-        });
     }
 
     function setLanguage(nextLanguage, notify) {

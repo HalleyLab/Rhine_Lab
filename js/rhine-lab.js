@@ -409,6 +409,8 @@
         menuToggle: document.getElementById('menuToggle'),
         mobileScrim: document.getElementById('mobileScrim'),
         notificationToggle: document.getElementById('notificationToggle'),
+        utilityNavToggle: document.getElementById('utilityNavToggle'),
+        utilityNav: document.getElementById('utilityNav'),
         notificationPanel: document.getElementById('notificationPanel'),
         notificationClose: document.getElementById('notificationClose'),
         noticeCount: document.getElementById('noticeCount'),
@@ -661,6 +663,7 @@
         applySavedTheme();
         applySavedBackground();
         applyWorkspaceMode();
+        setUtilityNav(false);
         setTodayLabels();
         startUiTimers();
         resolveLatestDesktopDownload();
@@ -704,6 +707,8 @@
         setTodayLabels();
         updateThemeToggleLabel();
         updateBackgroundToggleLabel();
+        applyWorkspaceMode();
+        setUtilityNav(Boolean(els.utilityNav && !els.utilityNav.hidden));
         applyNotificationState();
         switchView(activeView, false);
     }
@@ -1389,8 +1394,20 @@
         const current = currentBackground();
         toggle.dataset.backgroundMode = current;
         toggle.setAttribute('aria-pressed', String(current !== 'default'));
+        toggle.textContent = interfaceText('切换背景');
         toggle.setAttribute('aria-label', interfaceText('切换背景'));
         toggle.setAttribute('title', interfaceText('切换背景'));
+    }
+
+    function setUtilityNav(open) {
+        if (!els.utilityNav || !els.utilityNavToggle) return;
+        els.utilityNav.hidden = !open;
+        els.utilityNavToggle.setAttribute('aria-expanded', String(open));
+        const label = interfaceText(open ? '关闭工具导航' : '打开工具导航');
+        els.utilityNavToggle.setAttribute('aria-label', label);
+        els.utilityNavToggle.setAttribute('title', label);
+        const text = els.utilityNavToggle.querySelector('span');
+        if (text) text.textContent = interfaceText('工具');
     }
 
     function themeFromSystemTime(date) {
@@ -1420,7 +1437,8 @@
     function updateThemeToggleLabel() {
         const toggle = document.getElementById('themeToggle');
         if (!toggle) return;
-        const label = document.body.classList.contains('dark-theme') ? '切换日间模式' : '切换夜间模式';
+        const label = document.body.classList.contains('dark-theme') ? '日间模式☀️' : '夜间模式🌙';
+        toggle.textContent = interfaceText(label);
         toggle.setAttribute('aria-label', interfaceText(label));
         toggle.setAttribute('title', interfaceText(label));
     }
@@ -1431,11 +1449,16 @@
         document.body.classList.toggle('public-demo-locked', publicDemoMode && !workspaceAccess.authenticated);
         const publicBanner = document.getElementById('publicDemoBanner');
         if (publicBanner) publicBanner.hidden = !(publicDemoMode && !workspaceAccess.authenticated);
-        if (els.workspaceModeToggle) els.workspaceModeToggle.querySelectorAll('[data-workspace-mode]').forEach(function (button) {
-            const active = button.dataset.workspaceMode === workspaceMode;
-            button.classList.toggle('active', active);
-            button.setAttribute('aria-pressed', String(active));
-        });
+        if (els.workspaceModeToggle) {
+            const button = els.workspaceModeToggle.querySelector('[data-workspace-mode]');
+            if (button) {
+                const target = workspaceMode === 'lab' ? 'personal' : 'lab';
+                button.dataset.workspaceMode = target;
+                button.textContent = interfaceText(target === 'lab' ? '切换到Lab' : '切换到个人');
+                button.classList.remove('active');
+                button.setAttribute('aria-pressed', 'false');
+            }
+        }
         if (els.workspaceScopeBanner) els.workspaceScopeBanner.hidden = workspaceMode !== 'lab';
         if (workspaceMode === 'lab' && els.workspaceScopeBanner) {
             const description = els.workspaceScopeBanner.querySelector('div:first-child > span');
@@ -2213,6 +2236,18 @@
             }
         });
 
+        if (els.utilityNavToggle && els.utilityNav) {
+            els.utilityNavToggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const open = els.utilityNav.hidden;
+                if (open) closeNotifications();
+                setUtilityNav(open);
+            });
+            els.utilityNav.addEventListener('click', function (event) {
+                if (event.target.closest('a, button')) window.setTimeout(function () { setUtilityNav(false); }, 0);
+            });
+        }
+
         document.getElementById('themeToggle').addEventListener('click', function () {
             const nextTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
             localStorage.setItem('rhineLabTheme', nextTheme);
@@ -2234,6 +2269,7 @@
 
         els.notificationToggle.addEventListener('click', function (event) {
             event.stopPropagation();
+            setUtilityNav(false);
             if (els.notificationPanel.hidden) {
                 openNotifications();
             } else {
@@ -2247,6 +2283,9 @@
         });
 
         document.addEventListener('click', function (event) {
+            if (els.utilityNav && !els.utilityNav.hidden && !event.target.closest('#utilityNav') && !event.target.closest('#utilityNavToggle')) {
+                setUtilityNav(false);
+            }
             if (!els.notificationPanel.hidden && !event.target.closest('#notificationPanel') && !event.target.closest('#notificationToggle')) {
                 closeNotifications();
             }
@@ -2268,6 +2307,7 @@
                 event.preventDefault();
                 openSearch('');
             }
+            if (event.key === 'Escape' && els.utilityNav && !els.utilityNav.hidden) setUtilityNav(false);
             if (event.key === 'Escape' && !els.searchOverlay.hidden) closeSearch();
             if (event.key === 'Escape' && !els.notificationPanel.hidden) closeNotifications();
             if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-mouse-id], [data-reagent-catalog], #sampleTable [data-sample-id], [data-cell-id], [data-plant-id], [data-bioresource-id], [data-virus-id], [data-bioinfo-record]')) {

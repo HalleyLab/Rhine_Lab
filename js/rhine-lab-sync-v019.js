@@ -48,7 +48,7 @@
 
     function setLocalStatus() {
         if (ui.control) ui.control.dataset.syncState = 'local';
-        if (ui.label) ui.label.textContent = text('本地数据同步');
+        if (ui.label) ui.label.textContent = text('数据同步');
         if (ui.entrySaveStatus) ui.entrySaveStatus.textContent = text('数据将先保存到本机缓存');
         if (ui.systemConnection) ui.systemConnection.textContent = text('本地模式');
     }
@@ -289,7 +289,7 @@
         usbSettings.lastConnectedAt = new Date().toISOString();
         await saveUsbSettings();
         setUsbStatus(status);
-        if (ui.label) ui.label.textContent = text(status === 'LAB 数据已同步' ? 'LAB 数据已同步' : '数据线已同步');
+        if (ui.label) ui.label.textContent = text('数据同步');
     }
 
     async function exchangeWithDesktop() {

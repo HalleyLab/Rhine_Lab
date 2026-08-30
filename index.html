@@ -14,7 +14,7 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.2.4" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.2.4">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=20260829-1">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=20260829-2">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.2.4-usb-tether">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
@@ -22,9 +22,9 @@
     <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.2.4g">
     <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.2.4i">
     <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.2.4p">
-    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.2.4c">
+    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.2.4d">
     <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.2.4g">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.2.4a">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.2.4b">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -85,28 +85,21 @@
                     <kbd>CTRL K</kbd>
                 </label>
                 <div class="top-actions">
-                    <a class="desktop-download-button sync-control" id="desktopDownloadButton" href="https://github.com/HalleyLab/Rhine_Lab/releases/latest" aria-label="下载 Rhine Lab Windows 应用"><i aria-hidden="true"></i><span>下载应用</span></a>
-                    <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="portableSyncDialog" aria-haspopup="dialog" aria-label="本地数据同步" title="本地数据同步">
-                        <i aria-hidden="true"></i><span id="syncStatusLabel">本地数据同步</span>
-                    </button>
-                    <div class="workspace-mode-toggle" id="workspaceModeToggle" aria-label="切换工作区范围">
-                        <button class="active" type="button" data-workspace-mode="personal">个人</button>
-                        <button type="button" data-workspace-mode="lab">LAB 共用</button>
+                    <div class="utility-menu">
+                        <button class="utility-nav-toggle" id="utilityNavToggle" type="button" aria-controls="utilityNav" aria-expanded="false" aria-label="打开工具导航"><i aria-hidden="true">☷</i><span>工具</span></button>
+                        <nav class="utility-nav" id="utilityNav" aria-label="工具导航" hidden>
+                            <a class="desktop-download-button sync-control" id="desktopDownloadButton" href="https://github.com/HalleyLab/Rhine_Lab/releases/latest" aria-label="下载 Rhine Lab Windows 应用"><i aria-hidden="true"></i><span>下载应用</span></a>
+                            <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="portableSyncDialog" aria-haspopup="dialog" aria-label="数据同步" title="数据同步"><i aria-hidden="true"></i><span id="syncStatusLabel">数据同步</span></button>
+                            <div class="workspace-mode-toggle" id="workspaceModeToggle" aria-label="切换工作区范围">
+                                <button id="workspaceModeAction" type="button" data-workspace-mode="lab">切换到Lab</button>
+                            </div>
+                            <div class="language-dock topbar-language" aria-label="语言切换">
+                                <button id="languageToggle" type="button" data-i18n-control data-i18n-skip aria-label="Switch to English" title="Switch to English">语言/Language</button>
+                            </div>
+                            <button class="utility-nav-item background-toggle" id="backgroundToggle" type="button" aria-label="切换背景" title="切换背景" aria-pressed="false" data-background-mode="default">切换背景</button>
+                            <button class="utility-nav-item" id="themeToggle" type="button" aria-label="夜间模式🌙" title="夜间模式🌙">夜间模式🌙</button>
+                        </nav>
                     </div>
-                    <div class="language-dock topbar-language" aria-label="语言切换">
-                        <span class="language-dock-label" data-i18n-skip>LANGUAGE</span>
-                        <button id="languageToggle" type="button" data-i18n-control aria-label="Switch to English" title="Switch to English">
-                            <span class="active" data-language-option="zh" data-i18n-skip>中</span>
-                            <i data-i18n-skip>/</i>
-                            <span data-language-option="en" data-i18n-skip>EN</span>
-                        </button>
-                    </div>
-                    <button class="icon-button background-toggle" id="backgroundToggle" type="button" aria-label="切换背景" title="切换背景" aria-pressed="false" data-background-mode="default">
-                        <span class="background-toggle-glyph" aria-hidden="true">
-                            <i></i><i></i><i></i>
-                        </span>
-                    </button>
-                    <button class="icon-button" id="themeToggle" type="button" aria-label="切换夜间模式" title="切换夜间模式">◐</button>
                     <button class="icon-button notice-button is-read" id="notificationToggle" type="button" aria-label="打开通知，没有未读消息" aria-controls="notificationPanel" aria-expanded="false" title="通知">!<span id="noticeCount"></span></button>
                 </div>
             </header>
@@ -646,12 +639,12 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.2.4m"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.2.4n"></script>
     <script src="js/rhine-lab-config.js?v=0.2.4-ai-ready"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.2.4-usb-tether"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.2.4-usb-tether-nav"></script>
     <script src="js/rhine-lab-pwa.js?v=0.2.4g"></script>
-    <script src="js/rhine-lab-assistant.js?v=0.2.4e"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.2.4t"></script>
+    <script src="js/rhine-lab-assistant.js?v=0.2.4f"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.2.4u"></script>
 </body>
 </html>

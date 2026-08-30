@@ -90,31 +90,54 @@
     }
 
     function beginCharacterDrag(event) {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || dragState) return;
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
-        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, moved: false };
-        toggle.setPointerCapture(event.pointerId);
+        const touch = event.pointerType === 'touch';
+        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, touch: touch, active: false, moved: false, holdTimer: 0 };
+        if (touch) {
+            dragState.holdTimer = window.setTimeout(function () {
+                if (dragState && dragState.pointerId === event.pointerId) activateCharacterDrag();
+            }, 180);
+        } else {
+            try { toggle.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
+        }
+    }
+
+    function activateCharacterDrag() {
+        if (!dragState || dragState.active) return;
+        dragState.active = true;
+        const toggle = byId('assistantToggle');
+        toggle.classList.add('is-dragging', 'has-custom-position');
+        try { toggle.setPointerCapture(dragState.pointerId); } catch (_) { /* capture is optional */ }
     }
 
     function moveCharacter(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
-        if (!dragState.moved && Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY) < 5) return;
+        const distance = Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY);
+        if (dragState.touch && !dragState.active) {
+            if (distance > 8) {
+                window.clearTimeout(dragState.holdTimer);
+                dragState = null;
+            }
+            return;
+        }
+        if (!dragState.active && distance < 5) return;
+        activateCharacterDrag();
         dragState.moved = true;
         event.preventDefault();
-        const toggle = byId('assistantToggle');
-        toggle.classList.add('is-dragging', 'has-custom-position');
         placeCharacter(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
     }
 
     function endCharacterDrag(event) {
         if (!dragState || event.pointerId !== dragState.pointerId) return;
+        window.clearTimeout(dragState.holdTimer);
         const toggle = byId('assistantToggle');
         if (toggle.hasPointerCapture(event.pointerId)) toggle.releasePointerCapture(event.pointerId);
         toggle.classList.remove('is-dragging');
-        if (dragState.moved) {
+        if (dragState.active) {
             suppressOpen = true;
-            localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
+            if (dragState.moved) localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
             window.setTimeout(function () { suppressOpen = false; }, 0);
         }
         dragState = null;
@@ -144,7 +167,6 @@
         byId('assistantScrim').hidden = false;
         byId('assistantToggle').setAttribute('aria-expanded', 'true');
         document.body.classList.add('assistant-open');
-        window.setTimeout(function () { byId('assistantInput').focus(); }, 40);
     }
 
     function closeDrawer() {
