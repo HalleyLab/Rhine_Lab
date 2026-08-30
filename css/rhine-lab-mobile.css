@@ -534,10 +534,20 @@
 }
 
 @media (max-width: 700px) {
+    .cold-storage-tabs-row { align-items: stretch; gap: 7px; }
+    .cold-storage-tabs-row > .button { width: auto; padding-inline: 10px; white-space: nowrap; }
     .cold-storage-tab { flex-basis: min(72vw, 250px); }
+    .housing-room-map.cold-storage-room-map { min-height: 300px; }
+    .housing-layout-rack.cold-storage-layout-unit { width: 148px; }
+    .housing-layout-rack.cold-storage-layout-unit.vertical { width: 102px; min-height: 132px; }
     .cold-storage-overview { padding: 11px; }
     .cold-storage-overview > header { align-items: flex-start; flex-direction: column; }
     .cold-storage-overview > header .button { width: 100%; }
+    .cold-storage-apparatus { grid-template-columns: 1fr; gap: 10px; }
+    .cold-storage-device { min-height: 310px; }
+    .cold-storage-device[data-device-kind="ln2"] { min-height: 330px; padding-right: 28px; padding-left: 28px; }
+    .cold-storage-level-panel { padding: 10px; }
+    .cold-storage-level-panel > header { align-items: flex-start; flex-direction: column; gap: 3px; }
     .cold-storage-map { grid-auto-columns: minmax(108px, 1fr); }
     .freezer-manager-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
     .freezer-manager-actions .button { width: 100%; }

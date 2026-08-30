@@ -15,11 +15,23 @@ data.bioRuns.forEach((record) => {
 });
 assert.ok(JSON.stringify(data).includes('GSE123013'));
 assert.ok(!JSON.stringify(data).includes('展示'));
+data.coldStorageUnits.forEach((unit) => {
+  assert.ok(unit.location, `Missing physical location for ${unit.id}`);
+  assert.ok(['横向', '竖向'].includes(unit.orientation), `Invalid orientation for ${unit.id}`);
+  assert.ok(Number.isFinite(unit.layoutX) && Number.isFinite(unit.layoutY), `Missing layout coordinates for ${unit.id}`);
+  assert.equal(unit.levels.length, unit.shelves, `Level count mismatch for ${unit.id}`);
+  unit.levels.forEach((level) => {
+    assert.ok(['direct', 'rack'].includes(level.mode), `Invalid level mode for ${unit.id}`);
+    assert.ok(level.rows >= 1 && level.columns >= 1, `Invalid level dimensions for ${unit.id}`);
+  });
+});
 data.freezerBoxes.forEach((box) => {
   const unit = data.coldStorageUnits.find((item) => item.id === box.storageUnitId);
   assert.ok(unit, `Missing cold-storage unit ${box.storageUnitId}`);
   assert.ok(box.shelf >= 1 && box.shelf <= Math.max(1, unit.shelves));
-  assert.ok(box.storageRow >= 1 && box.storageRow <= unit.rows);
-  assert.ok(box.storageColumn >= 1 && box.storageColumn <= unit.columns);
+  const level = unit.levels[box.shelf - 1];
+  assert.ok(box.storageRow >= 1 && box.storageRow <= level.rows);
+  assert.ok(box.storageColumn >= 1 && box.storageColumn <= level.columns);
+  assert.ok(box.storageLocation.includes(unit.location));
 });
 console.log('Public showcase data is valid.');
