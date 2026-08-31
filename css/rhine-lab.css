@@ -9826,6 +9826,17 @@ html.native-app.boot-dark-theme .app-boot-screen {
 
 html.native-app.boot-dark-theme .app-boot-screen span { color: #aeb8b2; }
 
+/* Native launch uses the same light canvas as desktop; the app theme applies after launch. */
+html.native-app .app-boot-screen,
+html.native-app.boot-dark-theme .app-boot-screen,
+html.native-app body.dark-theme .app-boot-screen {
+    color: #1f2924;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .78), transparent 42%), #f2f4ed;
+}
+html.native-app .app-boot-screen span,
+html.native-app.boot-dark-theme .app-boot-screen span,
+html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
+
 @media (max-width: 700px) {
     .top-actions #themeToggle {
         display: grid !important;
@@ -12636,6 +12647,7 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-slot.occupied { cursor: grab; touch-action: none; }
 .cold-storage-slot.occupied.is-dragging { opacity: .48; cursor: grabbing; }
 .cold-storage-slot.drop-target { outline: 3px solid var(--acid-strong); outline-offset: -3px; background: var(--acid-soft); }
+.cold-storage-slot.drop-invalid { outline: 3px solid var(--danger); outline-offset: -3px; }
 .cold-storage-box-drag-ghost {
     position: fixed;
     z-index: 10000;
@@ -12653,6 +12665,55 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 }
 .cold-storage-box-drag-ghost span { display: block; color: var(--muted); font-size: 9px; font-weight: 900; }
 .cold-storage-box-drag-ghost strong { display: block; margin-top: 4px; font-size: 11px; }
+.cold-storage-device-slot {
+    z-index: 1;
+    display: grid;
+    place-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    border: 1px dashed var(--line-dark);
+    border-radius: 7px 2px 7px 2px;
+    text-align: center;
+}
+.cold-storage-device-slot span,
+.cold-storage-device-slot b { font-size: 8px; font-weight: 900; }
+.cold-storage-device-slot strong { overflow: hidden; color: var(--ink); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.cold-storage-device-slot.occupied { background: var(--surface-2); border-style: solid; cursor: grab; touch-action: none; }
+.cold-storage-device-slot.occupied-by-rack { opacity: .28; }
+.cold-storage-rack-position { z-index: 2; min-height: 0; }
+.cold-storage-device-slot.rack-drop-preview,
+.cold-storage-rack-position.rack-drop-preview { background: var(--acid-soft); border-color: var(--acid-strong); outline: 2px solid var(--acid-strong); outline-offset: -2px; opacity: 1; }
+.cold-storage-device-slot.rack-drop-invalid,
+.cold-storage-rack-position.rack-drop-invalid { border-color: var(--danger); outline: 2px solid var(--danger); outline-offset: -2px; opacity: .8; }
+.cold-storage-rack-drag-ghost {
+    position: fixed;
+    z-index: 10000;
+    display: grid;
+    place-content: center;
+    width: 118px;
+    min-height: 58px;
+    padding: 8px;
+    pointer-events: none;
+    transform: translate(-50%, -58%);
+    color: var(--ink);
+    background: var(--acid-soft);
+    border: 2px solid var(--acid-strong);
+    border-radius: 10px 3px 10px 3px;
+    box-shadow: 0 14px 28px rgba(20, 28, 23, .22);
+    text-align: center;
+}
+.cold-storage-rack-drag-ghost strong { font-size: 11px; }
+.cold-storage-rack-drag-ghost span { color: var(--muted); font-size: 9px; font-weight: 900; }
+.animal-rack-position.occupied,
+.plant-rack-position.occupied { cursor: grab; touch-action: none; }
+.animal-rack-position.is-dragging,
+.plant-rack-position.is-dragging { opacity: .45; cursor: grabbing; }
+.animal-rack-position.drop-target,
+.plant-rack-position.drop-target { background: var(--acid-soft); border-color: var(--acid-strong); outline: 3px solid var(--acid-strong); outline-offset: -3px; }
 .housing-layout-rack-delete { overflow: hidden; }
 .cold-storage-empty { margin: 0; padding: 14px; color: var(--muted); font-weight: 800; }
 .freezer-manager-actions { align-self: flex-end; }

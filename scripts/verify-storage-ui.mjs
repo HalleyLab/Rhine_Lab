@@ -1,17 +1,26 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [app, mobile, html, themeInit] = await Promise.all([
+const [app, css, mobile, html, themeInit] = await Promise.all([
   readFile(new URL('../js/rhine-lab.js', import.meta.url), 'utf8'),
+  readFile(new URL('../css/rhine-lab.css', import.meta.url), 'utf8'),
   readFile(new URL('../css/rhine-lab-mobile.css', import.meta.url), 'utf8'),
   readFile(new URL('../index.html', import.meta.url), 'utf8'),
   readFile(new URL('../js/rhine-lab-theme-init.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /function coldStorageRackCapacity/);
-assert.match(app, /targetLevel\.rackOrder\.length >= coldStorageRackCapacity\(targetLevel\)/);
+assert.match(app, /function coldStorageRackPosition/);
+assert.match(app, /rackPositions: rackPositions/);
+assert.match(app, /data-storage-device-slot/);
+assert.match(app, /grid-row:' \+ position\.row \+ '\/span ' \+ layout\.rows/);
+assert.match(app, /function bindColdStorageBoxGridDrag/);
+assert.match(app, /other \? '交换冻存盒位置'/);
+assert.match(app, /function openColdStorageDeviceDuringDrag/);
+assert.match(app, /function bindHousingSlotDrag/);
 assert.match(app, /els\.coldStorageOverview\.hidden = coldStorageOverviewHidden/);
 assert.doesNotMatch(app, /每架 .*盒位/);
+assert.match(css, /rack-drop-preview/);
+assert.match(css, /html\.native-app body\.dark-theme \.app-boot-screen/);
 assert.match(mobile, /grid-template-columns: 18px max-content !important/);
 assert.ok(html.indexOf('rhine-lab-theme-init.js') < html.indexOf('rhine-lab.css'));
 assert.match(themeInit, /getHours\(\) < 6/);

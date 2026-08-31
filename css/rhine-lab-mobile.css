@@ -770,6 +770,7 @@
         min-height: calc(var(--device-rows) * 42px);
     }
     .cold-storage-rack-position { min-height: 42px; }
+    .cold-storage-device-slot { min-height: 42px; }
 
     .assistant-character-trigger {
         touch-action: none;
