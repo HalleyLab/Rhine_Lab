@@ -553,16 +553,14 @@
     .cold-storage-apparatus { grid-template-columns: 1fr; gap: 10px; }
     .cold-storage-device { min-height: 310px; }
     .cold-storage-device.has-reagent-door { grid-template-columns: minmax(0, 1.25fr) minmax(116px, .75fr); gap: 6px; min-height: 360px; padding-right: 12px; padding-left: 12px; }
-    .cold-storage-side-door > header { align-items: flex-start; flex-direction: column; padding: 6px; }
-    .cold-storage-side-door > header button { width: 100%; }
+    .cold-storage-side-door > header { align-items: center; padding: 6px; }
     .cold-storage-side-door-grid { gap: 4px; padding: 4px; }
     .reagent-door-shelf { gap: 3px; padding: 4px; }
-    .reagent-door-shelf > div { gap: 2px; }
-    .reagent-door-slot { min-height: 52px; padding: 2px; }
-    .reagent-door-slot.occupied { grid-template-rows: 34px auto; }
-    .reagent-door-slot .reagent-bottle-visual { width: 23px; height: 32px; }
-    .reagent-door-slot .reagent-bottle-name { font-size: 6px; }
-    .reagent-door-slot small { display: none; }
+    .reagent-door-free-area { min-height: 58px; }
+    .reagent-door-bottle { width: 43px; min-height: 50px; padding: 2px; }
+    .reagent-door-bottle .reagent-bottle-visual { width: 23px; height: 32px; }
+    .reagent-door-bottle .reagent-bottle-name { font-size: 6px; }
+    .reagent-door-bottle small { display: none; }
     .cold-storage-reagent-tray { padding: 8px; }
     .reagent-door-source { grid-template-columns: 30px minmax(86px, 130px); min-height: 54px; }
     .cold-storage-device[data-device-kind="ln2"] { min-height: 330px; padding-right: 28px; padding-left: 28px; }
