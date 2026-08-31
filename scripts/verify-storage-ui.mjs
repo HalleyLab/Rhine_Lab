@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [app, css, mobile, html, themeInit] = await Promise.all([
+const [app, css, mobile, html, themeInit, i18n] = await Promise.all([
   readFile(new URL('../js/rhine-lab.js', import.meta.url), 'utf8'),
   readFile(new URL('../css/rhine-lab.css', import.meta.url), 'utf8'),
   readFile(new URL('../css/rhine-lab-mobile.css', import.meta.url), 'utf8'),
   readFile(new URL('../index.html', import.meta.url), 'utf8'),
-  readFile(new URL('../js/rhine-lab-theme-init.js', import.meta.url), 'utf8')
+  readFile(new URL('../js/rhine-lab-theme-init.js', import.meta.url), 'utf8'),
+  readFile(new URL('../js/rhine-lab-i18n.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /function coldStorageRackPosition/);
@@ -18,12 +19,18 @@ assert.match(app, /other \? '交换冻存盒位置'/);
 assert.match(app, /function openColdStorageDeviceDuringDrag/);
 assert.match(app, /function bindHousingSlotDrag/);
 assert.match(app, /function housingHitAt/);
+assert.match(app, /function housingSlotTargetAt/);
 assert.match(app, /document\.elementsFromPoint/);
+assert.match(app, /housingSlotTargetAt\(event\.clientX, event\.clientY, drag\.kind\) \|\| drag\.target/);
+assert.doesNotMatch(app, /drag\.slot\.releasePointerCapture/);
 assert.match(app, /function coldStorageRackDropPlan/);
 assert.match(app, /function coldStorageApplyRackDrop/);
 assert.match(app, /coldStorageSchemaVersion = 2/);
 assert.match(app, /deviceRows: 4, deviceColumns: 4, rackCount: 0, rows: 4, columns: 4/);
 assert.match(app, /name: '货架#' \+ rack/);
+assert.match(i18n, /\^货架#\(\\d\+\)\$/);
+assert.match(i18n, /点击空位放置冻存盒/);
+assert.match(i18n, /第 \(\\d\+\) 行第 \(\\d\+\) 位/);
 assert.match(app, /inputmode="numeric"/);
 assert.match(app, /els\.coldStorageOverview\.hidden = coldStorageOverviewHidden/);
 assert.doesNotMatch(app, /每架 .*盒位/);

@@ -2459,6 +2459,16 @@
         }) || null;
     }
 
+    function housingSlotTargetAt(x, y, kind) {
+        const selector = '[data-housing-slot="' + kind + '"]';
+        const direct = housingHitAt(x, y, selector);
+        if (direct) return direct;
+        return Array.from(document.querySelectorAll(selector)).find(function (slot) {
+            const rect = slot.getBoundingClientRect();
+            return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        }) || null;
+    }
+
     function bindHousingSlotDrag() {
         let drag = null;
         let suppressClick = false;
@@ -2467,7 +2477,7 @@
             if (!slot || event.button !== 0 || workspaceReadOnly) return;
             event.preventDefault();
             event.stopPropagation();
-            drag = { pointerId: event.pointerId, pointerType: event.pointerType, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
+            drag = { pointerId: event.pointerId, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
             slot.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
@@ -2476,7 +2486,6 @@
             if (!drag.moved) {
                 drag.moved = true; drag.slot.classList.add('is-dragging');
                 drag.ghost = drag.slot.cloneNode(true); drag.ghost.className = 'housing-slot-drag-ghost'; drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
-                if (drag.pointerType === 'mouse') drag.slot.releasePointerCapture?.(drag.pointerId);
             }
             drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px';
             drag.target?.classList.remove('drop-target');
@@ -2488,20 +2497,21 @@
                 drag.kind === 'animal' ? selectAnimalRack(nextRackId) : selectPlantRack(nextRackId);
                 event.preventDefault(); return;
             }
-            const target = housingHitAt(event.clientX, event.clientY, '[data-housing-slot="' + drag.kind + '"]');
+            const target = housingSlotTargetAt(event.clientX, event.clientY, drag.kind);
             drag.target = target;
             drag.target?.classList.add('drop-target');
             event.preventDefault();
         }, { passive: false });
         function finish(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
+            const target = event.type === 'pointerup' ? (housingSlotTargetAt(event.clientX, event.clientY, drag.kind) || drag.target) : null;
             drag.slot.classList.remove('is-dragging'); drag.target?.classList.remove('drop-target');
-            if (event.type === 'pointerup' && drag.moved && drag.target && drag.target !== drag.slot) {
+            if (drag.moved && target && target !== drag.slot) {
                 const collection = drag.kind === 'animal' ? state.animalCages : state.plants;
                 const item = collection.find(function (entry) { return entry.id === drag.itemId; });
-                const targetRackId = drag.target.dataset.rackId; const targetPosition = drag.target.dataset.position;
+                const targetRackId = target.dataset.rackId; const targetPosition = target.dataset.position;
                 const other = collection.find(function (entry) { return entry.id !== drag.itemId && entry.rackId === targetRackId && entry.position === targetPosition; });
-                if (item) {
+                if (item && (item.rackId !== targetRackId || item.position !== targetPosition)) {
                     const sourceRackId = item.rackId; const sourcePosition = item.position;
                     item.rackId = targetRackId; item.position = targetPosition;
                     if (drag.kind === 'plant') item.location = formatPlantLocation(state.plantRacks.find(function (rack) { return rack.id === targetRackId; }), targetPosition);

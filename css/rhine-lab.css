@@ -12788,7 +12788,7 @@ body :is(.animal-rack-position,.plant-rack-position) {
 
 body.background-all-lives .freezer-box-tab.active small,
 body.background-all-lives .freezer-box-tab.active b {
-    color: rgba(255, 255, 255, .88);
+    color: rgba(255, 255, 255, .9) !important;
 }
 
 :is(.entry-dialog > form,.protocol-detail-dialog > article,.record-detail-dialog > article,.experiment-detail-dialog > form,.freezer-scan-dialog > article) {
