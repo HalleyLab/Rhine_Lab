@@ -44,6 +44,7 @@ assert.match(css, /\.record-detail-body,.experiment-detail-body,.freezer-scan-bo
 assert.match(css, /html\.native-app body\.dark-theme \.app-boot-screen/);
 assert.match(mobile, /\.view > \.page-heading \+ \*/);
 assert.match(mobile, /grid-template-columns: 18px max-content !important/);
+assert.match(mobile, /input,\s*\n\s*select,\s*\n\s*textarea \{\s*\n\s*font-size: 16px !important/);
 assert.match(html, /id="editColdStorageRackButton"/);
 assert.ok(html.indexOf('rhine-lab-theme-init.js') < html.indexOf('rhine-lab.css'));
 assert.match(themeInit, /getHours\(\) < 6/);
