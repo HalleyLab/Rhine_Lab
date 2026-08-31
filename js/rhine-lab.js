@@ -2452,6 +2452,13 @@
         document.addEventListener('click', function (event) { if (suppressClick && event.target.closest('[data-cold-storage-rack],[data-cold-storage]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; } }, true);
     }
 
+    function housingHitAt(x, y, selector) {
+        const elements = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)];
+        return elements.map(function (element) { return element && element.closest ? element.closest(selector) : null; }).find(function (element) {
+            return element && !element.closest('.housing-slot-drag-ghost');
+        }) || null;
+    }
+
     function bindHousingSlotDrag() {
         let drag = null;
         let suppressClick = false;
@@ -2460,7 +2467,7 @@
             if (!slot || event.button !== 0 || workspaceReadOnly) return;
             event.preventDefault();
             event.stopPropagation();
-            drag = { pointerId: event.pointerId, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
+            drag = { pointerId: event.pointerId, pointerType: event.pointerType, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
             slot.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
@@ -2469,11 +2476,11 @@
             if (!drag.moved) {
                 drag.moved = true; drag.slot.classList.add('is-dragging');
                 drag.ghost = drag.slot.cloneNode(true); drag.ghost.className = 'housing-slot-drag-ghost'; drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
+                if (drag.pointerType === 'mouse') drag.slot.releasePointerCapture?.(drag.pointerId);
             }
             drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px';
             drag.target?.classList.remove('drop-target');
-            const point = document.elementFromPoint(event.clientX, event.clientY);
-            const rackTrigger = point?.closest(drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
+            const rackTrigger = housingHitAt(event.clientX, event.clientY, drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
             const nextRackId = rackTrigger && (drag.kind === 'animal' ? rackTrigger.dataset.animalRack : rackTrigger.dataset.plantRack);
             const activeRackId = drag.kind === 'animal' ? activeAnimalRackId : activePlantRackId;
             if (nextRackId && nextRackId !== activeRackId && nextRackId !== drag.openedRack) {
@@ -2481,7 +2488,7 @@
                 drag.kind === 'animal' ? selectAnimalRack(nextRackId) : selectPlantRack(nextRackId);
                 event.preventDefault(); return;
             }
-            const target = point?.closest('[data-housing-slot="' + drag.kind + '"]') || null;
+            const target = housingHitAt(event.clientX, event.clientY, '[data-housing-slot="' + drag.kind + '"]');
             drag.target = target;
             drag.target?.classList.add('drop-target');
             event.preventDefault();

@@ -12751,3 +12751,59 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     border-radius: 10px 3px 10px 3px;
     box-shadow: 0 14px 28px rgba(20, 28, 23, .22);
 }
+
+/* Keep drag targets visible and record actions reachable at every scroll depth. */
+body :is(.animal-rack-position,.plant-rack-position) {
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.dark-theme .animal-rack-position.active,
+.dark-theme .animal-rack-position.active > :is(span,strong,small) {
+    color: var(--ink);
+}
+
+.cold-storage-device-slot.drop-target {
+    background: var(--acid-soft);
+    border-color: var(--acid-strong);
+    outline: 3px solid var(--acid-strong);
+    outline-offset: -3px;
+    opacity: 1;
+}
+
+.cold-storage-device-slot.drop-invalid {
+    border-color: var(--danger);
+    outline: 3px solid var(--danger);
+    outline-offset: -3px;
+    opacity: 1;
+}
+
+.cold-storage-device-level-head span { font-size: 13px; }
+.cold-storage-device-level-slots .cold-storage-slot span,
+.cold-storage-device-slot span,
+.cold-storage-device-slot b { font-size: 10px; }
+.cold-storage-device-level-slots .cold-storage-slot strong,
+.cold-storage-device-slot strong,
+.cold-storage-rack-position strong { font-size: 12px; }
+
+body.background-all-lives .freezer-box-tab.active small,
+body.background-all-lives .freezer-box-tab.active b {
+    color: rgba(255, 255, 255, .88);
+}
+
+:is(.entry-dialog > form,.protocol-detail-dialog > article,.record-detail-dialog > article,.experiment-detail-dialog > form,.freezer-scan-dialog > article) {
+    display: flex;
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    flex-direction: column;
+}
+
+:is(.entry-dialog .form-grid,.protocol-detail-body,.record-detail-body,.experiment-detail-body,.freezer-scan-body) {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+:is(.entry-dialog,.protocol-detail-dialog,.record-detail-dialog,.experiment-detail-dialog,.freezer-scan-dialog) :is(header,footer) {
+    flex: 0 0 auto;
+}
