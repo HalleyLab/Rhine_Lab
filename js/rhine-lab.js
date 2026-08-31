@@ -361,6 +361,7 @@
     let pendingPlantDefaults = null;
     let pendingFreezerDefaults = null;
     let editingColdStorageLevel = 0;
+    let editingColdStorageRack = 0;
     let activeBioinfoTab = localStorage.getItem('rhineLabBioinfoTab') === 'pipelines' ? 'pipelines' : 'projects';
     let activeBioProjectId = localStorage.getItem('rhineLabActiveBioProject') || '';
     let activeBioDatasetId = localStorage.getItem('rhineLabActiveBioDataset') || '';
@@ -811,7 +812,8 @@
             plateLayouts: Array.isArray(stored.plateLayouts) ? stored.plateLayouts : [],
             security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
             exampleSeedVersion: Number(stored.exampleSeedVersion) || 0,
-            housingSchemaVersion: Number(stored.housingSchemaVersion) || 0
+            housingSchemaVersion: Number(stored.housingSchemaVersion) || 0,
+            coldStorageSchemaVersion: Number(stored.coldStorageSchemaVersion) || 0
         };
     }
 
@@ -837,9 +839,11 @@
             const rackPositions = {};
             const rackLayouts = {};
             const occupied = new Set();
-            (Array.isArray(level && level.rackOrder) ? level.rackOrder : []).concat(Array.from({ length: requestedRacks }, function (_, index) { return index + 1; })).forEach(function (rack) {
+            const requestedOrder = (Array.isArray(level && level.rackOrder) ? level.rackOrder : []).map(Number).filter(function (rack, index, list) { return Number.isInteger(rack) && rack > 0 && list.indexOf(rack) === index; }).slice(0, requestedRacks);
+            for (let rack = 1; requestedOrder.length < requestedRacks; rack += 1) if (!requestedOrder.includes(rack)) requestedOrder.push(rack);
+            requestedOrder.forEach(function (rack) {
                 rack = Math.round(Number(rack));
-                if (rack < 1 || rack > requestedRacks || rackOrder.includes(rack)) return;
+                if (rack < 1 || rackOrder.includes(rack)) return;
                 const storedLayout = level && level.rackLayouts && level.rackLayouts[rack] || {};
                 const rackRows = Math.min(deviceRows, Math.round(number(storedLayout.rows, 1, 12)) || rows);
                 const rackColumns = Math.round(number(storedLayout.columns, 1, 12)) || columns;
@@ -857,7 +861,7 @@
                 const row = Math.round(Number(position.row)); const column = Math.round(Number(position.column));
                 rackOrder.push(rack);
                 rackPositions[rack] = { row: row, column: column };
-                rackLayouts[rack] = { rows: rackRows, columns: rackColumns, orientation: rackOrientation };
+                rackLayouts[rack] = { name: String(storedLayout.name || '货架#' + rack).trim(), rows: rackRows, columns: rackColumns, orientation: rackOrientation };
                 for (let offset = 0; offset < rackRows; offset += 1) occupied.add((row + offset) + ':' + column);
             });
             return {
@@ -892,6 +896,7 @@
     function coldStorageRackLayout(level, rack) {
         const layout = level && level.rackLayouts && level.rackLayouts[rack] || {};
         return {
+            name: String(layout.name || '货架#' + rack).trim(),
             rows: Math.min(level.deviceRows, Math.round(number(layout.rows, 1, 12)) || level.rows),
             columns: Math.round(number(layout.columns, 1, 12)) || level.columns,
             orientation: layout.orientation === '竖向' ? '竖向' : (layout.orientation === '横向' ? '横向' : level.orientation)
@@ -929,40 +934,129 @@
         return true;
     }
 
+    function coldStorageDirectBoxAt(unitId, shelf, row, column, ignoredBoxIds) {
+        const ignored = ignoredBoxIds || [];
+        return state.freezerBoxes.find(function (box) {
+            return !ignored.includes(box.id) && box.storageUnitId === unitId && Number(box.shelf || 1) === shelf && coldStorageBoxRack(box) === 0 && Number(box.storageRow || 1) === row && Number(box.storageColumn || 1) === column;
+        }) || null;
+    }
+
+    function coldStorageRackDropPlan(source, target, layout) {
+        const sourceUnit = state.coldStorageUnits.find(function (unit) { return unit.id === source.unitId; });
+        const targetUnit = state.coldStorageUnits.find(function (unit) { return unit.id === target.unitId; });
+        const sourceLevel = sourceUnit && coldStorageLevel(sourceUnit, source.shelf);
+        const targetLevel = targetUnit && coldStorageLevel(targetUnit, target.shelf);
+        const sameLevel = source.unitId === target.unitId && source.shelf === target.shelf;
+        if (!sourceLevel || !targetLevel || target.row < 1 || target.column < 1 || target.column > targetLevel.deviceColumns || target.row + layout.rows - 1 > targetLevel.deviceRows) return { valid: false };
+        if (sameLevel && target.row === source.row && target.column === source.column) return { valid: false };
+
+        const ignoredTargetRacks = sameLevel ? [source.rack] : [];
+        const targetRacks = [];
+        for (let row = target.row; row < target.row + layout.rows; row += 1) {
+            const rack = coldStorageRackAt(targetLevel, row, target.column, ignoredTargetRacks);
+            if (rack && !targetRacks.includes(rack)) targetRacks.push(rack);
+        }
+        const rackMoves = targetRacks.map(function (rack) {
+            const position = coldStorageRackPosition(targetLevel, rack);
+            const rackLayout = coldStorageRackLayout(targetLevel, rack);
+            return { rack: rack, position: position, layout: rackLayout, row: source.row + position.row - target.row, column: source.column };
+        });
+        if (rackMoves.some(function (move) {
+            return move.position.column !== target.column || move.position.row < target.row || move.position.row + move.layout.rows > target.row + layout.rows || move.row < 1 || move.row + move.layout.rows - 1 > sourceLevel.deviceRows || move.column > sourceLevel.deviceColumns;
+        })) return { valid: false };
+
+        const targetBoxes = state.freezerBoxes.filter(function (box) {
+            const row = Number(box.storageRow || 1); const column = Number(box.storageColumn || 1);
+            return box.storageUnitId === target.unitId && Number(box.shelf || 1) === target.shelf && coldStorageBoxRack(box) === 0 && column === target.column && row >= target.row && row < target.row + layout.rows;
+        }).map(function (box) {
+            return { box: box, row: source.row + Number(box.storageRow || 1) - target.row, column: source.column };
+        });
+
+        const ignoredSourceRacks = [source.rack].concat(sameLevel ? targetRacks : []);
+        const ignoredSourceBoxes = sameLevel ? targetBoxes.map(function (entry) { return entry.box.id; }) : [];
+        const sourceBlocked = rackMoves.some(function (move) {
+            for (let row = move.row; row < move.row + move.layout.rows; row += 1) {
+                if (coldStorageRackAt(sourceLevel, row, move.column, ignoredSourceRacks) || coldStorageDirectBoxAt(source.unitId, source.shelf, row, move.column, ignoredSourceBoxes)) return true;
+            }
+            return false;
+        }) || targetBoxes.some(function (entry) {
+            return entry.row < 1 || entry.row > sourceLevel.deviceRows || entry.column > sourceLevel.deviceColumns || coldStorageRackAt(sourceLevel, entry.row, entry.column, ignoredSourceRacks) || coldStorageDirectBoxAt(source.unitId, source.shelf, entry.row, entry.column, ignoredSourceBoxes);
+        });
+        return { valid: !sourceBlocked, rackMoves: rackMoves, targetBoxes: targetBoxes };
+    }
+
+    function coldStorageRemoveRack(level, rack) {
+        level.rackOrder = level.rackOrder.filter(function (item) { return item !== rack; });
+        delete level.rackPositions[rack];
+        delete level.rackLayouts[rack];
+        level.rackCount = level.rackOrder.length;
+    }
+
+    function coldStorageNextRackId(level, preferred) {
+        if (preferred > 0 && !level.rackOrder.includes(preferred)) return preferred;
+        let rack = 1;
+        while (level.rackOrder.includes(rack)) rack += 1;
+        return rack;
+    }
+
+    function coldStorageAddRack(level, rack, position, layout) {
+        level.rackOrder.push(rack);
+        level.rackCount = level.rackOrder.length;
+        level.rackPositions[rack] = { row: position.row, column: position.column };
+        level.rackLayouts[rack] = clone(layout);
+    }
+
+    function coldStorageApplyRackDrop(source, target, layout, plan) {
+        const sourceUnit = state.coldStorageUnits.find(function (unit) { return unit.id === source.unitId; });
+        const targetUnit = state.coldStorageUnits.find(function (unit) { return unit.id === target.unitId; });
+        const sourceLevel = coldStorageLevel(sourceUnit, source.shelf);
+        const targetLevel = coldStorageLevel(targetUnit, target.shelf);
+        const sameLevel = source.unitId === target.unitId && source.shelf === target.shelf;
+        if (sameLevel) {
+            sourceLevel.rackPositions[source.rack] = { row: target.row, column: target.column };
+            plan.rackMoves.forEach(function (move) { sourceLevel.rackPositions[move.rack] = { row: move.row, column: move.column }; });
+            plan.targetBoxes.forEach(function (entry) { Object.assign(entry.box, { storageRow: entry.row, storageColumn: entry.column }); entry.box.storageLocation = formatColdStorageBoxLocation(entry.box); });
+            return source.rack;
+        }
+
+        const movingBoxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === source.unitId && Number(box.shelf || 1) === source.shelf && coldStorageBoxRack(box) === source.rack; });
+        const displacedRackBoxes = new Map(plan.rackMoves.map(function (move) {
+            return [move.rack, state.freezerBoxes.filter(function (box) { return box.storageUnitId === target.unitId && Number(box.shelf || 1) === target.shelf && coldStorageBoxRack(box) === move.rack; })];
+        }));
+        coldStorageRemoveRack(sourceLevel, source.rack);
+        plan.rackMoves.forEach(function (move) { coldStorageRemoveRack(targetLevel, move.rack); });
+
+        const targetRack = coldStorageNextRackId(targetLevel, source.rack);
+        coldStorageAddRack(targetLevel, targetRack, target, layout);
+        movingBoxes.forEach(function (box) {
+            Object.assign(box, { storageUnitId: target.unitId, shelf: target.shelf, storageRack: targetRack, temperature: targetUnit.temperature });
+            box.storageLocation = formatColdStorageBoxLocation(box);
+        });
+        plan.rackMoves.forEach(function (move) {
+            const sourceRack = coldStorageNextRackId(sourceLevel, move.rack);
+            coldStorageAddRack(sourceLevel, sourceRack, { row: move.row, column: move.column }, move.layout);
+            displacedRackBoxes.get(move.rack).forEach(function (box) {
+                Object.assign(box, { storageUnitId: source.unitId, shelf: source.shelf, storageRack: sourceRack, temperature: sourceUnit.temperature });
+                box.storageLocation = formatColdStorageBoxLocation(box);
+            });
+        });
+        plan.targetBoxes.forEach(function (entry) {
+            Object.assign(entry.box, { storageUnitId: source.unitId, shelf: source.shelf, storageRack: 0, storageRow: entry.row, storageColumn: entry.column, temperature: sourceUnit.temperature });
+            entry.box.storageLocation = formatColdStorageBoxLocation(entry.box);
+        });
+        return targetRack;
+    }
+
     function coldStorageLevel(unit, shelf) {
         const levels = Array.isArray(unit.levels) && unit.levels.length ? unit.levels : normalizeColdStorageLevels(unit);
         return levels[Math.min(levels.length, Math.max(1, Number(shelf) || 1)) - 1] || levels[0];
     }
 
-    function parseColdStorageLevels(value, shelfCount) {
-        const lines = String(value || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
-        if (lines.length !== shelfCount) return null;
-        const levels = lines.map(function (line) {
-            const match = line.match(/^(横向|竖向|horizontal|vertical)\s*(\d+)\s*(?:架|racks?)\s*[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
-            const legacy = !match && line.match(/^(直放|货架|direct|rack)\s*(?:(\d+)\s*(?:架|racks?)\s*)?[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
-            if (!match && !legacy) return null;
-            const orientation = match && /^(竖向|vertical)$/i.test(match[1]) ? '竖向' : '横向';
-            const rackCount = match ? Math.round(number(match[2], 0, 8)) : (/^(货架|rack)$/i.test(legacy[1]) ? (Math.round(number(legacy[2], 1, 8)) || 1) : 1);
-            const deviceRows = match ? (Math.round(number(match[3], 1, 8)) || 4) : 4;
-            const deviceColumns = match ? (Math.round(number(match[4], 1, 8)) || 4) : 4;
-            return {
-                mode: 'rack',
-                orientation: orientation,
-                deviceRows: deviceRows,
-                deviceColumns: deviceColumns,
-                rows: legacy ? (Math.round(number(legacy[3], 1, 12)) || 1) : 2,
-                columns: legacy ? (Math.round(number(legacy[4], 1, 12)) || 1) : 4,
-                rackCount: rackCount,
-                rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; })
-            };
+    function defaultColdStorageLevels(count) {
+        return normalizeColdStorageLevels({
+            shelves: count,
+            levels: Array.from({ length: count }, function () { return { mode: 'rack', orientation: '横向', deviceRows: 4, deviceColumns: 4, rackCount: 0, rows: 4, columns: 4 }; })
         });
-        if (!levels.every(Boolean)) return null;
-        const normalized = normalizeColdStorageLevels({ shelves: shelfCount, levels: levels });
-        return normalized.some(function (level, index) { return level.rackCount !== levels[index].rackCount; }) ? null : normalized;
-    }
-
-    function coldStorageLevelsText(levels) {
-        return levels.map(function (level) { return (level.orientation === '竖向' ? '竖向 ' : '横向 ') + (level.rackCount == null ? 1 : level.rackCount) + '架 ' + (level.deviceRows || 1) + 'x' + (level.deviceColumns || 1); }).join('\n');
     }
 
     function coldStorageLayoutConflict(unitId, levels) {
@@ -994,6 +1088,7 @@
             mergeExampleRecords(data.results, additionalExamples.results, 'experimentId');
             data.exampleSeedVersion = 4;
         }
+        const upgradeSmallColdStorageLevels = (Number(data.coldStorageSchemaVersion) || 0) < 2;
         data.coldStorageUnits = (Array.isArray(data.coldStorageUnits) && data.coldStorageUnits.length ? data.coldStorageUnits : clone(defaults.coldStorageUnits)).map(function (unit, index) {
             const seeded = defaults.coldStorageUnits.find(function (item) { return item.id === unit.id; });
             const legacyBuiltIn = !unit.levels && ['COLD-LOCAL-001', 'PUB-COLD-FZ01', 'PUB-COLD-LN01'].includes(unit.id)
@@ -1003,7 +1098,14 @@
             const migratedLocation = unit.id === 'COLD-LOCAL-001' || unit.id === 'PUB-COLD-FZ01'
                 ? '样本库 A 区 / 北墙 01 位'
                 : (unit.id === 'PUB-COLD-LN01' ? '样本库 B 区 / 液氮平台 01 位' : '');
-            const levels = normalizeColdStorageLevels(!unit.levels && preset ? Object.assign({}, unit, { shelves: preset.shelves, rows: preset.rows, columns: preset.columns, levels: preset.levels }) : unit);
+            let levels = normalizeColdStorageLevels(!unit.levels && preset ? Object.assign({}, unit, { shelves: preset.shelves, rows: preset.rows, columns: preset.columns, levels: preset.levels }) : unit);
+            if (upgradeSmallColdStorageLevels) levels = levels.map(function (level) {
+                if (level.deviceRows >= 4 && level.deviceColumns >= 4) return level;
+                const oneCell = level.deviceRows === 1 && level.deviceColumns === 1;
+                const rackLayouts = {};
+                level.rackOrder.forEach(function (rack) { rackLayouts[rack] = Object.assign({}, coldStorageRackLayout(level, rack), oneCell ? { rows: 4, columns: 4 } : {}); });
+                return normalizeColdStorageLevels({ shelves: 1, levels: [Object.assign({}, level, { deviceRows: Math.max(4, level.deviceRows), deviceColumns: Math.max(4, level.deviceColumns), rows: oneCell ? 4 : level.rows, columns: oneCell ? 4 : level.columns, rackLayouts: rackLayouts })] })[0];
+            });
             return {
                 id: unit.id || 'COLD-' + String(index + 1).padStart(3, '0'),
                 name: unit.name || '冻存设备 ' + (index + 1),
@@ -1027,15 +1129,17 @@
             const unit = data.coldStorageUnits.find(function (item) { return item.id === box.storageUnitId; }) || data.coldStorageUnits.find(function (item) { return String(box.temperature || '').includes('液氮') === String(item.temperature || '').includes('液氮'); }) || data.coldStorageUnits[0];
             const shelf = Math.round(number(box.shelf, 1, Math.max(1, unit.shelves))) || 1;
             const level = coldStorageLevel(unit, shelf);
-            const storageRack = box.storageRack == null ? (level.rackOrder[0] || 0) : Math.round(number(box.storageRack, 0, level.rackCount || 0));
+            const requestedRack = Math.max(0, Math.round(Number(box.storageRack) || 0));
+            const storageRack = box.storageRack == null ? (level.rackOrder[0] || 0) : (level.rackOrder.includes(requestedRack) ? requestedRack : 0);
+            const storageLayout = storageRack ? coldStorageRackLayout(level, storageRack) : { rows: level.deviceRows, columns: level.deviceColumns };
             const normalized = {
                 id: box.id || 'FB-USR-' + String(index + 1).padStart(3, '0'),
                 name: box.name || '冻存盒 ' + (index + 1),
                 storageUnitId: unit.id,
                 shelf: shelf,
                 storageRack: storageRack,
-                storageRow: Math.round(number(box.storageRow, 1, storageRack === 0 ? level.deviceRows : level.rows)) || 1,
-                storageColumn: Math.round(number(box.storageColumn, 1, storageRack === 0 ? level.deviceColumns : level.columns)) || 1,
+                storageRow: Math.round(number(box.storageRow, 1, storageLayout.rows)) || 1,
+                storageColumn: Math.round(number(box.storageColumn, 1, storageLayout.columns)) || 1,
                 temperature: box.temperature || unit.temperature,
                 rows: seededLegacyBox ? 9 : (Math.round(number(box.rows, 4, 12)) || 9),
                 columns: seededLegacyBox ? 9 : (Math.round(number(box.columns, 4, 12)) || 9),
@@ -1046,6 +1150,7 @@
             normalized.storageLocation = formatColdStorageBoxLocation(normalized, data.coldStorageUnits);
             return normalized;
         });
+        data.coldStorageSchemaVersion = 2;
 
         data.protocols = Array.isArray(data.protocols) ? data.protocols : clone(defaults.protocols);
         data.protocols = data.protocols.map(function (protocol, index) {
@@ -1253,7 +1358,8 @@
         const rack = coldStorageBoxRack(box);
         const row = Math.max(1, Number(box.storageRow) || 1);
         const column = Math.max(1, Number(box.storageColumn) || 1);
-        return unit.location + ' / ' + unit.name + ' · 第 ' + shelf + ' 层 · ' + (rack ? '第 ' + rack + ' 货架 · ' : '') + '第 ' + row + ' 行第 ' + column + ' 位';
+        const rackName = rack ? coldStorageRackLayout(level, rack).name : '';
+        return unit.location + ' / ' + unit.name + ' · 第 ' + shelf + ' 层 · ' + (rackName ? rackName + ' · ' : '') + '第 ' + row + ' 行第 ' + column + ' 位';
     }
 
     function firstAvailableColdStorageSlot(unit, shelf, excludedBoxId) {
@@ -1265,8 +1371,11 @@
             if (!coldStorageRackAt(level, row, column) && !occupied.has('0:' + row + ':' + column)) return { rack: 0, row: row, column: column };
         }
         const racks = level.rackOrder;
-        for (const rack of racks) for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) {
-            if (!occupied.has(rack + ':' + row + ':' + column)) return { rack: rack, row: row, column: column };
+        for (const rack of racks) {
+            const layout = coldStorageRackLayout(level, rack);
+            for (let row = 1; row <= layout.rows; row += 1) for (let column = 1; column <= layout.columns; column += 1) {
+                if (!occupied.has(rack + ':' + row + ':' + column)) return { rack: rack, row: row, column: column };
+            }
         }
         for (let row = 1; row <= level.deviceRows; row += 1) for (let column = 1; column <= level.deviceColumns; column += 1) {
             if (!coldStorageRackAt(level, row, column) && !occupied.has('0:' + row + ':' + column)) return { rack: 0, row: row, column: column };
@@ -2158,6 +2267,18 @@
         return true;
     }
 
+    function coldStorageDeviceTargetAt(x, y) {
+        const cell = (document.elementsFromPoint ? document.elementsFromPoint(x, y) : []).find(function (element) {
+            return element.matches && element.matches('.cold-storage-device-slot[data-storage-device-slot]');
+        });
+        return cell ? {
+            unitId: cell.dataset.storageUnit,
+            shelf: Number(cell.dataset.storageShelf),
+            row: Number(cell.dataset.deviceRow),
+            column: Number(cell.dataset.deviceColumn)
+        } : null;
+    }
+
     function bindColdStorageBoxGridDrag() {
         let drag = null;
         let suppressClick = false;
@@ -2262,7 +2383,7 @@
         let suppressClick = false;
         function clearPreview() {
             document.querySelectorAll('.rack-drop-preview,.rack-drop-invalid').forEach(function (cell) { cell.classList.remove('rack-drop-preview', 'rack-drop-invalid'); });
-            if (drag) { drag.target = null; drag.valid = false; }
+            if (drag) { drag.target = null; drag.plan = null; drag.valid = false; }
         }
         function preview(target, layout, valid) {
             document.querySelectorAll('[data-storage-device-slot]').forEach(function (cell) {
@@ -2270,21 +2391,6 @@
                 const row = Number(cell.dataset.deviceRow);
                 if (row >= target.row && row < target.row + layout.rows) cell.classList.add(valid ? 'rack-drop-preview' : 'rack-drop-invalid');
             });
-        }
-        function detach(unitId, shelf, rack, level) {
-            const remaining = level.rackOrder.filter(function (item) { return item !== rack; });
-            const ids = new Map(remaining.map(function (old, index) { return [old, index + 1]; }));
-            const positions = {}; const layouts = {};
-            remaining.forEach(function (old) { const next = ids.get(old); positions[next] = level.rackPositions[old]; layouts[next] = coldStorageRackLayout(level, old); });
-            state.freezerBoxes.forEach(function (box) {
-                if (box.storageUnitId !== unitId || Number(box.shelf || 1) !== shelf || coldStorageBoxRack(box) === rack) return;
-                if (coldStorageBoxRack(box) > 0) box.storageRack = ids.get(coldStorageBoxRack(box));
-                box.storageLocation = formatColdStorageBoxLocation(box);
-            });
-            level.rackOrder = remaining.map(function (_, index) { return index + 1; });
-            level.rackCount = level.rackOrder.length;
-            level.rackPositions = positions;
-            level.rackLayouts = layouts;
         }
         document.addEventListener('pointerdown', function (event) {
             const rackElement = event.target.closest('[data-cold-storage-rack]');
@@ -2312,12 +2418,10 @@
             clearPreview();
             const point = document.elementFromPoint(event.clientX, event.clientY);
             if (openColdStorageDeviceDuringDrag(point, drag)) { event.preventDefault(); return; }
-            const cell = point && point.closest('[data-storage-device-slot]');
-            if (cell) {
-                const target = { unitId: cell.dataset.storageUnit, shelf: Number(cell.dataset.storageShelf), row: Number(cell.dataset.deviceRow), column: Number(cell.dataset.deviceColumn) };
-                const unit = state.coldStorageUnits.find(function (item) { return item.id === target.unitId; });
-                const ignored = target.unitId === drag.sourceUnitId && target.shelf === drag.sourceShelf ? [drag.sourceRack] : [];
-                drag.valid = Boolean(unit && coldStorageCanPlaceRack(unit, target.shelf, target.row, target.column, ignored, drag.layout) && drag.movingBoxes.every(function (box) { return Number(box.storageRow || 1) <= drag.layout.rows && Number(box.storageColumn || 1) <= drag.layout.columns; }));
+            const target = coldStorageDeviceTargetAt(event.clientX, event.clientY);
+            if (target) {
+                drag.plan = coldStorageRackDropPlan({ unitId: drag.sourceUnitId, shelf: drag.sourceShelf, rack: drag.sourceRack, row: drag.sourcePosition.row, column: drag.sourcePosition.column }, target, drag.layout);
+                drag.valid = Boolean(drag.plan.valid && drag.movingBoxes.every(function (box) { return Number(box.storageRow || 1) <= drag.layout.rows && Number(box.storageColumn || 1) <= drag.layout.columns; }));
                 drag.target = target; preview(target, drag.layout, drag.valid);
             }
             event.preventDefault();
@@ -2325,30 +2429,19 @@
         function finish(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
             drag.rackElement.classList.remove('is-dragging');
-            const target = drag.target; const valid = event.type === 'pointerup' && drag.moved && drag.valid && target;
+            const target = drag.target; const plan = drag.plan; const valid = event.type === 'pointerup' && drag.moved && drag.valid && target && plan;
             clearPreview();
             if (valid) {
                 const sourceUnit = state.coldStorageUnits.find(function (item) { return item.id === drag.sourceUnitId; });
                 const targetUnit = state.coldStorageUnits.find(function (item) { return item.id === target.unitId; });
-                const sourceLevel = sourceUnit && coldStorageLevel(sourceUnit, drag.sourceShelf);
-                const targetLevel = targetUnit && coldStorageLevel(targetUnit, target.shelf);
-                if (sourceLevel && targetLevel) {
-                    let targetRack = drag.sourceRack;
-                    if (target.unitId === drag.sourceUnitId && target.shelf === drag.sourceShelf) {
-                        sourceLevel.rackPositions[targetRack] = { row: target.row, column: target.column };
-                    } else {
-                        detach(drag.sourceUnitId, drag.sourceShelf, drag.sourceRack, sourceLevel);
-                        targetRack = (targetLevel.rackOrder.length ? Math.max.apply(null, targetLevel.rackOrder) : 0) + 1;
-                        targetLevel.rackOrder.push(targetRack); targetLevel.rackCount = targetLevel.rackOrder.length;
-                        targetLevel.rackPositions[targetRack] = { row: target.row, column: target.column };
-                        targetLevel.rackLayouts[targetRack] = drag.layout;
-                        drag.movingBoxes.forEach(function (box) { Object.assign(box, { storageUnitId: target.unitId, shelf: target.shelf, storageRack: targetRack, temperature: targetUnit.temperature }); box.storageLocation = formatColdStorageBoxLocation(box); });
-                    }
+                if (sourceUnit && targetUnit) {
+                    const source = { unitId: drag.sourceUnitId, shelf: drag.sourceShelf, rack: drag.sourceRack, row: drag.sourcePosition.row, column: drag.sourcePosition.column };
+                    const targetRack = coldStorageApplyRackDrop(source, target, drag.layout, plan);
                     sourceUnit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '移动货架位置' }] });
                     if (targetUnit !== sourceUnit) targetUnit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '接收货架' }] });
                     activeColdStorageId = target.unitId; activeColdStorageShelf = target.shelf; activeColdStorageRack = targetRack;
                     localStorage.setItem('rhineLabActiveColdStorage', target.unitId); localStorage.setItem('rhineLabActiveColdStorageShelf', String(target.shelf)); localStorage.setItem('rhineLabActiveColdStorageRack', String(targetRack));
-                    addActivity('移动货架到“' + targetUnit.name + '”第 ' + target.shelf + ' 层'); saveState(); renderSamples();
+                    addActivity(((plan.rackMoves.length || plan.targetBoxes.length) ? '交换' : '移动') + '货架到“' + targetUnit.name + '”第 ' + target.shelf + ' 层'); saveState(); renderSamples();
                 }
             }
             drag.ghost?.remove();
@@ -2365,13 +2458,19 @@
         document.addEventListener('pointerdown', function (event) {
             const slot = event.target.closest('[data-housing-item]');
             if (!slot || event.button !== 0 || workspaceReadOnly) return;
-            drag = { pointerId: event.pointerId, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null };
+            event.preventDefault();
+            event.stopPropagation();
+            drag = { pointerId: event.pointerId, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
             slot.setPointerCapture?.(event.pointerId);
-        });
+        }, { passive: false });
         document.addEventListener('pointermove', function (event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
             if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3) return;
-            drag.moved = true; drag.slot.classList.add('is-dragging');
+            if (!drag.moved) {
+                drag.moved = true; drag.slot.classList.add('is-dragging');
+                drag.ghost = drag.slot.cloneNode(true); drag.ghost.className = 'housing-slot-drag-ghost'; drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
+            }
+            drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px';
             drag.target?.classList.remove('drop-target');
             const point = document.elementFromPoint(event.clientX, event.clientY);
             const rackTrigger = point?.closest(drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
@@ -2409,6 +2508,7 @@
                 }
             }
             if (drag.moved) { suppressClick = true; window.setTimeout(function () { suppressClick = false; }, 300); }
+            drag.ghost?.remove();
             drag = null;
         }
         document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', finish);
@@ -2474,7 +2574,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-cold-storage], [data-edit-cold-storage-level], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-cold-storage], [data-edit-cold-storage-level], [data-edit-cold-storage-rack], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -2832,6 +2932,13 @@
             if (event.target.closest('[data-edit-cold-storage-level]')) {
                 editingColdStorageLevel = activeColdStorageShelf;
                 openEntryDialog('coldStorageLevel');
+                return;
+            }
+
+            if (event.target.closest('[data-edit-cold-storage-rack]')) {
+                if (!activeColdStorageRack) return;
+                editingColdStorageRack = activeColdStorageRack;
+                openEntryDialog('coldStorageRack');
                 return;
             }
 
@@ -4512,7 +4619,7 @@
             const label = compact ? 'R' + row + ' · C' + column : '第 ' + row + ' 行第 ' + column + ' 位';
             return box
                 ? '<button class="cold-storage-slot occupied' + (box.id === activeFreezerBoxId ? ' active' : '') + '" type="button"' + attrs + ' data-cold-storage-box="' + esc(box.id) + '" data-freezer-box="' + esc(box.id) + '"><span>' + label + '</span><strong>' + esc(box.name) + '</strong></button>'
-                : '<button class="cold-storage-slot empty" type="button"' + attrs + ' data-add="freezer"><span>' + label + '</span><strong>＋ 放置冻存盒</strong></button>';
+                : '<button class="cold-storage-slot empty" type="button"' + attrs + ' data-add="freezer"><span>' + label + '</span><strong>＋</strong></button>';
         }).join('');
     }
 
@@ -4540,7 +4647,7 @@
         level.rackOrder.forEach(function (rack) {
             const position = coldStorageRackPosition(level, rack); const layout = coldStorageRackLayout(level, rack);
             if (!position) return;
-            cells.push('<button class="cold-storage-rack-position' + (shelf === activeColdStorageShelf && rack === activeColdStorageRack ? ' active' : '') + '" type="button" data-cold-storage-rack data-cold-storage-rack-handle data-select-cold-storage-rack data-storage-device-slot data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '" data-device-row="' + position.row + '" data-device-column="' + position.column + '" style="grid-row:' + position.row + '/span ' + layout.rows + ';grid-column:' + position.column + '"><strong>第 ' + rack + ' 货架</strong><span>' + layout.columns + ' × ' + layout.rows + ' · 盒位' + layout.orientation + '</span></button>');
+            cells.push('<button class="cold-storage-rack-position' + (shelf === activeColdStorageShelf && rack === activeColdStorageRack ? ' active' : '') + '" type="button" data-cold-storage-rack data-cold-storage-rack-handle data-select-cold-storage-rack data-storage-device-slot data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '" data-device-row="' + position.row + '" data-device-column="' + position.column + '" style="grid-row:' + position.row + '/span ' + layout.rows + ';grid-column:' + position.column + '"><strong>' + esc(layout.name) + '</strong></button>');
         });
         return '<div class="cold-storage-racks" data-cold-storage-racks data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" style="--device-rows:' + level.deviceRows + ';--device-columns:' + level.deviceColumns + '">' + cells.join('') + '</div>';
     }
@@ -4583,11 +4690,12 @@
         els.coldStorageShelfTabs.innerHTML = Array.from({ length: shelfCount }, function (_, index) {
             const shelf = index + 1;
             const level = coldStorageLevel(activeUnit, shelf);
-            const boxCount = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === shelf).length;
-            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>第 ' + shelf + ' 层</span><strong>' + level.rackCount + ' 个货架</strong><small>' + level.deviceRows + ' × ' + level.deviceColumns + ' 空位 · ' + boxCount + ' 盒</small></button>' + coldStorageRacksHtml(activeUnit, shelf, level) + '</section>';
+            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>第 ' + shelf + ' 层</span></button>' + coldStorageRacksHtml(activeUnit, shelf, level) + '</section>';
         }).join('');
-        els.coldStorageLevelTitle.textContent = activeColdStorageRack ? '第 ' + activeColdStorageShelf + ' 层 · 第 ' + activeColdStorageRack + ' 货架' : '第 ' + activeColdStorageShelf + ' 层';
-        els.coldStorageLevelMeta.textContent = selectedRackLayout ? selectedRackLayout.columns + ' 列 × ' + selectedRackLayout.rows + ' 行盒位 · ' + selectedRackLayout.orientation + '排列' : '点击左侧货架查看盒位';
+        els.coldStorageLevelTitle.textContent = activeColdStorageRack ? selectedRackLayout.name : '第 ' + activeColdStorageShelf + ' 层';
+        els.coldStorageLevelMeta.textContent = selectedRackLayout ? '第 ' + activeColdStorageShelf + ' 层 · 点击空位放置冻存盒' : '点击左侧货架查看盒位';
+        const editRackButton = document.getElementById('editColdStorageRackButton');
+        if (editRackButton) editRackButton.hidden = !activeColdStorageRack;
         els.coldStorageMap.classList.add('is-rack');
         els.coldStorageMap.classList.toggle('vertical-rack', Boolean(selectedRackLayout && selectedRackLayout.orientation === '竖向'));
         els.coldStorageMap.style.cssText = '';
@@ -7049,18 +7157,23 @@ function getReagentDisplayStatus(reagent) {
                 field('type', '设备类型', 'select', ['超低温冰箱', '-20°C 冰箱', '4°C 冰箱', '液氮罐'], true),
                 field('temperature', '存储条件', 'select', ['-80°C', '-20°C', '4°C', '液氮'], true),
                 field('location', '设备位置', 'text', '例：样本库 A 区 / 北墙 01 位', true),
-                field('shelves', '层数量', 'number', '1', true),
-                field('levelLayout', '各层空位（每行：盒位方向 货架数 设备行×列）', 'textarea', '横向 0架 4x4', true, true)
+                field('shelves', '层数量', 'number', '1', true)
             ]
         },
         coldStorageLevel: {
             kicker: 'COLD STORAGE LEVEL', title: '编辑设备层',
             fields: [
-                field('orientation', '货架内冻存盒排列', 'select', ['横向', '竖向'], true),
                 field('rackCount', '货架数量', 'number', '2', true),
-                field('deviceRows', '层内空位行数', 'number', '2', true),
-                field('deviceColumns', '层内空位列数', 'number', '4', true),
-                field('rows', '货架高度 / 盒位行数', 'number', '3', true),
+                field('deviceRows', '层内空位行数', 'number', '4', true),
+                field('deviceColumns', '层内空位列数', 'number', '4', true)
+            ]
+        },
+        coldStorageRack: {
+            kicker: 'COLD STORAGE RACK', title: '编辑货架',
+            fields: [
+                field('name', '货架名称', 'text', '货架#1', true),
+                field('orientation', '冻存盒排列方式', 'select', ['横向', '竖向'], true),
+                field('rows', '货架高度 / 盒位行数', 'number', '4', true),
                 field('columns', '货架宽度 / 盒位列数', 'number', '4', true)
             ]
         },
@@ -7092,7 +7205,6 @@ function getReagentDisplayStatus(reagent) {
         if (editOptions) {
             defaultsForEntry = clone(editOptions.record);
             if (type === 'protocol') defaultsForEntry.stepsText = (editOptions.record.steps || []).join('\n');
-            if (type === 'coldStorage') defaultsForEntry.levelLayout = coldStorageLevelsText(editOptions.record.levels || []);
         } else if (type === 'result') {
             const preferred = state.experiments.find(item => item.id === pendingResultExperimentId) || state.experiments.find(function (experiment) {
                 return !state.results.some(result => result.experimentId === experiment.id);
@@ -7136,12 +7248,16 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'formulation') {
             defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
         } else if (type === 'coldStorage') {
-            const levels = normalizeColdStorageLevels({ shelves: 1, levels: [{ orientation: '横向', rackCount: 0, deviceRows: 4, deviceColumns: 4, rows: 3, columns: 4 }] });
-            defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', shelves: 1, levelLayout: coldStorageLevelsText(levels) };
+            defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', shelves: 1 };
         } else if (type === 'coldStorageLevel') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const level = coldStorageLevel(unit, editingColdStorageLevel || activeColdStorageShelf);
-            defaultsForEntry = { orientation: level.orientation, rackCount: level.rackCount, deviceRows: level.deviceRows, deviceColumns: level.deviceColumns, rows: level.rows, columns: level.columns };
+            defaultsForEntry = { rackCount: level.rackCount, deviceRows: level.deviceRows, deviceColumns: level.deviceColumns };
+        } else if (type === 'coldStorageRack') {
+            const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
+            const level = coldStorageLevel(unit, activeColdStorageShelf);
+            const layout = coldStorageRackLayout(level, editingColdStorageRack || activeColdStorageRack);
+            defaultsForEntry = { name: layout.name, orientation: layout.orientation, rows: layout.rows, columns: layout.columns };
         } else if (type === 'freezer') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const requestedShelf = Math.min(Math.max(1, Number(activeColdStorageShelf) || 1), Math.max(1, Number(unit.shelves) || 1));
@@ -7364,7 +7480,9 @@ function getReagentDisplayStatus(reagent) {
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text"' + (options ? ' list="' + listId + '"' : '') + ' autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '>' + (options ? '<datalist id="' + listId + '">' + options + '</datalist>' : '');
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
-            const minmax = config.type === 'number' ? (config.name === 'rows' && ['animalRack', 'plantRack'].includes(activeDialogType) ? ' min="1" max="12" step="1"' : config.name === 'columns' && ['animalRack', 'plantRack'].includes(activeDialogType) ? ' min="1" max="48" step="1"' : ' min="0" step="0.01"') : '';
+            const integerFields = ['shelves', 'rackCount', 'deviceRows', 'deviceColumns', 'rows', 'columns', 'shelf', 'storageRack', 'storageRow', 'storageColumn'];
+            const structuralInteger = config.type === 'number' && integerFields.includes(config.name) && ['coldStorage', 'coldStorageLevel', 'coldStorageRack', 'freezer', 'animalRack', 'plantRack'].includes(activeDialogType);
+            const minmax = config.type === 'number' ? (structuralInteger ? ' min="' + (['rackCount', 'storageRack'].includes(config.name) ? '0' : '1') + '" step="1" inputmode="numeric"' : ' min="0" step="0.01"') : '';
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="' + config.type + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + defaultValue + minmax + required + '>';
         }
         return '<div class="' + className + '"><label for="field-' + config.name + '">' + esc(config.label) + '</label>' + control + '</div>';
@@ -7933,14 +8051,20 @@ function getReagentDisplayStatus(reagent) {
             if (!unit) return;
             const levelIndex = Math.min(unit.levels.length, Math.max(1, editingColdStorageLevel || activeColdStorageShelf)) - 1;
             const levels = unit.levels.map(function (level) { return Object.assign({}, level); });
-            const orientation = data.orientation === '竖向' ? '竖向' : '横向';
-            const deviceRows = Math.round(number(data.deviceRows, 1, 8)) || 1;
-            const deviceColumns = Math.round(number(data.deviceColumns, 1, 8)) || 1;
+            const current = levels[levelIndex];
+            const deviceRows = Math.round(number(data.deviceRows, 1, 8)) || 4;
+            const deviceColumns = Math.round(number(data.deviceColumns, 1, 8)) || 4;
             const rackCount = Math.round(number(data.rackCount, 0, 8));
-            const rows = Math.round(number(data.rows, 1, Math.min(12, deviceRows))) || 1;
-            const columns = Math.round(number(data.columns, 1, 12)) || 1;
-            const rackLayouts = {}; Array.from({ length: rackCount }, function (_, index) { rackLayouts[index + 1] = { rows: rows, columns: columns, orientation: orientation }; });
-            const nextLevel = normalizeColdStorageLevels({ shelves: 1, levels: [{ mode: 'rack', orientation: orientation, deviceRows: deviceRows, deviceColumns: deviceColumns, rackCount: rackCount, rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; }), rackPositions: levels[levelIndex].rackPositions, rackLayouts: rackLayouts, rows: rows, columns: columns }] })[0];
+            const rackOrder = current.rackOrder.slice(0, rackCount);
+            for (let rack = 1; rackOrder.length < rackCount; rack += 1) if (!rackOrder.includes(rack)) rackOrder.push(rack);
+            const removedRacks = current.rackOrder.filter(function (rack) { return !rackOrder.includes(rack); });
+            if (state.freezerBoxes.some(function (box) { return box.storageUnitId === unit.id && Number(box.shelf || 1) === levelIndex + 1 && removedRacks.includes(coldStorageBoxRack(box)); })) { showToast('请先移出要删除货架中的冻存盒'); return; }
+            const rackLayouts = {};
+            rackOrder.forEach(function (rack) {
+                rackLayouts[rack] = current.rackLayouts[rack] ? clone(current.rackLayouts[rack]) : { name: '货架#' + rack, rows: Math.min(4, deviceRows), columns: 4, orientation: '横向' };
+            });
+            if (rackOrder.some(function (rack) { return Number(rackLayouts[rack].rows) > deviceRows; })) { showToast('请先缩小超出新层高度的货架'); return; }
+            const nextLevel = normalizeColdStorageLevels({ shelves: 1, levels: [{ mode: 'rack', orientation: current.orientation, deviceRows: deviceRows, deviceColumns: deviceColumns, rackCount: rackCount, rackOrder: rackOrder, rackPositions: current.rackPositions, rackLayouts: rackLayouts, rows: 4, columns: 4 }] })[0];
             if (nextLevel.rackCount !== rackCount) { showToast('设备层没有足够的连续空位放置这些货架'); return; }
             levels[levelIndex] = nextLevel;
             if (coldStorageLayoutConflict(unit.id, levels)) {
@@ -7954,13 +8078,30 @@ function getReagentDisplayStatus(reagent) {
             state.freezerBoxes.filter(box => box.storageUnitId === unit.id).forEach(function (box) { box.storageLocation = formatColdStorageBoxLocation(box, [unit]); });
             editingColdStorageLevel = 0;
             activityText = '更新冻存设备“' + unit.name + '”第 ' + (levelIndex + 1) + ' 层';
+        } else if (activeDialogType === 'coldStorageRack') {
+            const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId);
+            const level = unit && coldStorageLevel(unit, activeColdStorageShelf);
+            const rack = editingColdStorageRack || activeColdStorageRack;
+            const position = level && coldStorageRackPosition(level, rack);
+            if (!unit || !level || !position) return;
+            const layout = {
+                name: displayOr(data.name, '货架#' + rack),
+                orientation: data.orientation === '竖向' ? '竖向' : '横向',
+                rows: Math.round(number(data.rows, 1, Math.min(12, level.deviceRows))) || 4,
+                columns: Math.round(number(data.columns, 1, 12)) || 4
+            };
+            if (!coldStorageCanPlaceRack(unit, activeColdStorageShelf, position.row, position.column, [rack], layout)) { showToast('当前货架尺寸会与其他货架或冻存盒重叠'); return; }
+            if (state.freezerBoxes.some(function (box) {
+                return box.storageUnitId === unit.id && Number(box.shelf || 1) === activeColdStorageShelf && coldStorageBoxRack(box) === rack && (Number(box.storageRow || 1) > layout.rows || Number(box.storageColumn || 1) > layout.columns);
+            })) { showToast('请先移动超出新货架尺寸的冻存盒'); return; }
+            level.rackLayouts[rack] = layout;
+            unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: layout.name + '结构' }] });
+            state.freezerBoxes.filter(function (box) { return box.storageUnitId === unit.id && Number(box.shelf || 1) === activeColdStorageShelf && coldStorageBoxRack(box) === rack; }).forEach(function (box) { box.storageLocation = formatColdStorageBoxLocation(box); });
+            editingColdStorageRack = 0;
+            activityText = '更新冻存货架“' + layout.name + '”';
         } else if (activeDialogType === 'coldStorage') {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
-            const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
-            if (!levels) {
-                showToast('请按设备层数逐行填写，例如“横向 2架 2x4”或“竖向 3架 4x3”');
-                return;
-            }
+            const levels = defaultColdStorageLevels(shelfCount);
             const unit = {
                 id: generatedRecordId('COLD'),
                 name: displayOr(data.name, '未命名冻存设备'),
@@ -7990,7 +8131,8 @@ function getReagentDisplayStatus(reagent) {
             const unit = state.coldStorageUnits.find(item => item.id === data.storageUnitId) || state.coldStorageUnits[0];
             const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
             const level = coldStorageLevel(unit, shelf);
-            const storageRack = Math.round(number(data.storageRack, 0, level.rackCount || 0));
+            const requestedRack = Math.max(0, Math.round(Number(data.storageRack) || 0));
+            const storageRack = level.rackOrder.includes(requestedRack) ? requestedRack : 0;
             const layout = storageRack ? coldStorageRackLayout(level, storageRack) : { rows: level.deviceRows, columns: level.deviceColumns };
             const storageRow = Math.round(number(data.storageRow, 1, layout.rows)) || 1;
             const storageColumn = Math.round(number(data.storageColumn, 1, layout.columns)) || 1;
@@ -8116,34 +8258,28 @@ function getReagentDisplayStatus(reagent) {
             }
         } else if (target.type === 'coldStorage') {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
-            const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
-            if (!levels) { showToast('请按设备层数逐行填写，例如“横向 2架 2x4”或“竖向 3架 4x3”'); return; }
-            levels.forEach(function (level, index) {
-                const previous = current.levels && current.levels[index];
-                if (!previous || previous.rackCount !== level.rackCount) return;
-                level.rackPositions = clone(previous.rackPositions || {});
-                level.rackLayouts = clone(previous.rackLayouts || {});
-                levels[index] = normalizeColdStorageLevels({ shelves: 1, levels: [level] })[0];
-            });
-            if (coldStorageLayoutConflict(current.id, levels)) { showToast('请先移动超出新范围的冻存盒'); return; }
+            if (state.freezerBoxes.some(function (box) { return box.storageUnitId === current.id && Number(box.shelf || 1) > shelfCount; })) { showToast('请先移出要删除层中的冻存盒'); return; }
+            const levels = (current.levels || []).slice(0, shelfCount).map(clone);
+            const defaultsForNewLevels = defaultColdStorageLevels(shelfCount);
+            while (levels.length < shelfCount) levels.push(defaultsForNewLevels[levels.length]);
             updated.id = current.id;
             updated.name = displayOr(data.name, current.name || '未命名冻存设备');
             updated.type = displayOr(data.type, current.type || '超低温冰箱');
             updated.temperature = displayOr(data.temperature, current.temperature || '-80°C');
             updated.location = displayOr(data.location, current.location || '位置待设置');
-            updated.orientation = levels[0].orientation;
+            updated.orientation = current.orientation;
             updated.shelves = levels.length;
             updated.rows = levels[0].rows;
             updated.columns = levels[0].columns;
             updated.levels = levels;
             updated.layoutX = current.layoutX;
             updated.layoutY = current.layoutY;
-            delete updated.levelLayout;
         } else if (target.type === 'freezer') {
             const unit = state.coldStorageUnits.find(function (item) { return item.id === data.storageUnitId; }) || state.coldStorageUnits[0];
             const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
             const level = coldStorageLevel(unit, shelf);
-            const storageRack = Math.round(number(data.storageRack, 0, level.rackCount || 0));
+            const requestedRack = Math.max(0, Math.round(Number(data.storageRack) || 0));
+            const storageRack = level.rackOrder.includes(requestedRack) ? requestedRack : 0;
             const layout = storageRack ? coldStorageRackLayout(level, storageRack) : { rows: level.deviceRows, columns: level.deviceColumns };
             const storageRow = Math.round(number(data.storageRow, 1, layout.rows)) || 1;
             const storageColumn = Math.round(number(data.storageColumn, 1, layout.columns)) || 1;
@@ -8322,7 +8458,6 @@ function getReagentDisplayStatus(reagent) {
         if (type === 'protocol' && fieldName === 'stepsText') return (record.steps || []).join('\n');
         if (type === 'formulation' && fieldName === 'components') return record.components || [];
         if (type === 'task' && fieldName === 'shareWithLab') return record.shareWithLab === false ? 'no' : 'yes';
-        if (type === 'coldStorage' && fieldName === 'levelLayout') return coldStorageLevelsText(record.levels || []);
         return record[fieldName];
     }
 

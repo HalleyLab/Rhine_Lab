@@ -203,6 +203,8 @@
         overflow: hidden;
         border-radius: 18px;
     }
+    .view > .page-heading + *,
+    .view > .dashboard-hero + * { margin-top: 18px; }
     .dashboard-hero h1,
     .page-heading h1 { font-size: clamp(30px, 9vw, 42px); }
     .page-heading.technical-heading > div:first-child,
@@ -553,6 +555,8 @@
     .cold-storage-device-level-slots .cold-storage-slot { min-height: 52px; }
     .cold-storage-level-panel { padding: 10px; }
     .cold-storage-level-panel > header { align-items: flex-start; flex-direction: column; gap: 3px; }
+    .cold-storage-level-actions { width: 100%; }
+    .cold-storage-level-actions .button { flex: 1 1 0; }
     .cold-storage-map { grid-auto-columns: minmax(108px, 1fr); }
     .freezer-manager-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
     .freezer-manager-actions .button { width: 100%; }

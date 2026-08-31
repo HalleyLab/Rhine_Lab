@@ -12720,3 +12720,34 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 
 .dark-theme .cold-storage-overview,
 .dark-theme .result-date-accordion { background: color-mix(in srgb, var(--surface-2) 90%, transparent); }
+
+.dark-theme .global-search kbd {
+    color: var(--ink);
+    background: var(--surface-2);
+    border-color: var(--line-dark);
+}
+
+.cold-storage-device-level-head {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+}
+.cold-storage-device-level-head span { font-size: 11px; font-weight: 900; }
+.cold-storage-level-actions { display: flex; align-items: center; gap: 7px; }
+.cold-storage-level-actions[hidden],
+.cold-storage-level-actions .button[hidden] { display: none !important; }
+
+.housing-slot-drag-ghost {
+    position: fixed;
+    z-index: 10000;
+    width: 132px;
+    min-height: 64px;
+    padding: 9px;
+    pointer-events: none;
+    transform: translate(-50%, -62%);
+    color: var(--ink);
+    background: var(--acid-soft);
+    border: 2px solid var(--acid-strong);
+    border-radius: 10px 3px 10px 3px;
+    box-shadow: 0 14px 28px rgba(20, 28, 23, .22);
+}
