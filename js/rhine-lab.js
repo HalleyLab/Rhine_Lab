@@ -453,6 +453,10 @@
         coldStorageMeta: document.getElementById('coldStorageMeta'),
         coldStorageDevice: document.getElementById('coldStorageDevice'),
         coldStorageShelfTabs: document.getElementById('coldStorageShelfTabs'),
+        coldStorageSideDoor: document.getElementById('coldStorageSideDoor'),
+        coldStorageSideDoorGrid: document.getElementById('coldStorageSideDoorGrid'),
+        coldStorageReagentTray: document.getElementById('coldStorageReagentTray'),
+        coldStorageReagentPool: document.getElementById('coldStorageReagentPool'),
         coldStorageLevelTitle: document.getElementById('coldStorageLevelTitle'),
         coldStorageLevelMeta: document.getElementById('coldStorageLevelMeta'),
         coldStorageMap: document.getElementById('coldStorageMap'),
@@ -1071,6 +1075,45 @@
         });
     }
 
+    function coldStorageHasReagentDoor(unit) {
+        return Boolean(unit && unit.type !== '液氮罐');
+    }
+
+    function reagentDoorPosition(reagent) {
+        const value = reagent && reagent.doorStorage;
+        return value && value.unitId ? { unitId: value.unitId, shelf: Number(value.shelf), slot: Number(value.slot) } : null;
+    }
+
+    function formatReagentDoorLocation(unit, shelf, slot) {
+        return unit.name + ' · 侧门第 ' + shelf + ' 层第 ' + slot + ' 位';
+    }
+
+    function reagentAtDoorSlot(unitId, shelf, slot, ignoredCatalog) {
+        return state.reagents.find(function (reagent) {
+            const position = reagentDoorPosition(reagent);
+            return reagent.catalog !== ignoredCatalog && position && position.unitId === unitId && position.shelf === shelf && position.slot === slot;
+        });
+    }
+
+    function putReagentInDoor(reagent, unit, shelf, slot) {
+        if (!reagentDoorPosition(reagent)) reagent.doorSourceLocation = reagent.doorSourceLocation || reagent.location || '';
+        reagent.doorStorage = { unitId: unit.id, shelf: shelf, slot: slot };
+        reagent.location = formatReagentDoorLocation(unit, shelf, slot);
+    }
+
+    function removeReagentFromDoor(reagent) {
+        reagent.location = reagent.doorSourceLocation || reagent.location;
+        reagent.doorStorage = null;
+    }
+
+    function reagentDoorDropAction(source, target, occupied) {
+        if (!target) return 'none';
+        if (target.pool) return source ? 'remove' : 'none';
+        if (!target.unitId) return 'none';
+        if (source && source.unitId === target.unitId && source.shelf === target.shelf && source.slot === target.slot) return 'none';
+        return occupied ? (source ? 'swap' : 'replace') : 'move';
+    }
+
     function migrateState(data) {
         if ((Number(data.exampleSeedVersion) || 0) < 2) {
             mergeExampleRecords(data.experiments, additionalExamples.experiments, 'id');
@@ -1119,6 +1162,8 @@
                 rows: levels[0].rows,
                 columns: levels[0].columns,
                 levels: levels,
+                doorShelves: Math.round(number(unit.doorShelves, 1, 16)) || 5,
+                doorSlots: Math.round(number(unit.doorSlots, 1, 8)) || 4,
                 createdBy: anonymousContributor(unit.createdBy),
                 history: Array.isArray(unit.history) ? unit.history : []
             };
@@ -1220,12 +1265,18 @@
             const totalQty = reagent.totalQty == null || reagent.totalQty === ''
                 ? profile.totalQty : Math.max(0, Number.isFinite(parsedTotalQty) ? parsedTotalQty : 0);
             const currentQty = reagent.currentQty == null ? roundQuantity(totalQty * number(reagent.amount, 0, 100) / 100) : positiveNumber(reagent.currentQty, 0);
+            const requestedDoor = reagentDoorPosition(reagent);
+            const doorUnit = requestedDoor && data.coldStorageUnits.find(function (unit) { return unit.id === requestedDoor.unitId; });
+            const doorStorage = doorUnit && coldStorageHasReagentDoor(doorUnit) && requestedDoor.shelf >= 1 && requestedDoor.shelf <= doorUnit.doorShelves && requestedDoor.slot >= 1 && requestedDoor.slot <= doorUnit.doorSlots ? requestedDoor : null;
             return Object.assign({}, reagent, {
                 totalQty: totalQty,
                 currentQty: currentQty,
                 unit: reagent.unit || profile.unit,
                 amount: totalQty ? number(currentQty / totalQty * 100, 0, 100) : 0,
                 photoData: reagent.photoData || '',
+                doorStorage: doorStorage,
+                doorSourceLocation: String(reagent.doorSourceLocation || (doorStorage ? reagent.location : '') || ''),
+                location: doorStorage ? formatReagentDoorLocation(doorUnit, doorStorage.shelf, doorStorage.slot) : reagent.location,
                 createdBy: anonymousContributor(reagent.createdBy),
                 history: Array.isArray(reagent.history) ? reagent.history : []
             });
@@ -2378,6 +2429,99 @@
         }, true);
     }
 
+    function bindColdStorageReagentDrag() {
+        let drag = null;
+        let suppressClick = false;
+        function clearTarget() {
+            drag?.targetElement?.classList.remove('drop-target');
+            if (drag) { drag.targetElement = null; drag.target = null; }
+        }
+        document.addEventListener('pointerdown', function (event) {
+            const bottle = event.target.closest('[data-door-reagent]');
+            if (!bottle || event.button !== 0 || workspaceReadOnly) return;
+            const reagent = state.reagents.find(function (item) { return item.catalog === bottle.dataset.doorReagent; });
+            if (!reagent) return;
+            event.preventDefault();
+            event.stopPropagation();
+            drag = { pointerId: event.pointerId, sourceElement: bottle, catalog: reagent.catalog, source: reagentDoorPosition(reagent), startX: event.clientX, startY: event.clientY, moved: false, ghost: null, target: null, targetElement: null, openedUnit: '' };
+            bottle.setPointerCapture?.(event.pointerId);
+        }, { passive: false });
+        document.addEventListener('pointermove', function (event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 5) return;
+            if (!drag.moved) {
+                drag.moved = true;
+                drag.sourceElement.classList.add('is-dragging');
+                drag.ghost = drag.sourceElement.cloneNode(true);
+                drag.ghost.className = 'reagent-door-drag-ghost';
+                drag.ghost.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(drag.ghost);
+            }
+            drag.ghost.style.left = event.clientX + 'px';
+            drag.ghost.style.top = event.clientY + 'px';
+            clearTarget();
+            const point = document.elementFromPoint(event.clientX, event.clientY);
+            if (openColdStorageDeviceDuringDrag(point, drag)) { event.preventDefault(); return; }
+            const slot = point && point.closest('[data-door-slot]');
+            const pool = point && point.closest('[data-door-reagent-pool]');
+            if (slot) {
+                drag.target = { unitId: slot.dataset.doorUnit, shelf: Number(slot.dataset.doorShelf), slot: Number(slot.dataset.doorSlot) };
+                drag.targetElement = slot;
+                slot.classList.add('drop-target');
+            } else if (pool && drag.source) {
+                drag.target = { pool: true };
+                drag.targetElement = pool;
+                pool.classList.add('drop-target');
+            }
+            event.preventDefault();
+        }, { passive: false });
+        function finish(event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            drag.sourceElement.classList.remove('is-dragging');
+            if (!drag.moved && event.type === 'pointerup') {
+                openReagentDetail(drag.catalog);
+                suppressClick = true;
+                window.setTimeout(function () { suppressClick = false; }, 350);
+            }
+            const target = event.type === 'pointerup' && drag.moved ? drag.target : null;
+            clearTarget();
+            if (target) {
+                const reagent = state.reagents.find(function (item) { return item.catalog === drag.catalog; });
+                const source = drag.source;
+                const other = target.unitId && reagentAtDoorSlot(target.unitId, target.shelf, target.slot, drag.catalog);
+                const action = reagentDoorDropAction(source, target, Boolean(other));
+                if (reagent && action === 'remove') {
+                    removeReagentFromDoor(reagent);
+                    addActivity('将试剂“' + reagent.name + '”移出冰箱侧门');
+                    saveState(); renderSamples();
+                } else if (reagent && action !== 'none') {
+                    const targetUnit = state.coldStorageUnits.find(function (unit) { return unit.id === target.unitId; });
+                    const sourceUnit = source && state.coldStorageUnits.find(function (unit) { return unit.id === source.unitId; });
+                    if (targetUnit && coldStorageHasReagentDoor(targetUnit)) {
+                        if (other && source && sourceUnit) putReagentInDoor(other, sourceUnit, source.shelf, source.slot);
+                        else if (other) removeReagentFromDoor(other);
+                        putReagentInDoor(reagent, targetUnit, target.shelf, target.slot);
+                        const entry = { at: new Date().toISOString(), action: 'updated', changes: [{ field: other ? '交换侧门试剂位置' : '侧门试剂位置' }] };
+                        reagent.history.unshift(entry);
+                        if (other) other.history.unshift(entry);
+                        addActivity((other ? '交换' : '移动') + '试剂“' + reagent.name + '”到“' + targetUnit.name + '”侧门');
+                        activeColdStorageId = targetUnit.id;
+                        localStorage.setItem('rhineLabActiveColdStorage', targetUnit.id);
+                        saveState(); renderSamples();
+                    }
+                }
+            }
+            drag.ghost?.remove();
+            if (drag.moved) { suppressClick = true; window.setTimeout(function () { suppressClick = false; }, 350); }
+            drag = null;
+        }
+        document.addEventListener('pointerup', finish);
+        document.addEventListener('pointercancel', finish);
+        document.addEventListener('click', function (event) {
+            if (suppressClick && event.target.closest('[data-door-reagent],[data-door-slot],[data-cold-storage]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
+        }, true);
+    }
+
     function bindColdStorageRackGridDrag() {
         let drag = null;
         let suppressClick = false;
@@ -2582,6 +2726,7 @@
         bindDirectDragScroll();
         bindRoomLayoutDrag();
         bindColdStorageBoxGridDrag();
+        bindColdStorageReagentDrag();
         bindColdStorageRackGridDrag();
         bindHousingSlotDrag();
         bindRoomTabReorder();
@@ -2591,7 +2736,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-cold-storage], [data-edit-cold-storage-level], [data-edit-cold-storage-rack], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-cold-storage], [data-edit-cold-storage-door], [data-edit-cold-storage-level], [data-edit-cold-storage-rack], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -2943,6 +3088,11 @@
             if (event.target.closest('[data-edit-cold-storage]')) {
                 const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId);
                 if (unit) openEntryDialog('coldStorage', { edit: true, key: unit.id, record: unit });
+                return;
+            }
+
+            if (event.target.closest('[data-edit-cold-storage-door]')) {
+                openEntryDialog('coldStorageDoor');
                 return;
             }
 
@@ -4669,6 +4819,35 @@
         return '<div class="cold-storage-racks" data-cold-storage-racks data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" style="--device-rows:' + level.deviceRows + ';--device-columns:' + level.deviceColumns + '">' + cells.join('') + '</div>';
     }
 
+    function reagentBottleHtml(reagent, className, attributes) {
+        return '<button class="' + className + '" type="button" data-door-reagent="' + esc(reagent.catalog) + '" data-reagent-catalog="' + esc(reagent.catalog) + '" ' + attributes + ' aria-label="' + esc(reagent.name + '，' + reagent.location) + '"><span class="reagent-bottle-visual" aria-hidden="true"><i></i><b>!</b></span><span class="reagent-bottle-name">' + esc(reagent.name) + '</span><small>' + esc(reagent.catalog) + '</small></button>';
+    }
+
+    function renderColdStorageReagentDoor(unit) {
+        const visible = coldStorageHasReagentDoor(unit);
+        els.coldStorageSideDoor.hidden = !visible;
+        els.coldStorageReagentTray.hidden = !visible;
+        els.coldStorageDevice.classList.toggle('has-reagent-door', visible);
+        if (!visible) {
+            els.coldStorageSideDoorGrid.innerHTML = '';
+            els.coldStorageReagentPool.innerHTML = '';
+            return;
+        }
+        const rows = [];
+        for (let shelf = 1; shelf <= unit.doorShelves; shelf += 1) {
+            const slots = [];
+            for (let slot = 1; slot <= unit.doorSlots; slot += 1) {
+                const reagent = reagentAtDoorSlot(unit.id, shelf, slot);
+                const attributes = 'data-door-unit="' + esc(unit.id) + '" data-door-shelf="' + shelf + '" data-door-slot="' + slot + '"';
+                slots.push(reagent ? reagentBottleHtml(reagent, 'reagent-door-slot occupied', attributes) : '<button class="reagent-door-slot empty" type="button" ' + attributes + ' aria-label="侧门第 ' + shelf + ' 层第 ' + slot + ' 位，空位"><span>＋</span></button>');
+            }
+            rows.push('<section class="reagent-door-shelf"><strong>侧门第 ' + shelf + ' 层</strong><div style="--door-slot-count:' + unit.doorSlots + '">' + slots.join('') + '</div></section>');
+        }
+        els.coldStorageSideDoorGrid.innerHTML = rows.join('');
+        const unassigned = state.reagents.filter(function (reagent) { return !reagentDoorPosition(reagent); });
+        els.coldStorageReagentPool.innerHTML = unassigned.map(function (reagent) { return reagentBottleHtml(reagent, 'reagent-door-source', ''); }).join('') || '<p>暂无未放入侧门的库存试剂</p>';
+    }
+
     function renderSamples() {
         const search = valueOf('sampleSearch').toLowerCase();
         const items = state.samples.filter(item => [item.id, item.type, item.source, item.processing, item.location, item.status].join(' ').toLowerCase().includes(search));
@@ -4700,6 +4879,7 @@
         els.coldStorageTitle.textContent = activeUnit.name;
         els.coldStorageMeta.textContent = activeUnit.location + ' · ' + shelfCount + ' 层设备结构';
         els.coldStorageDevice.dataset.deviceKind = activeUnit.type === '液氮罐' ? 'ln2' : 'freezer';
+        renderColdStorageReagentDoor(activeUnit);
         const selectedRackLayout = activeColdStorageRack ? coldStorageRackLayout(activeLevel, activeColdStorageRack) : null;
         els.coldStorageDevice.dataset.rackOrientation = selectedRackLayout && selectedRackLayout.orientation === '竖向' ? 'vertical' : 'horizontal';
         els.coldStorageShelfTabs.classList.remove('vertical-racks');
@@ -7177,6 +7357,13 @@ function getReagentDisplayStatus(reagent) {
                 field('shelves', '层数量', 'number', '1', true)
             ]
         },
+        coldStorageDoor: {
+            kicker: 'REFRIGERATOR SIDE DOOR', title: '编辑冰箱侧门',
+            fields: [
+                field('doorShelves', '侧门层数', 'number', '5', true),
+                field('doorSlots', '每层位置数', 'number', '4', true)
+            ]
+        },
         coldStorageLevel: {
             kicker: 'COLD STORAGE LEVEL', title: '编辑设备层',
             fields: [
@@ -7266,6 +7453,9 @@ function getReagentDisplayStatus(reagent) {
             defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
         } else if (type === 'coldStorage') {
             defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', shelves: 1 };
+        } else if (type === 'coldStorageDoor') {
+            const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
+            defaultsForEntry = { doorShelves: unit.doorShelves, doorSlots: unit.doorSlots };
         } else if (type === 'coldStorageLevel') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const level = coldStorageLevel(unit, editingColdStorageLevel || activeColdStorageShelf);
@@ -7497,8 +7687,8 @@ function getReagentDisplayStatus(reagent) {
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text"' + (options ? ' list="' + listId + '"' : '') + ' autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '>' + (options ? '<datalist id="' + listId + '">' + options + '</datalist>' : '');
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
-            const integerFields = ['shelves', 'rackCount', 'deviceRows', 'deviceColumns', 'rows', 'columns', 'shelf', 'storageRack', 'storageRow', 'storageColumn'];
-            const structuralInteger = config.type === 'number' && integerFields.includes(config.name) && ['coldStorage', 'coldStorageLevel', 'coldStorageRack', 'freezer', 'animalRack', 'plantRack'].includes(activeDialogType);
+            const integerFields = ['shelves', 'doorShelves', 'doorSlots', 'rackCount', 'deviceRows', 'deviceColumns', 'rows', 'columns', 'shelf', 'storageRack', 'storageRow', 'storageColumn'];
+            const structuralInteger = config.type === 'number' && integerFields.includes(config.name) && ['coldStorage', 'coldStorageDoor', 'coldStorageLevel', 'coldStorageRack', 'freezer', 'animalRack', 'plantRack'].includes(activeDialogType);
             const minmax = config.type === 'number' ? (structuralInteger ? ' min="' + (['rackCount', 'storageRack'].includes(config.name) ? '0' : '1') + '" step="1" inputmode="numeric"' : ' min="0" step="0.01"') : '';
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="' + config.type + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + defaultValue + minmax + required + '>';
         }
@@ -8063,6 +8253,20 @@ function getReagentDisplayStatus(reagent) {
             state.schedule.push(data);
             calendarDate = parseLocalDate(data.date);
             activityText = '添加日程“' + data.title + '”';
+        } else if (activeDialogType === 'coldStorageDoor') {
+            const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId);
+            if (!unit || !coldStorageHasReagentDoor(unit)) return;
+            const doorShelves = Math.round(number(data.doorShelves, 1, 16)) || 5;
+            const doorSlots = Math.round(number(data.doorSlots, 1, 8)) || 4;
+            const outside = state.reagents.some(function (reagent) {
+                const position = reagentDoorPosition(reagent);
+                return position && position.unitId === unit.id && (position.shelf > doorShelves || position.slot > doorSlots);
+            });
+            if (outside) { showToast('请先移出超出新侧门范围的试剂瓶'); return; }
+            unit.doorShelves = doorShelves;
+            unit.doorSlots = doorSlots;
+            unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '冰箱侧门结构' }] });
+            activityText = '更新冰箱“' + unit.name + '”的试剂侧门';
         } else if (activeDialogType === 'coldStorageLevel') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId);
             if (!unit) return;
@@ -8132,6 +8336,8 @@ function getReagentDisplayStatus(reagent) {
                 rows: levels[0].rows,
                 columns: levels[0].columns,
                 levels: levels,
+                doorShelves: 5,
+                doorSlots: 4,
                 createdBy: data.createdBy,
                 history: [createdHistoryEntry()]
             };
@@ -8276,6 +8482,7 @@ function getReagentDisplayStatus(reagent) {
         } else if (target.type === 'coldStorage') {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
             if (state.freezerBoxes.some(function (box) { return box.storageUnitId === current.id && Number(box.shelf || 1) > shelfCount; })) { showToast('请先移出要删除层中的冻存盒'); return; }
+            if (data.type === '液氮罐' && state.reagents.some(function (reagent) { const position = reagentDoorPosition(reagent); return position && position.unitId === current.id; })) { showToast('请先移出冰箱侧门中的试剂瓶'); return; }
             const levels = (current.levels || []).slice(0, shelfCount).map(clone);
             const defaultsForNewLevels = defaultColdStorageLevels(shelfCount);
             while (levels.length < shelfCount) levels.push(defaultsForNewLevels[levels.length]);
@@ -8289,6 +8496,8 @@ function getReagentDisplayStatus(reagent) {
             updated.rows = levels[0].rows;
             updated.columns = levels[0].columns;
             updated.levels = levels;
+            updated.doorShelves = current.doorShelves;
+            updated.doorSlots = current.doorSlots;
             updated.layoutX = current.layoutX;
             updated.layoutY = current.layoutY;
         } else if (target.type === 'freezer') {
@@ -8418,7 +8627,10 @@ function getReagentDisplayStatus(reagent) {
         if (target.type === 'cell') updated.changeHistory.push(historyEntry);
         else updated.history.push(historyEntry);
         collection[index] = updated;
-        if (target.type === 'coldStorage') state.freezerBoxes.filter(function (box) { return box.storageUnitId === updated.id; }).forEach(function (box) { box.temperature = updated.temperature; box.storageLocation = formatColdStorageBoxLocation(box, [updated]); });
+        if (target.type === 'coldStorage') {
+            state.freezerBoxes.filter(function (box) { return box.storageUnitId === updated.id; }).forEach(function (box) { box.temperature = updated.temperature; box.storageLocation = formatColdStorageBoxLocation(box, [updated]); });
+            state.reagents.forEach(function (reagent) { const position = reagentDoorPosition(reagent); if (position && position.unitId === updated.id) reagent.location = formatReagentDoorLocation(updated, position.shelf, position.slot); });
+        }
         if (['plant', 'microbe', 'plasmid', 'virus'].includes(target.type)) syncFrozenSampleLineage(target.type, updated.id, updated.frozenSampleId);
         appendAuditLog({ action: 'updated', recordType: target.type, recordId: target.key, changes: clone(changes) });
         addActivity('更新' + recordTypeLabel(target.type) + '记录“' + (updated.name || updated.id || updated.catalog) + '”');

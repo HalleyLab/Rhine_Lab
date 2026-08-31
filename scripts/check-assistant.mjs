@@ -64,7 +64,7 @@ assert.doesNotMatch(html, />细胞操作<\/button>/);
 assert.doesNotMatch(html, /<label for="assistantInput">/);
 assert.match(html, /id="assistantRole" data-i18n-skip/);
 assert.match(worker, /rhine-lab-assistant\.css\?v=0\.2\.6a/);
-assert.match(worker, /rhine-lab-mobile\.css\?v=0\.2\.6f/);
+assert.match(worker, /rhine-lab-mobile\.css\?v=0\.2\.6g/);
 assert.match(worker, /rhine-lab-assistant\.js\?v=0\.2\.6a/);
 assert.doesNotMatch(worker, /rhine-lab-utility-icon/);
 assert.match(assistant, /return english\(\) \? 'I am here\.' : '我在。'/);
