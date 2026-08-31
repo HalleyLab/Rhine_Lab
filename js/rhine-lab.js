@@ -2443,14 +2443,17 @@
             if (drag) { drag.targetElement = null; drag.target = null; }
         }
         document.addEventListener('pointerdown', function (event) {
-            const bottle = event.target.closest('[data-door-reagent]');
-            if (!bottle || event.button !== 0 || workspaceReadOnly) return;
-            const reagent = state.reagents.find(function (item) { return item.catalog === bottle.dataset.doorReagent; });
+            const handle = event.target.closest('[data-door-reagent]');
+            const row = event.target.closest('#reagentTable [data-reagent-catalog]');
+            if ((!handle && !row) || (!handle && event.pointerType === 'touch') || event.button !== 0 || workspaceReadOnly) return;
+            const catalog = handle ? handle.dataset.doorReagent : row.dataset.reagentCatalog;
+            const reagent = state.reagents.find(function (item) { return item.catalog === catalog; });
             if (!reagent) return;
             event.preventDefault();
             event.stopPropagation();
-            drag = { pointerId: event.pointerId, sourceElement: bottle, catalog: reagent.catalog, source: reagentDoorPosition(reagent), startX: event.clientX, startY: event.clientY, moved: false, ghost: null, target: null, targetElement: null, openedUnit: '' };
-            bottle.setPointerCapture?.(event.pointerId);
+            const sourceElement = handle || row;
+            drag = { pointerId: event.pointerId, sourceElement: sourceElement, ghostSource: handle || row.querySelector('.reagent-inventory-entry') || row, catalog: reagent.catalog, source: reagentDoorPosition(reagent), startX: event.clientX, startY: event.clientY, moved: false, ghost: null, target: null, targetElement: null, openedUnit: '' };
+            sourceElement.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
@@ -2458,7 +2461,7 @@
             if (!drag.moved) {
                 drag.moved = true;
                 drag.sourceElement.classList.add('is-dragging');
-                drag.ghost = drag.sourceElement.cloneNode(true);
+                drag.ghost = drag.ghostSource.cloneNode(true);
                 drag.ghost.className = 'reagent-door-drag-ghost';
                 drag.ghost.setAttribute('aria-hidden', 'true');
                 document.body.appendChild(drag.ghost);
@@ -2532,7 +2535,7 @@
         document.addEventListener('pointerup', finish);
         document.addEventListener('pointercancel', finish);
         document.addEventListener('click', function (event) {
-            if (suppressClick && event.target.closest('[data-door-reagent],[data-door-shelf],[data-cold-storage]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
+            if (suppressClick && event.target.closest('[data-door-reagent],[data-door-shelf],[data-cold-storage],#reagentTable [data-reagent-catalog]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
         }, true);
     }
 
@@ -2643,7 +2646,7 @@
             if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3) return;
             if (!drag.moved) {
                 drag.moved = true; drag.slot.classList.add('is-dragging');
-                drag.ghost = drag.slot.cloneNode(true); drag.ghost.className = 'housing-slot-drag-ghost'; drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
+                drag.ghost = drag.slot.cloneNode(true); drag.ghost.classList.add('housing-slot-drag-ghost'); drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
             }
             drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px';
             drag.target?.classList.remove('drop-target');
@@ -3498,6 +3501,26 @@
 
         els.entryForm.addEventListener('submit', function (event) { event.preventDefault(); });
         els.entrySubmitButton.addEventListener('click', saveEntryFromDialog);
+        els.entryForm.addEventListener('dragover', function (event) {
+            const capture = event.target.closest('.photo-capture');
+            if (!capture) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+            capture.classList.add('is-drop-target');
+        });
+        els.entryForm.addEventListener('dragleave', function (event) {
+            const capture = event.target.closest('.photo-capture');
+            if (capture && !capture.contains(event.relatedTarget)) capture.classList.remove('is-drop-target');
+        });
+        els.entryForm.addEventListener('drop', function (event) {
+            const capture = event.target.closest('.photo-capture');
+            if (!capture) return;
+            event.preventDefault();
+            capture.classList.remove('is-drop-target');
+            const file = Array.from(event.dataTransfer.files || []).find(function (item) { return item.type.startsWith('image/'); });
+            if (!file) { showToast('请拖入图片文件'); return; }
+            preparePhotoAttachment(capture.querySelector('[data-photo-capture]'), file);
+        });
         els.entryForm.addEventListener('change', function (event) {
             if (event.target.matches('[data-result-attachments]')) {
                 prepareResultAttachments(event.target);
@@ -7680,7 +7703,7 @@ function getReagentDisplayStatus(reagent) {
             control = '<div class="formulation-component-editor" id="field-' + config.name + '"><div class="formulation-component-head"><span>组分</span><span>用量</span><span>单位</span><i></i></div><div id="formulationComponentRows"><p class="field-note" data-empty-formulation-components>尚未添加组分。</p></div><button class="add-reagent-row" type="button" data-add-formulation-component>＋ 添加组分</button></div>';        } else if (config.type === 'reagent-list') {
             control = '<div class="protocol-reagent-editor" id="field-' + config.name + '"><div id="protocolReagentRows"><p class="field-note" data-empty-protocol-reagents>可暂不关联试剂，之后再补充。</p></div><button class="add-reagent-row" type="button" data-add-reagent-row>＋ 添加试剂</button><p>用量单位自动采用试剂库存中登记的单位。</p></div>';
         } else if (config.type === 'photo-capture') {
-            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照或选择图片</strong></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div></div>';
+            control = '<div class="photo-capture" id="field-' + config.name + '"><input class="photo-capture-input" id="photo-input-' + config.name + '" type="file" accept="image/*" capture="environment" data-photo-capture><input type="hidden" name="' + config.name + '" value=""><label class="photo-capture-button" for="photo-input-' + config.name + '"><span>⌑</span><strong>拍照、选择或拖入图片</strong></label><div class="photo-capture-preview" data-photo-preview><span>尚未选择照片</span></div></div>';
         } else if (config.type === 'file-attachments') {
             control = '<div class="result-attachment-editor" id="field-' + config.name + '"><input id="resultAttachmentInput" type="file" accept="image/*,.pdf,.csv,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple data-result-attachments><label class="result-attachment-upload" for="resultAttachmentInput"><span>＋</span><strong>上传照片或文件</strong><small>选择图片、PDF、表格或文档</small></label><div class="pending-result-attachments" id="pendingResultAttachments"></div><p class="field-note">图片会压缩保存；其他文件单个不超过 1 MB，最多 6 个附件。</p></div>';
         } else if (config.type === 'textarea') {
@@ -7814,9 +7837,10 @@ function getReagentDisplayStatus(reagent) {
         return (bytes / 1024 / 1024).toFixed(1) + ' MB';
     }
 
-    async function preparePhotoAttachment(input) {
-        const file = input.files && input.files[0];
+    async function preparePhotoAttachment(input, droppedFile) {
+        const file = droppedFile || (input.files && input.files[0]);
         if (!file) return;
+        if (!file.type.startsWith('image/')) { showToast('请拖入图片文件'); return; }
         const capture = input.closest('.photo-capture');
         const preview = capture.querySelector('[data-photo-preview]');
         try {

@@ -5114,6 +5114,13 @@ body.dark-theme {
     gap: 10px;
 }
 
+.photo-capture.is-drop-target :is(.photo-capture-button, .photo-capture-preview) {
+    background: var(--acid-soft);
+    border-color: var(--acid-strong);
+    outline: 2px solid var(--acid-strong);
+    outline-offset: -2px;
+}
+
 .photo-capture-input {
     position: absolute;
     width: 1px !important;
@@ -12519,7 +12526,6 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-side-door[hidden], .cold-storage-reagent-tray[hidden] { display: none !important; }
 .cold-storage-side-door > header { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 8px; border-bottom: 1px solid var(--line); }
 .cold-storage-side-door > header strong { color: var(--ink); font-size: 11px; }
-.cold-storage-side-door > header small { color: var(--muted); font-size: 9px; font-weight: 900; }
 .cold-storage-side-door-grid { display: grid; align-content: stretch; grid-auto-rows: minmax(88px, 1fr); gap: 5px; min-height: 0; padding: 6px; overflow: auto; }
 .reagent-door-shelf { display: grid; grid-template-rows: auto minmax(64px, 1fr); gap: 4px; min-width: 0; padding: 5px; background: color-mix(in srgb, var(--surface) 86%, transparent); border: 1px solid var(--line); border-radius: 6px 2px 6px 2px; }
 .reagent-door-shelf > strong { color: var(--muted); font-size: 9px; }
@@ -12544,6 +12550,8 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .reagent-bottle-visual.has-photo::before, .reagent-bottle-visual.has-photo::after { display: none; }
 .reagent-bottle-visual.has-photo img { width: 100%; height: 100%; object-fit: cover; }
 .reagent-inventory-entry { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.reagent-inventory-entry, #reagentTable [data-reagent-catalog] { cursor: grab; }
+#reagentTable [data-reagent-catalog].is-dragging { opacity: .4; }
 .reagent-inventory-entry > span { display: grid; gap: 2px; min-width: 0; }
 .reagent-inventory-bottle { flex: 0 0 auto; padding: 3px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px 2px 7px 2px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .reagent-inventory-bottle .reagent-bottle-visual { width: 25px; height: 33px; }
