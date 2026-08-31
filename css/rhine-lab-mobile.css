@@ -708,6 +708,69 @@
         color: var(--muted);
     }
 
+    .top-actions .utility-nav :is(#syncControl, #workspaceModeAction, #backgroundToggle, #themeToggle) {
+        display: grid !important;
+        grid-template-columns: 18px max-content !important;
+        grid-template-rows: 50px !important;
+        place-content: center !important;
+        place-items: center !important;
+        column-gap: 7px !important;
+        padding: 0 12px !important;
+        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        line-height: 16px !important;
+        text-align: center !important;
+    }
+    .top-actions .utility-nav #syncControl > i,
+    .top-actions .utility-nav #workspaceModeAction > .utility-item-icon,
+    .top-actions .utility-nav #backgroundToggle > .utility-item-icon,
+    .top-actions .utility-nav #themeToggle > .utility-theme-icon {
+        position: static !important;
+        inset: auto !important;
+        grid-area: 1 / 1 !important;
+        place-self: center !important;
+        display: grid !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        line-height: 18px !important;
+    }
+    .top-actions .utility-nav #syncControl > span,
+    .top-actions .utility-nav #workspaceModeAction > .utility-label,
+    .top-actions .utility-nav #backgroundToggle > .utility-label,
+    .top-actions .utility-nav #themeToggle > .utility-label {
+        position: static !important;
+        inset: auto !important;
+        grid-area: 1 / 2 !important;
+        place-self: center start !important;
+        display: block !important;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        color: var(--ink) !important;
+        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        line-height: 16px !important;
+        text-align: left !important;
+    }
+    .top-actions .utility-nav #syncControl > i {
+        width: 7px !important;
+        height: 7px !important;
+    }
+    .cold-storage-device-level .cold-storage-racks,
+    .cold-storage-device-level .cold-storage-racks.vertical {
+        grid-template-columns: repeat(var(--device-columns), minmax(22px, 1fr));
+        grid-template-rows: repeat(var(--device-rows), minmax(42px, 1fr));
+        min-height: calc(var(--device-rows) * 42px);
+    }
+    .cold-storage-rack-position { min-height: 42px; }
+
     .assistant-character-trigger {
         touch-action: none;
         overscroll-behavior: none;

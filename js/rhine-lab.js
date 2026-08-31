@@ -348,6 +348,8 @@
     let activeFreezerBoxId = state.freezerBoxes.some(box => box.id === localStorage.getItem('rhineLabActiveFreezerBox')) ? localStorage.getItem('rhineLabActiveFreezerBox') : state.freezerBoxes[0].id;
     let activeColdStorageId = state.coldStorageUnits.some(unit => unit.id === localStorage.getItem('rhineLabActiveColdStorage')) ? localStorage.getItem('rhineLabActiveColdStorage') : ((state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || {}).storageUnitId || state.coldStorageUnits[0].id);
     let activeColdStorageShelf = Math.max(1, Number(localStorage.getItem('rhineLabActiveColdStorageShelf')) || Number((state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || {}).shelf) || 1);
+    let activeColdStorageRack = Math.max(1, Number(localStorage.getItem('rhineLabActiveColdStorageRack')) || Number((state.freezerBoxes.find(box => box.id === activeFreezerBoxId) || {}).storageRack) || 1);
+    let coldStorageOverviewHidden = false;
     let activeAnimalRoomId = state.animalRooms.some(function (room) { return room.id === localStorage.getItem('rhineLabActiveAnimalRoom'); }) ? localStorage.getItem('rhineLabActiveAnimalRoom') : (state.animalRooms[0] ? state.animalRooms[0].id : '');
     let activeAnimalRackId = state.animalRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActiveAnimalRack') && (!activeAnimalRoomId || rack.roomId === activeAnimalRoomId); }) ? localStorage.getItem('rhineLabActiveAnimalRack') : ((state.animalRacks.find(function (rack) { return rack.roomId === activeAnimalRoomId; }) || {}).id || '');
     let selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
@@ -391,6 +393,7 @@
     let runInputSaveTimer = null;
     let greetingTimer = 0;
     let themeTimer = 0;
+    let manualThemeOverride = false;
     let runDisplayTimer = 0;
     let activeToolsTab = 'lineage';
     let activeProtocolTab = 'protocols';
@@ -443,6 +446,7 @@
         untimedScheduleList: document.getElementById('untimedScheduleList'),
         monthAgendaAdd: document.getElementById('monthAgendaAdd'),
         coldStorageTabs: document.getElementById('coldStorageTabs'),
+        coldStorageOverview: document.getElementById('coldStorageOverview'),
         coldStorageType: document.getElementById('coldStorageType'),
         coldStorageTitle: document.getElementById('coldStorageTitle'),
         coldStorageMeta: document.getElementById('coldStorageMeta'),
@@ -821,21 +825,34 @@
                 return { mode: unit.type === '液氮罐' || index > 0 ? 'rack' : 'direct', rows: legacyRows, columns: legacyColumns };
             });
         return source.map(function (level) {
-            const mode = level && level.mode === 'rack' ? 'rack' : 'direct';
-            const rackCount = mode === 'rack' ? (Math.round(number(level && level.rackCount, 1, 8)) || (unit.type === '液氮罐' ? 3 : 2)) : 1;
+            const legacyDirect = !level || level.mode !== 'rack';
+            const orientation = level && level.orientation === '竖向' ? '竖向' : (level && level.orientation === '横向' ? '横向' : (unit.orientation === '竖向' ? '竖向' : '横向'));
+            const storedRackCount = Number(level && level.rackCount);
+            const requestedRacks = Number.isFinite(storedRackCount) ? Math.min(8, Math.max(0, Math.round(storedRackCount))) : (legacyDirect ? 1 : (unit.type === '液氮罐' ? 3 : 2));
+            const deviceRows = Math.round(number(level && level.deviceRows, 1, 8)) || (orientation === '竖向' ? 4 : Math.max(1, requestedRacks));
+            const deviceColumns = Math.round(number(level && level.deviceColumns, 1, 8)) || (orientation === '竖向' ? Math.max(1, requestedRacks) : 4);
+            const capacity = orientation === '竖向' ? deviceColumns : deviceRows;
+            const rackCount = Math.min(requestedRacks, capacity);
             const rackOrder = [];
             (Array.isArray(level && level.rackOrder) ? level.rackOrder : []).concat(Array.from({ length: rackCount }, function (_, index) { return index + 1; })).forEach(function (rack) {
                 rack = Math.round(Number(rack));
                 if (rack >= 1 && rack <= rackCount && !rackOrder.includes(rack)) rackOrder.push(rack);
             });
             return {
-                mode: mode,
+                mode: 'rack',
+                orientation: orientation,
+                deviceRows: deviceRows,
+                deviceColumns: deviceColumns,
                 rows: Math.round(number(level && level.rows, 1, 12)) || 1,
                 columns: Math.round(number(level && level.columns, 1, 12)) || 1,
                 rackCount: rackCount,
                 rackOrder: rackOrder
             };
         });
+    }
+
+    function coldStorageRackCapacity(level) {
+        return level.orientation === '竖向' ? level.deviceColumns : level.deviceRows;
     }
 
     function coldStorageLevel(unit, shelf) {
@@ -847,14 +864,21 @@
         const lines = String(value || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
         if (lines.length !== shelfCount) return null;
         const levels = lines.map(function (line) {
-            const match = line.match(/^(直放|货架|direct|rack)\s*(?:(\d+)\s*(?:架|racks?)\s*)?[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
-            if (!match) return null;
-            const mode = /^(货架|rack)$/i.test(match[1]) ? 'rack' : 'direct';
-            const rackCount = mode === 'rack' ? (Math.round(number(match[2], 1, 8)) || 1) : 1;
+            const match = line.match(/^(横向|竖向|horizontal|vertical)\s*(\d+)\s*(?:架|racks?)\s*[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
+            const legacy = !match && line.match(/^(直放|货架|direct|rack)\s*(?:(\d+)\s*(?:架|racks?)\s*)?[:：]?\s*(\d+)\s*[x×*]\s*(\d+)$/i);
+            if (!match && !legacy) return null;
+            const orientation = match && /^(竖向|vertical)$/i.test(match[1]) ? '竖向' : '横向';
+            const rackCount = match ? Math.round(number(match[2], 0, 8)) : (/^(货架|rack)$/i.test(legacy[1]) ? (Math.round(number(legacy[2], 1, 8)) || 1) : 1);
+            const deviceRows = match ? (Math.round(number(match[3], 1, 8)) || 1) : (orientation === '竖向' ? 4 : rackCount);
+            const deviceColumns = match ? (Math.round(number(match[4], 1, 8)) || 1) : (orientation === '竖向' ? rackCount : 4);
+            if (rackCount > (orientation === '竖向' ? deviceColumns : deviceRows)) return null;
             return {
-                mode: mode,
-                rows: Math.round(number(match[3], 1, 12)) || 1,
-                columns: Math.round(number(match[4], 1, 12)) || 1,
+                mode: 'rack',
+                orientation: orientation,
+                deviceRows: deviceRows,
+                deviceColumns: deviceColumns,
+                rows: legacy ? (Math.round(number(legacy[3], 1, 12)) || 1) : 2,
+                columns: legacy ? (Math.round(number(legacy[4], 1, 12)) || 1) : 4,
                 rackCount: rackCount,
                 rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; })
             };
@@ -863,7 +887,7 @@
     }
 
     function coldStorageLevelsText(levels) {
-        return levels.map(function (level) { return (level.mode === 'rack' ? '货架 ' + (level.rackCount || 1) + '架 ' : '直放 ') + level.rows + 'x' + level.columns; }).join('\n');
+        return levels.map(function (level) { return (level.orientation === '竖向' ? '竖向 ' : '横向 ') + (level.rackCount == null ? 1 : level.rackCount) + '架 ' + (level.deviceRows || 1) + 'x' + (level.deviceColumns || 1); }).join('\n');
     }
 
     function coldStorageLayoutConflict(unitId, levels) {
@@ -1148,7 +1172,7 @@
         const rack = Math.max(1, Number(box.storageRack) || 1);
         const row = Math.max(1, Number(box.storageRow) || 1);
         const column = Math.max(1, Number(box.storageColumn) || 1);
-        return unit.location + ' / ' + unit.name + ' · 第 ' + shelf + ' 层 · ' + (level.mode === 'rack' ? '第 ' + rack + ' 货架' : '直放区') + ' · 第 ' + row + ' 行第 ' + column + ' 位';
+        return unit.location + ' / ' + unit.name + ' · 第 ' + shelf + ' 层 · 第 ' + rack + ' 货架 · 第 ' + row + ' 行第 ' + column + ' 位';
     }
 
     function firstAvailableColdStorageSlot(unit, shelf, excludedBoxId) {
@@ -1156,7 +1180,7 @@
         const occupied = new Set(state.freezerBoxes.filter(function (box) {
             return box.id !== excludedBoxId && box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf;
         }).map(function (box) { return Number(box.storageRack || 1) + ':' + Number(box.storageRow || 1) + ':' + Number(box.storageColumn || 1); }));
-        const racks = level.mode === 'rack' ? level.rackOrder : [1];
+        const racks = level.rackOrder;
         for (const rack of racks) for (let row = 1; row <= level.rows; row += 1) for (let column = 1; column <= level.columns; column += 1) {
             if (!occupied.has(rack + ':' + row + ':' + column)) return { rack: rack, row: row, column: column };
         }
@@ -1470,6 +1494,7 @@
         const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
         if (!state.coldStorageUnits.some(unit => unit.id === activeColdStorageId)) activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
         activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || activeColdStorageShelf || 1);
+        activeColdStorageRack = Math.max(1, Number(activeBox && activeBox.storageRack) || activeColdStorageRack || 1);
         if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
         if (!state.animalCages.some(cage => cage.id === selectedAnimalCageId)) selectedAnimalCageId = state.animalCages[0] ? state.animalCages[0].id : '';
         saveState({ remote: true });
@@ -1493,6 +1518,7 @@
             const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
             activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
             activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || 1);
+            activeColdStorageRack = Math.max(1, Number(activeBox && activeBox.storageRack) || 1);
             if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
             selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
         }
@@ -1512,8 +1538,9 @@
     }
 
     function applySavedTheme() {
-        const theme = localStorage.getItem('rhineLabTheme');
-        applyTheme(theme === 'dark' || theme === 'light' ? theme : themeFromSystemTime());
+        localStorage.removeItem('rhineLabTheme');
+        manualThemeOverride = false;
+        applyTheme(themeFromSystemTime());
     }
 
     function applySavedBackground() {
@@ -1560,14 +1587,14 @@
     }
 
     function applyTimeThemeIfAutomatic() {
-        const savedTheme = localStorage.getItem('rhineLabTheme');
-        if (savedTheme === 'dark' || savedTheme === 'light') return;
+        if (manualThemeOverride) return;
         applyTheme(themeFromSystemTime());
     }
 
     function applyTheme(theme) {
         const dark = theme === 'dark';
         document.body.classList.toggle('dark-theme', dark);
+        document.documentElement.classList.toggle('boot-dark-theme', dark);
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
         const themeColor = document.querySelector('meta[name="theme-color"]');
         if (themeColor) themeColor.setAttribute('content', dark ? '#1b2420' : '#f2f4ed');
@@ -1632,6 +1659,7 @@
         const activeBox = state.freezerBoxes.find(box => box.id === activeFreezerBoxId);
         activeColdStorageId = (activeBox && activeBox.storageUnitId) || state.coldStorageUnits[0].id;
         activeColdStorageShelf = Math.max(1, Number(activeBox && activeBox.shelf) || 1);
+        activeColdStorageRack = Math.max(1, Number(activeBox && activeBox.storageRack) || 1);
         if (!state.animalRacks.some(rack => rack.id === activeAnimalRackId)) activeAnimalRackId = state.animalRacks[0] ? state.animalRacks[0].id : '';
         selectedAnimalCageId = (state.animalCages.find(cage => cage.rackId === activeAnimalRackId) || {}).id || '';
         workspaceReadOnly = computeWorkspaceReadOnly();
@@ -1828,9 +1856,10 @@
                     box.history = Array.isArray(box.history) ? box.history : []; box.history.unshift(entry);
                     if (other) { other.history = Array.isArray(other.history) ? other.history : []; other.history.unshift(entry); }
                     addActivity('移动冻存盒“' + box.name + '”');
-                    activeColdStorageId = targetUnitId; activeColdStorageShelf = targetShelf; activeFreezerBoxId = box.id;
+                    activeColdStorageId = targetUnitId; activeColdStorageShelf = targetShelf; activeColdStorageRack = targetRack; activeFreezerBoxId = box.id;
                     localStorage.setItem('rhineLabActiveColdStorage', targetUnitId);
                     localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
+                    localStorage.setItem('rhineLabActiveColdStorageRack', String(targetRack));
                     localStorage.setItem('rhineLabActiveFreezerBox', box.id);
                     saveState(); renderSamples();
                 }
@@ -1851,9 +1880,8 @@
         function detachColdStorageRack(unitId, shelf, rack, level) {
             const remaining = level.rackOrder.filter(function (item) { return item !== rack; });
             if (!remaining.length) {
-                level.mode = 'direct';
-                level.rackOrder = [1];
-                level.rackCount = 1;
+                level.rackOrder = [];
+                level.rackCount = 0;
                 return;
             }
             const rackNumbers = new Map(remaining.map(function (item, index) { return [item, index + 1]; }));
@@ -1881,7 +1909,7 @@
                 return Array.from({ length: Math.max(1, Number(unit.shelves) || 1) }, function (_, index) {
                     const shelf = index + 1;
                     const level = coldStorageLevel(unit, shelf);
-                    const fits = level.mode === 'rack' && level.rackOrder.length < 8 && movingBoxes.every(function (box) { return Number(box.storageRow || 1) <= level.rows && Number(box.storageColumn || 1) <= level.columns; });
+                    const fits = level.rackOrder.length < coldStorageRackCapacity(level) && movingBoxes.every(function (box) { return Number(box.storageRow || 1) <= level.rows && Number(box.storageColumn || 1) <= level.columns; });
                     return fits ? '<button type="button" data-cold-storage-rack-destination data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '"><strong>' + esc(unit.name) + '</strong><span>' + esc(unit.type) + ' · 第 ' + shelf + ' 层</span></button>' : '';
                 }).filter(Boolean);
             }) : [];
@@ -1928,6 +1956,7 @@
                 return;
             }
             const target = point?.closest('[data-cold-storage-rack]') || null;
+            const empty = point?.closest('[data-cold-storage-rack-empty]') || null;
             const container = target?.parentElement || point?.closest('[data-cold-storage-racks]') || null;
             if (!container || container.dataset.rackMode !== 'rack' || container.dataset.storageUnit !== drag.sourceUnitId) return;
             const targetShelf = Number(container.dataset.storageShelf);
@@ -1937,14 +1966,16 @@
                 const sourceLevel = unit && coldStorageLevel(unit, drag.sourceShelf);
                 const targetLevel = unit && coldStorageLevel(unit, targetShelf);
                 const movingBoxes = state.freezerBoxes.filter(function (box) { return box.storageUnitId === drag.sourceUnitId && Number(box.shelf || 1) === drag.sourceShelf && Number(box.storageRack || 1) === drag.sourceRack; });
-                if (!sourceLevel || !targetLevel || targetLevel.rackOrder.length >= 8 || movingBoxes.some(function (box) { return Number(box.storageRow || 1) > targetLevel.rows || Number(box.storageColumn || 1) > targetLevel.columns; })) return;
+                if (!sourceLevel || !targetLevel || targetLevel.rackOrder.length >= coldStorageRackCapacity(targetLevel) || movingBoxes.some(function (box) { return Number(box.storageRow || 1) > targetLevel.rows || Number(box.storageColumn || 1) > targetLevel.columns; })) return;
             }
             if (target && target !== drag.rack) {
                 const rect = target.getBoundingClientRect();
                 const after = container.classList.contains('vertical') ? event.clientX > rect.left + rect.width / 2 : event.clientY > rect.top + rect.height / 2;
                 container.insertBefore(drag.rack, after ? target.nextSibling : target);
+            } else if (empty) {
+                container.insertBefore(drag.rack, empty);
             } else if (!target) {
-                container.appendChild(drag.rack);
+                return;
             }
             drag.dropContainer?.classList.remove('is-rack-drop-target');
             drag.dropContainer = container;
@@ -1979,8 +2010,10 @@
                         targetUnit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '接收“' + unit.name + '”的货架' }] });
                         activeColdStorageId = targetUnitId;
                         activeColdStorageShelf = targetShelf;
+                        activeColdStorageRack = targetRack;
                         localStorage.setItem('rhineLabActiveColdStorage', targetUnitId);
                         localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
+                        localStorage.setItem('rhineLabActiveColdStorageRack', String(targetRack));
                         addActivity('移动货架到“' + targetUnit.name + '”第 ' + targetShelf + ' 层');
                         saveState();
                         renderSamples();
@@ -1992,6 +2025,7 @@
                     const targetLevel = unit && coldStorageLevel(unit, targetShelf);
                     if (sourceLevel && targetLevel && targetShelf === drag.sourceShelf) {
                     sourceLevel.rackOrder = Array.from(targetContainer.children).map(function (item) { return Number(item.dataset.storageRack); }).filter(Boolean);
+                    activeColdStorageRack = drag.sourceRack;
                     unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '第 ' + targetShelf + ' 层货架顺序' }] });
                     saveState();
                     renderSamples();
@@ -2007,7 +2041,9 @@
                         });
                         unit.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '货架由第 ' + drag.sourceShelf + ' 层移动到第 ' + targetShelf + ' 层' }] });
                         activeColdStorageShelf = targetShelf;
+                        activeColdStorageRack = targetRack;
                         localStorage.setItem('rhineLabActiveColdStorageShelf', String(targetShelf));
+                        localStorage.setItem('rhineLabActiveColdStorageRack', String(targetRack));
                         addActivity('移动“' + unit.name + '”货架到第 ' + targetShelf + ' 层');
                         saveState();
                         renderSamples();
@@ -2448,8 +2484,19 @@
 
             const coldStorageTab = event.target.closest('[data-cold-storage]');
             if (coldStorageTab) {
-                activeColdStorageId = coldStorageTab.dataset.coldStorage;
-                activeColdStorageShelf = 1;
+                const selectedUnit = coldStorageTab.dataset.coldStorage;
+                coldStorageOverviewHidden = selectedUnit === activeColdStorageId ? !coldStorageOverviewHidden : false;
+                activeColdStorageId = selectedUnit;
+                if (!coldStorageOverviewHidden) activeColdStorageShelf = 1;
+                selectedSampleId = '';
+                renderSamples();
+                return;
+            }
+
+            const coldStorageRack = event.target.closest('[data-select-cold-storage-rack]');
+            if (coldStorageRack) {
+                activeColdStorageShelf = Math.max(1, Number(coldStorageRack.dataset.storageShelf) || 1);
+                activeColdStorageRack = Math.max(1, Number(coldStorageRack.dataset.storageRack) || 1);
                 selectedSampleId = '';
                 renderSamples();
                 return;
@@ -2458,6 +2505,8 @@
             const coldStorageShelf = event.target.closest('[data-cold-storage-shelf]');
             if (coldStorageShelf) {
                 activeColdStorageShelf = Math.max(1, Number(coldStorageShelf.dataset.coldStorageShelf) || 1);
+                const level = coldStorageLevel(state.coldStorageUnits.find(function (unit) { return unit.id === activeColdStorageId; }), activeColdStorageShelf);
+                activeColdStorageRack = level.rackOrder[0] || 1;
                 selectedSampleId = '';
                 renderSamples();
                 return;
@@ -2701,7 +2750,7 @@
 
         document.getElementById('themeToggle').addEventListener('click', function () {
             const nextTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
-            localStorage.setItem('rhineLabTheme', nextTheme);
+            manualThemeOverride = true;
             applyTheme(nextTheme);
         });
 
@@ -4026,7 +4075,7 @@
                 shelf: 1,
                 storageRow: 1,
                 storageColumn: 1,
-                storageLocation: '样本库 A 区 / 北墙 01 位 / -80°C 超低温冰箱 FZ-01 · 第 1 层 · 直放区 · 第 1 行第 1 位',
+                storageLocation: '样本库 A 区 / 北墙 01 位 / -80°C 超低温冰箱 FZ-01 · 第 1 层 · 第 1 货架 · 第 1 行第 1 位',
                 temperature: '-80°C',
                 rows: 9,
                 columns: 9,
@@ -4111,13 +4160,17 @@
         return 'grid-template-columns:repeat(' + level.columns + ',minmax(' + width + 'px,1fr))';
     }
 
-    function coldStorageRacksHtml(unit, shelf, level, compact) {
-        const racks = level.mode === 'rack' ? level.rackOrder : [1];
-        const orientation = level.mode === 'rack' && unit.orientation === '竖向' ? ' vertical' : ' horizontal';
-        return '<div class="cold-storage-racks' + orientation + '" data-cold-storage-racks data-rack-mode="' + level.mode + '" data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" style="--rack-count:' + racks.length + '">' + racks.map(function (rack) {
-            const handle = level.mode === 'rack' ? '<button class="cold-storage-rack-handle" type="button" data-cold-storage-rack-handle><strong>第 ' + rack + ' 货架</strong><span>拖动排序</span></button>' : '';
-            return '<section class="cold-storage-rack' + (level.mode === 'rack' ? '' : ' direct') + '" data-cold-storage-rack data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '">' + handle + '<div class="cold-storage-device-level-slots" style="' + coldStorageSlotsStyle(level, compact) + '">' + coldStorageSlotsHtml(unit, shelf, level, compact, rack) + '</div></section>';
-        }).join('') + '</div>';
+    function coldStorageRacksHtml(unit, shelf, level) {
+        const vertical = level.orientation === '竖向';
+        const capacity = coldStorageRackCapacity(level);
+        const rackPositionStyle = function (index) {
+            return vertical ? 'grid-column:' + index + ';grid-row:1/-1' : 'grid-row:' + index + ';grid-column:1/-1';
+        };
+        const racks = level.rackOrder.map(function (rack, index) {
+            return '<button class="cold-storage-rack-position' + (shelf === activeColdStorageShelf && rack === activeColdStorageRack ? ' active' : '') + '" type="button" data-cold-storage-rack data-cold-storage-rack-handle data-select-cold-storage-rack data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" data-storage-rack="' + rack + '" style="' + rackPositionStyle(index + 1) + '"><strong>第 ' + rack + ' 货架</strong><span>' + (vertical ? '竖向' : '横向') + '</span></button>';
+        });
+        for (let index = racks.length; index < capacity; index += 1) racks.push('<span class="cold-storage-rack-position empty" data-cold-storage-rack-empty style="' + rackPositionStyle(index + 1) + '">空位</span>');
+        return '<div class="cold-storage-racks ' + (vertical ? 'vertical' : 'horizontal') + '" data-cold-storage-racks data-rack-mode="rack" data-storage-unit="' + esc(unit.id) + '" data-storage-shelf="' + shelf + '" style="--device-rows:' + level.deviceRows + ';--device-columns:' + level.deviceColumns + '">' + racks.join('') + '</div>';
     }
 
     function renderSamples() {
@@ -4128,9 +4181,11 @@
         const shelfCount = Math.max(1, Number(activeUnit.shelves) || 0);
         activeColdStorageShelf = Math.min(shelfCount, Math.max(1, Number(activeColdStorageShelf) || 1));
         const activeLevel = coldStorageLevel(activeUnit, activeColdStorageShelf);
+        activeColdStorageRack = activeLevel.rackOrder.includes(activeColdStorageRack) ? activeColdStorageRack : (activeLevel.rackOrder[0] || 0);
         localStorage.setItem('rhineLabActiveColdStorage', activeColdStorageId);
         localStorage.setItem('rhineLabActiveColdStorageShelf', String(activeColdStorageShelf));
-        const visibleBoxes = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === activeColdStorageShelf);
+        localStorage.setItem('rhineLabActiveColdStorageRack', String(activeColdStorageRack));
+        const visibleBoxes = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === activeColdStorageShelf && Number(box.storageRack || 1) === activeColdStorageRack);
         const activeBox = visibleBoxes.find(item => item.id === activeFreezerBoxId) || visibleBoxes[0] || null;
         if (activeBox) {
             activeFreezerBoxId = activeBox.id;
@@ -4142,27 +4197,28 @@
 
         els.coldStorageTabs.innerHTML = state.coldStorageUnits.map(function (unit) {
             const count = state.freezerBoxes.filter(box => box.storageUnitId === unit.id).length;
-            return '<button class="cold-storage-tab' + (unit.id === activeUnit.id ? ' active' : '') + '" type="button" data-cold-storage="' + esc(unit.id) + '"><span>' + esc(unit.type) + '</span><strong>' + esc(unit.name) + '</strong><small>' + esc(unit.location) + ' · ' + count + ' 个冻存盒</small></button>';
+            return '<button class="cold-storage-tab' + (unit.id === activeUnit.id ? ' active' : '') + '" type="button" data-cold-storage="' + esc(unit.id) + '" aria-expanded="' + (unit.id === activeUnit.id && !coldStorageOverviewHidden ? 'true' : 'false') + '"><span>' + esc(unit.type) + '</span><strong>' + esc(unit.name) + '</strong><small>' + esc(unit.location) + ' · ' + count + ' 个冻存盒</small></button>';
         }).join('');
+        els.coldStorageOverview.hidden = coldStorageOverviewHidden;
         els.coldStorageType.textContent = (activeUnit.type === '液氮罐' ? 'LIQUID NITROGEN TANK' : 'FREEZER') + ' · ' + activeUnit.temperature;
         els.coldStorageTitle.textContent = activeUnit.name;
         els.coldStorageMeta.textContent = activeUnit.location + ' · ' + shelfCount + ' 层设备结构';
         els.coldStorageDevice.dataset.deviceKind = activeUnit.type === '液氮罐' ? 'ln2' : 'freezer';
-        els.coldStorageDevice.dataset.rackOrientation = activeUnit.orientation === '竖向' ? 'vertical' : 'horizontal';
+        els.coldStorageDevice.dataset.rackOrientation = activeLevel.orientation === '竖向' ? 'vertical' : 'horizontal';
         els.coldStorageShelfTabs.classList.remove('vertical-racks');
         els.coldStorageShelfTabs.style.removeProperty('--rack-count');
         els.coldStorageShelfTabs.innerHTML = Array.from({ length: shelfCount }, function (_, index) {
             const shelf = index + 1;
             const level = coldStorageLevel(activeUnit, shelf);
             const boxCount = state.freezerBoxes.filter(box => box.storageUnitId === activeUnit.id && Number(box.shelf || 1) === shelf).length;
-            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>第 ' + shelf + ' 层</span><strong>' + (level.mode === 'rack' ? level.rackCount + ' 个' + (activeUnit.orientation === '竖向' ? '竖向' : '横向') + '货架' : '直放') + '</strong><small>每架 ' + level.rows + ' × ' + level.columns + ' 盒位 · ' + boxCount + ' 盒</small></button>' + coldStorageRacksHtml(activeUnit, shelf, level, true) + '</section>';
+            return '<section class="cold-storage-device-level' + (shelf === activeColdStorageShelf ? ' active' : '') + '"><button class="cold-storage-device-level-head" type="button" data-cold-storage-shelf="' + shelf + '" aria-expanded="' + (shelf === activeColdStorageShelf ? 'true' : 'false') + '"><span>第 ' + shelf + ' 层</span><strong>' + level.rackCount + ' 个' + (level.orientation === '竖向' ? '竖向' : '横向') + '货架</strong><small>' + level.deviceRows + ' × ' + level.deviceColumns + ' 空位 · ' + boxCount + ' 盒</small></button>' + coldStorageRacksHtml(activeUnit, shelf, level) + '</section>';
         }).join('');
-        els.coldStorageLevelTitle.textContent = '第 ' + activeColdStorageShelf + ' 层 · ' + (activeLevel.mode === 'rack' ? (activeUnit.orientation === '竖向' ? '竖向插入' : '横向排列') : '直放区');
-        els.coldStorageLevelMeta.textContent = (activeLevel.mode === 'rack' ? activeLevel.rackCount + ' 个货架 · 每架 ' : '') + activeLevel.rows + ' 行 × ' + activeLevel.columns + ' 列盒位';
-        els.coldStorageMap.classList.toggle('is-rack', activeLevel.mode === 'rack');
-        els.coldStorageMap.classList.toggle('vertical-rack', activeLevel.mode === 'rack' && activeUnit.orientation === '竖向');
+        els.coldStorageLevelTitle.textContent = activeColdStorageRack ? '第 ' + activeColdStorageShelf + ' 层 · 第 ' + activeColdStorageRack + ' 货架' : '第 ' + activeColdStorageShelf + ' 层';
+        els.coldStorageLevelMeta.textContent = activeColdStorageRack ? activeLevel.rows + ' 行 × ' + activeLevel.columns + ' 列盒位' : '当前层没有货架';
+        els.coldStorageMap.classList.add('is-rack');
+        els.coldStorageMap.classList.toggle('vertical-rack', activeLevel.orientation === '竖向');
         els.coldStorageMap.style.cssText = '';
-        els.coldStorageMap.innerHTML = coldStorageRacksHtml(activeUnit, activeColdStorageShelf, activeLevel, false);
+        els.coldStorageMap.innerHTML = activeColdStorageRack ? '<section class="cold-storage-selected-rack"><div class="cold-storage-device-level-slots" style="' + coldStorageSlotsStyle(activeLevel, false) + '">' + coldStorageSlotsHtml(activeUnit, activeColdStorageShelf, activeLevel, false, activeColdStorageRack) + '</div></section>' : '<p class="cold-storage-empty">当前层没有货架。</p>';
 
         els.freezerBoxTabs.innerHTML = visibleBoxes.map(function (box) {
             const count = state.samples.filter(item => item.boxId === box.id).length;
@@ -5978,9 +6034,11 @@ function getReagentDisplayStatus(reagent) {
         activeFreezerBoxId = box.id;
         activeColdStorageId = box.storageUnitId;
         activeColdStorageShelf = Math.max(1, Number(box.shelf) || 1);
+        activeColdStorageRack = Math.max(1, Number(box.storageRack) || 1);
         localStorage.setItem('rhineLabActiveFreezerBox', box.id);
         localStorage.setItem('rhineLabActiveColdStorage', activeColdStorageId);
         localStorage.setItem('rhineLabActiveColdStorageShelf', String(activeColdStorageShelf));
+        localStorage.setItem('rhineLabActiveColdStorageRack', String(activeColdStorageRack));
         const firstSample = state.samples.find(item => item.boxId === box.id);
         selectedSampleId = firstSample ? firstSample.id : '';
         renderSamples();
@@ -6618,18 +6676,19 @@ function getReagentDisplayStatus(reagent) {
                 field('type', '设备类型', 'select', ['超低温冰箱', '-20°C 冰箱', '4°C 冰箱', '液氮罐'], true),
                 field('temperature', '存储条件', 'select', ['-80°C', '-20°C', '4°C', '液氮'], true),
                 field('location', '设备位置', 'text', '例：样本库 A 区 / 北墙 01 位', true),
-                field('orientation', '货架排列', 'select', ['横向', '竖向'], true),
-                field('shelves', '货架 / 层数量', 'number', '5', true),
-                field('levelLayout', '各层结构（每行：直放；或货架 数量架 行×列）', 'textarea', '直放 1x4\n货架 2架 2x4\n货架 3架 3x4\n直放 1x4\n货架 2架 2x4', true, true)
+                field('shelves', '层数量', 'number', '5', true),
+                field('levelLayout', '各层空位（每行：方向 货架数 行×列）', 'textarea', '横向 1架 2x4\n横向 2架 2x4\n竖向 3架 4x3\n横向 1架 2x4\n横向 2架 2x4', true, true)
             ]
         },
         coldStorageLevel: {
             kicker: 'COLD STORAGE LEVEL', title: '编辑设备层',
             fields: [
-                field('mode', '层结构', 'select', ['直放', '货架'], true),
+                field('orientation', '货架排列', 'select', ['横向', '竖向'], true),
                 field('rackCount', '货架数量', 'number', '2', true),
-                field('rows', '盒位行数', 'number', '2', true),
-                field('columns', '盒位列数', 'number', '4', true)
+                field('deviceRows', '层内空位行数', 'number', '2', true),
+                field('deviceColumns', '层内空位列数', 'number', '4', true),
+                field('rows', '货架内盒位行数', 'number', '2', true),
+                field('columns', '货架内盒位列数', 'number', '4', true)
             ]
         },
         freezer: {
@@ -6704,12 +6763,12 @@ function getReagentDisplayStatus(reagent) {
         } else if (type === 'formulation') {
             defaultsForEntry = { physicalForm: '液体', unit: 'mL', version: 'V1.0' };
         } else if (type === 'coldStorage') {
-            const levels = normalizeColdStorageLevels({ shelves: 5, levels: [{ mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rackCount: 2, rows: 2, columns: 4 }, { mode: 'rack', rackCount: 3, rows: 3, columns: 4 }, { mode: 'direct', rows: 1, columns: 4 }, { mode: 'rack', rackCount: 2, rows: 2, columns: 4 }] });
-            defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', orientation: '横向', shelves: 5, levelLayout: coldStorageLevelsText(levels) };
+            const levels = normalizeColdStorageLevels({ shelves: 5, levels: [{ orientation: '横向', rackCount: 1, deviceRows: 2, deviceColumns: 4, rows: 2, columns: 4 }, { orientation: '横向', rackCount: 2, deviceRows: 2, deviceColumns: 4, rows: 2, columns: 4 }, { orientation: '竖向', rackCount: 3, deviceRows: 4, deviceColumns: 3, rows: 3, columns: 4 }, { orientation: '横向', rackCount: 1, deviceRows: 2, deviceColumns: 4, rows: 2, columns: 4 }, { orientation: '横向', rackCount: 2, deviceRows: 2, deviceColumns: 4, rows: 2, columns: 4 }] });
+            defaultsForEntry = { type: '超低温冰箱', temperature: '-80°C', shelves: 5, levelLayout: coldStorageLevelsText(levels) };
         } else if (type === 'coldStorageLevel') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const level = coldStorageLevel(unit, editingColdStorageLevel || activeColdStorageShelf);
-            defaultsForEntry = { mode: level.mode === 'rack' ? '货架' : '直放', rackCount: level.rackCount || 1, rows: level.rows, columns: level.columns };
+            defaultsForEntry = { orientation: level.orientation, rackCount: level.rackCount, deviceRows: level.deviceRows, deviceColumns: level.deviceColumns, rows: level.rows, columns: level.columns };
         } else if (type === 'freezer') {
             const unit = state.coldStorageUnits.find(item => item.id === activeColdStorageId) || state.coldStorageUnits[0];
             const requestedShelf = Math.min(Math.max(1, Number(activeColdStorageShelf) || 1), Math.max(1, Number(unit.shelves) || 1));
@@ -7501,9 +7560,16 @@ function getReagentDisplayStatus(reagent) {
             if (!unit) return;
             const levelIndex = Math.min(unit.levels.length, Math.max(1, editingColdStorageLevel || activeColdStorageShelf)) - 1;
             const levels = unit.levels.map(function (level) { return Object.assign({}, level); });
-            const mode = data.mode === '货架' ? 'rack' : 'direct';
-            const rackCount = mode === 'rack' ? (Math.round(number(data.rackCount, 1, 8)) || 1) : 1;
-            levels[levelIndex] = { mode: mode, rackCount: rackCount, rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; }), rows: Math.round(number(data.rows, 1, 12)) || 1, columns: Math.round(number(data.columns, 1, 12)) || 1 };
+            const orientation = data.orientation === '竖向' ? '竖向' : '横向';
+            const deviceRows = Math.round(number(data.deviceRows, 1, 8)) || 1;
+            const deviceColumns = Math.round(number(data.deviceColumns, 1, 8)) || 1;
+            const capacity = orientation === '竖向' ? deviceColumns : deviceRows;
+            const rackCount = Math.round(number(data.rackCount, 0, 8));
+            if (rackCount > capacity) {
+                showToast('横向货架不能超过空位行数，竖向货架不能超过空位列数');
+                return;
+            }
+            levels[levelIndex] = { mode: 'rack', orientation: orientation, deviceRows: deviceRows, deviceColumns: deviceColumns, rackCount: rackCount, rackOrder: Array.from({ length: rackCount }, function (_, index) { return index + 1; }), rows: Math.round(number(data.rows, 1, 12)) || 1, columns: Math.round(number(data.columns, 1, 12)) || 1 };
             if (coldStorageLayoutConflict(unit.id, levels)) {
                 showToast('请先移动超出新范围的冻存盒');
                 return;
@@ -7519,7 +7585,7 @@ function getReagentDisplayStatus(reagent) {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
             const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
             if (!levels) {
-                showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2架 2x4”');
+                showToast('请按设备层数逐行填写，例如“横向 2架 2x4”或“竖向 3架 4x3”');
                 return;
             }
             const unit = {
@@ -7528,7 +7594,7 @@ function getReagentDisplayStatus(reagent) {
                 type: displayOr(data.type, '超低温冰箱'),
                 temperature: displayOr(data.temperature, '-80°C'),
                 location: displayOr(data.location, '位置待设置'),
-                orientation: data.orientation === '竖向' ? '竖向' : '横向',
+                orientation: levels[0].orientation,
                 layoutX: housingLayoutCoordinate('', state.coldStorageUnits.length, 'x'),
                 layoutY: housingLayoutCoordinate('', state.coldStorageUnits.length, 'y'),
                 shelves: levels.length,
@@ -7541,15 +7607,17 @@ function getReagentDisplayStatus(reagent) {
             state.coldStorageUnits.push(unit);
             activeColdStorageId = unit.id;
             activeColdStorageShelf = 1;
+            activeColdStorageRack = levels[0].rackOrder[0] || 0;
             selectedSampleId = '';
             localStorage.setItem('rhineLabActiveColdStorage', unit.id);
             localStorage.setItem('rhineLabActiveColdStorageShelf', '1');
+            localStorage.setItem('rhineLabActiveColdStorageRack', String(activeColdStorageRack));
             activityText = '新增冻存设备“' + unit.name + '”';
         } else if (activeDialogType === 'freezer') {
             const unit = state.coldStorageUnits.find(item => item.id === data.storageUnitId) || state.coldStorageUnits[0];
             const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
             const level = coldStorageLevel(unit, shelf);
-            const storageRack = level.mode === 'rack' ? (Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1) : 1;
+            const storageRack = Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1;
             const storageRow = Math.round(number(data.storageRow, 1, level.rows)) || 1;
             const storageColumn = Math.round(number(data.storageColumn, 1, level.columns)) || 1;
             if (state.freezerBoxes.some(box => box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) === storageRack && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn)) {
@@ -7576,9 +7644,11 @@ function getReagentDisplayStatus(reagent) {
             activeFreezerBoxId = box.id;
             activeColdStorageId = unit.id;
             activeColdStorageShelf = shelf;
+            activeColdStorageRack = storageRack;
             localStorage.setItem('rhineLabActiveFreezerBox', box.id);
             localStorage.setItem('rhineLabActiveColdStorage', unit.id);
             localStorage.setItem('rhineLabActiveColdStorageShelf', String(shelf));
+            localStorage.setItem('rhineLabActiveColdStorageRack', String(storageRack));
             selectedSampleId = '';
             activityText = '新增冻存盒“' + box.name + '”';
         }
@@ -7672,14 +7742,14 @@ function getReagentDisplayStatus(reagent) {
         } else if (target.type === 'coldStorage') {
             const shelfCount = Math.round(number(data.shelves, 1, 12)) || 1;
             const levels = parseColdStorageLevels(data.levelLayout, shelfCount);
-            if (!levels) { showToast('请按设备层数逐行填写，例如“直放 1x4”或“货架 2架 2x4”'); return; }
+            if (!levels) { showToast('请按设备层数逐行填写，例如“横向 2架 2x4”或“竖向 3架 4x3”'); return; }
             if (coldStorageLayoutConflict(current.id, levels)) { showToast('请先移动超出新范围的冻存盒'); return; }
             updated.id = current.id;
             updated.name = displayOr(data.name, current.name || '未命名冻存设备');
             updated.type = displayOr(data.type, current.type || '超低温冰箱');
             updated.temperature = displayOr(data.temperature, current.temperature || '-80°C');
             updated.location = displayOr(data.location, current.location || '位置待设置');
-            updated.orientation = data.orientation === '竖向' ? '竖向' : '横向';
+            updated.orientation = levels[0].orientation;
             updated.shelves = levels.length;
             updated.rows = levels[0].rows;
             updated.columns = levels[0].columns;
@@ -7691,7 +7761,7 @@ function getReagentDisplayStatus(reagent) {
             const unit = state.coldStorageUnits.find(function (item) { return item.id === data.storageUnitId; }) || state.coldStorageUnits[0];
             const shelf = Math.round(number(data.shelf, 1, Math.max(1, Number(unit.shelves) || 1))) || 1;
             const level = coldStorageLevel(unit, shelf);
-            const storageRack = level.mode === 'rack' ? (Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1) : 1;
+            const storageRack = Math.round(number(data.storageRack, 1, level.rackCount || 1)) || 1;
             const storageRow = Math.round(number(data.storageRow, 1, level.rows)) || 1;
             const storageColumn = Math.round(number(data.storageColumn, 1, level.columns)) || 1;
             if (state.freezerBoxes.some(function (box) { return box.id !== current.id && box.storageUnitId === unit.id && Number(box.shelf || 1) === shelf && Number(box.storageRack || 1) === storageRack && Number(box.storageRow || 1) === storageRow && Number(box.storageColumn || 1) === storageColumn; })) {
@@ -7824,14 +7894,18 @@ function getReagentDisplayStatus(reagent) {
         } else if (target.type === 'coldStorage') {
             activeColdStorageId = updated.id;
             activeColdStorageShelf = Math.min(updated.levels.length, activeColdStorageShelf);
+            activeColdStorageRack = coldStorageLevel(updated, activeColdStorageShelf).rackOrder[0] || 0;
             localStorage.setItem('rhineLabActiveColdStorage', updated.id);
+            localStorage.setItem('rhineLabActiveColdStorageRack', String(activeColdStorageRack));
         } else if (target.type === 'freezer') {
             activeFreezerBoxId = updated.id;
             activeColdStorageId = updated.storageUnitId;
             activeColdStorageShelf = updated.shelf;
+            activeColdStorageRack = updated.storageRack;
             localStorage.setItem('rhineLabActiveFreezerBox', updated.id);
             localStorage.setItem('rhineLabActiveColdStorage', updated.storageUnitId);
             localStorage.setItem('rhineLabActiveColdStorageShelf', String(updated.shelf));
+            localStorage.setItem('rhineLabActiveColdStorageRack', String(updated.storageRack));
         } else if (target.type === 'animalRoom') {
             activeAnimalRoomId = updated.id;
             localStorage.setItem('rhineLabActiveAnimalRoom', updated.id);

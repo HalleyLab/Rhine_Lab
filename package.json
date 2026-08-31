@@ -7,6 +7,7 @@
   "main": "desktop/main.cjs",
   "scripts": {
     "mobile:prepare": "node scripts/prepare-mobile.mjs",
+    "verify:storage-ui": "node scripts/verify-storage-ui.mjs",
     "mobile:assets": "node scripts/create-mobile-assets.mjs",
     "mobile:icons": "pnpm exec capacitor-assets generate --android && node scripts/sync-android-icons.mjs && node scripts/verify-icons.mjs",
     "mobile:sync": "pnpm mobile:prepare && pnpm mobile:assets && cap sync android && pnpm mobile:icons",

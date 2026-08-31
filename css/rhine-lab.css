@@ -9817,18 +9817,14 @@ body.dark-theme .app-boot-screen {
 
 body.dark-theme .app-boot-screen span { color: #aeb8b2; }
 
-@media (prefers-color-scheme: dark) {
-    html.native-app body:not(.dark-theme) .app-boot-screen {
-        color: #eef3ef;
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 42%),
-            #151c19;
-    }
-
-    html.native-app body:not(.dark-theme) .app-boot-screen span {
-        color: #aeb8b2;
-    }
+html.native-app.boot-dark-theme .app-boot-screen {
+    color: #eef3ef;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 42%),
+        #151c19;
 }
+
+html.native-app.boot-dark-theme .app-boot-screen span { color: #aeb8b2; }
 
 @media (max-width: 700px) {
     .top-actions #themeToggle {
@@ -12428,6 +12424,7 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
     border: 1px solid var(--line);
     border-radius: 15px 4px 15px 4px;
 }
+.cold-storage-overview[hidden] { display: none !important; }
 .cold-storage-overview > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .cold-storage-overview h2 { margin: 3px 0; font-size: 18px; }
 .cold-storage-overview small { color: var(--muted); font-weight: 800; }
@@ -12534,6 +12531,39 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 .cold-storage-rack-handle { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 6px 8px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px 2px 7px 2px; cursor: grab; touch-action: none; }
 .cold-storage-rack-handle strong { font-size: 11px; }
 .cold-storage-rack-handle span { color: var(--muted); font-size: 9px; font-weight: 900; }
+.cold-storage-device-level .cold-storage-racks {
+    grid-template-columns: repeat(var(--device-columns), minmax(24px, 1fr));
+    grid-template-rows: repeat(var(--device-rows), minmax(34px, 1fr));
+    gap: 4px;
+    min-height: calc(var(--device-rows) * 34px);
+    overflow: visible;
+}
+.cold-storage-rack-position {
+    display: grid;
+    place-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 34px;
+    padding: 5px 7px;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line-dark);
+    border-radius: 7px 2px 7px 2px;
+    cursor: grab;
+    touch-action: none;
+    text-align: center;
+}
+.cold-storage-rack-position strong { font-size: 10px; }
+.cold-storage-rack-position span { color: var(--muted); font-size: 8px; font-weight: 900; }
+.cold-storage-rack-position.active { background: var(--acid); border-color: var(--acid-strong); }
+.cold-storage-rack-position.empty {
+    color: var(--muted);
+    background: transparent;
+    border-style: dashed;
+    cursor: default;
+}
+.cold-storage-rack-position.is-dragging { opacity: .52; outline: 3px solid var(--acid-strong); cursor: grabbing; }
+.cold-storage-selected-rack { width: 100%; min-width: 0; }
 .cold-storage-rack.is-dragging { opacity: .58; outline: 3px solid var(--acid-strong); cursor: grabbing; }
 .cold-storage-racks.is-rack-drop-target { outline: 3px solid color-mix(in srgb, var(--acid-strong) 72%, transparent); outline-offset: 3px; }
 .cold-storage-rack-destinations { position: fixed; right: 16px; bottom: 16px; z-index: 1900; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); max-height: min(42dvh, 360px); padding: 12px; overflow: auto; color: var(--ink); background: color-mix(in srgb, var(--surface) 96%, var(--acid) 4%); border: 1px solid var(--line-dark); border-radius: 14px; box-shadow: 0 18px 48px rgba(20, 31, 25, .24); touch-action: none; }

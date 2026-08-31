@@ -1,9 +1,9 @@
-const CACHE_NAME = 'rhine-lab-pages-v131-0.2.6';
+const CACHE_NAME = 'rhine-lab-pages-v132-0.2.6';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
-    './css/rhine-lab.css?v=20260830-12',
+    './css/rhine-lab.css?v=20260830-13',
     './css/rhine-dashboard-refresh.css?v=20260814-1',
     './css/rhine-lab-v019.css?v=0.2.6',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
@@ -13,7 +13,7 @@ const APP_SHELL = [
     './css/rhine-lab-bioinformatics.css?v=0.2.6',
     './css/rhine-lab-assistant.css?v=0.2.6a',
     './css/rhine-lab-motion-icons.css?v=0.2.6',
-    './css/rhine-lab-mobile.css?v=0.2.6b',
+    './css/rhine-lab-mobile.css?v=0.2.6c',
     './js/rhine-lab-config.js?v=0.2.6',
     './js/rhine-lab-i18n.js?v=0.2.6b',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
@@ -21,8 +21,9 @@ const APP_SHELL = [
     './js/rhine-lab-pwa.js?v=0.2.6',
     './js/rhine-lab-assistant.js?v=0.2.6a',
     './js/rhine-lab-close-icons.js?v=0.2.6',
-    './js/rhine-lab-bootstrap.js?v=0.2.6b',
-    './js/rhine-lab.js?v=0.2.6b',
+    './js/rhine-lab-theme-init.js?v=0.2.6c',
+    './js/rhine-lab-bootstrap.js?v=0.2.6c',
+    './js/rhine-lab.js?v=0.2.6c',
     './js/vendor/morphicons/dom.js',
     './js/vendor/morphicons/spring-CFHloqPP.js',
     './js/vendor/morphicons/normalize-CYnN3Npw.js',
