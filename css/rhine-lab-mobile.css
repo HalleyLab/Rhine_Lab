@@ -29,6 +29,15 @@
         -webkit-text-size-adjust: 100%;
     }
 
+    .view.active > * + * { margin-top: 22px !important; }
+    :is(.animal-rack-position,.plant-rack-position).occupied { touch-action: pan-x; }
+    :is(.animal-rack-board,.plant-rack-board) { touch-action: pan-x; }
+    :is([data-housing-item],[data-cold-storage-box],[data-door-reagent],[data-room-tab],[data-cold-storage-rack-handle],#reagentTable [data-reagent-catalog]) {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
+
     input,
     select,
     textarea {
