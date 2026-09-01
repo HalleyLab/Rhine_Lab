@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Rhine Lab Workspace",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Open the Rhine Lab workspace from Chrome or Microsoft Edge.",
   "action": {
     "default_title": "Open Rhine Lab",

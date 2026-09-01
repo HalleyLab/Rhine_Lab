@@ -51,7 +51,7 @@
 
     if (!nativeApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js?v=38', { updateViaCache: 'none' }).then(function (registration) {
+            navigator.serviceWorker.register('./sw.js?v=39', { updateViaCache: 'none' }).then(function (registration) {
                 return registration.update();
             }).catch(function () {
                 // The site remains usable if service worker registration is unavailable.

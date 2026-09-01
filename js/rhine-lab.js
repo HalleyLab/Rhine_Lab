@@ -2443,10 +2443,93 @@
 
     function bindColdStorageReagentDrag() {
         let drag = null;
+        let dragFrame = 0;
+        let latestPointer = null;
         let suppressClick = false;
+        const hoverTip = document.createElement('div');
+        hoverTip.className = 'reagent-name-bubble';
+        hoverTip.hidden = true;
+        document.body.appendChild(hoverTip);
         function clearTarget() {
             drag?.targetElement?.classList.remove('drop-target');
             if (drag) { drag.targetElement = null; drag.target = null; }
+        }
+        function setTarget(element, target) {
+            if (drag.targetElement !== element) {
+                drag.targetElement?.classList.remove('drop-target');
+                drag.targetElement = element;
+                element?.classList.add('drop-target');
+            }
+            drag.target = target;
+        }
+        function hideHoverTip() {
+            hoverTip.hidden = true;
+        }
+        function showHoverTip(bottle) {
+            hoverTip.textContent = bottle.dataset.reagentName;
+            hoverTip.hidden = false;
+            hoverTip.classList.remove('below');
+            const bottleBounds = bottle.getBoundingClientRect();
+            const tipBounds = hoverTip.getBoundingClientRect();
+            const left = number(bottleBounds.left + bottleBounds.width / 2 - tipBounds.width / 2, 8, window.innerWidth - tipBounds.width - 8);
+            let top = bottleBounds.top - tipBounds.height - 8;
+            if (top < 8) {
+                top = bottleBounds.bottom + 8;
+                hoverTip.classList.add('below');
+            }
+            hoverTip.style.left = left + 'px';
+            hoverTip.style.top = number(top, 8, window.innerHeight - tipBounds.height - 8) + 'px';
+        }
+        function moveReagentDrag(pointer) {
+            if (!drag || pointer.pointerId !== drag.pointerId) return;
+            if (!drag.moved && Math.hypot(pointer.clientX - drag.startX, pointer.clientY - drag.startY) < 5) return;
+            if (!drag.moved) {
+                drag.moved = true;
+                hideHoverTip();
+                drag.sourceElement.classList.add('is-dragging');
+                drag.ghost = drag.ghostSource.cloneNode(true);
+                drag.ghost.className = 'reagent-door-drag-ghost';
+                drag.ghost.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(drag.ghost);
+            }
+            drag.ghost.style.left = pointer.clientX + 'px';
+            drag.ghost.style.top = pointer.clientY + 'px';
+            const point = document.elementFromPoint(pointer.clientX, pointer.clientY);
+            const samplesNav = point && point.closest('[data-view="samples"]');
+            if (samplesNav && activeView !== 'samples') {
+                clearTarget();
+                switchView('samples');
+                closeSidebar();
+                return;
+            }
+            if (openColdStorageDeviceDuringDrag(point, drag)) {
+                clearTarget();
+                return;
+            }
+            const shelf = point && point.closest('[data-door-shelf]');
+            const boxArea = point && point.closest('[data-reagent-box-area]');
+            const deviceArea = point && point.closest('[data-reagent-device-area]');
+            const area = shelf || boxArea || deviceArea;
+            if (!area) {
+                setTarget(null, null);
+                return;
+            }
+            const coordinateArea = shelf || area.querySelector(boxArea ? '.freezer-box-reagent-layer' : '.cold-storage-device-reagent-layer') || area;
+            const bounds = coordinateArea.getBoundingClientRect();
+            setTarget(area, {
+                area: shelf ? 'door' : (boxArea ? 'box' : 'device'),
+                unitId: shelf ? shelf.dataset.doorUnit : area.dataset.storageUnit,
+                shelf: shelf ? Number(shelf.dataset.doorShelf) : 1,
+                boxId: boxArea ? area.dataset.boxId : '',
+                x: number((pointer.clientX - bounds.left) / bounds.width * 100, 6, 94),
+                y: number((pointer.clientY - bounds.top) / bounds.height * 100, 8, 92)
+            });
+        }
+        function flushReagentDrag() {
+            dragFrame = 0;
+            const pointer = latestPointer;
+            latestPointer = null;
+            if (pointer) moveReagentDrag(pointer);
         }
         document.addEventListener('pointerdown', function (event) {
             const handle = event.target.closest('[data-door-reagent]');
@@ -2457,64 +2540,24 @@
             if (!reagent) return;
             event.preventDefault();
             event.stopPropagation();
+            hideHoverTip();
             const sourceElement = handle || row;
             drag = { pointerId: event.pointerId, sourceElement: sourceElement, ghostSource: handle || row.querySelector('.reagent-inventory-bottle'), catalog: reagent.catalog, source: reagentDoorPosition(reagent), startX: event.clientX, startY: event.clientY, moved: false, ghost: null, target: null, targetElement: null, openedUnit: '' };
             sourceElement.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
-            if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 5) return;
-            if (!drag.moved) {
-                drag.moved = true;
-                drag.sourceElement.classList.add('is-dragging');
-                drag.ghost = drag.ghostSource.cloneNode(true);
-                drag.ghost.className = 'reagent-door-drag-ghost';
-                drag.ghost.setAttribute('aria-hidden', 'true');
-                document.body.appendChild(drag.ghost);
-            }
-            drag.ghost.style.left = event.clientX + 'px';
-            drag.ghost.style.top = event.clientY + 'px';
-            clearTarget();
-            const point = document.elementFromPoint(event.clientX, event.clientY);
-            const samplesNav = point && point.closest('[data-view="samples"]');
-            if (samplesNav && activeView !== 'samples') {
-                switchView('samples');
-                closeSidebar();
-                event.preventDefault();
-                return;
-            }
-            if (openColdStorageDeviceDuringDrag(point, drag)) { event.preventDefault(); return; }
-            const shelf = point && point.closest('[data-door-shelf]');
-            const boxArea = point && point.closest('[data-reagent-box-area]');
-            const deviceArea = point && point.closest('[data-reagent-device-area]');
-            if (shelf) {
-                const bounds = shelf.getBoundingClientRect();
-                drag.target = {
-                    area: 'door',
-                    unitId: shelf.dataset.doorUnit,
-                    shelf: Number(shelf.dataset.doorShelf),
-                    x: number((event.clientX - bounds.left) / bounds.width * 100, 6, 94),
-                    y: number((event.clientY - bounds.top) / bounds.height * 100, 8, 92)
-                };
-                drag.targetElement = shelf;
-                shelf.classList.add('drop-target');
-            } else if (boxArea || deviceArea) {
-                const area = boxArea || deviceArea;
-                const bounds = area.getBoundingClientRect();
-                drag.target = {
-                    area: boxArea ? 'box' : 'device',
-                    unitId: area.dataset.storageUnit,
-                    boxId: boxArea ? area.dataset.boxId : '',
-                    x: number((event.clientX - bounds.left) / bounds.width * 100, 6, 94),
-                    y: number((event.clientY - bounds.top) / bounds.height * 100, 8, 92)
-                };
-                drag.targetElement = area;
-                area.classList.add('drop-target');
-            }
+            latestPointer = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY };
+            if (!dragFrame) dragFrame = window.requestAnimationFrame(flushReagentDrag);
             event.preventDefault();
         }, { passive: false });
         function finish(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
+            if (dragFrame) {
+                window.cancelAnimationFrame(dragFrame);
+                dragFrame = 0;
+                flushReagentDrag();
+            }
             drag.sourceElement.classList.remove('is-dragging');
             if (!drag.moved && event.type === 'pointerup') {
                 openReagentDetail(drag.catalog);
@@ -2548,6 +2591,21 @@
             if (drag.moved) { suppressClick = true; window.setTimeout(function () { suppressClick = false; }, 350); }
             drag = null;
         }
+        document.addEventListener('pointerover', function (event) {
+            const bottle = event.target.closest('[data-door-reagent][data-reagent-name]');
+            if (event.pointerType !== 'touch' && bottle && !bottle.contains(event.relatedTarget)) showHoverTip(bottle);
+        });
+        document.addEventListener('pointerout', function (event) {
+            const bottle = event.target.closest('[data-door-reagent][data-reagent-name]');
+            if (bottle && !bottle.contains(event.relatedTarget)) hideHoverTip();
+        });
+        document.addEventListener('focusin', function (event) {
+            const bottle = event.target.closest('[data-door-reagent][data-reagent-name]');
+            if (bottle) showHoverTip(bottle);
+        });
+        document.addEventListener('focusout', function (event) {
+            if (event.target.closest('[data-door-reagent][data-reagent-name]')) hideHoverTip();
+        });
         document.addEventListener('pointerup', finish);
         document.addEventListener('pointercancel', finish);
         document.addEventListener('click', function (event) {
@@ -4347,7 +4405,7 @@
         document.getElementById('reagentTable').innerHTML = items.map(function (item) {
             const low = item.amount < 25 ? ' low' : '';
             const displayStatus = getReagentDisplayStatus(item);
-            return '<tr class="clickable-data-row" data-reagent-catalog="' + esc(item.catalog) + '" tabindex="0" aria-label="查看试剂 ' + esc(item.name) + ' 的详细信息"><td><span class="reagent-inventory-entry"><button class="reagent-inventory-bottle" type="button" data-door-reagent="' + esc(item.catalog) + '" title="' + esc(item.name) + '" aria-label="' + esc(item.name) + '">' + reagentBottleVisualHtml(item) + '</button><span><strong>' + esc(item.name) + (item.photoData ? ' <span class="table-photo-mark" title="附有录入照片">⌑</span>' : '') + '</strong>' + contributorInline(item) + '</span></span></td><td><strong>' + esc(item.category) + '</strong><small>' + esc(item.catalog) + '</small></td><td>' + esc(item.lot) + '</td><td>' + esc(item.location) + '</td><td><div class="amount-meter' + low + '"><div><i style="width:' + number(item.amount, 0, 100) + '%"></i></div><span>' + formatQuantity(item.currentQty) + ' / ' + formatQuantity(item.totalQty) + ' ' + esc(item.unit) + '</span></div></td><td>' + esc(item.expiry) + '</td><td><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+            return '<tr class="clickable-data-row" data-reagent-catalog="' + esc(item.catalog) + '" tabindex="0" aria-label="查看试剂 ' + esc(item.name) + ' 的详细信息"><td><span class="reagent-inventory-entry"><button class="reagent-inventory-bottle" type="button" data-door-reagent="' + esc(item.catalog) + '" data-reagent-name="' + esc(item.name) + '" aria-label="' + esc(item.name) + '">' + reagentBottleVisualHtml(item) + '</button><span><strong>' + esc(item.name) + (item.photoData ? ' <span class="table-photo-mark" title="附有录入照片">⌑</span>' : '') + '</strong>' + contributorInline(item) + '</span></span></td><td><strong>' + esc(item.category) + '</strong><small>' + esc(item.catalog) + '</small></td><td>' + esc(item.lot) + '</td><td>' + esc(item.location) + '</td><td><div class="amount-meter' + low + '"><div><i style="width:' + number(item.amount, 0, 100) + '%"></i></div><span>' + formatQuantity(item.currentQty) + ' / ' + formatQuantity(item.totalQty) + ' ' + esc(item.unit) + '</span></div></td><td>' + esc(item.expiry) + '</td><td><span class="status-chip ' + statusClass(displayStatus) + '">' + esc(displayStatus) + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
         }).join('') || '<tr><td colspan="8">没有找到匹配的试剂记录。</td></tr>';
     }
 
@@ -4855,7 +4913,7 @@
 
     function reagentBottleHtml(reagent, className, attributes) {
         const detail = reagent.name;
-        return '<button class="' + className + '" type="button" data-door-reagent="' + esc(reagent.catalog) + '" data-reagent-catalog="' + esc(reagent.catalog) + '" ' + attributes + ' aria-label="' + esc(detail) + '" title="' + esc(detail) + '">' + reagentBottleVisualHtml(reagent) + '</button>';
+        return '<button class="' + className + '" type="button" data-door-reagent="' + esc(reagent.catalog) + '" data-reagent-catalog="' + esc(reagent.catalog) + '" data-reagent-name="' + esc(detail) + '" ' + attributes + ' aria-label="' + esc(detail) + '">' + reagentBottleVisualHtml(reagent) + '</button>';
     }
 
     function reagentStorageBottlesHtml(unitId, area, boxId, className) {

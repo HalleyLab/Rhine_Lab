@@ -12948,6 +12948,43 @@ body.background-all-lives .freezer-box-tab.active b {
 .reagent-bottle-visual.bottle-style-vial i { right: 3px; bottom: 8px; left: 3px; height: 11px; }
 .reagent-bottle-visual.bottle-style-vial b { right: 8px; bottom: 8px; }
 .reagent-inventory-bottle .reagent-bottle-visual { transform: scale(.86); transform-origin: center; }
+:is(.reagent-door-bottle,.reagent-device-bottle,.reagent-box-bottle,.reagent-door-drag-ghost) .reagent-bottle-visual { transform: scale(.76); transform-origin: center; }
+.reagent-name-bubble {
+    position: fixed;
+    z-index: 10020;
+    max-width: min(190px, calc(100vw - 16px));
+    padding: 5px 8px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-dark);
+    border-radius: 8px 8px 8px 2px;
+    box-shadow: 0 5px 14px rgba(24,34,31,.14);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+}
+.reagent-name-bubble::after {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    content: '';
+    background: var(--surface);
+    border-right: 1px solid var(--line-dark);
+    border-bottom: 1px solid var(--line-dark);
+    transform: translateX(-50%) rotate(45deg);
+}
+.reagent-name-bubble.below { border-radius: 2px 8px 8px 8px; }
+.reagent-name-bubble.below::after {
+    top: -5px;
+    bottom: auto;
+    border: 0;
+    border-top: 1px solid var(--line-dark);
+    border-left: 1px solid var(--line-dark);
+}
 :is(.cold-storage-shelf-tabs,.cryo-matrix,.reagent-door-free-area).drop-target {
     background: color-mix(in srgb,var(--acid-soft) 58%,transparent);
     outline: 2px solid var(--acid-strong);
