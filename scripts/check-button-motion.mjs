@@ -10,9 +10,9 @@ const closeIcons = read('js/rhine-lab-close-icons.js');
 const bioCss = read('css/rhine-lab-bioinformatics.css');
 const main = read('js/rhine-lab.js');
 
-assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.2\.6/);
-assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.2\.6/);
-assert.match(worker, /rhine-lab-close-icons\.js\?v=0\.2\.6/);
+assert.match(html, /rhine-lab-motion-icons\.css\?v=0\.3\.1/);
+assert.match(worker, /rhine-lab-motion-icons\.css\?v=0\.3\.1/);
+assert.match(worker, /rhine-lab-close-icons\.js\?v=0\.3\.1/);
 assert.match(html, /id="searchTitle">搜索<\/h2>/);
 assert.match(html, /data-close-search aria-label="关闭搜索"><\/button>/);
 assert.match(css, /body:not\(\.dark-theme\) :is\(\.global-search, \.dialog-search\)/);

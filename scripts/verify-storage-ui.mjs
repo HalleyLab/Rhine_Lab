@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [app, css, mobile, html, themeInit, i18n] = await Promise.all([
+const [app, bootstrap, css, mobile, html, themeInit, i18n, defaultVial] = await Promise.all([
   readFile(new URL('../js/rhine-lab.js', import.meta.url), 'utf8'),
+  readFile(new URL('../js/rhine-lab-bootstrap.js', import.meta.url), 'utf8'),
   readFile(new URL('../css/rhine-lab.css', import.meta.url), 'utf8'),
   readFile(new URL('../css/rhine-lab-mobile.css', import.meta.url), 'utf8'),
   readFile(new URL('../index.html', import.meta.url), 'utf8'),
   readFile(new URL('../js/rhine-lab-theme-init.js', import.meta.url), 'utf8'),
-  readFile(new URL('../js/rhine-lab-i18n.js', import.meta.url), 'utf8')
+  readFile(new URL('../js/rhine-lab-i18n.js', import.meta.url), 'utf8'),
+  readFile(new URL('../images/reagent-vial-default.svg', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /function coldStorageRackPosition/);
@@ -19,6 +21,8 @@ assert.match(app, /function bindColdStorageReagentDrag/);
 assert.match(app, /function reagentDoorDropAction/);
 const reagentDropAction = new Function(app.match(/function reagentDoorDropAction\(source, target\) \{[\s\S]*?\n    \}/)[0] + '; return reagentDoorDropAction;')();
 const sameReagentStorageArea = new Function(app.match(/function sameReagentStorageArea\(position, target\) \{[\s\S]*?\n    \}/)[0] + '; return sameReagentStorageArea;')();
+const bottleFunctions = new Function('esc', app.match(/function reagentBottleVisualHtml\(reagent\) \{[\s\S]*?\n    \}/)[0] + app.match(/function reagentBottleHtml\(reagent, className, attributes\) \{[\s\S]*?\n    \}/)[0] + '; return { visual: reagentBottleVisualHtml, button: reagentBottleHtml };')(String);
+const emptyWorkspace = new Function(app.match(/function emptyWorkspaceState\(\) \{[\s\S]*?\n    \}/)[0] + '; return emptyWorkspaceState;')();
 assert.equal(reagentDropAction({ area: 'door', unitId: 'A', shelf: 1 }, { area: 'door', unitId: 'B', shelf: 2, x: 40, y: 60 }), 'move');
 assert.equal(reagentDropAction(null, { area: 'device', unitId: 'B', x: 40, y: 60 }), 'move');
 assert.equal(reagentDropAction(null, { area: 'box', unitId: 'B', boxId: 'BOX-1', x: 40, y: 60 }), 'move');
@@ -26,11 +30,21 @@ assert.equal(reagentDropAction(null, { pool: true }), 'none');
 assert.equal(sameReagentStorageArea({ area: 'door', unitId: 'A', shelf: 2 }, { area: 'door', unitId: 'A', shelf: 2 }), true);
 assert.equal(sameReagentStorageArea({ area: 'door', unitId: 'A', shelf: 2 }, { area: 'door', unitId: 'A', shelf: 3 }), false);
 assert.equal(sameReagentStorageArea({ area: 'box', unitId: 'A', boxId: 'B1' }, { area: 'box', unitId: 'A', boxId: 'B1' }), true);
+assert.match(bottleFunctions.visual({ bottleStyle: '试剂瓶', photoData: '' }), /reagent-vial-default\.svg/);
+assert.match(bottleFunctions.visual({ bottleStyle: 'EP 管', photoData: 'photo' }), /bottle-style-photo has-photo/);
+assert.match(bottleFunctions.button({ name: 'DMEM', catalog: '11965092', location: '4°C' }, 'reagent-door-bottle', ''), /title="DMEM"/);
+assert.match(bottleFunctions.button({ name: 'DMEM', catalog: '11965092', location: '4°C' }, 'reagent-door-bottle', ''), /aria-label="DMEM" title="DMEM"/);
+assert.deepEqual(emptyWorkspace().coldStorageUnits, []);
+assert.deepEqual(emptyWorkspace().freezerBoxes, []);
 assert.match(app, /data-door-shelf/);
 assert.match(app, /nextReagentStorageZ/);
 assert.match(app, /position\.x \+ '%;top:' \+ position\.y/);
 assert.match(app, /reagentBottleVisualHtml/);
 assert.match(app, /reagent\.bottleStyle === 'EP 管' \? 'ep-tube'/);
+assert.match(app, /const detail = reagent\.name;/);
+assert.match(app, /ghostSource: handle \|\| row\.querySelector\('\.reagent-inventory-bottle'\)/);
+assert.match(app, /images\/reagent-vial-default\.svg/);
+assert.match(defaultVial, /viewBox="0 0 64 132"/);
 assert.match(app, /data-reagent-device-area/);
 assert.match(app, /data-reagent-box-area/);
 assert.match(app, /if \(publicDemoMode\) return;/);
@@ -91,5 +105,33 @@ assert.match(mobile, /input,\s*\n\s*select,\s*\n\s*textarea \{\s*\n\s*font-size:
 assert.match(html, /id="editColdStorageRackButton"/);
 assert.ok(html.indexOf('rhine-lab-theme-init.js') < html.indexOf('rhine-lab.css'));
 assert.match(themeInit, /getHours\(\) < 6/);
+assert.match(bootstrap, /'rhineLabWorkspaceV3', 'rhineLabWorkspaceV3:lab'/);
+assert.match(bootstrap, /readLocal\('rhineLabWorkspaceV2' \+ suffix\)/);
+assert.match(bootstrap, /writeLocal\(currentKey, previousValue\)/);
+assert.match(app, /const emptyFirstRun = mode === 'lab' \|\| isInstalledAppRuntime\(\);/);
+assert.match(app, /coldStorageUnits: \[\],\s*freezerBoxes: \[\]/);
+assert.match(app, /Array\.isArray\(data\.coldStorageUnits\) \? data\.coldStorageUnits/);
+assert.match(app, /if \(!activeUnit\) \{[\s\S]*尚未添加冻存设备/);
+
+async function runBootstrap(initialValues) {
+  const values = new Map(Object.entries(initialValues));
+  const writes = [];
+  const crypto = {
+    prepareLocalStorage: async function () {},
+    readLocal: function (key) { return values.has(key) ? values.get(key) : null; },
+    writeLocal: async function (key, value) { writes.push([key, value]); values.set(key, value); }
+  };
+  const document = { body: { dataset: {}, appendChild: function () {} }, createElement: function () { return {}; } };
+  const localStorage = { length: 0, key: function () { return null; } };
+  new Function('window', 'document', 'localStorage', bootstrap)({ RHINE_LAB_CONFIG: {}, RhineLabCrypto: crypto }, document, localStorage);
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  return { values, writes };
+}
+
+const migratedStorage = await runBootstrap({ rhineLabWorkspaceV2: { marker: 'legacy' } });
+assert.deepEqual(migratedStorage.values.get('rhineLabWorkspaceV3'), { marker: 'legacy' });
+const preservedStorage = await runBootstrap({ rhineLabWorkspaceV2: { marker: 'legacy' }, rhineLabWorkspaceV3: { marker: 'current' } });
+assert.deepEqual(preservedStorage.values.get('rhineLabWorkspaceV3'), { marker: 'current' });
+assert.equal(preservedStorage.writes.length, 0);
 
 console.log('Storage layout, mobile tools, and first-frame theme checks passed.');

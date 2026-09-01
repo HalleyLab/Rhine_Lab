@@ -40,13 +40,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Package browser extension
         run: |
-          mkdir -p dist/release-0.2.1
+          mkdir -p dist/release-0.3.1
           cd browser-extension
-          zip -r ../dist/release-0.2.1/Rhine-Lab-Browser-Extension-0.2.1.zip .
+          zip -r ../dist/release-0.3.1/Rhine-Lab-Browser-Extension-0.3.1.zip .
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-Browser-Extension
-          path: dist/release-0.2.1/Rhine-Lab-Browser-Extension-0.2.1.zip
+          path: dist/release-0.3.1/Rhine-Lab-Browser-Extension-0.3.1.zip
           retention-days: 30
 
   windows:

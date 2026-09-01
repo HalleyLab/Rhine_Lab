@@ -12334,7 +12334,7 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     font-family: Arial, sans-serif !important;
 }
 
-/* 0.2.6: dense inventory typography and physical cold-storage navigation. */
+/* 0.3.1: dense inventory typography and physical cold-storage navigation. */
 html[lang="zh-CN"] #reagentTable td:nth-child(2),
 html[lang="zh-CN"] #reagentTable td:nth-child(3),
 html[lang="zh-CN"] #reagentTable td:nth-child(4),
@@ -12540,23 +12540,14 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 }
 .reagent-door-free-marker { position: absolute; inset: 50% auto auto 50%; color: var(--muted); font-size: 18px; font-weight: 900; opacity: .28; transform: translate(-50%, -50%); pointer-events: none; }
 .reagent-door-bottle { position: absolute; display: grid; place-items: center; width: 52px; min-height: 58px; padding: 3px; color: var(--ink); background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line-dark); border-radius: 6px 2px 6px 2px; transform: translate(-50%, -50%); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-.reagent-bottle-visual { position: relative; display: block; width: 29px; height: 38px; }
-.reagent-bottle-visual::before { position: absolute; z-index: 2; top: 0; left: 6px; width: 17px; height: 7px; content: ''; background: #275a83; border: 1px solid #173b59; border-radius: 3px 3px 1px 1px; box-shadow: inset 0 -2px rgba(255,255,255,.18); }
-.reagent-bottle-visual::after { position: absolute; inset: 6px 2px 0; content: ''; background: linear-gradient(90deg, #6f371e, #a95a2d 47%, #633019); border: 1px solid #432517; border-radius: 4px 4px 7px 7px; box-shadow: inset 5px 0 rgba(255,255,255,.12); }
-.reagent-bottle-visual i { position: absolute; z-index: 3; right: 5px; bottom: 8px; left: 5px; height: 13px; background: #f7f5ee; border-top: 2px solid #d33d45; }
-.reagent-bottle-visual b { position: absolute; z-index: 4; right: 8px; bottom: 9px; color: #b1262d; font-size: 9px; line-height: 11px; }
-.reagent-bottle-visual.has-photo { overflow: hidden; background: #f7f5ee; clip-path: polygon(28% 0, 72% 0, 72% 15%, 90% 23%, 95% 100%, 5% 100%, 10% 23%, 28% 15%); }
-.reagent-bottle-visual.has-photo::before, .reagent-bottle-visual.has-photo::after { display: none; }
-.reagent-bottle-visual.has-photo img { width: 100%; height: 100%; object-fit: cover; }
 .reagent-inventory-entry { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .reagent-inventory-entry, #reagentTable [data-reagent-catalog] { cursor: grab; }
 #reagentTable [data-reagent-catalog].is-dragging { opacity: .4; }
 .reagent-inventory-entry > span { display: grid; gap: 2px; min-width: 0; }
-.reagent-inventory-bottle { flex: 0 0 auto; padding: 3px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px 2px 7px 2px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-.reagent-inventory-bottle .reagent-bottle-visual { width: 25px; height: 33px; }
+.reagent-inventory-bottle { flex: 0 0 auto; padding: 0; color: var(--ink); background: transparent; border: 0; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .reagent-door-free-area.drop-target { background: var(--acid-soft); border-color: var(--acid-strong); outline: 2px solid var(--acid-strong); outline-offset: -2px; }
 .reagent-door-bottle.is-dragging, .reagent-inventory-bottle.is-dragging { opacity: .35; }
-.reagent-door-drag-ghost { position: fixed; z-index: 9999; width: 116px; min-height: 58px; transform: translate(-50%, -58%); pointer-events: none; opacity: .92; box-shadow: 0 12px 26px rgba(15,25,20,.22); }
+.reagent-door-drag-ghost { position: fixed; z-index: 9999; display: grid; place-items: center; width: 42px; height: 68px; min-height: 0; padding: 0; color: var(--ink); background: transparent; border: 0; transform: translate(-50%, -58%); pointer-events: none; opacity: .94; box-shadow: none; }
 .cold-storage-shelf-tabs { display: grid; align-content: stretch; gap: 7px; min-width: 0; overflow: auto; }
 .cold-storage-device-level {
     display: grid;
@@ -12886,8 +12877,8 @@ body.background-all-lives .freezer-box-tab.active b {
     position: absolute;
     display: grid;
     place-items: center;
-    width: 58px;
-    height: 64px;
+    width: 44px;
+    height: 68px;
     min-height: 0;
     padding: 3px;
     color: var(--ink);
@@ -12900,36 +12891,63 @@ body.background-all-lives .freezer-box-tab.active b {
     -webkit-user-select: none;
     pointer-events: auto;
 }
-.reagent-bottle-visual { width: 34px; height: 45px; }
+.reagent-bottle-visual { position: relative; display: block; width: 30px; height: 58px; }
 .reagent-bottle-visual::before {
+    position: absolute;
+    z-index: 4;
     top: 0;
-    left: 4px;
-    width: 26px;
-    height: 9px;
-    border-radius: 4px 4px 2px 2px;
+    left: 3px;
+    width: 24px;
+    height: 10px;
+    content: '';
+    background: repeating-linear-gradient(90deg,#f5f5f2 0 2px,#cfd2d0 2px 3px);
+    border: 1px solid #8c9290;
+    border-radius: 5px 5px 2px 2px;
+    box-sizing: border-box;
 }
-.reagent-bottle-visual::after { inset: 8px 1px 0; }
+.reagent-bottle-visual::after {
+    position: absolute;
+    z-index: 1;
+    inset: 9px 2px 0;
+    content: '';
+    background: linear-gradient(90deg,rgba(173,197,200,.48),rgba(255,255,255,.84) 48%,rgba(157,185,188,.5));
+    border: 1px solid #77898c;
+    border-radius: 3px 3px 8px 8px;
+    box-shadow: inset 4px 0 rgba(255,255,255,.45);
+}
+.reagent-bottle-visual i { position: absolute; z-index: 3; right: 4px; bottom: 10px; left: 4px; height: 14px; background: #f7f5ee; border-top: 2px solid #d33d45; }
+.reagent-bottle-visual b { position: absolute; z-index: 4; right: 8px; bottom: 11px; color: #b1262d; font-size: 9px; line-height: 11px; }
+.reagent-bottle-visual.bottle-style-bottle:not(.has-photo)::before,
+.reagent-bottle-visual.bottle-style-bottle:not(.has-photo)::after,
+.reagent-bottle-visual.bottle-style-bottle:not(.has-photo) :is(i,b) { display: none; }
+.default-reagent-vial { display: block; width: 100%; height: 100%; object-fit: contain; }
 .reagent-bottle-visual.has-photo {
-    width: 42px;
-    height: 56px;
-    clip-path: polygon(22% 0,78% 0,78% 12%,92% 20%,96% 100%,4% 100%,8% 20%,22% 12%);
+    width: 32px;
+    height: 60px;
+    overflow: visible;
+    background: transparent;
+    clip-path: none;
 }
-.reagent-bottle-visual.bottle-style-ep-tube { width: 24px; height: 46px; }
-.reagent-bottle-visual.bottle-style-ep-tube::before { left: 1px; width: 22px; height: 7px; border-radius: 5px 5px 2px 2px; }
+.reagent-bottle-visual.has-photo::before { display: block; left: 3px; width: 26px; }
+.reagent-bottle-visual.has-photo::after { display: block; inset: 9px 2px 0; }
+.reagent-bottle-visual.has-photo :is(i,b) { display: none; }
+.reagent-photo-vial { position: absolute; z-index: 2; top: 10px; left: 4px; width: 24px; height: 48px; object-fit: cover; clip-path: polygon(8% 0,92% 0,100% 8%,96% 94%,82% 100%,18% 100%,4% 94%,0 8%); }
+.reagent-bottle-visual.bottle-style-ep-tube { width: 22px; height: 56px; }
+.reagent-bottle-visual.bottle-style-ep-tube::before { left: 1px; width: 20px; height: 8px; border-radius: 5px 5px 2px 2px; }
 .reagent-bottle-visual.bottle-style-ep-tube::after {
-    inset: 6px 4px 0;
+    inset: 7px 3px 0;
     background: linear-gradient(90deg,#dcebea,#f8ffff 48%,#c7dcda);
     border-color: #8ba9a6;
     border-radius: 3px 3px 8px 8px;
     clip-path: polygon(0 0,100% 0,82% 78%,58% 100%,42% 100%,18% 78%);
 }
 .reagent-bottle-visual.bottle-style-ep-tube :is(i,b) { display: none; }
-.reagent-bottle-visual.bottle-style-vial { width: 27px; height: 40px; }
-.reagent-bottle-visual.bottle-style-vial::before { left: 2px; width: 23px; height: 8px; background: #8b9497; border-color: #555f62; }
-.reagent-bottle-visual.bottle-style-vial::after { inset: 7px 1px 0; background: linear-gradient(90deg,#d9e9ed,#f7ffff 50%,#b9d1d7); border-color: #78939a; border-radius: 3px 3px 6px 6px; }
+.reagent-bottle-visual.bottle-style-vial { width: 26px; height: 54px; }
+.reagent-bottle-visual.bottle-style-vial::before { left: 1px; width: 24px; height: 9px; background: repeating-linear-gradient(90deg,#d8dcdd 0 2px,#929a9c 2px 3px); border-color: #555f62; }
+.reagent-bottle-visual.bottle-style-vial::after { inset: 8px 2px 0; background: linear-gradient(90deg,#d9e9ed,#f7ffff 50%,#b9d1d7); border-color: #78939a; border-radius: 3px 3px 7px 7px; }
 .reagent-bottle-visual.bottle-style-vial i { right: 3px; bottom: 8px; left: 3px; height: 11px; }
 .reagent-bottle-visual.bottle-style-vial b { right: 8px; bottom: 8px; }
-.reagent-inventory-bottle .reagent-bottle-visual.has-photo { width: 34px; height: 45px; }
+.reagent-inventory-bottle .reagent-bottle-visual { transform: scale(.86); transform-origin: center; }
 :is(.cold-storage-shelf-tabs,.cryo-matrix,.reagent-door-free-area).drop-target {
     background: color-mix(in srgb,var(--acid-soft) 58%,transparent);
     outline: 2px solid var(--acid-strong);
