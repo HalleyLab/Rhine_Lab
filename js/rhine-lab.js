@@ -1088,9 +1088,20 @@
             unitId: value.unitId,
             shelf: Math.max(1, Math.round(Number(value.shelf) || 1)),
             boxId: String(value.boxId || ''),
-            x: Number.isFinite(rawX) ? number(rawX, 6, 94) : 12 + ((legacySlot - 1) % 4) * 25,
-            y: Number.isFinite(rawY) ? number(rawY, 15, 86) : 58,
+            x: Number.isFinite(rawX) ? number(rawX, 0, 100) : 12 + ((legacySlot - 1) % 4) * 25,
+            y: Number.isFinite(rawY) ? number(rawY, 0, 100) : 58,
             z: Number.isFinite(rawZ) ? Math.max(1, Math.round(rawZ)) : legacySlot
+        };
+    }
+
+    function reagentDropCoordinates(pointer, bounds) {
+        const width = Math.max(1, bounds.width);
+        const height = Math.max(1, bounds.height);
+        const xInset = Math.min(50, 12 / width * 100);
+        const yInset = Math.min(50, 23 / height * 100);
+        return {
+            x: number((pointer.clientX - bounds.left) / width * 100, xInset, 100 - xInset),
+            y: number((pointer.clientY - bounds.top) / height * 100, yInset, 100 - yInset)
         };
     }
 
@@ -1113,7 +1124,7 @@
 
     function putReagentInStorage(reagent, unit, target, z) {
         if (!reagentDoorPosition(reagent)) reagent.doorSourceLocation = reagent.doorSourceLocation || reagent.location || '';
-        reagent.doorStorage = { area: target.area, unitId: unit.id, shelf: target.shelf || 1, boxId: target.boxId || '', x: number(target.x, 6, 94), y: number(target.y, 8, 92), z: Math.max(1, Math.round(Number(z) || 1)) };
+        reagent.doorStorage = { area: target.area, unitId: unit.id, shelf: target.shelf || 1, boxId: target.boxId || '', x: number(target.x, 0, 100), y: number(target.y, 0, 100), z: Math.max(1, Math.round(Number(z) || 1)) };
         reagent.location = formatReagentStorageLocation(unit, reagent.doorStorage, state.freezerBoxes.find(function (box) { return box.id === reagent.doorStorage.boxId; }));
     }
 
@@ -2516,13 +2527,14 @@
             }
             const coordinateArea = shelf || area.querySelector(boxArea ? '.freezer-box-reagent-layer' : '.cold-storage-device-reagent-layer') || area;
             const bounds = coordinateArea.getBoundingClientRect();
+            const coordinates = reagentDropCoordinates(pointer, bounds);
             setTarget(area, {
                 area: shelf ? 'door' : (boxArea ? 'box' : 'device'),
                 unitId: shelf ? shelf.dataset.doorUnit : area.dataset.storageUnit,
                 shelf: shelf ? Number(shelf.dataset.doorShelf) : 1,
                 boxId: boxArea ? area.dataset.boxId : '',
-                x: number((pointer.clientX - bounds.left) / bounds.width * 100, 6, 94),
-                y: number((pointer.clientY - bounds.top) / bounds.height * 100, 8, 92)
+                x: coordinates.x,
+                y: coordinates.y
             });
         }
         function flushReagentDrag() {
