@@ -4,6 +4,7 @@
     let initialized = false;
     let busy = false;
     let messages = [];
+    let quota = null;
     let dragState = null;
     let suppressOpen = false;
     const POSITION_KEY = 'rhineLabAssistantPosition';
@@ -58,6 +59,8 @@
             sendInput();
         });
         byId('assistantMessages').addEventListener('click', handleActionClick);
+        byId('assistantMessages').addEventListener('input', handleActionEdit);
+        byId('assistantMessages').addEventListener('change', handleActionEdit);
         window.addEventListener('rhine:languagechange', function () { updateLabels(); renderMessages(); });
         window.addEventListener('resize', restoreCharacterPosition);
         document.addEventListener('keydown', function (event) {
@@ -68,7 +71,8 @@
     function updateLabels() {
         const isEnglish = english();
         const remote = Boolean(String((window.RHINE_LAB_CONFIG || {}).assistantApiUrl || '').trim());
-        byId('assistantMode').textContent = remote ? 'SERVER' : 'LOCAL';
+        byId('assistantMode').textContent = remote ? (quota ? 'AI · ' + quota.remaining + '/' + quota.limit : 'AI') : 'LOCAL';
+        byId('assistantMode').setAttribute('title', remote && quota ? (isEnglish ? quota.remaining + ' online requests remain on this device today' : '本设备今日剩余 ' + quota.remaining + ' 次在线 AI') : '');
         const toggle = byId('assistantToggle');
         const toggleLabel = isEnglish ? 'Open or drag Kristen research assistant' : '打开或拖动克里斯滕科研助理';
         toggle.setAttribute('aria-label', toggleLabel);
@@ -211,8 +215,14 @@
     async function remoteOrLocal(text, local) {
         if (!navigator.onLine || !window.RhineLabSync || !window.RhineLabSync.assistantChat || !String((window.RHINE_LAB_CONFIG || {}).assistantApiUrl || '').trim()) return local;
         try {
-            return { content: await window.RhineLabSync.assistantChat(text, english() ? 'en-US' : 'zh-CN'), actions: [] };
-        } catch (_) {
+            const response = await window.RhineLabSync.assistantChat(text, english() ? 'en-US' : 'zh-CN');
+            quota = response.quota || quota;
+            updateLabels();
+            return { content: response.content, actions: [] };
+        } catch (error) {
+            quota = error.quota || quota;
+            updateLabels();
+            if (error.status === 429) return { content: english() ? 'This device has reached its online AI limit for now. Local app automation is still available.' : '本设备当前的在线 AI 额度已用完；应用内的本地自动化仍可使用。', actions: local.actions || [] };
             return local;
         }
     }
@@ -263,13 +273,16 @@
         card.dataset.actionId = action.id;
         card.dataset.messageId = messageId;
         card.dataset.state = action.state;
+        const editable = action.state === 'pending' && ['create_experiment', 'create_task'].includes(action.kind);
         const kicker = document.createElement('small');
-        kicker.textContent = action.state === 'applied' ? (english() ? 'APPLIED' : '已执行') : action.state === 'dismissed' ? (english() ? 'DISMISSED' : '已忽略') : (english() ? 'ACTION PREVIEW' : '操作预览');
+        kicker.textContent = action.state === 'applied' ? (english() ? 'APPLIED' : '已执行') : action.state === 'dismissed' ? (english() ? 'DISMISSED' : '已忽略') : editable ? (english() ? 'EDITABLE DRAFT' : '可编辑草稿') : (english() ? 'ACTION PREVIEW' : '操作预览');
         const title = document.createElement('strong');
         title.textContent = action.label || actionLabel(action.kind);
         const summary = document.createElement('p');
         summary.textContent = action.summary || payloadSummary(action.payload);
-        card.append(kicker, title, summary);
+        card.append(kicker, title);
+        if (editable) card.appendChild(renderDraftEditor(action));
+        else card.appendChild(summary);
         if (action.state === 'pending') {
             const controls = document.createElement('div');
             controls.className = 'assistant-action-buttons';
@@ -284,6 +297,62 @@
             result.className = 'assistant-action-result'; result.textContent = action.result; card.appendChild(result);
         }
         return card;
+    }
+
+    function renderDraftEditor(action) {
+        const editor = document.createElement('div');
+        editor.className = 'assistant-action-editor';
+        const fields = action.kind === 'create_experiment'
+            ? [
+                ['title', ui('实验标题', 'Experiment title'), 'text', true],
+                ['date', ui('实验日期', 'Date'), 'date'],
+                ['status', ui('记录状态', 'Status'), 'select', false, [['进行中', ui('进行中', 'In progress')], ['待分析', ui('待分析', 'Pending analysis')], ['已完成', ui('已完成', 'Completed')]]],
+                ['project', ui('研究项目', 'Project'), 'text'],
+                ['type', ui('实验类型', 'Experiment type'), 'text'],
+                ['description', ui('本次记录与备注', 'Notes'), 'textarea', true]
+            ]
+            : [
+                ['title', ui('日程标题', 'Schedule title'), 'text', true],
+                ['date', ui('日期', 'Date'), 'date'],
+                ['time', ui('开始时间', 'Start time'), 'time'],
+                ['end', ui('结束时间', 'End time'), 'time'],
+                ['resource', ui('资源或地点', 'Resource or location'), 'text', true],
+                ['taskType', ui('日程类型', 'Schedule type'), 'select', false, [['cell', ui('细胞', 'Cell')], ['animal', ui('动物', 'Animal')], ['analysis', ui('分析', 'Analysis')]]]
+            ];
+        fields.forEach(function (field) {
+            const label = document.createElement('label');
+            if (field[3]) label.className = 'wide';
+            const caption = document.createElement('span');
+            caption.textContent = field[1];
+            let control;
+            if (field[2] === 'textarea') {
+                control = document.createElement('textarea');
+                control.rows = 3;
+            } else if (field[2] === 'select') {
+                control = document.createElement('select');
+                (field[4] || []).forEach(function (entry) {
+                    const option = document.createElement('option');
+                    option.value = entry[0]; option.textContent = entry[1]; control.appendChild(option);
+                });
+            } else {
+                control = document.createElement('input');
+                control.type = field[2];
+            }
+            control.dataset.assistantField = field[0];
+            control.value = String(action.payload[field[0]] || '');
+            label.append(caption, control);
+            editor.appendChild(label);
+        });
+        return editor;
+    }
+
+    function handleActionEdit(event) {
+        const control = event.target.closest('[data-assistant-field]');
+        const card = control && control.closest('.assistant-action-card');
+        if (!card) return;
+        const message = messages.find(function (item) { return item.id === card.dataset.messageId; });
+        const action = message && message.actions.find(function (item) { return item.id === card.dataset.actionId; });
+        if (action && action.state === 'pending') action.payload[control.dataset.assistantField] = control.value;
     }
 
     function handleActionClick(event) {
@@ -346,13 +415,19 @@
             const time = extractTime(text) || '09:00';
             const date = /(明天|tomorrow)/i.test(text) ? addDay(context.today) : context.today;
             const title = quoted(text) || cleanTitle(text, ['添加', '新建', '安排', '一项', '今天', '明天', '的', '日程', '提醒']);
-            return { content: ui('已整理为日程草稿。请核对日期和时间。', 'I prepared a schedule draft. Check the date and time before confirming.'), actions: [makeAction('create_task', ui('添加日程', 'Add schedule'), { title: title || ui('未命名日程', 'Untitled schedule entry'), date: date, time: time, end: addHour(time), resource: '' })] };
+            return { content: ui('已整理为日程草稿。请核对日期和时间。', 'I prepared a schedule draft. Check the date and time before confirming.'), actions: [makeAction('create_task', ui('添加日程', 'Add schedule'), { title: title || ui('未命名日程', 'Untitled schedule entry'), date: date, time: time, end: addHour(time), resource: '', taskType: 'cell' })] };
         }
 
         if (/(录入|新增|添加|新建|add|create).*(试剂|reagent)/i.test(text)) {
             const name = quoted(text) || cleanTitle(text, ['录入', '新增', '添加', '新建', '一条', '试剂']);
             return { content: ui('已建立试剂条目草稿。没有说明的数量会先保留为零。', 'I prepared a reagent draft. Unspecified quantities remain zero.'), actions: [makeAction('create_reagent', ui('录入试剂', 'Add reagent'), { name: name || ui('未命名试剂', 'Untitled reagent'), category: '未分类', unit: 'mL', totalQty: '0', currentQty: '0' })] };
         }
+
+        const collection = assistantCollection(context, text);
+        if (collection && /(有多少|数量|多少个|how many)/i.test(text)) return { content: ui('当前工作区共有 ' + collection.items.length + ' 条' + collection.label + '记录。', 'This workspace contains ' + collection.items.length + ' ' + collection.label + ' records.'), actions: [] };
+        if (collection && /(有哪些|列出|清单|list|show all)/i.test(text)) return { content: collection.items.length ? collection.items.slice(0, 20).map(function (item) { return item.title || item.name || item.id; }).join('\n') : ui('当前没有这类记录。', 'There are no records in this category.'), actions: [] };
+        const found = findContextRecord(context, text);
+        if (found) return { content: recordFacts(found), actions: [] };
 
         if (/^(你好|在吗|hello|hi)\b/i.test(text)) return { content: english() ? 'I am here. Tell me what you want to record, revise, or review.' : '我在。直接告诉我要整理、修改或回顾什么。', actions: [] };
         if (/(记录细胞操作|细胞操作|record cell operation)/i.test(text)) return { content: ui('请写明细胞名称或编号、操作类型，以及代次、比例、汇合度等信息。例如：BV2 今天传代到 P19，1:4，汇合度 82%。', 'Include the cell name or ID, operation, passage, split ratio and confluence. Example: BV2 was passaged to P19 today, 1:4, 82% confluence.'), actions: [] };
@@ -375,6 +450,36 @@
     }
     function ui(zh, en) { return english() ? en : zh; }
     function payloadSummary(payload) { return Object.keys(payload || {}).filter(function (key) { return payload[key] !== '' && payload[key] != null && !['notes', 'description'].includes(key); }).slice(0, 7).map(function (key) { const value = window.RhineLabI18n ? window.RhineLabI18n.t(payload[key]) : payload[key]; return key + ': ' + value; }).join(' · '); }
+    function assistantCollection(context, text) {
+        const definitions = [
+            [/(实验结果|结果|result)/i, 'results', ui('实验结果', 'result')],
+            [/(实验|experiment)/i, 'experiments', ui('实验', 'experiment')],
+            [/(动物|小鼠|鼠|animal|mice|mouse)/i, 'animals', ui('动物', 'animal')],
+            [/(植物|plant)/i, 'plants', ui('植物', 'plant')],
+            [/(菌|微生物|microbe)/i, 'microbes', ui('微生物', 'microbe')],
+            [/(质粒|plasmid)/i, 'plasmids', ui('质粒', 'plasmid')],
+            [/(病毒|virus)/i, 'viruses', ui('病毒', 'virus')],
+            [/(细胞|cell)/i, 'cells', ui('细胞', 'cell')],
+            [/(试剂|库存|reagent|inventory)/i, 'reagents', ui('试剂', 'reagent')],
+            [/(样本|sample)/i, 'samples', ui('样本', 'sample')],
+            [/(冻存盒|freezer box)/i, 'freezerBoxes', ui('冻存盒', 'freezer-box')],
+            [/(protocol|方案|流程)/i, 'protocols', 'Protocol'],
+            [/(日程|安排|schedule|task)/i, 'schedule', ui('日程', 'schedule')]
+        ];
+        const match = definitions.find(function (item) { return item[0].test(text); });
+        return match ? { items: context[match[1]] || [], label: match[2] } : null;
+    }
+    function findContextRecord(context, text) {
+        const lower = String(text).toLowerCase();
+        return Object.keys(context).reduce(function (records, key) { return records.concat(Array.isArray(context[key]) ? context[key] : []); }, []).find(function (item) {
+            if (!item || typeof item !== 'object') return false;
+            return ['id', 'title', 'name'].some(function (key) { const value = String(item[key] || '').toLowerCase(); return value && lower.includes(value); });
+        });
+    }
+    function recordFacts(record) {
+        const labels = { id: ui('编号', 'ID'), title: ui('名称', 'Title'), name: ui('名称', 'Name'), project: ui('项目', 'Project'), status: ui('状态', 'Status'), type: ui('类型', 'Type'), date: ui('日期', 'Date'), location: ui('位置', 'Location'), currentQty: ui('实际库存', 'Current stock'), totalQty: ui('总量', 'Total'), unit: ui('单位', 'Unit'), time: ui('时间', 'Time'), end: ui('结束', 'End'), resource: ui('资源', 'Resource'), summary: ui('主要结果', 'Summary'), conclusion: ui('结论', 'Conclusion'), nextStep: ui('下一步', 'Next step') };
+        return Object.keys(record).filter(function (key) { return record[key] !== '' && record[key] != null && typeof record[key] !== 'object'; }).slice(0, 9).map(function (key) { return (labels[key] || key) + '：' + record[key]; }).join('\n');
+    }
     function quoted(text) { const match = String(text).match(/[“\"']([^”\"']+)[”\"']/); return match ? match[1].trim() : ''; }
     function cleanTitle(text, words) { let value = String(text); words.forEach(function (word) { value = value.replace(new RegExp(word, 'gi'), ' '); }); return value.replace(/\s+/g, ' ').replace(/^[：:，,。\s]+|[。\s]+$/g, '').slice(0, 80); }
     function matchNumber(text, pattern) { const match = String(text).match(pattern); return match ? Number(match[1]) : null; }

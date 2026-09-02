@@ -26,7 +26,7 @@
             document.body.dataset.cryptoError = 'true';
         }
         const script = document.createElement('script');
-        script.src = 'js/rhine-lab.js?v=0.3.2-r2';
+        script.src = 'js/rhine-lab.js?v=0.3.2-r3';
         script.defer = true;
         document.body.appendChild(script);
     }

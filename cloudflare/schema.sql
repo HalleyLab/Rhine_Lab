@@ -97,6 +97,15 @@ CREATE TABLE IF NOT EXISTS lab_member_publications (
 );
 CREATE INDEX IF NOT EXISTS idx_publications_lab_updated ON lab_member_publications(lab_id, updated_at);
 
+CREATE TABLE IF NOT EXISTS assistant_device_usage (
+  device_hash TEXT NOT NULL,
+  usage_date TEXT NOT NULL,
+  requests INTEGER NOT NULL DEFAULT 0 CHECK (requests >= 0),
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (device_hash, usage_date)
+);
+CREATE INDEX IF NOT EXISTS idx_assistant_usage_date ON assistant_device_usage(usage_date);
+
 CREATE TRIGGER IF NOT EXISTS prevent_owner_membership_delete
 BEFORE DELETE ON lab_members
 WHEN OLD.role = 'owner'

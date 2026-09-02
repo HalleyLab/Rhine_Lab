@@ -7,6 +7,7 @@ workers_dev = true
 ALLOWED_ORIGINS = "https://rh1nelab.com,https://www.rh1nelab.com,https://halleylab.github.io"
 MAIL_FROM_EMAIL = "noreply@rh1nelab.com"
 MAIL_FROM_NAME = "Rhine Lab"
+ASSISTANT_DAILY_LIMIT = "30"
 
 [[ratelimits]]
 name = "ASSISTANT_RATE_LIMITER"

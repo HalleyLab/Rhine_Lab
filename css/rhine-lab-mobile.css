@@ -19,6 +19,7 @@
         max-width: 100%;
         min-height: 100%;
         margin: 0;
+        overflow-x: hidden;
         overflow-x: clip;
         overscroll-behavior-x: none;
     }
@@ -30,7 +31,8 @@
     }
 
     .view.active > * + * { margin-top: 22px !important; }
-    :is(.animal-rack-position,.plant-rack-position).occupied { touch-action: pan-x; }
+    .animal-rack-position.occupied { touch-action: none; }
+    .plant-rack-position.occupied { touch-action: pan-x; }
     :is(.animal-rack-board,.plant-rack-board) { touch-action: pan-x; }
     :is([data-housing-item],[data-cold-storage-box],[data-door-reagent],[data-room-tab],[data-cold-storage-rack-handle],#reagentTable [data-reagent-catalog]) {
         user-select: none;
@@ -356,8 +358,9 @@
 
     :is(.entry-dialog, .sync-dialog, .record-detail-dialog, .protocol-detail-dialog, .experiment-detail-dialog, .experiment-run-dialog, .freezer-scan-dialog) {
         inset: 0 !important;
-        width: 100vw !important;
-        max-width: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         height: 100dvh !important;
         max-height: none !important;
         margin: 0 !important;
@@ -372,6 +375,7 @@
         width: 100%;
         height: 100%;
         max-height: none;
+        min-width: 0;
         overflow: hidden;
         background: var(--surface);
     }
@@ -384,6 +388,9 @@
         background: var(--surface) !important;
         border-bottom: 1px solid var(--line);
         box-shadow: 0 5px 18px rgba(39, 51, 44, .06);
+    }
+    :is(.entry-dialog, .sync-dialog, .record-detail-dialog, .protocol-detail-dialog, .experiment-detail-dialog, .experiment-run-dialog, .freezer-scan-dialog) header > div {
+        min-width: 0;
     }
     :is(.entry-dialog, .sync-dialog, .record-detail-dialog, .protocol-detail-dialog, .experiment-detail-dialog, .experiment-run-dialog, .freezer-scan-dialog) h2 {
         margin-top: 3px;
@@ -414,8 +421,13 @@
     }
     :is(.form-grid, .sync-transfer-panel, .record-detail-body, .protocol-detail-body, .experiment-detail-body, .experiment-run-body, .freezer-scan-body) {
         flex: 1 1 auto;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         min-height: 0;
+        overflow-x: hidden;
         overflow-y: auto;
+        overflow-wrap: anywhere;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
@@ -428,6 +440,7 @@
     .record-detail-grid,
     .experiment-detail-fields,
     .scan-workspace { grid-template-columns: minmax(0, 1fr) !important; }
+    :is(.form-field, .record-detail-grid, .record-detail-section, .experiment-detail-fields, .experiment-usage-section, .experiment-result-section, .experiment-history-section, .scan-workspace) { min-width: 0; max-width: 100%; }
     .record-detail-hero { min-height: 110px; padding: 16px; }
     .record-detail-section { padding: 14px; }
 

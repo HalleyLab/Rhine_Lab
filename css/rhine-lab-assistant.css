@@ -270,6 +270,13 @@ body.assistant-open .assistant-character-trigger {
 .assistant-action-card small { display: block; margin-bottom: 5px; color: var(--muted); font: 800 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .12em; }
 .assistant-action-card strong { display: block; color: var(--ink); font-size: 13px; }
 .assistant-action-card p { margin: 6px 0 10px; color: var(--muted); font: 700 11px/1.55 var(--font-interface); }
+.assistant-action-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+.assistant-action-editor label { display: grid; gap: 4px; min-width: 0; }
+.assistant-action-editor label.wide { grid-column: 1 / -1; }
+.assistant-action-editor label > span { color: var(--muted); font-size: 10px; font-weight: 800; }
+.assistant-action-editor :is(input, select, textarea) { width: 100%; min-width: 0; padding: 8px 9px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-dark); border-radius: 3px; font: 700 12px/1.35 var(--font-interface); }
+.assistant-action-editor textarea { resize: vertical; }
+.assistant-action-editor :is(input, select, textarea):focus { outline: 2px solid color-mix(in srgb, var(--cyan) 45%, transparent); border-color: var(--cyan); }
 .assistant-action-buttons { display: flex; gap: 7px; justify-content: flex-end; }
 .assistant-action-buttons button { padding: 7px 10px; border: 1px solid var(--line-dark); background: var(--surface); cursor: pointer; font: 800 11px/1 var(--font-interface); }
 .assistant-action-buttons button[data-assistant-confirm] { color: #111615; background: var(--acid); border-color: var(--acid-strong); }
@@ -330,6 +337,9 @@ body.background-black-current .assistant-orbit { background: var(--cyan); }
     .assistant-character-label { left: -9px; bottom: 14px; min-width: 74px; padding: 6px 8px; }
     .assistant-character-label small { font-size: 11px; }
     .assistant-message { max-width: 95%; }
+    .assistant-action-editor { grid-template-columns: minmax(0, 1fr); }
+    .assistant-action-editor label.wide { grid-column: auto; }
+    .assistant-action-editor :is(input, select, textarea) { min-height: 44px; font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -544,11 +544,19 @@
             today: today,
             workspace: workspaceMode,
             readOnly: Boolean(workspaceReadOnly),
-            experiments: state.experiments.slice(0, 24).map(function (item) { return { id: item.id, title: item.title, project: item.project, status: item.status, date: item.date, protocolId: item.protocolId || '' }; }),
+            experiments: state.experiments.slice(0, 24).map(function (item) { return { id: item.id, title: item.title, project: item.project, status: item.status, type: item.type, date: item.date, description: item.description, protocolId: item.protocolId || '' }; }),
+            results: state.results.slice(0, 24).map(function (item) { return { id: item.id, experimentId: item.experimentId, date: item.date, summary: item.summary, conclusion: item.conclusion, nextStep: item.nextStep }; }),
+            animals: state.mice.slice(0, 30).map(function (item) { return { id: item.id, name: item.id, species: item.species, strain: item.strain, genotype: item.genotype, sex: item.sex, birth: item.birth, cage: item.cage, status: item.status }; }),
+            plants: state.plants.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, species: item.scientificName, stage: item.growthStage, conditions: item.growthConditions, location: item.location, status: item.status }; }),
+            microbes: state.microbes.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, species: item.species, strain: item.strain, conditions: item.growthConditions, location: item.location, status: item.status }; }),
+            plasmids: state.plasmids.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, host: item.host, insert: item.insert, resistance: item.resistance, location: item.location, status: item.status }; }),
+            viruses: state.viruses.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, type: item.virusType, cargo: item.cargo, host: item.hostRange, titer: item.titer, location: item.location, status: item.status }; }),
             cells: state.cellCultures.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, passage: item.passage, medium: item.medium, container: item.container, incubator: item.incubator, confluence: item.confluence, status: item.status }; }),
             reagents: state.reagents.slice(0, 30).map(function (item) { return { id: item.catalog, name: item.name, currentQty: item.currentQty, totalQty: item.totalQty, unit: item.unit, location: item.location, status: getReagentDisplayStatus(item) }; }),
-            protocols: state.protocols.slice(0, 24).map(function (item) { return { id: item.id, title: item.title }; }),
-            schedule: state.schedule.filter(function (item) { return item.date === today; }).slice(0, 20).map(function (item) { return { id: item.id, title: item.title, time: item.time, end: item.end, done: Boolean(item.done), protocolId: item.protocolId || '' }; })
+            samples: state.samples.slice(0, 30).map(function (item) { return { id: item.id, name: item.id, type: item.type, source: item.source, processing: item.processing, location: item.location, date: item.date, status: item.status }; }),
+            freezerBoxes: state.freezerBoxes.slice(0, 24).map(function (item) { return { id: item.id, name: item.name, location: item.storageLocation, temperature: item.temperature }; }),
+            protocols: state.protocols.slice(0, 20).map(function (item) { return { id: item.id, title: item.title, summary: item.summary }; }),
+            schedule: state.schedule.slice(0, 30).map(function (item) { return { id: item.id, title: item.title, date: item.date, time: item.time, end: item.end, resource: item.resource, done: Boolean(item.done), protocolId: item.protocolId || '' }; })
         };
     }
 
@@ -2719,8 +2727,26 @@
     function bindHousingSlotDrag() {
         let drag = null;
         let suppressClick = false;
+        const touchPoints = new Map();
         document.addEventListener('pointerdown', function (event) {
             const slot = event.target.closest('[data-housing-item]');
+            if (event.pointerType === 'touch') {
+                touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY, slot: slot });
+                const cageTouch = Array.from(touchPoints.entries()).find(function (entry) {
+                    return entry[1].slot?.dataset.housingSlot === 'animal';
+                });
+                if (cageTouch) {
+                    if (drag || touchPoints.size < 2 || dragInteractionsLocked()) return;
+                    const points = Array.from(touchPoints.entries()).slice(-2);
+                    const cageSlot = cageTouch[1].slot;
+                    const x = points.reduce(function (sum, entry) { return sum + entry[1].x; }, 0) / points.length;
+                    const y = points.reduce(function (sum, entry) { return sum + entry[1].y; }, 0) / points.length;
+                    drag = { pointerId: event.pointerId, touchIds: new Set(points.map(function (entry) { return entry[0]; })), slot: cageSlot, kind: 'animal', itemId: cageSlot.dataset.housingItem, startX: x, startY: y, x: x, y: y, moved: false, target: null, ghost: null };
+                    points.forEach(function (entry) { cageSlot.setPointerCapture?.(entry[0]); });
+                    event.preventDefault();
+                    return;
+                }
+            }
             if (!slot || event.button !== 0 || dragInteractionsLocked()) return;
             if (event.pointerType !== 'touch') {
                 event.preventDefault();
@@ -2730,17 +2756,22 @@
             slot.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
-            if (!drag || event.pointerId !== drag.pointerId) return;
-            const deltaX = event.clientX - drag.startX; const deltaY = event.clientY - drag.startY;
-            if (!drag.moved && event.pointerType === 'touch' && Math.abs(deltaX) > Math.abs(deltaY)) return;
+            if (event.pointerType === 'touch' && touchPoints.has(event.pointerId)) touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY, slot: touchPoints.get(event.pointerId).slot });
+            if (!drag || (drag.touchIds ? !drag.touchIds.has(event.pointerId) : event.pointerId !== drag.pointerId)) return;
+            const activeTouches = drag.touchIds ? Array.from(drag.touchIds).map(function (id) { return touchPoints.get(id); }).filter(Boolean) : [];
+            const x = activeTouches.length ? activeTouches.reduce(function (sum, point) { return sum + point.x; }, 0) / activeTouches.length : event.clientX;
+            const y = activeTouches.length ? activeTouches.reduce(function (sum, point) { return sum + point.y; }, 0) / activeTouches.length : event.clientY;
+            const deltaX = x - drag.startX; const deltaY = y - drag.startY;
+            if (!drag.moved && event.pointerType === 'touch' && !drag.touchIds && Math.abs(deltaX) > Math.abs(deltaY)) return;
             if (!drag.moved && Math.hypot(deltaX, deltaY) < 3) return;
+            drag.x = x; drag.y = y;
             if (!drag.moved) {
                 drag.moved = true; drag.slot.classList.add('is-dragging');
                 drag.ghost = drag.slot.cloneNode(true); drag.ghost.classList.add('housing-slot-drag-ghost'); drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
             }
-            drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px';
+            drag.ghost.style.left = x + 'px'; drag.ghost.style.top = y + 'px';
             drag.target?.classList.remove('drop-target');
-            const rackTrigger = housingHitAt(event.clientX, event.clientY, drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
+            const rackTrigger = housingHitAt(x, y, drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
             const nextRackId = rackTrigger && (drag.kind === 'animal' ? rackTrigger.dataset.animalRack : rackTrigger.dataset.plantRack);
             const activeRackId = drag.kind === 'animal' ? activeAnimalRackId : activePlantRackId;
             if (nextRackId && nextRackId !== activeRackId && nextRackId !== drag.openedRack) {
@@ -2748,14 +2779,18 @@
                 drag.kind === 'animal' ? selectAnimalRack(nextRackId) : selectPlantRack(nextRackId);
                 event.preventDefault(); return;
             }
-            const target = housingSlotTargetAt(event.clientX, event.clientY, drag.kind);
+            const target = housingSlotTargetAt(x, y, drag.kind);
             drag.target = target;
             drag.target?.classList.add('drop-target');
             event.preventDefault();
         }, { passive: false });
         function finish(event) {
-            if (!drag || event.pointerId !== drag.pointerId) return;
-            const target = event.type === 'pointerup' ? (housingSlotTargetAt(event.clientX, event.clientY, drag.kind) || drag.target) : null;
+            const touchPoint = touchPoints.get(event.pointerId);
+            const ownsDrag = drag && (drag.touchIds ? drag.touchIds.has(event.pointerId) : event.pointerId === drag.pointerId);
+            if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+            if (!ownsDrag) return;
+            const x = drag.x ?? (touchPoint ? touchPoint.x : event.clientX); const y = drag.y ?? (touchPoint ? touchPoint.y : event.clientY);
+            const target = event.type === 'pointerup' ? (housingSlotTargetAt(x, y, drag.kind) || drag.target) : null;
             drag.slot.classList.remove('is-dragging'); drag.target?.classList.remove('drop-target');
             if (drag.moved && target && target !== drag.slot) {
                 const collection = drag.kind === 'animal' ? state.animalCages : state.plants;

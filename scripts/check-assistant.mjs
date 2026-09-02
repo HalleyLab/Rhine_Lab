@@ -37,6 +37,10 @@ assert.match(mobile, /height:\s*100dvh/);
 assert.match(mobile, /assistant-compose textarea \{ font-size: 16px !important; \}/);
 assert.match(css, /-webkit-touch-callout:\s*none/);
 assert.match(assistant, /Summarize today/);
+assert.match(assistant, /function renderDraftEditor/);
+assert.match(assistant, /data-assistant-field/);
+assert.match(assistant, /function assistantCollection/);
+assert.match(assistant, /function findContextRecord/);
 assert.match(html, /id="notificationToggle"[\s\S]*id="utilityNav"/);
 assert.match(html, /class="utility-nav-toggle-icon"[\s\S]*M15 18 9 12l6-6/);
 assert.doesNotMatch(html, /utilityNavMorphPath|rhine-lab-utility-icon/);
@@ -62,25 +66,31 @@ assert.match(main, /'切换LAB' : '切换个人'/);
 assert.match(i18n, /'数据同步': 'Data Sync'/);
 assert.match(appCss, /utility-nav-toggle\[aria-expanded="true"\] \.utility-nav-toggle-icon \{\s*transform: rotate\(180deg\);/);
 assert.doesNotMatch(appCss, /utility-nav-toggle-icon[\s\S]{0,300}rotate\([^)]*45deg/);
-assert.match(html, /rhine-lab-assistant\.css\?v=0\.3\.2/);
-assert.match(html, /rhine-lab-assistant\.js\?v=0\.3\.2/);
+assert.match(html, /rhine-lab-assistant\.css\?v=0\.3\.2-ai2/);
+assert.match(html, /rhine-lab-assistant\.js\?v=0\.3\.2-ai2/);
 assert.doesNotMatch(html, /id="assistantPrivacy"/);
 assert.doesNotMatch(html, />细胞操作<\/button>/);
 assert.doesNotMatch(html, /<label for="assistantInput">/);
 assert.match(html, /id="assistantRole" data-i18n-skip/);
-assert.match(worker, /rhine-lab-assistant\.css\?v=0\.3\.2/);
-assert.match(worker, /rhine-lab-mobile\.css\?v=0\.3\.2/);
-assert.match(worker, /rhine-lab-assistant\.js\?v=0\.3\.2/);
+assert.match(worker, /rhine-lab-assistant\.css\?v=0\.3\.2-ai2/);
+assert.match(worker, /rhine-lab-mobile\.css\?v=0\.3\.2-r3/);
+assert.match(worker, /rhine-lab-assistant\.js\?v=0\.3\.2-ai2/);
 assert.doesNotMatch(worker, /rhine-lab-utility-icon/);
 assert.match(assistant, /return english\(\) \? 'I am here\.' : '我在。'/);
 assert.match(config, /assistantApiUrl: 'https:\/\/api\.rh1nelab\.com\/api\/assistant'/);
 assert.match(sync, /assistantChat: assistantChat/);
 assert.match(sync, /'x-rhine-device': assistantDeviceId\(\)/);
+assert.match(sync, /return \{ content: String\(data\.content\), quota: data\.quota \|\| null \}/);
 assert.match(api, /const ASSISTANT_MODEL = 'openai\/gpt-oss-20b'/);
 assert.match(api, /env\.GROQ_API_KEY/);
 assert.match(api, /https:\/\/api\.groq\.com\/openai\/v1\/chat\/completions/);
 assert.match(api, /path === '\/api\/assistant'/);
 assert.match(wrangler, /name = "ASSISTANT_RATE_LIMITER"[\s\S]*limit = 6[\s\S]*period = 60/);
+assert.match(wrangler, /ASSISTANT_DAILY_LIMIT = "30"/);
+assert.match(api, /function consumeAssistantDailyQuota/);
+assert.match(api, /INSERT INTO assistant_device_usage/);
+assert.match(api, /Only help users read, organize, draft, or automate records inside Rhine Lab/);
+assert.doesNotMatch(sync, /context:/);
 assert.doesNotMatch(config + sync, /(?:GROQ_API_KEY|gsk_[A-Za-z0-9])/);
 assert.match(html, />存储位置<\/th>/);
 assert.doesNotMatch(html, /先显示关联 Protocol 的单次用量|未完成的记录不会计入库存消耗/);
@@ -131,13 +141,24 @@ const makeRequest = (message = 'Hello', requestOrigin = origin) => new Request('
     method: 'POST', headers: { origin: requestOrigin, 'content-type': 'application/json', 'x-rhine-device': 'test-device-12345678' },
     body: JSON.stringify({ message, locale: 'en-US', workspace: 'must not be forwarded' })
 });
-const apiEnv = { ALLOWED_ORIGINS: origin, GROQ_API_KEY: 'test-only', ASSISTANT_RATE_LIMITER: { limit: async () => ({ success: true }) } };
+function quotaDb(initial = 0) {
+    let used = initial;
+    return { prepare(sql) { return { bind(...values) { return { async first() {
+        if (sql.startsWith('INSERT INTO assistant_device_usage')) {
+            if (used >= Number(values[3])) return null;
+            used += 1; return { requests: used };
+        }
+        return { requests: used };
+    } }; } }; } };
+}
+const apiEnv = { ALLOWED_ORIGINS: origin, GROQ_API_KEY: 'test-only', ASSISTANT_DAILY_LIMIT: '30', DB: quotaDb(), ASSISTANT_RATE_LIMITER: { limit: async () => ({ success: true }) } };
 try {
     console.error = () => {};
     globalThis.fetch = async () => { throw new Error('Unexpected upstream request'); };
     for (const [env, message, expected] of [
         [{ ...apiEnv, GROQ_API_KEY: '' }, 'Hello', 503],
         [{ ...apiEnv, ASSISTANT_RATE_LIMITER: { limit: async () => ({ success: false }) } }, 'Hello', 429],
+        [{ ...apiEnv, DB: quotaDb(30) }, 'Hello', 429],
         [apiEnv, '', 400], [apiEnv, 'a'.repeat(4001), 413]
     ]) {
         const response = await assistantApi.fetch(makeRequest(message), env);
@@ -151,12 +172,16 @@ try {
         const payload = JSON.parse(options.body);
         assert.equal(payload.model, 'openai/gpt-oss-20b');
         assert.deepEqual(payload.messages[1], { role: 'user', content: 'Hello' });
+        assert.match(payload.messages[0].content, /perform external actions/);
         assert.ok(!options.body.includes('must not be forwarded'));
         return Response.json({ choices: [{ message: { content: 'I am here.' } }] });
     };
     const reply = await assistantApi.fetch(makeRequest(), apiEnv);
     assert.equal(reply.status, 200);
-    assert.equal((await reply.json()).content, 'I am here.');
+    const replyBody = await reply.json();
+    assert.equal(replyBody.content, 'I am here.');
+    assert.equal(replyBody.quota.limit, 30);
+    assert.equal(replyBody.quota.remaining, 29);
     globalThis.fetch = async () => Response.json({ error: 'upstream limit' }, { status: 429 });
     assert.equal((await assistantApi.fetch(makeRequest(), apiEnv)).status, 429);
 } finally {

@@ -97,10 +97,12 @@ async function assistantChat(request, env, cors) {
   const message = String(body.message || '').trim();
   if (!message) throw new HttpError(400, 'Message is required.');
   if (message.length > 4000) throw new HttpError(413, 'Message is too long.');
+  const quota = await consumeAssistantDailyQuota(env, device, ip);
+  if (!quota.allowed) return json({ error: 'This device has used today’s AI quota.', quota }, 429, cors);
   const english = /^en(?:-|$)/i.test(String(body.locale || ''));
   const system = english
-    ? 'You are Kristen, the Rhine Lab research assistant. Reply in the user language, be concise and rigorous, and never invent experimental data, citations, or sources. State uncertainty clearly. Do not claim to have changed app data unless the interface confirms it.'
-    : '你是 Rhine Lab 的科研助理克里斯滕。使用用户的语言，回答简洁、严谨；不得虚构实验数据、文献或来源，不确定时明确说明。除非界面明确确认，否则不要声称已经修改应用数据。';
+    ? 'You are Kristen, the Rhine Lab in-app assistant. Only help users read, organize, draft, or automate records inside Rhine Lab. You have no permission or tools to browse the web, control a device, run code, contact people, or perform external actions; refuse unrelated requests. App data is searched locally and is not included in this request. Never invent records, citations, or sources. Any mutation must remain an editable draft until the user explicitly confirms it in the app.'
+    : '你是 Rhine Lab 的应用内助理克里斯滕。只能帮助用户读取、整理、起草或自动化 Rhine Lab 内部记录；你无权且没有工具浏览网页、控制设备、运行代码、联系他人或执行任何外部操作，遇到无关请求应拒绝。应用数据只在设备本地检索，不包含在本请求中。不得虚构记录、文献或来源；任何修改都必须保持为可编辑草稿，直到用户在应用内明确确认。';
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { authorization: 'Bearer ' + env.GROQ_API_KEY, 'content-type': 'application/json' },
@@ -115,7 +117,22 @@ async function assistantChat(request, env, cors) {
   if (!response.ok) throw new HttpError(response.status === 429 ? 429 : 502, response.status === 429 ? 'AI quota is temporarily exhausted.' : 'AI service is unavailable.');
   const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   if (!content) throw new HttpError(502, 'AI service returned an empty response.');
-  return json({ content: String(content), model: ASSISTANT_MODEL }, 200, cors);
+  return json({ content: String(content), model: ASSISTANT_MODEL, quota }, 200, cors);
+}
+
+async function consumeAssistantDailyQuota(env, device, ip) {
+  if (!env.DB) throw new HttpError(503, 'AI quota storage is unavailable.');
+  const limit = Math.max(1, Math.min(500, Math.floor(Number(env.ASSISTANT_DAILY_LIMIT) || 30)));
+  const usageDate = new Date().toISOString().slice(0, 10);
+  const identity = /^[a-z0-9-]{16,80}$/i.test(device) ? device : 'anonymous:' + ip;
+  const deviceHash = await sha256('assistant-device:' + identity);
+  const updatedAt = nowIso();
+  const statement = 'INSERT INTO assistant_device_usage (device_hash, usage_date, requests, updated_at) VALUES (?, ?, 1, ?) ON CONFLICT(device_hash, usage_date) DO UPDATE SET requests = requests + 1, updated_at = excluded.updated_at WHERE assistant_device_usage.requests < ? RETURNING requests';
+  const row = await env.DB.prepare(statement).bind(deviceHash, usageDate, updatedAt, limit).first();
+  const current = row || await env.DB.prepare('SELECT requests FROM assistant_device_usage WHERE device_hash = ? AND usage_date = ?').bind(deviceHash, usageDate).first();
+  const used = Math.max(0, Number(current && current.requests || 0));
+  const reset = new Date(usageDate + 'T00:00:00.000Z'); reset.setUTCDate(reset.getUTCDate() + 1);
+  return { allowed: Boolean(row), limit, remaining: Math.max(0, limit - used), resetsAt: reset.toISOString() };
 }
 
 class HttpError extends Error {

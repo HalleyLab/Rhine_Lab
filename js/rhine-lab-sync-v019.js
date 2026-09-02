@@ -62,9 +62,12 @@
             body: JSON.stringify({ message: content, locale: String(locale || 'zh-CN') })
         });
         const data = await response.json().catch(function () { return {}; });
-        if (!response.ok) throw new Error(data.error || 'AI service is unavailable.');
+        if (!response.ok) {
+            const error = new Error(data.error || 'AI service is unavailable.');
+            error.status = response.status; error.quota = data.quota || null; throw error;
+        }
         if (!data.content) throw new Error('AI service returned an empty response.');
-        return String(data.content);
+        return { content: String(data.content), quota: data.quota || null };
     }
 
     function setMessage(message, error) {
