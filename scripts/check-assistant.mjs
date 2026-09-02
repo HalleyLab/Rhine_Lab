@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import assistantApi from '../cloudflare/src/index.js';
 
-const [html, css, mobile, assistant, main, i18n, worker, appCss] = await Promise.all([
+const [html, css, mobile, assistant, main, i18n, worker, appCss, config, sync, api, wrangler] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../css/rhine-lab-assistant.css', import.meta.url), 'utf8'),
     readFile(new URL('../css/rhine-lab-mobile.css', import.meta.url), 'utf8'),
@@ -9,7 +10,11 @@ const [html, css, mobile, assistant, main, i18n, worker, appCss] = await Promise
     readFile(new URL('../js/rhine-lab.js', import.meta.url), 'utf8'),
     readFile(new URL('../js/rhine-lab-i18n.js', import.meta.url), 'utf8'),
     readFile(new URL('../sw.js', import.meta.url), 'utf8'),
-    readFile(new URL('../css/rhine-lab.css', import.meta.url), 'utf8')
+    readFile(new URL('../css/rhine-lab.css', import.meta.url), 'utf8'),
+    readFile(new URL('../js/rhine-lab-config.js', import.meta.url), 'utf8'),
+    readFile(new URL('../js/rhine-lab-sync-v019.js', import.meta.url), 'utf8'),
+    readFile(new URL('../cloudflare/src/index.js', import.meta.url), 'utf8'),
+    readFile(new URL('../cloudflare/wrangler.toml', import.meta.url), 'utf8')
 ]);
 
 assert.match(css, /width:\s*240px;\s*\n\s*height:\s*314px;/);
@@ -68,11 +73,21 @@ assert.match(worker, /rhine-lab-mobile\.css\?v=0\.3\.2/);
 assert.match(worker, /rhine-lab-assistant\.js\?v=0\.3\.2/);
 assert.doesNotMatch(worker, /rhine-lab-utility-icon/);
 assert.match(assistant, /return english\(\) \? 'I am here\.' : '我在。'/);
+assert.match(config, /assistantApiUrl: 'https:\/\/api\.rh1nelab\.com\/api\/assistant'/);
+assert.match(sync, /assistantChat: assistantChat/);
+assert.match(sync, /'x-rhine-device': assistantDeviceId\(\)/);
+assert.match(api, /const ASSISTANT_MODEL = 'openai\/gpt-oss-20b'/);
+assert.match(api, /env\.GROQ_API_KEY/);
+assert.match(api, /https:\/\/api\.groq\.com\/openai\/v1\/chat\/completions/);
+assert.match(api, /path === '\/api\/assistant'/);
+assert.match(wrangler, /name = "ASSISTANT_RATE_LIMITER"[\s\S]*limit = 6[\s\S]*period = 60/);
+assert.doesNotMatch(config + sync, /(?:GROQ_API_KEY|gsk_[A-Za-z0-9])/);
 assert.match(html, />存储位置<\/th>/);
 assert.doesNotMatch(html, /先显示关联 Protocol 的单次用量|未完成的记录不会计入库存消耗/);
 assert.doesNotMatch(html + main + appCss, /experimentUsageImpact/);
 assert.doesNotMatch(main, /<h2>' \+ esc\(item\.title\) \+ '<\/h2><p>' \+ esc\(item\.description\)/);
-assert.match(main, /experiment-inline-result pending[\s\S]*<h3>实验结果<\/h3>[\s\S]*<span class="status-chip">已填写<\/span>[\s\S]*result-preview-action[\s\S]*已录入结果[\s\S]*修改结果/);
+assert.match(main, /experiment-inline-result pending[\s\S]*<h3>实验结果<\/h3>[\s\S]*<span class="status-chip">已填写<\/span>[\s\S]*button primary compact[\s\S]*data-edit-result[\s\S]*修改结果/);
+assert.doesNotMatch(main + i18n, /已录入结果|result-preview-action/);
 assert.match(main, /<small>主要结果<\/small>[\s\S]*<small>结论与解释<\/small>[\s\S]*<small>下一步<\/small>/);
 assert.match(main, /<details class="result-date-accordion" open>/);
 assert.doesNotMatch(main, /当前没有试剂用量，点击下方按钮添加/);
@@ -109,4 +124,43 @@ assert.match(appCss, /html\[lang="en"\][\s\S]*\.story-quote cite \{\s*font-famil
 assert.ok(appCss.lastIndexOf('font-family: Arial, sans-serif !important;') > appCss.lastIndexOf('font-family: SimHei, "黑体"'));
 assert.match(appCss, /html\[lang="zh-CN"\] \.project-progress small,[\s\S]*\.compact-table tbody td:nth-child\(4\),[\s\S]*\.result-conclusion strong \{[\s\S]*font-family: SimHei/);
 
-console.log('assistant UI check passed');
+const savedFetch = globalThis.fetch;
+const savedError = console.error;
+const origin = 'https://rh1nelab.com';
+const makeRequest = (message = 'Hello', requestOrigin = origin) => new Request('https://api.rh1nelab.com/api/assistant', {
+    method: 'POST', headers: { origin: requestOrigin, 'content-type': 'application/json', 'x-rhine-device': 'test-device-12345678' },
+    body: JSON.stringify({ message, locale: 'en-US', workspace: 'must not be forwarded' })
+});
+const apiEnv = { ALLOWED_ORIGINS: origin, GROQ_API_KEY: 'test-only', ASSISTANT_RATE_LIMITER: { limit: async () => ({ success: true }) } };
+try {
+    console.error = () => {};
+    globalThis.fetch = async () => { throw new Error('Unexpected upstream request'); };
+    for (const [env, message, expected] of [
+        [{ ...apiEnv, GROQ_API_KEY: '' }, 'Hello', 503],
+        [{ ...apiEnv, ASSISTANT_RATE_LIMITER: { limit: async () => ({ success: false }) } }, 'Hello', 429],
+        [apiEnv, '', 400], [apiEnv, 'a'.repeat(4001), 413]
+    ]) {
+        const response = await assistantApi.fetch(makeRequest(message), env);
+        assert.equal(response.status, expected);
+        assert.equal(response.headers.get('access-control-allow-origin'), origin);
+        assert.equal(typeof (await response.json()).error, 'string');
+    }
+    assert.equal((await assistantApi.fetch(makeRequest('Hello', 'https://untrusted.example'), apiEnv)).status, 403);
+    globalThis.fetch = async (url, options) => {
+        assert.equal(url, 'https://api.groq.com/openai/v1/chat/completions');
+        const payload = JSON.parse(options.body);
+        assert.equal(payload.model, 'openai/gpt-oss-20b');
+        assert.deepEqual(payload.messages[1], { role: 'user', content: 'Hello' });
+        assert.ok(!options.body.includes('must not be forwarded'));
+        return Response.json({ choices: [{ message: { content: 'I am here.' } }] });
+    };
+    const reply = await assistantApi.fetch(makeRequest(), apiEnv);
+    assert.equal(reply.status, 200);
+    assert.equal((await reply.json()).content, 'I am here.');
+    globalThis.fetch = async () => Response.json({ error: 'upstream limit' }, { status: 429 });
+    assert.equal((await assistantApi.fetch(makeRequest(), apiEnv)).status, 429);
+} finally {
+    globalThis.fetch = savedFetch;
+    console.error = savedError;
+}
+console.log('assistant UI and API checks passed');

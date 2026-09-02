@@ -2,6 +2,7 @@
     'use strict';
 
     const secure = window.RhineLabCrypto;
+    const config = window.RHINE_LAB_CONFIG || {};
     const ui = {
         control: document.getElementById('syncControl'),
         label: document.getElementById('syncStatusLabel'),
@@ -38,6 +39,32 @@
 
     function text(value) {
         return window.RhineLabI18n && window.RhineLabI18n.t ? window.RhineLabI18n.t(value) : value;
+    }
+
+    function assistantDeviceId() {
+        const key = 'rhineLabAssistantDeviceV1';
+        let value = localStorage.getItem(key);
+        if (!value) {
+            value = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+            localStorage.setItem(key, value);
+        }
+        return value;
+    }
+
+    async function assistantChat(message, locale) {
+        const endpoint = String(config.assistantApiUrl || '').trim();
+        const content = String(message || '').trim();
+        if (!endpoint) throw new Error('AI service is not configured.');
+        if (!content) throw new Error('Message is required.');
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-rhine-device': assistantDeviceId() },
+            body: JSON.stringify({ message: content, locale: String(locale || 'zh-CN') })
+        });
+        const data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.error || 'AI service is unavailable.');
+        if (!data.content) throw new Error('AI service returned an empty response.');
+        return String(data.content);
     }
 
     function setMessage(message, error) {
@@ -462,6 +489,7 @@
         switchScope: function () { return Promise.resolve(); },
         queueState: function (_state, scope) { if (scope === 'personal') scheduleUsbSnapshot(); },
         isConfigured: function () { return Boolean(usbSettings && usbSettings.enabled); },
+        assistantChat: assistantChat,
         mergeLabWorkspace: mergeLabWorkspace
     };
 }());

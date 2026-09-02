@@ -2,6 +2,7 @@ const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 const SESSION_DAYS = 180;
 const OTP_MINUTES = 10;
 const PASSWORD_ITERATIONS = 100000;
+const ASSISTANT_MODEL = 'openai/gpt-oss-20b';
 
 export default {
   async fetch(request, env) {
@@ -22,6 +23,7 @@ export default {
       if (path === '/api/auth/login/password' && request.method === 'POST') return passwordLogin(request, env, cors);
       if (path === '/api/auth/login/code/request' && request.method === 'POST') return loginCodeRequest(request, env, cors);
       if (path === '/api/auth/login/code/verify' && request.method === 'POST') return loginCodeVerify(request, env, cors);
+      if (path === '/api/assistant' && request.method === 'POST') return await assistantChat(request, env, cors);
 
       const auth = await authenticate(request, env);
       if (!auth) return json({ error: 'Authentication required.' }, 401, cors);
@@ -58,7 +60,7 @@ function corsHeaders(origin, env) {
   const allowed = originAllowed(origin, env) ? origin : 'null';
   return {
     'access-control-allow-origin': allowed,
-    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-headers': 'authorization, content-type, x-rhine-device',
     'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
     'access-control-max-age': '86400',
     'vary': 'Origin'
@@ -81,6 +83,39 @@ async function readJson(request, maxBytes = 2_000_000) {
   const text = await request.text();
   if (text.length > maxBytes) throw new HttpError(413, 'Request is too large.');
   try { return text ? JSON.parse(text) : {}; } catch (_) { throw new HttpError(400, 'Invalid JSON.'); }
+}
+
+async function assistantChat(request, env, cors) {
+  if (!env.GROQ_API_KEY) throw new HttpError(503, 'AI service is not configured.');
+  const device = String(request.headers.get('x-rhine-device') || '').trim();
+  const ip = String(request.headers.get('cf-connecting-ip') || 'unknown');
+  const key = await sha256(ip + ':' + (/^[a-z0-9-]{16,80}$/i.test(device) ? device : 'anonymous'));
+  const rate = await env.ASSISTANT_RATE_LIMITER.limit({ key });
+  if (!rate.success) throw new HttpError(429, 'Please wait before sending another message.');
+
+  const body = await readJson(request, 30_000);
+  const message = String(body.message || '').trim();
+  if (!message) throw new HttpError(400, 'Message is required.');
+  if (message.length > 4000) throw new HttpError(413, 'Message is too long.');
+  const english = /^en(?:-|$)/i.test(String(body.locale || ''));
+  const system = english
+    ? 'You are Kristen, the Rhine Lab research assistant. Reply in the user language, be concise and rigorous, and never invent experimental data, citations, or sources. State uncertainty clearly. Do not claim to have changed app data unless the interface confirms it.'
+    : '你是 Rhine Lab 的科研助理克里斯滕。使用用户的语言，回答简洁、严谨；不得虚构实验数据、文献或来源，不确定时明确说明。除非界面明确确认，否则不要声称已经修改应用数据。';
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { authorization: 'Bearer ' + env.GROQ_API_KEY, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: ASSISTANT_MODEL,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: message }],
+      temperature: 0.3,
+      max_completion_tokens: 512
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new HttpError(response.status === 429 ? 429 : 502, response.status === 429 ? 'AI quota is temporarily exhausted.' : 'AI service is unavailable.');
+  const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new HttpError(502, 'AI service returned an empty response.');
+  return json({ content: String(content), model: ASSISTANT_MODEL }, 200, cors);
 }
 
 class HttpError extends Error {

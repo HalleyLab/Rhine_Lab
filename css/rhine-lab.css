@@ -12373,8 +12373,6 @@ html[lang="zh-CN"] #virusTable td:nth-child(5) * {
 }
 
 .experiment-inline-result.pending .button { border-radius: 10px 3px 10px 3px; }
-.result-preview-action { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.result-preview-action :is(span, b) { font-weight: 900; }
 .result-date-accordion {
     margin: 14px 16px 16px;
     overflow: hidden;

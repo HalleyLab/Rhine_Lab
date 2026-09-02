@@ -9,6 +9,13 @@ ALLOWED_ORIGINS = "https://rh1nelab.com,https://www.rh1nelab.com,https://halleyl
 MAIL_FROM_EMAIL = "noreply@rh1nelab.com"
 MAIL_FROM_NAME = "Rhine Lab"
 
+[[ratelimits]]
+name = "ASSISTANT_RATE_LIMITER"
+namespace_id = "36027"
+  [ratelimits.simple]
+  limit = 6
+  period = 60
+
 [[d1_databases]]
 binding = "DB"
 database_name = "rhine-lab"
