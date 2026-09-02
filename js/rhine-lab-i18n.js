@@ -402,6 +402,7 @@
         '一个笼位可以包含多个动物。': 'A cage can contain multiple animal records.',
         '暂无动物条目；请先建立笼架和笼位，再添加动物。': 'No animal records yet. Create a rack and cage before adding animals.',
         '公开展示 · 只读': 'Public showcase · Read-only',
+        '在浏览器中使用': 'Use in browser',
         '记录垫料、光照、饲料、温度或特殊照护要求…': 'Record bedding, light cycle, feed, temperature or special-care requirements…',
         '记录体重、标记方式、来源或特殊照护要求…': 'Record body weight, identification method, source or special-care requirements…',
         '记录消化时间、细胞状态、接种密度和异常情况…': 'Record dissociation time, cell condition, seeding density and anomalies…',

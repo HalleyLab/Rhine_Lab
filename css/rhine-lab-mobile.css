@@ -358,6 +358,7 @@
 
     :is(.entry-dialog, .sync-dialog, .record-detail-dialog, .protocol-detail-dialog, .experiment-detail-dialog, .experiment-run-dialog, .freezer-scan-dialog) {
         inset: 0 !important;
+        box-sizing: border-box;
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
@@ -433,10 +434,15 @@
     }
     .form-grid { grid-template-columns: minmax(0, 1fr); padding: 16px; }
     .form-field.full { grid-column: auto; }
-    :is(.form-field input, .form-field select, .form-field textarea, dialog input, dialog select, dialog textarea) {
+    :is(.entry-dialog, .sync-dialog, .record-detail-dialog, .protocol-detail-dialog, .experiment-detail-dialog, .experiment-run-dialog, .freezer-scan-dialog) :is(.form-field, form, article) :is(input, select, textarea) {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         min-height: 48px;
         font-size: 16px !important;
     }
+    dialog input[type="date"],
+    dialog input[type="time"] { min-width: 0; }
     .record-detail-grid,
     .experiment-detail-fields,
     .scan-workspace { grid-template-columns: minmax(0, 1fr) !important; }

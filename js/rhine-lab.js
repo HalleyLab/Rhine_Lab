@@ -759,12 +759,12 @@
 
     function loadState(mode) {
         try {
-            if (isPublicDemoRuntime() && !publicDemoUnlocked) return normalizeStateShape(clone(defaults));
+            if (isPublicDemoRuntime()) return normalizeStateShape(clone(defaults));
             const storageKey = scopeStorageKey(mode);
             const secureValue = window.RhineLabCrypto ? window.RhineLabCrypto.readLocal(storageKey) : null;
             const raw = secureValue == null ? localStorage.getItem(storageKey) : null;
             if (secureValue == null && !raw) {
-                const emptyFirstRun = mode === 'lab' || isInstalledAppRuntime();
+                const emptyFirstRun = mode === 'lab' || isInstalledAppRuntime() || isBrowserAppRuntime();
                 return normalizeStateShape(emptyFirstRun ? emptyWorkspaceState() : clone(defaults));
             }
             const stored = secureValue == null ? JSON.parse(raw) : secureValue;
@@ -777,7 +777,11 @@
     function isPublicDemoRuntime() {
         const githubPages = /(^|\.)github\.io$/i.test(location.hostname) && /\/Rhine_Lab(?:\/|$)/i.test(location.pathname);
         const customDomain = /^(?:www\.)?rh1nelab\.com$/i.test(location.hostname);
-        return (githubPages || customDomain) && !isInstalledAppRuntime();
+        return (githubPages || customDomain) && !isInstalledAppRuntime() && !isBrowserAppRuntime();
+    }
+
+    function isBrowserAppRuntime() {
+        return new URLSearchParams(location.search).get('app') === '1';
     }
 
     function isInstalledAppRuntime() {
@@ -1901,11 +1905,12 @@
     }
 
     function applyWorkspaceMode() {
+        document.body.classList.toggle('browser-app-mode', isBrowserAppRuntime());
         document.body.classList.toggle('lab-workspace', workspaceMode === 'lab');
         document.body.classList.toggle('workspace-readonly', workspaceReadOnly);
         document.body.classList.toggle('public-demo-locked', publicDemoMode && !workspaceAccess.authenticated);
         const publicBanner = document.getElementById('publicDemoBanner');
-        if (publicBanner) publicBanner.hidden = !(publicDemoMode && !workspaceAccess.authenticated);
+        if (publicBanner) publicBanner.hidden = !publicDemoMode;
         if (els.workspaceModeToggle) {
             const button = els.workspaceModeToggle.querySelector('.mobile-workspace-action');
             if (button) {
@@ -3735,7 +3740,7 @@
             event.preventDefault();
             event.stopPropagation();
         }
-        showToast(publicDemoMode && !workspaceAccess.authenticated ? '公开网页仅供展示；请先登录再修改' : 'LAB 共用页面为只读；请切换到个人工作区录入');
+        showToast(publicDemoMode ? '当前为公开展示；点击“在浏览器中使用”进入个人工作区' : 'LAB 共用页面为只读；请切换到个人工作区录入');
         return true;
     }
 
@@ -7717,7 +7722,7 @@ function getReagentDisplayStatus(reagent) {
         pendingFreezerDefaults = null;
         els.entryDialog.showModal();
         const first = els.dialogFields.querySelector('input, select, textarea');
-        if (first) first.focus();
+        if (first && !window.matchMedia('(max-width: 820px), (max-width: 1200px) and (max-height: 700px) and (orientation: landscape)').matches) first.focus();
     }
 
     function readInputMemory() {

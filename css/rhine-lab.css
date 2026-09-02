@@ -9975,7 +9975,10 @@ html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
 
 .public-demo-banner[hidden] { display: none !important; }
 
-.public-demo-banner button {
+.public-demo-banner :is(button, a) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 28px;
     padding: 0 10px;
     color: #192018;
@@ -9984,6 +9987,7 @@ html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
     border-radius: 999px;
     cursor: pointer;
     font: inherit;
+    text-decoration: none;
 }
 
 .dark-theme .public-demo-banner {
@@ -9992,7 +9996,7 @@ html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
     border-color: #9acb27;
 }
 
-.dark-theme .public-demo-banner button { color: #17200d; }
+.dark-theme .public-demo-banner :is(button, a) { color: #17200d; }
 
 .animal-heading-actions,
 .animal-rack-actions,

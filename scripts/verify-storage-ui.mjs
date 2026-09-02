@@ -122,7 +122,7 @@ assert.match(themeInit, /getHours\(\) < 6/);
 assert.match(bootstrap, /'rhineLabWorkspaceV3', 'rhineLabWorkspaceV3:lab'/);
 assert.match(bootstrap, /readLocal\('rhineLabWorkspaceV2' \+ suffix\)/);
 assert.match(bootstrap, /writeLocal\(currentKey, previousValue\)/);
-assert.match(app, /const emptyFirstRun = mode === 'lab' \|\| isInstalledAppRuntime\(\);/);
+assert.match(app, /const emptyFirstRun = mode === 'lab' \|\| isInstalledAppRuntime\(\) \|\| isBrowserAppRuntime\(\);/);
 assert.match(app, /coldStorageUnits: \[\],\s*freezerBoxes: \[\]/);
 assert.match(app, /Array\.isArray\(data\.coldStorageUnits\) \? data\.coldStorageUnits/);
 assert.match(app, /if \(!activeUnit\) \{[\s\S]*尚未添加冻存设备/);
