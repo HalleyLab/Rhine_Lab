@@ -84,17 +84,16 @@
     }
 
     :root:has(.topbar .public-demo-banner:not([hidden])) { --public-demo-topbar-extra: 40px; }
-    .topbar-context { display: contents; }
     .topbar:has(.public-demo-banner:not([hidden])) { grid-template-rows: 52px 44px 36px; }
     .topbar .public-demo-banner {
         grid-column: 1 / -1;
         grid-row: 3;
-        justify-content: space-between;
+        justify-self: end;
+        align-self: center;
         min-width: 0;
-        padding: 0 6px 0 10px;
+        max-width: 100%;
     }
     .topbar .public-demo-banner > span { min-width: 0; white-space: normal; line-height: 1.15; }
-    .topbar .public-demo-banner > a { flex-shrink: 0; }
 
     .menu-toggle {
         grid-column: 1;
@@ -666,8 +665,14 @@
         border-radius: 16px;
     }
     .top-actions .utility-nav[hidden] { display: none !important; }
-    .top-actions .utility-nav .desktop-download-button,
-    html.native-app .utility-nav #desktopDownloadButton { display: none !important; }
+    html.native-app .utility-nav .app-download-menu { display: none !important; }
+    .top-actions .utility-nav .app-download-menu { width: 100%; }
+    .top-actions .utility-nav .app-download-options {
+        position: static;
+        min-width: 0;
+        margin-top: 6px;
+        box-shadow: none;
+    }
     .top-actions .utility-nav > .sync-control,
     .top-actions .utility-nav > .utility-nav-item,
     .top-actions .utility-nav > .workspace-mode-toggle {
@@ -685,6 +690,7 @@
         min-height: 50px;
     }
     .top-actions .utility-nav > .sync-control,
+    .top-actions .utility-nav .app-download-menu > summary,
     .top-actions .utility-nav .workspace-mode-toggle > button,
     .top-actions .utility-nav .utility-nav-item {
         display: flex !important;

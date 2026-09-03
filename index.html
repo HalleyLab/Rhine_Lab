@@ -15,7 +15,7 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.3.2" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.2-web3">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.2-web4">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.2">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.3.2">
     <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.3.2-ai2">
     <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.2-web3">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.2-web4">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -79,18 +79,13 @@
         <section class="app-stage">
             <header class="topbar">
                 <button class="menu-toggle" id="menuToggle" type="button" aria-label="打开导航" aria-expanded="false"><i></i><i></i><i></i></button>
-                <div class="topbar-context">
-                    <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
-                    <div class="public-demo-banner" id="publicDemoBanner" hidden>
-                        <span>公开展示 · 只读</span>
-                        <a href="?app=1#dashboard">在浏览器中使用</a>
-                    </div>
-                </div>
+                <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
                 <label class="global-search">
                     <span aria-hidden="true">⌕</span>
                     <input id="globalSearch" type="search" autocomplete="off">
                     <kbd>CTRL K</kbd>
                 </label>
+                <div class="public-demo-banner" id="publicDemoBanner" hidden><span>公开展示 · 只读</span></div>
                 <div class="top-actions">
                     <div class="language-dock topbar-language" aria-label="语言切换">
                         <button id="languageToggle" type="button" data-i18n-control data-i18n-skip aria-label="Switch to English" title="Switch to English"><span class="desktop-language-option active" data-language-option="zh">中</span><i class="desktop-language-divider">/</i><span class="desktop-language-option" data-language-option="en">EN</span></button>
@@ -101,7 +96,13 @@
                             <svg class="utility-nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"></path></svg>
                         </button>
                         <nav class="utility-nav" id="utilityNav" aria-label="工具导航" hidden>
-                            <a class="desktop-download-button sync-control" id="desktopDownloadButton" href="https://github.com/HalleyLab/Rhine_Lab/releases/latest" aria-label="下载 Rhine Lab Windows 应用"><i aria-hidden="true"></i><span>下载应用</span></a>
+                            <details class="app-download-menu" id="appDownloadMenu">
+                                <summary class="sync-control"><i aria-hidden="true"></i><span>下载应用</span></summary>
+                                <div class="app-download-options">
+                                    <a id="desktopDownloadButton" href="https://github.com/HalleyLab/Rhine_Lab/releases/latest">Windows 应用</a>
+                                    <a href="?app=1#dashboard">在浏览器中使用</a>
+                                </div>
+                            </details>
                             <button class="sync-control" id="syncControl" type="button" data-sync-state="local" aria-controls="portableSyncDialog" aria-haspopup="dialog" aria-label="数据同步" title="数据同步"><i aria-hidden="true"></i><span id="syncStatusLabel">数据同步</span></button>
                             <div class="workspace-mode-toggle" id="workspaceModeToggle" aria-label="切换工作区范围">
                                 <div class="desktop-workspace-options desktop-utility-control">
@@ -659,13 +660,13 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.3.2-web1"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.3.2-web4"></script>
     <script src="js/rhine-lab-config.js?v=0.3.2-ai"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
     <script src="js/rhine-lab-sync-v019.js?v=0.3.2-ai2"></script>
     <script src="js/rhine-lab-pwa.js?v=0.3.2-r2"></script>
     <script src="js/rhine-lab-assistant.js?v=0.3.2-ai2"></script>
     <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.2"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.3.2-r3"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.3.2-web4"></script>
 </body>
 </html>

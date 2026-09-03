@@ -1861,6 +1861,8 @@
     function setUtilityNav(open) {
         if (!els.utilityNav || !els.utilityNavToggle) return;
         els.utilityNav.hidden = !open;
+        const downloadMenu = document.getElementById('appDownloadMenu');
+        if (!open && downloadMenu) downloadMenu.open = false;
         els.utilityNavToggle.setAttribute('aria-expanded', String(open));
         const label = interfaceText(open ? '关闭工具导航' : '打开工具导航');
         els.utilityNavToggle.setAttribute('aria-label', label);
@@ -3740,7 +3742,7 @@
             event.preventDefault();
             event.stopPropagation();
         }
-        showToast(publicDemoMode ? '当前为公开展示；点击“在浏览器中使用”进入个人工作区' : 'LAB 共用页面为只读；请切换到个人工作区录入');
+        showToast(publicDemoMode ? '当前为公开展示；在“下载应用”中选择“在浏览器中使用”进入个人工作区' : 'LAB 共用页面为只读；请切换到个人工作区录入');
         return true;
     }
 
