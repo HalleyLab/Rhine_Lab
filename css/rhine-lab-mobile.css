@@ -5,7 +5,7 @@
         --mobile-safe-right: env(safe-area-inset-right, 0px);
         --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
         --mobile-safe-left: env(safe-area-inset-left, 0px);
-        --mobile-topbar-height: calc(108px + var(--mobile-safe-top));
+        --mobile-topbar-height: calc(108px + var(--mobile-safe-top) + var(--public-demo-topbar-extra, 0px));
     }
     html.platform-android {
         --mobile-safe-top: max(env(safe-area-inset-top, 0px), 24px);
@@ -82,6 +82,19 @@
         box-shadow: 0 1px 0 var(--line), 0 8px 24px rgba(38, 51, 44, .07);
         backdrop-filter: none;
     }
+
+    :root:has(.topbar .public-demo-banner:not([hidden])) { --public-demo-topbar-extra: 40px; }
+    .topbar-context { display: contents; }
+    .topbar:has(.public-demo-banner:not([hidden])) { grid-template-rows: 52px 44px 36px; }
+    .topbar .public-demo-banner {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        justify-content: space-between;
+        min-width: 0;
+        padding: 0 6px 0 10px;
+    }
+    .topbar .public-demo-banner > span { min-width: 0; white-space: normal; line-height: 1.15; }
+    .topbar .public-demo-banner > a { flex-shrink: 0; }
 
     .menu-toggle {
         grid-column: 1;
@@ -538,7 +551,7 @@
 }
 
 @media (max-width: 390px) {
-    :root { --mobile-topbar-height: calc(106px + var(--mobile-safe-top)); }
+    :root { --mobile-topbar-height: calc(106px + var(--mobile-safe-top) + var(--public-demo-topbar-extra, 0px)); }
     .topbar,
     html.native-app .topbar { grid-template-columns: 42px minmax(0, 1fr) minmax(84px, auto); padding-inline: 8px; }
     .top-actions { max-width: 45vw; }
@@ -549,7 +562,7 @@
 }
 
 @media (max-width: 1200px) and (max-height: 700px) and (orientation: landscape) {
-    :root { --mobile-topbar-height: calc(58px + var(--mobile-safe-top)); }
+    :root { --mobile-topbar-height: calc(58px + var(--mobile-safe-top) + var(--public-demo-topbar-extra, 0px)); }
     .topbar,
     html.native-app .topbar {
         grid-template-columns: 44px minmax(100px, .55fr) minmax(160px, 1fr) auto;
@@ -560,6 +573,8 @@
     .breadcrumb { grid-column: 2; }
     .global-search { grid-column: 3; grid-row: 1; height: 40px; }
     .top-actions { grid-column: 4; max-width: 34vw; }
+    .topbar:has(.public-demo-banner:not([hidden])) { grid-template-rows: 50px 36px; }
+    .topbar .public-demo-banner { grid-row: 2; }
     .dashboard-hero,
     .page-heading {
         min-height: 118px;

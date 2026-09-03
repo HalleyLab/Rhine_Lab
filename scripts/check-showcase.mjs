@@ -55,6 +55,12 @@ data.freezerBoxes.forEach((box) => {
   assert.ok(box.storageLocation.includes(unit.location));
 });
 assert.match(html, /id="publicDemoBanner"/);
+const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)[0];
+assert.match(topbar, /id="publicDemoBanner" hidden/);
+assert.equal((html.match(/id="publicDemoBanner"/g) || []).length, 1);
+assert.ok(!html.slice(html.indexOf('<main ')).includes('id="publicDemoBanner"'));
+assert.match(mobileCss, /--public-demo-topbar-extra: 40px/);
+assert.match(mobileCss, /\.topbar \.public-demo-banner \{\s*grid-column: 1 \/ -1;\s*grid-row: 3;/);
 assert.match(html, /href="\?app=1#dashboard"/);
 assert.match(app, /function isBrowserAppRuntime\(\)/);
 assert.match(app, /isInstalledAppRuntime\(\) \|\| isBrowserAppRuntime\(\)/);

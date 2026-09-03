@@ -15,7 +15,7 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.3.2" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.2-web2">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.2-web3">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260814-1">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.2">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.3.2">
     <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.3.2-ai2">
     <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.2-r4">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.2-web3">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -79,7 +79,13 @@
         <section class="app-stage">
             <header class="topbar">
                 <button class="menu-toggle" id="menuToggle" type="button" aria-label="打开导航" aria-expanded="false"><i></i><i></i><i></i></button>
-                <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
+                <div class="topbar-context">
+                    <div class="breadcrumb"><span>RHINE LAB</span><i>/</i><strong id="breadcrumbLabel">工作总览</strong></div>
+                    <div class="public-demo-banner" id="publicDemoBanner" hidden>
+                        <span>公开展示 · 只读</span>
+                        <a href="?app=1#dashboard">在浏览器中使用</a>
+                    </div>
+                </div>
                 <label class="global-search">
                     <span aria-hidden="true">⌕</span>
                     <input id="globalSearch" type="search" autocomplete="off">
@@ -147,10 +153,6 @@
             </aside>
 
             <main id="mainContent" tabindex="-1">
-                <section class="public-demo-banner" id="publicDemoBanner" hidden>
-                    <span>公开展示 · 只读</span>
-                    <a href="?app=1#dashboard">在浏览器中使用</a>
-                </section>
                 <section class="workspace-scope-banner" id="workspaceScopeBanner" hidden>
                     <div><p class="micro-label">LOCAL LAB WORKSPACE</p><h2>LAB 共用界面</h2><span>通过 .rhinelab 文件合并实验室成员共享记录；此界面只读。</span></div>
                     <div class="workspace-scope-stats" id="workspaceScopeStats"></div>
