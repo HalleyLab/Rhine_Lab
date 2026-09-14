@@ -8,6 +8,10 @@
     let dragState = null;
     let suppressOpen = false;
     const POSITION_KEY = 'rhineLabAssistantPosition';
+    const DOCK_KEY = 'rhineLabAssistantDock';
+    const EDGE_SNAP = 18;
+    const DOCK_WIDTH = 44;
+    const DOCK_HEIGHT = 132;
     const HOLD_DELAY = 180;
 
     function byId(id) { return document.getElementById(id); }
@@ -38,6 +42,7 @@
         const toggle = byId('assistantToggle');
         toggle.addEventListener('click', function (event) {
             if (suppressOpen) { event.preventDefault(); suppressOpen = false; return; }
+            if (toggle.classList.contains('is-edge-docked')) { undockCharacter(); return; }
             openDrawer();
         });
         toggle.addEventListener('pointerdown', beginCharacterDrag, { passive: false, capture: true });
@@ -73,10 +78,7 @@
         const remote = Boolean(String((window.RHINE_LAB_CONFIG || {}).assistantApiUrl || '').trim());
         byId('assistantMode').textContent = remote ? (quota ? 'AI · ' + quota.remaining + '/' + quota.limit : 'AI') : 'LOCAL';
         byId('assistantMode').setAttribute('title', remote && quota ? (isEnglish ? quota.remaining + ' online requests remain on this device today' : '本设备今日剩余 ' + quota.remaining + ' 次在线 AI') : '');
-        const toggle = byId('assistantToggle');
-        const toggleLabel = isEnglish ? 'Open or drag Kristen research assistant' : '打开或拖动克里斯滕科研助理';
-        toggle.setAttribute('aria-label', toggleLabel);
-        toggle.setAttribute('title', toggleLabel);
+        updateToggleLabel();
         byId('assistantRole').textContent = isEnglish ? 'Research Assistant' : '科研助理';
         byId('assistantTitle').textContent = isEnglish ? 'Kristen' : '克里斯滕';
         byId('assistantClose').setAttribute('aria-label', isEnglish ? 'Close research assistant' : '关闭科研助理');
@@ -101,7 +103,7 @@
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
         const touch = event.pointerType === 'touch' || event.pointerType === 'pen';
-        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false, touch: touch, holdTimer: 0 };
+        dragState = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, startX: event.clientX, startY: event.clientY, active: false, moved: false, touch: touch, docked: toggle.classList.contains('is-edge-docked'), dockEdge: toggle.dataset.edge || '', holdTimer: 0 };
         toggle.classList.add('is-pressing');
         try { toggle.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
         if (touch) dragState.holdTimer = window.setTimeout(activateCharacterDrag, HOLD_DELAY);
@@ -135,7 +137,10 @@
             activateCharacterDrag();
         }
         dragState.moved = true;
-        placeCharacter(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
+        placeCharacter(
+            dragState.docked ? (dragState.dockEdge === 'left' ? 0 : window.innerWidth - DOCK_WIDTH) : event.clientX - dragState.offsetX,
+            event.clientY - dragState.offsetY
+        );
     }
 
     function endCharacterDrag(event) {
@@ -148,11 +153,19 @@
         toggle.classList.remove('is-pressing', 'is-dragging');
         if (dragState.active) {
             suppressOpen = true;
-            if (dragState.moved) localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
+            if (dragState.moved) {
+                const edge = characterDockEdge(toggle);
+                if (edge) dockCharacter(edge, toggle.getBoundingClientRect().top);
+                else {
+                    localStorage.removeItem(DOCK_KEY);
+                    localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
+                }
+            }
             window.setTimeout(function () { suppressOpen = false; }, 450);
         } else if (event.type === 'pointerup') {
             suppressOpen = true;
-            openDrawer();
+            if (toggle.classList.contains('is-edge-docked')) undockCharacter();
+            else openDrawer();
             window.setTimeout(function () { suppressOpen = false; }, 0);
         }
         dragState = null;
@@ -170,11 +183,59 @@
     }
 
     function restoreCharacterPosition() {
+        let dock;
+        try { dock = JSON.parse(localStorage.getItem(DOCK_KEY) || 'null'); } catch (_) { dock = null; }
+        if (dock && (dock.edge === 'left' || dock.edge === 'right') && Number.isFinite(dock.top)) {
+            dockCharacter(dock.edge, dock.top);
+            return;
+        }
         let saved;
         try { saved = JSON.parse(localStorage.getItem(POSITION_KEY) || 'null'); } catch (_) { saved = null; }
         if (!saved || !Number.isFinite(saved.left) || !Number.isFinite(saved.top)) return;
         byId('assistantToggle').classList.add('has-custom-position');
         placeCharacter(saved.left, saved.top);
+    }
+
+    function characterDockEdge(toggle) {
+        const rect = toggle.getBoundingClientRect();
+        if (rect.left <= EDGE_SNAP) return 'left';
+        if (window.innerWidth - rect.right <= EDGE_SNAP) return 'right';
+        return '';
+    }
+
+    function dockCharacter(edge, top) {
+        const toggle = byId('assistantToggle');
+        const nextTop = Math.max(8, Math.min(window.innerHeight - DOCK_HEIGHT - 8, Number(top) || 8));
+        toggle.dataset.edge = edge;
+        toggle.classList.add('has-custom-position', 'is-edge-docked');
+        toggle.style.left = (edge === 'left' ? 0 : window.innerWidth - DOCK_WIDTH) + 'px';
+        toggle.style.top = nextTop + 'px';
+        toggle.style.right = 'auto';
+        toggle.style.bottom = 'auto';
+        localStorage.setItem(DOCK_KEY, JSON.stringify({ edge: edge, top: nextTop }));
+        updateToggleLabel();
+    }
+
+    function undockCharacter() {
+        const toggle = byId('assistantToggle');
+        toggle.classList.remove('is-edge-docked');
+        delete toggle.dataset.edge;
+        localStorage.removeItem(DOCK_KEY);
+        const rect = toggle.getBoundingClientRect();
+        placeCharacter(window.innerWidth - rect.width - 8, window.innerHeight - rect.height - 8);
+        localStorage.setItem(POSITION_KEY, JSON.stringify({ left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top) }));
+        updateToggleLabel();
+        toggle.focus();
+    }
+
+    function updateToggleLabel() {
+        const toggle = byId('assistantToggle');
+        toggle.dataset.dockLabel = english() ? 'KRISTEN' : '克里斯滕';
+        const toggleLabel = toggle.classList.contains('is-edge-docked')
+            ? (english() ? 'Show Kristen research assistant' : '显示克里斯滕科研助理')
+            : (english() ? 'Open or drag Kristen research assistant' : '打开或拖动克里斯滕科研助理');
+        toggle.setAttribute('aria-label', toggleLabel);
+        toggle.setAttribute('title', toggleLabel);
     }
 
     function openDrawer() {

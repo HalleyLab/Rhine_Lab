@@ -101,6 +101,58 @@
     transform: scale(.97) !important;
 }
 
+.assistant-character-trigger.is-edge-docked {
+    width: 44px;
+    height: 132px;
+    overflow: hidden;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 88%, var(--acid) 12%);
+    border: 1px solid var(--acid-strong);
+    box-shadow: 0 10px 26px rgba(31, 45, 39, .18);
+    animation: none;
+    cursor: pointer;
+    transform: none !important;
+}
+
+.assistant-character-trigger.is-edge-docked[data-edge="left"] {
+    border-left: 0;
+    border-radius: 0 16px 16px 0;
+}
+
+.assistant-character-trigger.is-edge-docked[data-edge="right"] {
+    border-right: 0;
+    border-radius: 16px 0 0 16px;
+}
+
+.assistant-character-trigger.is-edge-docked::before {
+    content: attr(data-dock-label);
+    inset: 0;
+    display: grid;
+    width: auto;
+    height: auto;
+    place-items: center;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    color: var(--ink);
+    background: transparent;
+    border-radius: inherit;
+    filter: none;
+    transform: none;
+    font: 900 14px/1 var(--font-interface);
+    letter-spacing: 2px;
+}
+
+.assistant-character-trigger.is-edge-docked img,
+.assistant-character-trigger.is-edge-docked .assistant-character-label {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.assistant-character-trigger.is-edge-docked:focus-visible {
+    outline: 2px solid var(--acid-strong);
+    outline-offset: 3px;
+}
+
 body.assistant-open .assistant-character-trigger {
     opacity: 0;
     pointer-events: none;
