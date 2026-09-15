@@ -21,6 +21,7 @@ const [html, css, mobile, assistant, main, i18n, worker, appCss, config, sync, a
 
 assert.match(themeCss, /rhine-life-science-atlas-v1\.svg/);
 assert.match(themeCss, /background-size:\s*500% 200%/);
+assert.match(themeCss, /page-heading\.technical-heading::before,[\s\S]*?content:\s*none !important/);
 for (const view of ['dashboard', 'experiments', 'reagents', 'protocols', 'tools', 'bioinformatics', 'cells', 'samples', 'mice', 'schedule']) {
     assert.match(themeCss, new RegExp(`#view-${view}[^}]+background-position`));
 }

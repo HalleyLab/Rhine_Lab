@@ -182,6 +182,7 @@ body:not(.background-all-lives):not(.background-black-current) :is(.heading-visu
     display: none !important;
 }
 
+body:not(.background-all-lives):not(.background-black-current) .page-heading.technical-heading::before,
 body:not(.background-all-lives):not(.background-black-current) .heading-visual::before,
 body:not(.background-all-lives):not(.background-black-current) .hero-atmosphere::before,
 body:not(.background-all-lives):not(.background-black-current) .hero-atmosphere::after {
