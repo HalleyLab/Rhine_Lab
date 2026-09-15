@@ -1,10 +1,10 @@
-const CACHE_NAME = 'rhine-lab-pages-v153-0.3.2';
+const CACHE_NAME = 'rhine-lab-pages-v154-0.3.2';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
     './css/rhine-lab.css?v=0.3.2-web4',
-    './css/rhine-dashboard-refresh.css?v=20260814-1',
+    './css/rhine-dashboard-refresh.css?v=20260914-2',
     './css/rhine-lab-v019.css?v=0.3.2',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
     './css/rhine-lab-theme-atlas-v2.css?v=20260830-1',
@@ -32,7 +32,8 @@ const APP_SHELL = [
     './images/rhine-life-app-icon.png?v=0.3.2',
     './images/reagent-vial-default.svg',
     './images/assistant/kristen-wright.png',
-    './images/theme-atlas/all-lives-bioinformatics-collage-v1.svg'
+    './images/theme-atlas/all-lives-bioinformatics-collage-v1.svg',
+    './images/theme-atlas/rhine-life-science-atlas-v1.svg'
 ];
 
 self.addEventListener('install', function (event) {

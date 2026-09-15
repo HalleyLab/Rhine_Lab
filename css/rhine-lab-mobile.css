@@ -705,7 +705,7 @@
         padding: 0 12px;
         border-radius: 10px;
         color: var(--ink) !important;
-        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-family: var(--font-interface) !important;
         font-size: 13px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
@@ -786,7 +786,7 @@
         place-items: center !important;
         column-gap: 7px !important;
         padding: 0 12px !important;
-        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-family: var(--font-interface) !important;
         font-size: 13px !important;
         font-weight: 900 !important;
         line-height: 16px !important;
@@ -823,7 +823,7 @@
         padding: 0 !important;
         transform: none !important;
         color: var(--ink) !important;
-        font-family: SimHei, "Microsoft YaHei", Arial, sans-serif !important;
+        font-family: var(--font-interface) !important;
         font-size: 13px !important;
         font-weight: 900 !important;
         line-height: 16px !important;

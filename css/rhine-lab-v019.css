@@ -24,7 +24,7 @@
 .sync-security-panel small,
 .sync-lab-panel small {
     color: var(--accent-deep);
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: var(--font-latin);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: .12em;
@@ -91,7 +91,7 @@
     border-radius: 10px;
     color: var(--text);
     background: var(--surface);
-    font: 11px/1.45 Helvetica, Arial, sans-serif;
+    font: 11px/1.45 var(--font-latin);
     overflow-wrap: anywhere;
 }
 
@@ -310,13 +310,13 @@
 }
 
 .sync-transfer-head > div { display: grid; gap: 3px; }
-.sync-transfer-head small { color: var(--accent-deep); font: 800 10px/1.2 Helvetica, Arial, sans-serif; letter-spacing: .12em; }
+.sync-transfer-head small { color: var(--accent-deep); font: 800 10px/1.2 var(--font-latin); letter-spacing: .12em; }
 .sync-transfer-head strong { color: var(--text); font-size: 16px; }
 .sync-transfer-head span,
 .sync-transfer-message { color: var(--muted); font-size: 12px; line-height: 1.45; }
 .sync-transfer-file {
     color: var(--text);
-    font: 700 14px/1.45 "SimHei", "Heiti SC", "Microsoft YaHei", Arial, sans-serif;
+    font: 700 14px/1.45 var(--font-cjk);
 }
 
 .sync-transfer-head > b {
@@ -329,7 +329,7 @@
     border-radius: 50%;
     color: var(--text);
     background: var(--card);
-    font: 700 18px/1 Helvetica, Arial, sans-serif;
+    font: 700 18px/1 var(--font-latin);
 }
 
 .sync-transfer-password { display: grid; gap: 5px; }
@@ -364,7 +364,7 @@
 .usb-sync-panel[hidden] { display: none; }
 .usb-sync-panel > div { display: grid; gap: 2px; }
 .usb-sync-panel strong { color: var(--text); font-size: 13px; }
-.usb-sync-panel span { color: var(--muted); font: 700 12px/1.35 "SimHei", "Heiti SC", "Microsoft YaHei", Arial, sans-serif; }
+.usb-sync-panel span { color: var(--muted); font: 700 12px/1.35 var(--font-cjk); }
 
 @media (max-width: 640px) {
     .sync-transfer-panel { margin-inline: 15px; padding: 14px; }
@@ -379,11 +379,11 @@
 .sync-local-transfer-entry .local-transfer-control {
     min-height: 36px;
     padding-inline: 14px;
-    font-family: "SimHei", "Heiti SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--font-cjk);
 }
 
 html[lang="en"] .sync-local-transfer-entry .local-transfer-control {
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: var(--font-latin);
 }
 
 .portable-sync-dialog article { width: min(620px, calc(100vw - 32px)); }

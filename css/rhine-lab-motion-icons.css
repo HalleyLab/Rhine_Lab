@@ -29,7 +29,7 @@ body:not(.dark-theme) :is(.global-search, .dialog-search) {
 }
 
 html[lang="zh-CN"] :is(.utilization-panel h2, .load-item header span) {
-    font-family: "Microsoft YaHei", "SimHei", Arial, sans-serif !important;
+    font-family: var(--font-cjk) !important;
 }
 
 /* The global header search is the only page-level search entry. */

@@ -8498,10 +8498,6 @@ select optgroup {
 }
 
 /* Global type and contrast audit: Helvetica for Latin glyphs, SimHei for CJK glyphs. */
-:root {
-    --font-interface: "Helvetica Neue", Helvetica, Arial, SimHei, "Microsoft YaHei", sans-serif;
-}
-
 html body,
 html body *,
 html body *::before,
@@ -9463,10 +9459,6 @@ textarea::placeholder {
     .amount-meter span { font-size: 10px; }
 }
 /* 2026-08-10: mobile account access, manager directory and explicit CJK quotation type. */
-:root {
-    --font-cjk: SimHei, "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
-}
-
 html[lang="zh-CN"] .page-heading.technical-heading .story-quote,
 html[lang="zh-CN"] .page-heading.technical-heading .story-quote cite {
     font-family: var(--font-interface);
@@ -10304,7 +10296,7 @@ dialog small,
 
 .untimed-schedule-list[hidden] { display: none !important; }
 .untimed-schedule-list > header { padding: 10px 14px 5px; }
-.untimed-schedule-list > header span { color: var(--muted); font: 800 9px/1 Helvetica, Arial, sans-serif; letter-spacing: .12em; }
+.untimed-schedule-list > header span { color: var(--muted); font: 800 9px/1 var(--font-latin); letter-spacing: .12em; }
 .untimed-schedule-list > header strong { display: block; margin-top: 4px; font-size: 13px; }
 .untimed-schedule-list .today-item:last-child { border-bottom: 0; }
 
@@ -10628,7 +10620,7 @@ html[lang="zh-CN"] .compact-table tbody td:nth-child(2),
 html[lang="zh-CN"] .compact-table tbody td:nth-child(4),
 html[lang="zh-CN"] .result-conclusion small,
 html[lang="zh-CN"] .result-conclusion strong {
-    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
     font-weight: 800;
 }
 
@@ -10720,7 +10712,7 @@ html[lang="en"] .nav-item {
 .page-heading.technical-heading .story-quote cite,
 html[lang="en"] .page-heading.technical-heading .story-quote,
 html[lang="en"] .page-heading.technical-heading .story-quote cite {
-    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
     font-weight: 500;
 }
 
@@ -11007,7 +10999,7 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
     background: rgba(255, 244, 240, .94);
     border: 1px solid rgba(219, 103, 83, .34);
     border-radius: 999px;
-    font-family: Helvetica, Arial, sans-serif !important;
+    font-family: var(--font-latin) !important;
     font-weight: 800;
     cursor: pointer;
 }
@@ -11061,7 +11053,7 @@ html[lang="en"] .page-heading.technical-heading .story-quote cite {
 html[lang="en"] .page-heading.technical-heading .story-quote,
 html[lang="en"] .page-heading.technical-heading .story-quote *,
 html[lang="en"] .page-heading.technical-heading .story-quote cite {
-    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
     font-weight: 500 !important;
     letter-spacing: 0 !important;
 }
@@ -11266,7 +11258,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     background: var(--surface);
     color: var(--ink);
     cursor: pointer;
-    font: 700 15px/1 Helvetica, Arial, sans-serif;
+    font: 700 15px/1 var(--font-latin);
 }
 .schedule-edit-button:hover { border-color: var(--lime-strong); color: var(--lime-deep); }
 .entry-edit-history { grid-column: 1 / -1; }
@@ -11585,7 +11577,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     color: #f8faf6;
     background: #202724;
     box-shadow: 8px 8px 0 var(--heading-signal-soft);
-    font: 800 17px/1 Helvetica, Arial, sans-serif;
+    font: 800 17px/1 var(--font-latin);
     letter-spacing: .06em;
 }
 
@@ -11614,7 +11606,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
 
 .heading-visual-label b,
 .heading-visual-label small {
-    font-family: Helvetica, Arial, sans-serif !important;
+    font-family: var(--font-latin) !important;
     line-height: 1;
 }
 
@@ -12076,7 +12068,7 @@ html[lang="en"] .nav-item > span:not(.nav-code) {
     line-height:1.65!important;
 }
 .delete-confirm-dialog article>p:not(.micro-label){font-size:13px!important;color:color-mix(in srgb,var(--ink) 68%,var(--muted) 32%)}
-html[lang="zh-CN"] :is(.delete-confirm-dialog article>p:not(.micro-label),.entry-dialog .field-note,.entry-dialog .dialog-helper,.entry-dialog .form-help,.entry-dialog footer p,.photo-capture-status,.photo-capture-button small,.search-empty,.empty-state p,.empty-card span){font-family:"Rhine SimHei",SimHei,"黑体",sans-serif!important}
+html[lang="zh-CN"] :is(.delete-confirm-dialog article>p:not(.micro-label),.entry-dialog .field-note,.entry-dialog .dialog-helper,.entry-dialog .form-help,.entry-dialog footer p,.photo-capture-status,.photo-capture-button small,.search-empty,.empty-state p,.empty-card span){font-family:var(--font-cjk)!important}
 .entry-save-status[hidden]{display:none!important}
 
 /* Overview activity readability and room-dialog helper visibility 2026-08-26 */
@@ -12091,7 +12083,7 @@ html[lang="zh-CN"] :is(.delete-confirm-dialog article>p:not(.micro-label),.entry
 .activity-item time{font-size:12px!important;color:var(--muted)!important}
 html[lang="zh-CN"] .activity-item p,
 html[lang="zh-CN"] .activity-item time{
-    font-family:"Rhine SimHei",SimHei,"黑体",sans-serif!important;
+    font-family:var(--font-cjk)!important;
 }
 
 /* Dashboard hierarchy and compact change history 2026-08-26 */
@@ -12367,7 +12359,7 @@ html[lang="zh-CN"] #bioresourceTable td:nth-child(6),
 html[lang="zh-CN"] #virusTable td:nth-child(4),
 html[lang="zh-CN"] #virusTable td:nth-child(5),
 html[lang="zh-CN"] .load-item header span {
-    font-family: SimHei, "Microsoft YaHei", sans-serif;
+    font-family: var(--font-cjk);
     font-weight: 900;
 }
 html[lang="zh-CN"] #reagentTable td:nth-child(2) *,
@@ -12381,7 +12373,7 @@ html[lang="zh-CN"] #bioresourceTable td:nth-child(4) *,
 html[lang="zh-CN"] #bioresourceTable td:nth-child(6) *,
 html[lang="zh-CN"] #virusTable td:nth-child(4) *,
 html[lang="zh-CN"] #virusTable td:nth-child(5) * {
-    font-family: SimHei, "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
     font-weight: 900 !important;
 }
 
@@ -12877,7 +12869,7 @@ body.background-all-lives .freezer-box-tab.active b {
 #reagentFilters button,
 #view-reagents .data-table thead th {
     color: var(--ink);
-    font-family: SimHei, "Microsoft YaHei", Arial, sans-serif;
+    font-family: var(--font-interface);
     font-size: 13px;
     font-weight: 900;
 }

@@ -2,7 +2,7 @@
 .bioinfo-subpage-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 16px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:color-mix(in srgb,var(--paper) 94%,transparent)}
 .bioinfo-subpage-tabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;min-height:52px;padding:10px 14px;color:var(--muted);background:transparent;border:0;border-right:1px solid var(--line);font:800 13px var(--font-interface);cursor:pointer}
 .bioinfo-subpage-tabs button:last-child{border-right:0}
-.bioinfo-subpage-tabs button span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}
+.bioinfo-subpage-tabs button span{color:var(--accent-deep);font:800 9px var(--font-latin);letter-spacing:.12em}
 .bioinfo-subpage-tabs button.active{color:var(--ink);background:color-mix(in srgb,var(--accent) 13%,var(--paper));box-shadow:inset 0 -3px 0 var(--accent)}
 .bioinfo-subpage[hidden]{display:none!important}
 .bioinfo-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;width:min(100%,620px);margin-left:auto}
@@ -21,14 +21,14 @@
 .bioinfo-protein-structure .protein-backbone path:last-child{stroke-width:1;opacity:.68}
 .bioinfo-protein-structure .protein-helix{stroke:#8fbd25;stroke-width:1.5;opacity:.8}
 .bioinfo-protein-structure .protein-nodes{fill:var(--paper);stroke:#4d9991;stroke-width:2}
-.bioinfo-rnaseq{position:absolute;left:39%;bottom:20px;z-index:2;display:grid;grid-template-columns:56px 1fr;grid-template-rows:repeat(4,4px) auto;gap:5px 8px;width:31%;color:#526d5e;font-family:Helvetica,Arial,sans-serif!important}
+.bioinfo-rnaseq{position:absolute;left:39%;bottom:20px;z-index:2;display:grid;grid-template-columns:56px 1fr;grid-template-rows:repeat(4,4px) auto;gap:5px 8px;width:31%;color:#526d5e;font-family:var(--font-latin)!important}
 .bioinfo-rnaseq b{grid-row:1/5;align-self:center;font-size:10px;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg)}
 .bioinfo-rnaseq i{display:block;height:3px;background:linear-gradient(90deg,currentColor 0 34%,transparent 34% 39%,currentColor 39% 68%,transparent 68% 73%,currentColor 73%);opacity:.84}
 .bioinfo-rnaseq i:nth-of-type(1){color:#8fbd25}.bioinfo-rnaseq i:nth-of-type(2){width:82%;margin-left:13%;color:#51aaa6}
 .bioinfo-rnaseq i:nth-of-type(3){width:94%;margin-left:3%;color:#d5903d}
 .bioinfo-rnaseq i:nth-of-type(4){width:71%;margin-left:19%}
 .bioinfo-rnaseq small{grid-column:1/-1;margin-top:2px;font-size:7px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
-.bioinfo-math-symbol{position:absolute;z-index:2;color:#596b61;font:800 13px/1 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.bioinfo-math-symbol{position:absolute;z-index:2;color:#596b61;font:800 13px/1 var(--font-latin);letter-spacing:.04em}
 .bioinfo-math-symbol.math-log{left:43%;top:88px;color:#c17f35}
 .bioinfo-math-symbol.math-sum{right:15%;bottom:28px;color:#799f2b;font-size:16px}
 
@@ -78,13 +78,13 @@ body.dark-theme.background-all-lives #view-bioinformatics .heading-visual{filter
 .bio-project-map-toggle,.bio-dataset-map-toggle{width:100%;color:var(--ink);font:inherit;text-align:left;background:transparent;border:0;cursor:pointer}
 .bio-project-map-toggle{display:grid;grid-template-columns:112px minmax(220px,1.25fr) minmax(138px,.55fr) auto 34px;align-items:center;gap:16px;min-height:84px;padding:15px 60px 15px 18px}
 .bio-project-map-toggle:hover,.bio-dataset-map-toggle:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
-.bio-project-code,.bio-dataset-glyph{font:800 10px/1.2 Helvetica,Arial,sans-serif;letter-spacing:.1em;color:var(--accent-deep)}
+.bio-project-code,.bio-dataset-glyph{font:800 10px/1.2 var(--font-latin);letter-spacing:.1em;color:var(--accent-deep)}
 .bio-project-heading,.bio-project-metrics,.bio-dataset-map-toggle>span:nth-child(2){display:grid;gap:5px}
 .bio-project-heading strong,.bio-dataset-map-toggle strong{font-size:15px;line-height:1.3}
 .bio-project-heading small,.bio-project-metrics small,.bio-dataset-map-toggle small,.bio-dataset-location{color:var(--muted);font-size:11px;line-height:1.45}
 .bio-project-metrics{padding-left:16px;border-left:1px solid var(--line)}
-.bio-flow-chevron{display:grid!important;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;color:var(--ink)!important;font:700 16px/1 Helvetica,Arial,sans-serif}
-.bio-flow-detail-button{position:absolute;top:50%;right:14px;z-index:2;display:grid;place-items:center;width:32px;height:32px;padding:0;transform:translateY(-50%);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:50%;font:800 15px Helvetica,Arial,sans-serif;cursor:pointer}
+.bio-flow-chevron{display:grid!important;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;color:var(--ink)!important;font:700 16px/1 var(--font-latin)}
+.bio-flow-detail-button{position:absolute;top:50%;right:14px;z-index:2;display:grid;place-items:center;width:32px;height:32px;padding:0;transform:translateY(-50%);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:50%;font:800 15px var(--font-latin);cursor:pointer}
 .bio-flow-detail-button:hover{color:var(--accent-deep);border-color:var(--accent)}
 .bio-project-map-body{padding:0 16px 16px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--soft) 56%,var(--paper))}
 .bio-project-action-strip,.bio-dataset-action-strip{display:flex;justify-content:flex-end;gap:8px;padding:12px 0}
@@ -97,9 +97,9 @@ body.dark-theme.background-all-lives #view-bioinformatics .heading-visual{filter
 .bio-dataset-map-body{padding:14px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--soft) 72%,transparent)}
 .bio-analysis-flow{display:grid;grid-template-columns:minmax(170px,.7fr) 74px minmax(260px,1.55fr);align-items:stretch;gap:12px}
 .bio-flow-source-node{display:grid;align-content:center;gap:6px;min-height:108px;padding:16px;color:var(--ink);text-align:left;background:color-mix(in srgb,#51aaa6 10%,var(--paper));border:1px solid color-mix(in srgb,#51aaa6 43%,var(--line));border-radius:10px;font:inherit;cursor:pointer}
-.bio-flow-source-node span,.bio-pipeline-node-main span:first-child{color:#397e78;font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}
+.bio-flow-source-node span,.bio-pipeline-node-main span:first-child{color:#397e78;font:800 9px var(--font-latin);letter-spacing:.12em}
 .bio-flow-source-node strong{font-size:14px}.bio-flow-source-node small{color:var(--muted);font-size:11px}
-.bio-flow-connector{position:relative;display:grid;place-items:center;color:var(--muted);font:800 8px Helvetica,Arial,sans-serif;letter-spacing:.08em}
+.bio-flow-connector{position:relative;display:grid;place-items:center;color:var(--muted);font:800 8px var(--font-latin);letter-spacing:.08em}
 .bio-flow-connector i{position:absolute;right:-5px;left:-5px;top:50%;height:2px;background:linear-gradient(90deg,#51aaa6,var(--accent))}
 .bio-flow-connector i::after{content:"";position:absolute;right:-1px;top:50%;width:8px;height:8px;border-top:2px solid var(--accent);border-right:2px solid var(--accent);transform:translateY(-50%) rotate(45deg)}
 .bio-flow-connector span{position:relative;z-index:1;margin-top:-28px;padding:2px 5px;background:var(--soft)}
@@ -113,7 +113,7 @@ body.dark-theme.background-all-lives #view-bioinformatics .heading-visual{filter
 .bio-pipeline-node-main strong{font-size:13px;line-height:1.35}
 .bio-pipeline-node-main small{color:var(--muted);font-size:10px;line-height:1.4}
 .bio-run-node{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:8px 10px;color:var(--ink);text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:8px;font:inherit;cursor:pointer}
-.bio-run-node span{font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.06em;color:var(--accent-deep)}
+.bio-run-node span{font:800 9px var(--font-latin);letter-spacing:.06em;color:var(--accent-deep)}
 .bio-run-node small{overflow:hidden;color:var(--muted);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
 .bio-run-node b{font-size:14px}
 .bio-dataset-action-strip{padding-bottom:0}
@@ -168,21 +168,21 @@ body.background-all-lives .bio-flow-connector i::after{border-color:var(--atlas-
 .bio-folder-card::before{content:"";position:absolute;left:-1px;top:-13px;width:42%;height:18px;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));border-bottom:0;border-radius:8px 13px 0 0;background:color-mix(in srgb,var(--accent) 13%,var(--paper));clip-path:polygon(0 0,82% 0,100% 100%,0 100%)}
 .bio-folder-card:hover{z-index:1;transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 72%,var(--line));box-shadow:0 13px 25px rgba(42,54,48,.1)}
 .bio-folder-open{position:relative;z-index:1;display:grid;align-content:start;gap:8px;width:100%;min-height:146px;padding:20px 42px 14px 16px;color:var(--ink);text-align:left;background:transparent;border:0;font:inherit;cursor:pointer}
-.bio-folder-kind{color:var(--accent-deep);font:800 9px/1.2 Helvetica,Arial,sans-serif;letter-spacing:.13em}
+.bio-folder-kind{color:var(--accent-deep);font:800 9px/1.2 var(--font-latin);letter-spacing:.13em}
 .bio-folder-open>strong{overflow:hidden;font-size:16px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
 .bio-folder-open>small{overflow:hidden;color:var(--muted);font-size:11px;line-height:1.45;text-overflow:ellipsis;white-space:nowrap}
 .bio-folder-footer{align-self:end;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:10px}
 .bio-folder-footer i{overflow:hidden;color:var(--muted);font-style:normal;text-overflow:ellipsis;white-space:nowrap}.bio-folder-footer b{flex:none;color:var(--accent-deep)}
-.bio-folder-detail{position:absolute;right:10px;top:12px;z-index:3;display:grid;place-items:center;width:29px;height:29px;padding:0;color:var(--muted);background:color-mix(in srgb,var(--paper) 86%,transparent);border:1px solid var(--line);border-radius:50%;font:800 12px Helvetica,Arial,sans-serif;cursor:pointer}
+.bio-folder-detail{position:absolute;right:10px;top:12px;z-index:3;display:grid;place-items:center;width:29px;height:29px;padding:0;color:var(--muted);background:color-mix(in srgb,var(--paper) 86%,transparent);border:1px solid var(--line);border-radius:50%;font:800 12px var(--font-latin);cursor:pointer}
 .bio-folder-detail:hover{color:var(--ink);border-color:var(--accent)}
 .bio-workflow-folder{border-color:color-mix(in srgb,#51aaa6 52%,var(--line));background:linear-gradient(145deg,color-mix(in srgb,#51aaa6 14%,var(--paper)),var(--paper) 64%)}
 .bio-workflow-folder::before{border-color:color-mix(in srgb,#51aaa6 52%,var(--line));background:color-mix(in srgb,#51aaa6 17%,var(--paper))}
 .bio-workflow-folder .bio-folder-kind{color:#397e78}
 .bio-folder-summary{display:flex;align-items:center;gap:10px;margin:0 0 20px;padding:14px 16px;border:1px solid var(--line);background:var(--paper)}
-.bio-folder-summary>div{display:grid;gap:4px;min-width:0;margin-right:auto}.bio-folder-summary>div>span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-folder-summary>div>strong{font-size:16px}.bio-folder-summary>div>small{color:var(--muted);font-size:11px}
+.bio-folder-summary>div{display:grid;gap:4px;min-width:0;margin-right:auto}.bio-folder-summary>div>span{color:var(--accent-deep);font:800 9px var(--font-latin);letter-spacing:.12em}.bio-folder-summary>div>strong{font-size:16px}.bio-folder-summary>div>small{color:var(--muted);font-size:11px}
 .bio-dataset-profile{border:1px solid var(--line);background:var(--paper)}
 .bio-dataset-profile>header{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--line)}
-.bio-dataset-profile>header>div{display:grid;gap:4px;margin-right:auto}.bio-dataset-profile>header span,.bio-method-heading span,.bio-workflow-library-head span{color:var(--accent-deep);font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-dataset-profile h3,.bio-method-heading h3,.bio-workflow-library-head h3{margin:0;font-size:18px}.bio-dataset-profile>header small{color:var(--muted);font-size:10px}
+.bio-dataset-profile>header>div{display:grid;gap:4px;margin-right:auto}.bio-dataset-profile>header span,.bio-method-heading span,.bio-workflow-library-head span{color:var(--accent-deep);font:800 9px var(--font-latin);letter-spacing:.12em}.bio-dataset-profile h3,.bio-method-heading h3,.bio-workflow-library-head h3{margin:0;font-size:18px}.bio-dataset-profile>header small{color:var(--muted);font-size:10px}
 .bio-dataset-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line)}
 .bio-dataset-facts>div{display:grid;gap:6px;min-height:100px;padding:15px;background:color-mix(in srgb,var(--soft) 58%,var(--paper))}
 .bio-dataset-facts span{color:var(--muted);font-size:11px}.bio-dataset-facts strong{overflow-wrap:anywhere;font-size:14px}.bio-dataset-facts small{color:var(--muted);font-size:10px}
@@ -190,13 +190,13 @@ body.background-all-lives .bio-flow-connector i::after{border-color:var(--atlas-
 .bio-method-file-list{display:grid;gap:9px}
 .bio-method-file{display:grid;grid-template-columns:54px minmax(0,1fr) minmax(128px,.42fr) 34px auto;align-items:center;gap:14px;min-height:88px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid color-mix(in srgb,var(--accent) 70%,#51aaa6);background:var(--paper)}
 .bio-method-file.is-running{box-shadow:inset 0 0 0 1px color-mix(in srgb,#51aaa6 22%,transparent)}
-.bio-method-file-icon{display:grid;place-items:center;width:48px;height:38px;color:#397e78;background:color-mix(in srgb,#51aaa6 12%,var(--paper));border:1px solid color-mix(in srgb,#51aaa6 42%,var(--line));font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.08em}
+.bio-method-file-icon{display:grid;place-items:center;width:48px;height:38px;color:#397e78;background:color-mix(in srgb,#51aaa6 12%,var(--paper));border:1px solid color-mix(in srgb,#51aaa6 42%,var(--line));font:800 9px var(--font-latin);letter-spacing:.08em}
 .bio-method-file>div:nth-child(2){display:grid;gap:4px;min-width:0}.bio-method-file>div:nth-child(2)>span{color:var(--accent-deep);font-size:10px}.bio-method-file>div:nth-child(2)>strong{overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}.bio-method-file>div:nth-child(2)>small{color:var(--muted);font-size:10px}
 .bio-method-status{display:grid;justify-items:start;gap:5px}.bio-method-status>small{color:var(--muted);font-size:10px}.bio-method-status>b{color:var(--muted);font-size:9px}
-.bio-method-file>button{display:grid;place-items:center;min-width:32px;height:32px;padding:0 8px;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:800 10px Helvetica,Arial,sans-serif;cursor:pointer}.bio-method-file>button:hover{border-color:var(--accent);color:var(--accent-deep)}
+.bio-method-file>button{display:grid;place-items:center;min-width:32px;height:32px;padding:0 8px;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:800 10px var(--font-latin);cursor:pointer}.bio-method-file>button:hover{border-color:var(--accent);color:var(--accent-deep)}
 .bio-script-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .bio-script-file{display:grid;gap:10px;min-width:0;padding:16px;border:1px solid var(--line);border-top:3px solid color-mix(in srgb,#51aaa6 58%,var(--accent));background:var(--paper)}
-.bio-script-file header,.bio-script-file footer{display:flex;align-items:center;justify-content:space-between;gap:10px}.bio-script-file header>span{color:#397e78;font:800 9px Helvetica,Arial,sans-serif;letter-spacing:.12em}.bio-script-file header>button{width:29px;height:29px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:50%;cursor:pointer}.bio-script-file>strong{font-size:15px}.bio-script-file>small{color:var(--muted);font-size:10px}.bio-script-file pre{max-height:94px;margin:0;padding:11px;overflow:auto;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:600 10px/1.55 Consolas,'Courier New',monospace;white-space:pre-wrap}.bio-script-file footer{padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}.bio-script-file footer b{color:var(--accent-deep)}
+.bio-script-file header,.bio-script-file footer{display:flex;align-items:center;justify-content:space-between;gap:10px}.bio-script-file header>span{color:#397e78;font:800 9px var(--font-latin);letter-spacing:.12em}.bio-script-file header>button{width:29px;height:29px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:50%;cursor:pointer}.bio-script-file>strong{font-size:15px}.bio-script-file>small{color:var(--muted);font-size:10px}.bio-script-file pre{max-height:94px;margin:0;padding:11px;overflow:auto;color:var(--ink);background:var(--soft);border:1px solid var(--line);font:600 10px/1.55 Consolas,'Courier New',monospace;white-space:pre-wrap}.bio-script-file footer{padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}.bio-script-file footer b{color:var(--accent-deep)}
 .dark-theme .bio-file-browser{background:color-mix(in srgb,var(--soft) 80%,#08110d)}
 .dark-theme :is(.bio-folder-card,.bio-folder-summary,.bio-dataset-profile,.bio-method-file,.bio-script-file){box-shadow:none}
 body.background-all-lives :is(.bio-folder-card,.bio-folder-summary,.bio-dataset-profile,.bio-method-file,.bio-script-file,.bio-method-file>button){border-radius:0}

@@ -158,3 +158,76 @@
         border-radius: 13px 3px 13px 3px;
     }
 }
+
+/* One static sprite gives every section distinct artwork without layered repaints. */
+body:not(.background-all-lives):not(.background-black-current) :is(.dashboard-hero, .page-heading.technical-heading) {
+    background:
+        linear-gradient(104deg, rgba(255, 255, 255, .94) 0 52%, rgba(239, 244, 237, .92) 73%, rgba(220, 231, 221, .9) 100%),
+        var(--surface);
+    border-radius: 18px 4px 18px 4px;
+    box-shadow: 0 18px 48px rgba(38, 53, 45, .09);
+}
+
+body:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual) {
+    contain: paint;
+    background-image: url("../images/theme-atlas/rhine-life-science-atlas-v1.svg");
+    background-repeat: no-repeat;
+    background-size: 500% 200%;
+    opacity: .68;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, .44) 18%, #000 42%);
+    mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, .44) 18%, #000 42%);
+}
+
+body:not(.background-all-lives):not(.background-black-current) :is(.heading-visual, .hero-atmosphere) > * {
+    display: none !important;
+}
+
+body:not(.background-all-lives):not(.background-black-current) .heading-visual::before,
+body:not(.background-all-lives):not(.background-black-current) .hero-atmosphere::before,
+body:not(.background-all-lives):not(.background-black-current) .hero-atmosphere::after {
+    content: none !important;
+    display: none !important;
+}
+
+body:not(.background-all-lives):not(.background-black-current) #view-dashboard .hero-atmosphere { background-position: 0 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-experiments .heading-visual { background-position: 25% 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-reagents .heading-visual { background-position: 50% 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-protocols .heading-visual { background-position: 75% 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-tools .heading-visual { background-position: 100% 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-bioinformatics .heading-visual { background-position: 0 100%; }
+body:not(.background-all-lives):not(.background-black-current) #view-cells .heading-visual { background-position: 25% 100%; }
+body:not(.background-all-lives):not(.background-black-current) #view-samples .heading-visual { background-position: 50% 100%; }
+body:not(.background-all-lives):not(.background-black-current) #view-mice .heading-visual { background-position: 75% 100%; }
+body:not(.background-all-lives):not(.background-black-current) #view-schedule .heading-visual { background-position: 100% 100%; }
+
+body.dark-theme:not(.background-all-lives):not(.background-black-current) :is(.dashboard-hero, .page-heading.technical-heading) {
+    background:
+        linear-gradient(104deg, rgba(23, 31, 27, .98) 0 52%, rgba(28, 42, 34, .97) 73%, rgba(35, 49, 38, .96) 100%),
+        var(--surface);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .22);
+}
+
+body.dark-theme:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual) {
+    filter: invert(.82) hue-rotate(138deg) saturate(.72) brightness(1.18);
+    opacity: .5;
+}
+
+.view { animation: rhineViewFade .18s ease-out both; }
+
+@keyframes rhineViewFade {
+    from { opacity: .01; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 700px) {
+    body:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual) {
+        width: 56%;
+        opacity: .42 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .view {
+        animation: none;
+    }
+}

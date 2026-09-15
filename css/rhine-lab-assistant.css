@@ -235,7 +235,7 @@ body.assistant-open .assistant-character-trigger {
     color: #111615;
     background: var(--acid);
     border-radius: 50%;
-    font: 900 15px/1 Arial, Helvetica, sans-serif;
+    font: 900 15px/1 var(--font-latin);
 }
 
 .assistant-orbit i {
@@ -250,7 +250,7 @@ body.assistant-open .assistant-character-trigger {
     padding: 5px 7px;
     color: var(--muted);
     border: 1px solid var(--line);
-    font: 800 9px/1 Arial, Helvetica, sans-serif;
+    font: 800 9px/1 var(--font-latin);
     letter-spacing: .1em;
 }
 
@@ -289,7 +289,7 @@ body.assistant-open .assistant-character-trigger {
 .assistant-message { display: flex; flex-direction: column; gap: 7px; max-width: 91%; }
 .assistant-message.user { align-self: flex-end; align-items: flex-end; }
 .assistant-message.assistant { align-self: flex-start; }
-.assistant-message-meta { color: var(--muted); font: 800 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .12em; }
+.assistant-message-meta { color: var(--muted); font: 800 9px/1 var(--font-latin); letter-spacing: .12em; }
 .assistant-message-body {
     padding: 11px 13px;
     white-space: pre-wrap;
@@ -319,7 +319,7 @@ body.assistant-open .assistant-character-trigger {
 }
 .assistant-action-card[data-state="applied"] { opacity: .7; border-left-color: var(--ok); }
 .assistant-action-card[data-state="dismissed"] { opacity: .52; border-left-color: var(--muted); }
-.assistant-action-card small { display: block; margin-bottom: 5px; color: var(--muted); font: 800 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .12em; }
+.assistant-action-card small { display: block; margin-bottom: 5px; color: var(--muted); font: 800 9px/1 var(--font-latin); letter-spacing: .12em; }
 .assistant-action-card strong { display: block; color: var(--ink); font-size: 13px; }
 .assistant-action-card p { margin: 6px 0 10px; color: var(--muted); font: 700 11px/1.55 var(--font-interface); }
 .assistant-action-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }

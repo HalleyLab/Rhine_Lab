@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import assistantApi from '../cloudflare/src/index.js';
 
-const [html, css, mobile, assistant, main, i18n, worker, appCss, config, sync, api, wrangler] = await Promise.all([
+const [html, css, mobile, assistant, main, i18n, worker, appCss, config, sync, api, wrangler, themeCss, rhineAtlas] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../css/rhine-lab-assistant.css', import.meta.url), 'utf8'),
     readFile(new URL('../css/rhine-lab-mobile.css', import.meta.url), 'utf8'),
@@ -14,8 +14,20 @@ const [html, css, mobile, assistant, main, i18n, worker, appCss, config, sync, a
     readFile(new URL('../js/rhine-lab-config.js', import.meta.url), 'utf8'),
     readFile(new URL('../js/rhine-lab-sync-v019.js', import.meta.url), 'utf8'),
     readFile(new URL('../cloudflare/src/index.js', import.meta.url), 'utf8'),
-    readFile(new URL('../cloudflare/wrangler.toml', import.meta.url), 'utf8')
+    readFile(new URL('../cloudflare/wrangler.toml', import.meta.url), 'utf8'),
+    readFile(new URL('../css/rhine-dashboard-refresh.css', import.meta.url), 'utf8'),
+    readFile(new URL('../images/theme-atlas/rhine-life-science-atlas-v1.svg', import.meta.url), 'utf8')
 ]);
+
+assert.match(themeCss, /rhine-life-science-atlas-v1\.svg/);
+assert.match(themeCss, /background-size:\s*500% 200%/);
+for (const view of ['dashboard', 'experiments', 'reagents', 'protocols', 'tools', 'bioinformatics', 'cells', 'samples', 'mice', 'schedule']) {
+    assert.match(themeCss, new RegExp(`#view-${view}[^}]+background-position`));
+}
+assert.doesNotMatch(themeCss, /RHINE LIFE \/ INTERNAL ARCHIVE|FACILITY ARCHIVE/);
+assert.doesNotMatch(rhineAtlas, /<text\b/i);
+assert.equal((rhineAtlas.match(/<rect\b/g) || []).length, 1, 'theme atlas should only use the invisible clipping rectangle');
+assert.match(worker, /rhine-life-science-atlas-v1\.svg/);
 
 assert.match(css, /width:\s*240px;\s*\n\s*height:\s*314px;/);
 assert.match(assistant, /document\.addEventListener\('pointermove', moveCharacter, \{ passive: false, capture: true \}\)/);
@@ -141,8 +153,7 @@ assert.match(appCss, /\.cold-storage-map\.is-rack/);
 assert.match(appCss, /\.cold-storage-racks\.vertical/);
 assert.match(appCss, /\.cold-storage-rack-handle[\s\S]*touch-action:\s*none/);
 assert.match(appCss, /html\[lang="en"\][\s\S]*\.story-quote cite \{\s*font-family: Arial, sans-serif !important;/);
-assert.ok(appCss.lastIndexOf('font-family: Arial, sans-serif !important;') > appCss.lastIndexOf('font-family: SimHei, "黑体"'));
-assert.match(appCss, /html\[lang="zh-CN"\] \.project-progress small,[\s\S]*\.compact-table tbody td:nth-child\(4\),[\s\S]*\.result-conclusion strong \{[\s\S]*font-family: SimHei/);
+assert.match(appCss, /html\[lang="zh-CN"\] \.project-progress small,[\s\S]*\.compact-table tbody td:nth-child\(4\),[\s\S]*\.result-conclusion strong \{[\s\S]*font-family: var\(--font-cjk\)/);
 
 const savedFetch = globalThis.fetch;
 const savedError = console.error;

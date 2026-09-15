@@ -382,7 +382,7 @@ html.native-app .app-boot-screen {
 
 .boot-logo-wordmark {
     fill: currentColor;
-    font-family: var(--font-latin, Helvetica, Arial, sans-serif);
+    font-family: var(--font-latin);
     font-size: 30px;
     font-weight: 700;
     letter-spacing: 16px;
@@ -675,7 +675,7 @@ body.dark-theme .app-boot-screen {
     padding: 0 6px;
     color: var(--text);
     background: var(--card);
-    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
     font-size: 12px;
     font-weight: 800;
     line-height: 1.45;
@@ -684,11 +684,11 @@ body.dark-theme .app-boot-screen {
 .embedded-lineage-branch.outgoing > em { left: 0; right: auto; }
 html[lang^="zh"] .embedded-lineage-flow :is(small, strong, span, em),
 html[lang^="zh"] .lineage-map text {
-    font-family: SimHei, "黑体", "Microsoft YaHei", sans-serif !important;
+    font-family: var(--font-cjk) !important;
 }
 html[lang="en"] .embedded-lineage-flow :is(small, strong, span, em),
 html[lang="en"] .lineage-map text {
-    font-family: Helvetica, Arial, sans-serif !important;
+    font-family: var(--font-latin) !important;
 }
 .lineage-map {
     min-height: 340px;
@@ -823,7 +823,7 @@ html[lang="en"] .lineage-map text {
     height: 22px;
     padding: 0 !important;
     appearance: none;
-    font-family: Helvetica, Arial, sans-serif !important;
+    font-family: var(--font-latin) !important;
     font-size: 15px;
     font-weight: 500;
     line-height: 1 !important;
