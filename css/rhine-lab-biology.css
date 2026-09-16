@@ -504,3 +504,28 @@ body #recordDetailDialog :is(.microbe-detail-hero,.plasmid-detail-hero,.virus-de
     .housing-room-map.is-zoomed{min-height:60vh}
     .housing-layout-rack{width:168px}
 }
+
+/* Individual organisms and microbial culture equipment share one drag system. */
+#microbeIncubatorTabs,.microbe-incubator-overview{--room-accent:#4fa39b}
+.microbe-rack-actions{display:flex;gap:8px;flex-wrap:wrap}
+.microbe-rack-manager>.compact-resource-toolbar{border-bottom:1px solid var(--line)!important}
+.housing-layout-rack.microbe::before{background:#4fa39b}
+.microbe-rack-position.occupied{background:color-mix(in srgb,#4fa39b 12%,var(--soft));border-color:color-mix(in srgb,#4fa39b 50%,var(--line))}
+[data-biological-drag]{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+[data-biological-drag].is-dragging{opacity:.42;cursor:grabbing}
+.cage-mouse-tokens{display:flex;flex-wrap:wrap;gap:3px}.cage-mouse-token{display:grid;place-items:center;width:22px;height:22px;color:inherit}.cage-mouse-token svg{width:20px;height:20px;fill:currentColor}
+.biology-item-drag-ghost{
+    display:grid!important;
+    place-items:center;
+    width:62px!important;
+    min-height:62px!important;
+    padding:10px!important;
+    color:var(--ink);
+    background:color-mix(in srgb,var(--paper) 76%,var(--accent) 24%)!important;
+    border:2px solid var(--accent)!important;
+    border-radius:50%!important;
+}
+.biology-item-drag-ghost svg{display:block;width:36px;height:36px;overflow:visible;fill:currentColor}
+.biology-item-drag-ghost.mouse{--accent:#c3a15d}.biology-item-drag-ghost.plant{--accent:#8fb83f}.biology-item-drag-ghost.microbe{--accent:#4fa39b}
+:is(.animal-rack-position,.plant-rack-position).drop-invalid{border-color:var(--danger)!important;outline:3px solid var(--danger);outline-offset:-3px}
+@media(max-width:700px){.biology-item-drag-ghost{width:56px!important;min-height:56px!important}.biology-item-drag-ghost svg{width:32px;height:32px}}

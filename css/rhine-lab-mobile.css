@@ -32,7 +32,7 @@
 
     .view.active > * + * { margin-top: 22px !important; }
     .animal-rack-position.occupied { touch-action: none; }
-    .plant-rack-position.occupied { touch-action: pan-x; }
+    .plant-rack-position.occupied { touch-action: none; }
     :is(.animal-rack-board,.plant-rack-board) { touch-action: pan-x; }
     :is([data-housing-item],[data-cold-storage-box],[data-door-reagent],[data-room-tab],[data-cold-storage-rack-handle],#reagentTable [data-reagent-catalog]) {
         user-select: none;

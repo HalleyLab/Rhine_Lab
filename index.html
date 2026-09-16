@@ -11,21 +11,21 @@
     <meta property="og:type" content="website">
     <meta property="og:image" content="images/rhine-life-logo.png">
     <title>Rhine Lab · 生命科学研究工作台</title>
-    <script src="js/rhine-lab-theme-init.js?v=0.3.2"></script>
+    <script src="js/rhine-lab-theme-init.js?v=0.3.3"></script>
     <link rel="manifest" href="app.webmanifest">
-    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.3.2" type="image/png" sizes="512x512">
-    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.2-web4">
+    <link rel="icon" href="images/rhine-life-app-icon.png?v=0.3.3" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.3">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.3-web4">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260914-3">
-    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.2">
+    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.3">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260830-1">
-    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.3.2-ai5">
-    <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.2">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.2-web4">
+    <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.3.3">
+    <link rel="stylesheet" href="css/rhine-lab-biology.css?v=0.3.3-bio2">
+    <link rel="stylesheet" href="css/rhine-lab-bioinformatics.css?v=0.3.3">
+    <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.3.3-ai5">
+    <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.3">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.3-web5">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -284,6 +284,21 @@
                     </section>
 
                     <section class="biology-subpage" data-biology-panel="microbes" hidden>
+                        <section class="panel microbe-rack-manager">
+                            <div class="module-toolbar in-panel compact-resource-toolbar"><div class="microbe-rack-actions"><button class="button ghost compact" type="button" data-add="microbeIncubator"><span>＋</span> 新建培养箱</button><button class="button primary compact" type="button" data-add="microbeRack"><span>＋</span> 新建摇架 / 层架</button></div></div>
+                            <div class="housing-room-tabs direct-drag-scroll" id="microbeIncubatorTabs" aria-label="菌种培养箱" data-drag-scroll></div>
+                            <section class="housing-room-overview microbe-incubator-overview">
+                                <header><div><p class="micro-label">INCUBATOR LAYOUT</p><h3 id="microbeIncubatorTitle">尚未建立培养箱</h3><small id="microbeIncubatorMeta">先建立培养箱，再放置摇架或静置层架。</small></div><span class="housing-room-drag-hint">拖动摇架调整位置</span></header>
+                                <div class="housing-room-map microbe-incubator-map" id="microbeIncubatorMap" data-room-map="microbe"></div>
+                            </section>
+                            <div class="plant-housing-layout microbe-housing-layout">
+                                <div class="plant-rack-board microbe-rack-board">
+                                    <header><div><p class="micro-label">CULTURE RACK</p><h3 id="microbeRackTitle">尚未建立摇架</h3><small id="microbeRackMeta">建立摇架或层架后，可为菌种分配培养位置。</small></div><div class="plant-rack-legend"><span><i class="occupied"></i>已放置</span><span><i class="selected"></i>当前</span><span><i></i>空位</span><button id="editMicrobeRackButton" class="button small ghost" type="button" hidden>编辑培养架</button></div></header>
+                                    <div class="plant-rack-grid microbe-rack-grid direct-drag-scroll" id="microbeRackGrid" data-drag-scroll></div>
+                                </div>
+                                <aside class="plant-position-inspector microbe-position-inspector" id="microbePositionInspector"><div class="plant-position-empty"><span>MICROBE</span><strong>选择一个位置</strong><p>查看该位置的菌种与培养条件。</p></div></aside>
+                            </div>
+                        </section>
                         <section class="panel table-panel biology-table-panel">
                             <div class="module-toolbar in-panel resource-only-toolbar"><div class="biology-toolbar-actions"><label class="inline-search"><span>⌕</span><input id="bioresourceSearch" type="search"></label><button class="button ghost compact" type="button" data-add="microbe"><span>＋</span> 录入菌种</button><button class="button primary compact" type="button" data-add="plasmid"><span>＋</span> 录入质粒</button></div></div>
                             <div class="filter-tabs biology-resource-filters" id="bioresourceFilters"><button class="active" type="button" data-bioresource-filter="全部">全部</button><button type="button" data-bioresource-filter="菌种">菌种</button><button type="button" data-bioresource-filter="质粒">质粒</button></div>
@@ -660,13 +675,13 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.3.2-web4"></script>
-    <script src="js/rhine-lab-config.js?v=0.3.2-ai"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.3.3-web5"></script>
+    <script src="js/rhine-lab-config.js?v=0.3.3-ai"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.3.2-ai2"></script>
-    <script src="js/rhine-lab-pwa.js?v=0.3.2-r2"></script>
-    <script src="js/rhine-lab-assistant.js?v=0.3.2-ai5"></script>
-    <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.2"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.3.2-web4"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.3.3-ai2"></script>
+    <script src="js/rhine-lab-pwa.js?v=0.3.3-r2"></script>
+    <script src="js/rhine-lab-assistant.js?v=0.3.3-ai5"></script>
+    <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.3"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.3.3-web5"></script>
 </body>
 </html>

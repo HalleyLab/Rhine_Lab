@@ -217,6 +217,17 @@
         { id: 'MIC-BL21-002', name: 'E. coli BL21(DE3)', species: 'Escherichia coli', strain: 'BL21(DE3)', biosafetyLevel: 'BSL-1', genotype: 'T7 RNA polymerase', source: '实验室保藏', medium: 'LB', growthConditions: '37°C · 200 rpm', resistance: '无', location: '-80°C / MIC-A2', status: '在库', frozenSampleId: '', notes: '用于重组蛋白表达。', createdBy: 'NODE-02', history: [] },
         { id: 'MIC-GV31-003', name: 'A. tumefaciens GV3101', species: 'Agrobacterium tumefaciens', strain: 'GV3101', biosafetyLevel: 'BSL-1', genotype: 'pMP90', source: '植物平台', medium: 'YEB', growthConditions: '28°C · 200 rpm', resistance: 'Rifampicin', location: '-80°C / MIC-B1', status: '在库', frozenSampleId: '', notes: '用于植物瞬时表达。', createdBy: 'NODE-04', history: [] }
     ];
+    defaults.microbeIncubators = [
+        { id: 'MINC-37-01', name: '微生物培养箱 37°C', temperature: '37°C', atmosphere: '常氧', location: '微生物室 / 北侧', shape: '圆角', entranceSide: '右侧', entrancePosition: 50, notes: '细菌常规培养', createdBy: 'NODE-02', history: [] },
+        { id: 'MINC-28-02', name: '微生物培养箱 28°C', temperature: '28°C', atmosphere: '常氧', location: '微生物室 / 东侧', shape: '矩形', entranceSide: '右侧', entrancePosition: 50, notes: '农杆菌与酵母培养', createdBy: 'NODE-04', history: [] }
+    ];
+    defaults.microbeRacks = [
+        { id: 'MRACK-37-S01', incubatorId: 'MINC-37-01', name: '摇架 #1', type: '摇架', rpm: 200, rows: 3, columns: 6, layoutX: 25, layoutY: 32, createdBy: 'NODE-02', history: [] },
+        { id: 'MRACK-28-S01', incubatorId: 'MINC-28-02', name: '摇架 #2', type: '摇架', rpm: 200, rows: 3, columns: 6, layoutX: 28, layoutY: 34, createdBy: 'NODE-04', history: [] }
+    ];
+    defaults.microbes[0].rackId = 'MRACK-37-S01'; defaults.microbes[0].position = 'A1'; defaults.microbes[0].status = '培养中';
+    defaults.microbes[1].rackId = 'MRACK-37-S01'; defaults.microbes[1].position = 'A2'; defaults.microbes[1].status = '培养中';
+    defaults.microbes[2].rackId = 'MRACK-28-S01'; defaults.microbes[2].position = 'A1'; defaults.microbes[2].status = '培养中';
     defaults.plasmids = [
         { id: 'PLA-PUC19-001', name: 'pUC19', backbone: 'pUC19', insert: '无', host: 'E. coli DH5α', sizeBp: 2686, resistance: 'Ampicillin', promoter: 'lac', source: '实验室保藏', sequenceRef: 'GenBank / 本地序列文件', location: '-20°C / DNA-A1', status: '在库', frozenSampleId: '', notes: '', createdBy: 'NODE-02', history: [] },
         { id: 'PLA-GFP-002', name: 'pLenti-EF1α-GFP', backbone: 'Lentiviral transfer vector', insert: 'GFP', host: 'E. coli Stbl3', sizeBp: 8740, resistance: 'Ampicillin', promoter: 'EF1α', source: '载体平台', sequenceRef: '本地 GenBank 记录', location: '-20°C / DNA-A3', status: '在库', frozenSampleId: '', notes: '慢病毒包装用转移质粒。', createdBy: 'NODE-05', history: [] }
@@ -324,7 +335,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'coldStorageUnits', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'coldStorageUnits', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -359,6 +370,11 @@
     let selectedPlantId = state.plants[0] ? state.plants[0].id : '';
     let zoomedPlantRoomId = '';
     let pendingPlantDefaults = null;
+    let activeMicrobeIncubatorId = state.microbeIncubators.some(function (item) { return item.id === localStorage.getItem('rhineLabActiveMicrobeIncubator'); }) ? localStorage.getItem('rhineLabActiveMicrobeIncubator') : (state.microbeIncubators[0] ? state.microbeIncubators[0].id : '');
+    let activeMicrobeRackId = state.microbeRacks.some(function (rack) { return rack.id === localStorage.getItem('rhineLabActiveMicrobeRack') && (!activeMicrobeIncubatorId || rack.incubatorId === activeMicrobeIncubatorId); }) ? localStorage.getItem('rhineLabActiveMicrobeRack') : ((state.microbeRacks.find(function (rack) { return rack.incubatorId === activeMicrobeIncubatorId; }) || {}).id || '');
+    let selectedMicrobeId = state.microbes[0] ? state.microbes[0].id : '';
+    let zoomedMicrobeIncubatorId = '';
+    let pendingMicrobeDefaults = null;
     let pendingFreezerDefaults = null;
     let editingColdStorageLevel = 0;
     let editingColdStorageRack = 0;
@@ -804,6 +820,8 @@
             plantRooms: Array.isArray(stored.plantRooms) ? stored.plantRooms : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plantRooms)),
             plantRacks: Array.isArray(stored.plantRacks) ? stored.plantRacks : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plantRacks)),
             microbes: Array.isArray(stored.microbes) ? stored.microbes : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.microbes)),
+            microbeIncubators: Array.isArray(stored.microbeIncubators) ? stored.microbeIncubators : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.microbeIncubators)),
+            microbeRacks: Array.isArray(stored.microbeRacks) ? stored.microbeRacks : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.microbeRacks)),
             plasmids: Array.isArray(stored.plasmids) ? stored.plasmids : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.plasmids)),
             viruses: Array.isArray(stored.viruses) ? stored.viruses : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.viruses)),
             bioProjects: Array.isArray(stored.bioProjects) ? stored.bioProjects : (Number(stored.exampleSeedVersion) >= 999 ? [] : clone(defaults.bioProjects)),
@@ -828,6 +846,7 @@
             security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
             exampleSeedVersion: Number(stored.exampleSeedVersion) || 0,
             housingSchemaVersion: Number(stored.housingSchemaVersion) || 0,
+            microbeHousingSchemaVersion: Number(stored.microbeHousingSchemaVersion) || 0,
             coldStorageSchemaVersion: Number(stored.coldStorageSchemaVersion) || 0
         };
     }
@@ -1345,6 +1364,7 @@
 
         migrateAnimalHousing(data);
         migratePlantHousing(data);
+        migrateMicrobeHousing(data);
         cleanupLegacyHousingPlaceholders(data);
         normalizeBioinformaticsData(data);
 
@@ -1617,6 +1637,52 @@
             plant.rackId = rack.id; plant.position = position; plant.location = formatPlantLocation(rack, position);
         });
     }
+    function migrateMicrobeHousing(data) {
+        data.microbeIncubators = normalizeHousingRooms(data.microbeIncubators, 'MINC', '微生物培养箱').map(function (incubator) {
+            return Object.assign({}, incubator, {
+                temperature: incubator.temperature || '37°C',
+                atmosphere: incubator.atmosphere || '常氧',
+                location: incubator.location || '位置待设置'
+            });
+        });
+        data.microbeRacks = (Array.isArray(data.microbeRacks) ? data.microbeRacks : []).map(function (rack, index) {
+            const incubator = data.microbeIncubators.find(function (item) { return item.id === rack.incubatorId; }) || data.microbeIncubators[0];
+            return Object.assign({}, rack, {
+                id: rack.id || 'MRACK-' + String(index + 1).padStart(3, '0'),
+                incubatorId: incubator ? incubator.id : '',
+                name: rack.name || '摇架 #' + (index + 1),
+                type: ['摇架', '静置层架', '滚瓶架'].includes(rack.type) ? rack.type : '摇架',
+                rpm: Math.max(0, Math.round(positiveNumber(rack.rpm, 0))),
+                rows: Math.round(number(rack.rows, 1, 12)) || 3,
+                columns: Math.round(number(rack.columns, 1, 48)) || 6,
+                layoutX: housingLayoutCoordinate(rack.layoutX, index, 'x'),
+                layoutY: housingLayoutCoordinate(rack.layoutY, index, 'y'),
+                createdBy: anonymousContributor(rack.createdBy),
+                history: Array.isArray(rack.history) ? rack.history : []
+            });
+        });
+        const occupied = new Set();
+        data.microbes = (Array.isArray(data.microbes) ? data.microbes : []).map(function (microbe, index) {
+            const normalized = Object.assign({}, microbe, {
+                id: microbe.id || 'MIC-' + String(index + 1).padStart(3, '0'),
+                name: microbe.name || '未命名菌种',
+                rackId: microbe.rackId || '',
+                position: normalizePlantPosition(microbe.position),
+                createdBy: anonymousContributor(microbe.createdBy),
+                history: Array.isArray(microbe.history) ? microbe.history : []
+            });
+            const rack = data.microbeRacks.find(function (item) { return item.id === normalized.rackId; });
+            const placementKey = rack && normalized.position ? rack.id + ':' + normalized.position : '';
+            if (!rack || !isValidPlantPosition(rack, normalized.position) || occupied.has(placementKey)) {
+                normalized.rackId = ''; normalized.position = '';
+            } else {
+                occupied.add(placementKey);
+                normalized.location = formatMicrobeLocation(rack, normalized.position, data.microbeIncubators);
+            }
+            return normalized;
+        });
+        data.microbeHousingSchemaVersion = 1;
+    }
     function normalizeBioinformaticsData(data) {
         [['bioProjects','BIO-PRJ','未命名项目'],['bioDatasets','BIO-DATA','未命名数据集'],['bioPipelines','BIO-FLOW','未命名分析流程'],['bioRuns','BIO-RUN','未命名运行任务']].forEach(function (spec) {
             data[spec[0]] = (Array.isArray(data[spec[0]]) ? data[spec[0]] : []).map(function (record, index) {
@@ -1626,12 +1692,18 @@
     }
 
     function normalizePlantPosition(value) { const match = String(value || '').trim().toUpperCase().match(/^([A-L])[-\s]?(\d{1,2})$/); return match ? match[1] + Number(match[2]) : ''; }
-    function isValidPlantPosition(rack, position) { const match = String(position || '').match(/^([A-L])(\d{1,2})$/); return Boolean(rack && match && match[1].charCodeAt(0) - 64 <= rack.rows && Number(match[2]) <= rack.columns); }
+    function isValidPlantPosition(rack, position) { const match = String(position || '').match(/^([A-L])(\d{1,2})$/); return Boolean(rack && match && match[1].charCodeAt(0) - 64 <= rack.rows && Number(match[2]) >= 1 && Number(match[2]) <= rack.columns); }
     function firstAvailablePlantPosition(rack, plants) {
         if (!rack) return ''; const occupied = new Set(plants.filter(function (item) { return item.rackId === rack.id; }).map(function (item) { return item.position; }));
         for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) { const position = String.fromCharCode(65 + row) + column; if (!occupied.has(position)) return position; } return '';
     }
     function formatPlantLocation(rack, position) { return rack ? rack.facility + (position ? ' / ' + position : '') : '未分配'; }
+    function formatMicrobeLocation(rack, position, incubators) {
+        if (!rack) return '未分配位置';
+        const collection = incubators || (typeof state !== 'undefined' ? state.microbeIncubators : []);
+        const incubator = collection.find(function (item) { return item.id === rack.incubatorId; });
+        return [incubator && incubator.name, rack.name, position].filter(Boolean).join(' / ') || '未分配位置';
+    }
     function normalizeAnimalPosition(value) {
         const match = String(value || '').trim().toUpperCase().match(/^([A-L])[-\s]?(\d{1,2})$/);
         return match ? match[1] + Number(match[2]) : '';
@@ -2008,7 +2080,7 @@
         let suppressClick = false;
         document.addEventListener('pointerdown', function (event) {
             const scroller = event.target.closest('[data-drag-scroll]');
-            if (!scroller || event.button !== 0 || event.pointerType !== 'mouse' || event.target.closest('.animal-rack-delete,.plant-rack-delete')) return;
+            if (!scroller || event.button !== 0 || event.pointerType !== 'mouse' || event.target.closest('.animal-rack-delete,.plant-rack-delete,[data-housing-item],[data-biological-drag]')) return;
             drag = { element: scroller, pointerId: event.pointerId, startX: event.clientX, startScroll: scroller.scrollLeft, moved: false };
         });
         document.addEventListener('pointermove', function (event) {
@@ -2030,14 +2102,14 @@
         let suppressClick = false;
         document.addEventListener('pointerdown', function (event) {
             const card = event.target.closest('[data-room-layout-rack]');
-            if (!card || event.button !== 0 || dragInteractionsLocked() || event.target.closest('[data-delete-animal-rack],[data-delete-plant-rack]')) return;
+            if (!card || event.button !== 0 || dragInteractionsLocked() || event.target.closest('[data-delete-animal-rack],[data-delete-plant-rack],[data-delete-microbe-rack]')) return;
             const map = card.closest('[data-room-map]');
             if (!map) return;
             const cardRect = card.getBoundingClientRect();
             drag = {
                 card: card, map: map, pointerId: event.pointerId,
                 kind: card.dataset.roomLayoutRack,
-                id: card.dataset.animalRack || card.dataset.plantRack,
+                id: card.dataset.animalRack || card.dataset.plantRack || card.dataset.microbeRack,
                 offsetX: event.clientX - cardRect.left, offsetY: event.clientY - cardRect.top,
                 moved: false, x: 0, y: 0
             };
@@ -2065,7 +2137,7 @@
             if (!drag || drag.pointerId !== event.pointerId) return;
             drag.card.classList.remove('is-dragging');
             if (drag.moved) {
-                const collection = drag.kind === 'animal' ? state.animalRacks : state.plantRacks;
+                const collection = drag.kind === 'animal' ? state.animalRacks : (drag.kind === 'plant' ? state.plantRacks : state.microbeRacks);
                 const rack = collection.find(function (item) { return item.id === drag.id; });
                 if (rack) { rack.layoutX = roundQuantity(drag.x); rack.layoutY = roundQuantity(drag.y); saveState(); }
                 suppressClick = true;
@@ -2722,7 +2794,7 @@
     }
 
     function housingSlotTargetAt(x, y, kind) {
-        const selector = '[data-housing-slot="' + kind + '"]';
+        const selector = kind === 'mouse' ? '.animal-rack-position.occupied[data-animal-cage]' : '[data-housing-slot="' + kind + '"]';
         const direct = housingHitAt(x, y, selector);
         if (direct) return direct;
         return Array.from(document.querySelectorAll(selector)).find(function (slot) {
@@ -2731,12 +2803,26 @@
         }) || null;
     }
 
+    function biologicalDragIconHtml(kind) {
+        if (kind === 'mouse') return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 18c-4.2-1.6-5.7-6.9-1.7-9.3 3.2-1.9 6.7.6 7.1 4.1 7.9-3 17.9 1.2 18.2 10.3.2 6.4-4.3 11.1-10.5 11.8-6.5.7-13.2-2.5-15.3-8.7Z"/><circle cx="33.5" cy="20" r="1.7"/><path d="M15.3 27.5C8.7 27.2 5 31.2 5 36c0 3.8 3 6.4 7 6.4" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
+        if (kind === 'plant') return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 42V18" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M23.8 24C13.7 24 8 18.7 8 8.5 18.2 8.5 23.8 13.8 23.8 24Zm.4-5.5C25 9.5 30.3 5 40 5c0 9.2-5.5 13.8-15.8 13.5Z"/></svg>';
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="13" width="36" height="22" rx="11"/><circle cx="16" cy="22" r="2" fill="var(--paper)"/><circle cx="25" cy="28" r="2" fill="var(--paper)"/><circle cx="34" cy="20" r="1.7" fill="var(--paper)"/></svg>';
+    }
+
     function bindHousingSlotDrag() {
         let drag = null;
         let suppressClick = false;
         const touchPoints = new Map();
         document.addEventListener('pointerdown', function (event) {
-            const slot = event.target.closest('[data-housing-item]');
+            const biological = event.target.closest('[data-biological-drag]');
+            const slot = biological || event.target.closest('[data-housing-item]');
+            if (biological) {
+                if (event.button !== 0 || dragInteractionsLocked()) return;
+                event.stopPropagation();
+                drag = { pointerId: event.pointerId, slot: biological, kind: biological.dataset.biologicalDrag, itemId: biological.dataset.biologicalItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
+                if (event.pointerType === 'mouse') event.preventDefault();
+                return;
+            }
             if (event.pointerType === 'touch') {
                 touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY, slot: slot });
                 const cageTouch = Array.from(touchPoints.entries()).find(function (entry) {
@@ -2749,7 +2835,6 @@
                     const x = points.reduce(function (sum, entry) { return sum + entry[1].x; }, 0) / points.length;
                     const y = points.reduce(function (sum, entry) { return sum + entry[1].y; }, 0) / points.length;
                     drag = { pointerId: event.pointerId, touchIds: new Set(points.map(function (entry) { return entry[0]; })), slot: cageSlot, kind: 'animal', itemId: cageSlot.dataset.housingItem, startX: x, startY: y, x: x, y: y, moved: false, target: null, ghost: null };
-                    points.forEach(function (entry) { cageSlot.setPointerCapture?.(entry[0]); });
                     event.preventDefault();
                     return;
                 }
@@ -2760,7 +2845,6 @@
                 event.stopPropagation();
             }
             drag = { pointerId: event.pointerId, slot: slot, kind: slot.dataset.housingSlot, itemId: slot.dataset.housingItem, startX: event.clientX, startY: event.clientY, moved: false, target: null, ghost: null };
-            slot.setPointerCapture?.(event.pointerId);
         }, { passive: false });
         document.addEventListener('pointermove', function (event) {
             if (event.pointerType === 'touch' && touchPoints.has(event.pointerId)) touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY, slot: touchPoints.get(event.pointerId).slot });
@@ -2769,26 +2853,60 @@
             const x = activeTouches.length ? activeTouches.reduce(function (sum, point) { return sum + point.x; }, 0) / activeTouches.length : event.clientX;
             const y = activeTouches.length ? activeTouches.reduce(function (sum, point) { return sum + point.y; }, 0) / activeTouches.length : event.clientY;
             const deltaX = x - drag.startX; const deltaY = y - drag.startY;
-            if (!drag.moved && event.pointerType === 'touch' && !drag.touchIds && Math.abs(deltaX) > Math.abs(deltaY)) return;
             if (!drag.moved && Math.hypot(deltaX, deltaY) < 3) return;
             drag.x = x; drag.y = y;
             if (!drag.moved) {
                 drag.moved = true; drag.slot.classList.add('is-dragging');
-                drag.ghost = drag.slot.cloneNode(true); drag.ghost.classList.add('housing-slot-drag-ghost'); drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
+                const captureIds = drag.touchIds ? Array.from(drag.touchIds) : [drag.pointerId];
+                captureIds.forEach(function (id) { document.body.setPointerCapture?.(id); });
+                if (['mouse', 'plant', 'microbe'].includes(drag.kind)) {
+                    drag.ghost = document.createElement('div');
+                    drag.ghost.className = 'housing-slot-drag-ghost biology-item-drag-ghost ' + drag.kind;
+                    drag.ghost.innerHTML = biologicalDragIconHtml(drag.kind);
+                } else {
+                    drag.ghost = drag.slot.cloneNode(true); drag.ghost.classList.add('housing-slot-drag-ghost');
+                }
+                drag.ghost.setAttribute('aria-hidden', 'true'); document.body.appendChild(drag.ghost);
             }
             drag.ghost.style.left = x + 'px'; drag.ghost.style.top = y + 'px';
-            drag.target?.classList.remove('drop-target');
-            const rackTrigger = housingHitAt(x, y, drag.kind === 'animal' ? '[data-animal-rack]' : '[data-plant-rack]');
-            const nextRackId = rackTrigger && (drag.kind === 'animal' ? rackTrigger.dataset.animalRack : rackTrigger.dataset.plantRack);
-            const activeRackId = drag.kind === 'animal' ? activeAnimalRackId : activePlantRackId;
+            drag.target?.classList.remove('drop-target', 'drop-invalid');
+            drag.target = null;
+            const rackKind = drag.kind === 'mouse' ? 'animal' : drag.kind;
+            const roomSelector = rackKind === 'animal' ? '[data-animal-room]' : (rackKind === 'plant' ? '[data-plant-room]' : '[data-microbe-incubator]');
+            const roomTrigger = housingHitAt(x, y, roomSelector);
+            const nextRoomId = roomTrigger && (rackKind === 'animal' ? roomTrigger.dataset.animalRoom : (rackKind === 'plant' ? roomTrigger.dataset.plantRoom : roomTrigger.dataset.microbeIncubator));
+            if (nextRoomId && nextRoomId !== drag.openedRoom) {
+                drag.openedRoom = nextRoomId;
+                if (rackKind === 'animal') { zoomedAnimalRoomId = nextRoomId; selectAnimalRoom(nextRoomId); }
+                else if (rackKind === 'plant') { zoomedPlantRoomId = nextRoomId; selectPlantRoom(nextRoomId); }
+                else { zoomedMicrobeIncubatorId = nextRoomId; selectMicrobeIncubator(nextRoomId); }
+                event.preventDefault(); return;
+            }
+            const rackSelector = rackKind === 'animal' ? '[data-animal-rack]' : (rackKind === 'plant' ? '[data-plant-rack]' : '[data-microbe-rack]');
+            const rackTrigger = housingHitAt(x, y, rackSelector);
+            const nextRackId = rackTrigger && (rackKind === 'animal' ? rackTrigger.dataset.animalRack : (rackKind === 'plant' ? rackTrigger.dataset.plantRack : rackTrigger.dataset.microbeRack));
+            const activeRackId = rackKind === 'animal' ? activeAnimalRackId : (rackKind === 'plant' ? activePlantRackId : activeMicrobeRackId);
             if (nextRackId && nextRackId !== activeRackId && nextRackId !== drag.openedRack) {
                 drag.openedRack = nextRackId;
-                drag.kind === 'animal' ? selectAnimalRack(nextRackId) : selectPlantRack(nextRackId);
+                if (rackKind === 'animal') selectAnimalRack(nextRackId);
+                else if (rackKind === 'plant') selectPlantRack(nextRackId);
+                else selectMicrobeRack(nextRackId);
                 event.preventDefault(); return;
             }
             const target = housingSlotTargetAt(x, y, drag.kind);
             drag.target = target;
-            drag.target?.classList.add('drop-target');
+            drag.invalid = false;
+            if (target && drag.kind === 'mouse') {
+                const animal = state.mice.find(function (item) { return item.id === drag.itemId; });
+                const cage = state.animalCages.find(function (item) { return item.id === target.dataset.animalCage; });
+                const residents = cage ? state.mice.filter(function (item) { return item.cageId === cage.id; }).length : 0;
+                drag.invalid = Boolean(cage && animal && animal.cageId !== cage.id && residents >= cage.capacity);
+            }
+            if (target && drag.kind === 'microbe') {
+                const item = state.microbes.find(function (entry) { return entry.id === drag.itemId; });
+                drag.invalid = Boolean(item && !item.rackId && state.microbes.some(function (entry) { return entry.id !== item.id && entry.rackId === target.dataset.rackId && entry.position === target.dataset.position; }));
+            }
+            drag.target?.classList.add(drag.invalid ? 'drop-invalid' : 'drop-target');
             event.preventDefault();
         }, { passive: false });
         function finish(event) {
@@ -2797,32 +2915,52 @@
             if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
             if (!ownsDrag) return;
             const x = drag.x ?? (touchPoint ? touchPoint.x : event.clientX); const y = drag.y ?? (touchPoint ? touchPoint.y : event.clientY);
-            const target = event.type === 'pointerup' ? (housingSlotTargetAt(x, y, drag.kind) || drag.target) : null;
-            drag.slot.classList.remove('is-dragging'); drag.target?.classList.remove('drop-target');
-            if (drag.moved && target && target !== drag.slot) {
-                const collection = drag.kind === 'animal' ? state.animalCages : state.plants;
+            const target = event.type === 'pointerup' ? housingSlotTargetAt(x, y, drag.kind) : null;
+            drag.slot.classList.remove('is-dragging'); drag.target?.classList.remove('drop-target', 'drop-invalid');
+            if (drag.moved && drag.kind === 'mouse' && target && target !== drag.slot) {
+                const animal = state.mice.find(function (item) { return item.id === drag.itemId; });
+                const cage = state.animalCages.find(function (item) { return item.id === target.dataset.animalCage; });
+                const residents = cage ? state.mice.filter(function (item) { return item.cageId === cage.id; }).length : 0;
+                if (animal && cage && animal.cageId !== cage.id && residents >= cage.capacity) showToast('目标笼位已达到容量上限');
+                else if (animal && cage && animal.cageId !== cage.id) {
+                    animal.cageId = cage.id; animal.cage = cage.label;
+                    activeAnimalRackId = cage.rackId; selectedAnimalCageId = cage.id;
+                    localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
+                    addActivity('移动动物“' + animal.id + '”到笼位“' + cage.label + '”');
+                    saveState(); renderMice();
+                }
+            }
+            if (drag.moved && drag.kind !== 'mouse' && target && target !== drag.slot) {
+                const collection = drag.kind === 'animal' ? state.animalCages : (drag.kind === 'plant' ? state.plants : (drag.kind === 'microbe' ? state.microbes : []));
                 const item = collection.find(function (entry) { return entry.id === drag.itemId; });
                 const targetRackId = target.dataset.rackId; const targetPosition = target.dataset.position;
                 const other = collection.find(function (entry) { return entry.id !== drag.itemId && entry.rackId === targetRackId && entry.position === targetPosition; });
-                if (item && (item.rackId !== targetRackId || item.position !== targetPosition)) {
+                if (other && item && !item.rackId) showToast('请先选择空位放置未分配的材料');
+                else if (item && (item.rackId !== targetRackId || item.position !== targetPosition)) {
                     const sourceRackId = item.rackId; const sourcePosition = item.position;
                     item.rackId = targetRackId; item.position = targetPosition;
                     if (drag.kind === 'plant') item.location = formatPlantLocation(state.plantRacks.find(function (rack) { return rack.id === targetRackId; }), targetPosition);
+                    if (drag.kind === 'microbe') item.location = formatMicrobeLocation(state.microbeRacks.find(function (rack) { return rack.id === targetRackId; }), targetPosition);
                     if (other) {
                         other.rackId = sourceRackId; other.position = sourcePosition;
                         if (drag.kind === 'plant') other.location = formatPlantLocation(state.plantRacks.find(function (rack) { return rack.id === sourceRackId; }), sourcePosition);
+                        if (drag.kind === 'microbe') other.location = formatMicrobeLocation(state.microbeRacks.find(function (rack) { return rack.id === sourceRackId; }), sourcePosition);
                     }
                     if (drag.kind === 'animal') { activeAnimalRackId = targetRackId; selectedAnimalCageId = item.id; addActivity((other ? '交换' : '移动') + '笼位“' + item.label + '”'); }
-                    else { activePlantRackId = targetRackId; selectedPlantId = item.id; addActivity((other ? '交换' : '移动') + '植物“' + item.name + '”'); }
-                    saveState(); drag.kind === 'animal' ? renderMice() : renderPlants();
+                    else if (drag.kind === 'plant') { activePlantRackId = targetRackId; selectedPlantId = item.id; addActivity((other ? '交换' : '移动') + '植物“' + item.name + '”'); }
+                    else if (drag.kind === 'microbe') { activeMicrobeRackId = targetRackId; selectedMicrobeId = item.id; addActivity((other ? '交换' : '移动') + '菌种“' + item.name + '”'); }
+                    saveState();
+                    if (drag.kind === 'animal') renderMice(); else if (drag.kind === 'plant') renderPlants(); else renderBioResources();
                 }
             }
             if (drag.moved) { suppressClick = true; window.setTimeout(function () { suppressClick = false; }, 300); }
             drag.ghost?.remove();
+            const captureIds = drag.touchIds ? Array.from(drag.touchIds) : [drag.pointerId];
+            captureIds.forEach(function (id) { if (document.body.hasPointerCapture?.(id)) document.body.releasePointerCapture(id); });
             drag = null;
         }
         document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', finish);
-        document.addEventListener('click', function (event) { if (suppressClick && event.target.closest('[data-housing-slot]')) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; } }, true);
+        document.addEventListener('click', function (event) { if (suppressClick) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; } }, true);
     }
 
     function bindRoomTabReorder() {
@@ -2830,7 +2968,7 @@
         let suppressClick = false;
         document.addEventListener('dragstart', function (event) {
             const tab = event.target.closest('[data-room-tab]');
-            if (!tab || dragInteractionsLocked() || event.target.closest('[data-edit-animal-room],[data-edit-plant-room]')) return;
+            if (!tab || dragInteractionsLocked() || event.target.closest('[data-edit-animal-room],[data-edit-plant-room],[data-edit-microbe-incubator]')) return;
             draggedTab = tab;
             tab.classList.add('is-reordering');
             if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tab.dataset.roomTab); }
@@ -2849,14 +2987,16 @@
             const target = event.target.closest('[data-room-tab]');
             if (!draggedTab || !target || target === draggedTab || target.dataset.roomKind !== draggedTab.dataset.roomKind) return;
             event.preventDefault();
-            const collection = draggedTab.dataset.roomKind === 'animal' ? state.animalRooms : state.plantRooms;
+            const collection = draggedTab.dataset.roomKind === 'animal' ? state.animalRooms : (draggedTab.dataset.roomKind === 'plant' ? state.plantRooms : state.microbeIncubators);
             const from = collection.findIndex(function (item) { return item.id === draggedTab.dataset.roomTab; });
             const to = collection.findIndex(function (item) { return item.id === target.dataset.roomTab; });
             if (from >= 0 && to >= 0) {
                 const moved = collection.splice(from, 1)[0];
                 collection.splice(to, 0, moved);
                 saveState();
-                draggedTab.dataset.roomKind === 'animal' ? renderMice() : renderPlants();
+                if (draggedTab.dataset.roomKind === 'animal') renderMice();
+                else if (draggedTab.dataset.roomKind === 'plant') renderPlants();
+                else renderBioResources();
                 suppressClick = true;
             }
             target.classList.remove('is-drop-target');
@@ -2885,7 +3025,7 @@
                 if (syncControl) syncControl.click();
                 return;
             }
-            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-cold-storage], [data-edit-cold-storage-level], [data-edit-cold-storage-rack], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
+            const mutationTarget = event.target.closest('[data-add], [data-animal-position], [data-plant-position], [data-microbe-position], [data-add-animal-to-cage], [data-edit-animal-room], [data-edit-plant-room], [data-edit-microbe-incubator], [data-edit-microbe-rack], [data-edit-cold-storage], [data-edit-cold-storage-level], [data-edit-cold-storage-rack], [data-delete-animal-rack], [data-delete-plant-rack], [data-delete-microbe-rack], [data-delete-animal-cage], [data-delete-task], [data-edit-task], [data-add-result-for], [data-edit-result], [data-delete-result], [data-remove-result-attachment], [data-task-check], [data-start-scheduled-experiment], [data-scan-freezer], [data-start-scan-intake], [data-sample-position], [data-add-reagent-row], [data-remove-reagent-row], [data-add-formulation-component], [data-remove-formulation-component], [data-add-experiment-reagent], [data-remove-experiment-reagent], [data-edit-record], [data-delete-record], [data-confirm-delete], [data-run-action], [data-run-timer], [data-run-calculate], [data-calc-token], [data-calc-action], [data-toggle-run-calculator], [data-save-lineage-from], [data-delete-embedded-lineage], [data-clear-apparatus], [data-remove-run-photo], [data-add-passage], [data-open-clear-workspace], [data-confirm-clear-workspace]');
             if (mutationTarget && denyReadOnlyMutation(event)) return;
 
             const nav = event.target.closest('[data-view]');
@@ -3101,6 +3241,8 @@
 
             const deletePlantRack = event.target.closest('[data-delete-plant-rack]');
             if (deletePlantRack) { requestRecordDelete('plantRack', deletePlantRack.dataset.deletePlantRack); return; }
+            const deleteMicrobeRack = event.target.closest('[data-delete-microbe-rack]');
+            if (deleteMicrobeRack) { requestRecordDelete('microbeRack', deleteMicrobeRack.dataset.deleteMicrobeRack); return; }
 
             const deleteCage = event.target.closest('[data-delete-animal-cage]');
             if (deleteCage) {
@@ -3133,6 +3275,18 @@
                 if (room) openEntryDialog('plantRoom', { edit: true, key: room.id, record: room });
                 return;
             }
+            const editMicrobeIncubator = event.target.closest('[data-edit-microbe-incubator]');
+            if (editMicrobeIncubator) {
+                const incubator = state.microbeIncubators.find(function (item) { return item.id === editMicrobeIncubator.dataset.editMicrobeIncubator; });
+                if (incubator) openEntryDialog('microbeIncubator', { edit: true, key: incubator.id, record: incubator });
+                return;
+            }
+            const editMicrobeRack = event.target.closest('[data-edit-microbe-rack]');
+            if (editMicrobeRack) {
+                const rack = state.microbeRacks.find(function (item) { return item.id === editMicrobeRack.dataset.editMicrobeRack; });
+                if (rack) openEntryDialog('microbeRack', { edit: true, key: rack.id, record: rack });
+                return;
+            }
 
             const animalRoom = event.target.closest('[data-animal-room]');
             if (animalRoom) {
@@ -3149,6 +3303,13 @@
                 selectPlantRoom(roomId);
                 return;
             }
+            const microbeIncubator = event.target.closest('[data-microbe-incubator]');
+            if (microbeIncubator) {
+                const incubatorId = microbeIncubator.dataset.microbeIncubator;
+                zoomedMicrobeIncubatorId = incubatorId === activeMicrobeIncubatorId && zoomedMicrobeIncubatorId === incubatorId ? '' : incubatorId;
+                selectMicrobeIncubator(incubatorId);
+                return;
+            }
 
             const animalRack = event.target.closest('[data-animal-rack]');
             if (animalRack) {
@@ -3158,6 +3319,8 @@
 
             const plantRack = event.target.closest('[data-plant-rack]');
             if (plantRack) { selectPlantRack(plantRack.dataset.plantRack); return; }
+            const microbeRack = event.target.closest('[data-microbe-rack]');
+            if (microbeRack) { selectMicrobeRack(microbeRack.dataset.microbeRack); return; }
 
             const animalCage = event.target.closest('[data-animal-cage]');
             if (animalCage) {
@@ -3169,6 +3332,12 @@
             if (animalPosition) {
                 pendingAnimalCageDefaults = { rackId: activeAnimalRackId, position: animalPosition.dataset.animalPosition };
                 openEntryDialog('animalCage');
+                return;
+            }
+            const microbePosition = event.target.closest('[data-microbe-position]');
+            if (microbePosition) {
+                pendingMicrobeDefaults = { rackId: activeMicrobeRackId, position: microbePosition.dataset.microbePosition };
+                openEntryDialog('microbe');
                 return;
             }
 
@@ -3982,7 +4151,7 @@
         const items = state.mice.filter(item => [item.id, item.species, item.strain, item.genotype, item.cage, item.status, item.ethics, item.line, item.parents, item.project, item.marker].join(' ').toLowerCase().includes(search));
         renderAnimalHousing();
         document.getElementById('mouseTable').innerHTML = items.map(function (item) {
-            return '<tr class="clickable-data-row" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>ANIMAL RECORD' + contributorInline(item) + '</small></td><td><strong>' + esc(item.species || '未设置') + '</strong></td><td><strong>' + esc(item.strain || '未设置') + '</strong><small>' + esc(item.genotype || '基因型未填写') + '</small></td><td>' + esc(item.sex || '未确认') + '</td><td>' + esc(item.birth || '未填写') + '</td><td><strong>' + esc(item.cage || '未分配') + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在养') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+            return '<tr class="clickable-data-row" data-biological-drag="mouse" data-biological-item="' + esc(item.id) + '" data-mouse-id="' + esc(item.id) + '" tabindex="0" aria-label="查看动物 ' + esc(item.id) + ' 的详细信息"><td><strong>' + esc(item.id) + '</strong><small>ANIMAL RECORD' + contributorInline(item) + '</small></td><td><strong>' + esc(item.species || '未设置') + '</strong></td><td><strong>' + esc(item.strain || '未设置') + '</strong><small>' + esc(item.genotype || '基因型未填写') + '</small></td><td>' + esc(item.sex || '未确认') + '</td><td>' + esc(item.birth || '未填写') + '</td><td><strong>' + esc(item.cage || '未分配') + '</strong></td><td><span class="status-chip ' + statusClass(item.status) + '">' + esc(item.status || '在养') + '</span></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
         }).join('') || '<tr><td colspan="8">暂无动物条目；请先建立笼架和笼位，再添加动物。</td></tr>';
     }
 
@@ -4034,11 +4203,13 @@
     }
 
     function housingRoomTabHtml(kind, item, index, active, detail, expanded) {
-        const editAttribute = kind === 'animal' ? 'data-edit-animal-room' : 'data-edit-plant-room';
-        const selectAttribute = kind === 'animal' ? 'data-animal-room' : 'data-plant-room';
+        const editAttribute = kind === 'animal' ? 'data-edit-animal-room' : (kind === 'plant' ? 'data-edit-plant-room' : 'data-edit-microbe-incubator');
+        const selectAttribute = kind === 'animal' ? 'data-animal-room' : (kind === 'plant' ? 'data-plant-room' : 'data-microbe-incubator');
+        const category = kind === 'microbe' ? 'INCUBATOR ' : 'ROOM ';
+        const editLabel = kind === 'microbe' ? '编辑培养箱' : '编辑房间';
         return '<article class="housing-room-tab' + (active ? ' active' : '') + (expanded ? ' is-expanded' : '') + '" role="button" tabindex="0" aria-expanded="' + (expanded ? 'true' : 'false') + '" draggable="true" data-room-tab="' + esc(item.id) + '" data-room-kind="' + kind + '" ' + selectAttribute + '="' + esc(item.id) + '">' +
-            '<span>ROOM ' + String(index + 1).padStart(2, '0') + '</span><strong>' + esc(interfaceText(item.name)) + '</strong><small>' + esc(detail) + '</small>' +
-            '<button class="housing-room-edit" type="button" ' + editAttribute + '="' + esc(item.id) + '" draggable="false" aria-label="' + esc(interfaceText('编辑房间')) + '" title="' + esc(interfaceText('编辑房间')) + '">✎</button>' +
+            '<span>' + category + String(index + 1).padStart(2, '0') + '</span><strong>' + esc(interfaceText(item.name)) + '</strong><small>' + esc(detail) + '</small>' +
+            '<button class="housing-room-edit" type="button" ' + editAttribute + '="' + esc(item.id) + '" draggable="false" aria-label="' + esc(interfaceText(editLabel)) + '" title="' + esc(interfaceText(editLabel)) + '">✎</button>' +
             '<i class="housing-room-toggle" aria-hidden="true">' + (expanded ? '−' : '+') + '</i>' +
             '<i class="housing-room-grip" aria-hidden="true">⋮⋮</i></article>';
     }
@@ -4107,7 +4278,7 @@
         for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) {
             const position = String.fromCharCode(65 + row) + column; const plant = plantByPosition.get(position);
             if (!plant) cells += '<button class="plant-rack-position empty" type="button" data-housing-slot="plant" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-plant-position="' + position + '" aria-label="在 ' + position + ' 登记植物"><span>' + position + '</span><strong>＋</strong></button>';
-            else cells += '<button class="plant-rack-position occupied' + (plant.id === selectedPlantId ? ' active' : '') + '" type="button" data-housing-slot="plant" data-housing-item="' + esc(plant.id) + '" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-plant-id="' + esc(plant.id) + '"><span>' + position + '</span><strong>' + esc(plant.name) + '</strong><small>' + esc(plant.growthStage || plant.status || '已定位') + '</small></button>';
+            else cells += '<button class="plant-rack-position occupied' + (plant.id === selectedPlantId ? ' active' : '') + '" type="button" data-housing-slot="plant" data-housing-item="' + esc(plant.id) + '" data-biological-drag="plant" data-biological-item="' + esc(plant.id) + '" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-plant-id="' + esc(plant.id) + '"><span>' + position + '</span><strong>' + esc(plant.name) + '</strong><small>' + esc(plant.growthStage || plant.status || '已定位') + '</small></button>';
         }
         grid.innerHTML = cells; renderPlantPositionInspector();
     }
@@ -4140,6 +4311,7 @@
     function renderBioResources() {
         const table = document.getElementById('bioresourceTable');
         if (!table) return;
+        renderMicrobeHousing();
         const search = valueOf('bioresourceSearch').toLowerCase();
         const items = state.microbes.map(function (item) { return { type: 'microbe', kind: '菌种', item: item }; }).concat(state.plasmids.map(function (item) { return { type: 'plasmid', kind: '质粒', item: item }; })).filter(function (entry) {
             if (bioresourceFilter !== '全部' && entry.kind !== bioresourceFilter) return false;
@@ -4150,8 +4322,104 @@
             const host = entry.type === 'microbe' ? item.species : item.host;
             const feature = entry.type === 'microbe' ? [item.strain, item.genotype].filter(Boolean).join(' · ') : [item.backbone, item.insert].filter(Boolean).join(' · ');
             const condition = entry.type === 'microbe' ? [item.medium, item.growthConditions].filter(Boolean).join(' · ') : [item.resistance, item.promoter].filter(Boolean).join(' · ');
-            return '<tr class="clickable-data-row" data-bioresource-type="' + entry.type + '" data-bioresource-id="' + esc(item.id) + '" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>' + (entry.type === 'microbe' ? 'MICROBIAL STRAIN' : 'DNA CONSTRUCT') + contributorInline(item) + '</small></td><td><strong>' + esc(item.name || item.id) + '</strong><small>' + esc(item.source || '来源未填写') + '</small></td><td><span class="biology-record-kind">' + esc(entry.kind) + '</span></td><td>' + esc(host || '未填写') + '</td><td><strong>' + esc(feature || '未填写') + '</strong></td><td>' + esc(condition || '未填写') + '</td><td><strong>' + esc(item.location || '未分配') + '</strong><small>' + esc(item.status || '在库') + '</small></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
+            return '<tr class="clickable-data-row"' + (entry.type === 'microbe' ? ' data-biological-drag="microbe" data-biological-item="' + esc(item.id) + '"' : '') + ' data-bioresource-type="' + entry.type + '" data-bioresource-id="' + esc(item.id) + '" tabindex="0"><td><strong>' + esc(item.id) + '</strong><small>' + (entry.type === 'microbe' ? 'MICROBIAL STRAIN' : 'DNA CONSTRUCT') + contributorInline(item) + '</small></td><td><strong>' + esc(item.name || item.id) + '</strong><small>' + esc(item.source || '来源未填写') + '</small></td><td><span class="biology-record-kind">' + esc(entry.kind) + '</span></td><td>' + esc(host || '未填写') + '</td><td><strong>' + esc(feature || '未填写') + '</strong></td><td>' + esc(condition || '未填写') + '</td><td><strong>' + esc(item.location || '未分配') + '</strong><small>' + esc(item.status || '在库') + '</small></td><td><button class="row-arrow" type="button" tabindex="-1" aria-hidden="true">→</button></td></tr>';
         }).join('') || '<tr><td colspan="8">暂无菌种或质粒记录。</td></tr>';
+    }
+
+    function renderMicrobeHousing() {
+        const tabs = document.getElementById('microbeIncubatorTabs');
+        const map = document.getElementById('microbeIncubatorMap');
+        const title = document.getElementById('microbeRackTitle');
+        const meta = document.getElementById('microbeRackMeta');
+        const incubatorTitle = document.getElementById('microbeIncubatorTitle');
+        const incubatorMeta = document.getElementById('microbeIncubatorMeta');
+        const grid = document.getElementById('microbeRackGrid');
+        const editButton = document.getElementById('editMicrobeRackButton');
+        if (!tabs || !map || !grid) return;
+        if (editButton) { editButton.hidden = true; editButton.removeAttribute('data-edit-microbe-rack'); }
+        const incubator = state.microbeIncubators.find(function (item) { return item.id === activeMicrobeIncubatorId; }) || state.microbeIncubators[0];
+        if (!incubator) {
+            activeMicrobeIncubatorId = ''; activeMicrobeRackId = ''; selectedMicrobeId = '';
+            tabs.classList.remove('has-expanded-room');
+            tabs.innerHTML = '<span class="housing-room-empty-tabs">尚无培养箱</span>';
+            map.closest('.housing-room-overview')?.classList.remove('is-expanded');
+            map.innerHTML = '<button class="housing-room-empty" type="button" data-add="microbeIncubator"><strong>＋ 新建第一个培养箱</strong><span>建立菌种培养设备布局</span></button>';
+            title.textContent = '尚未建立摇架'; meta.textContent = '先建立培养箱，再放置摇架或静置层架。';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="microbeIncubator"><strong>＋ 新建培养箱</strong></button>';
+            renderMicrobePositionInspector(); return;
+        }
+        activeMicrobeIncubatorId = incubator.id;
+        incubatorTitle.textContent = interfaceText(incubator.name);
+        incubatorMeta.textContent = [incubator.location, incubator.temperature, interfaceText(incubator.atmosphere)].filter(Boolean).join(' · ');
+        localStorage.setItem('rhineLabActiveMicrobeIncubator', incubator.id);
+        tabs.innerHTML = state.microbeIncubators.map(function (item, index) {
+            const racks = state.microbeRacks.filter(function (rack) { return rack.incubatorId === item.id; });
+            const cultures = state.microbes.filter(function (microbe) { return racks.some(function (rack) { return rack.id === microbe.rackId; }); }).length;
+            return housingRoomTabHtml('microbe', item, index, item.id === incubator.id, interfaceText(racks.length + ' 个培养架 · ' + cultures + ' 个菌种'), item.id === zoomedMicrobeIncubatorId);
+        }).join('');
+        const racks = state.microbeRacks.filter(function (item) { return item.incubatorId === incubator.id; });
+        const rack = racks.find(function (item) { return item.id === activeMicrobeRackId; }) || racks[0];
+        activeMicrobeRackId = rack ? rack.id : '';
+        localStorage.setItem('rhineLabActiveMicrobeRack', activeMicrobeRackId);
+        applyHousingRoomGeometry(map, incubator);
+        const expanded = incubator.id === zoomedMicrobeIncubatorId;
+        map.classList.toggle('is-zoomed', expanded);
+        map.closest('.housing-room-overview')?.classList.toggle('is-expanded', expanded);
+        tabs.classList.toggle('has-expanded-room', expanded);
+        map.innerHTML = racks.map(function (item) {
+            const count = state.microbes.filter(function (microbe) { return microbe.rackId === item.id; }).length;
+            const selected = Boolean(rack && item.id === rack.id);
+            const speed = item.type === '摇架' && item.rpm ? ' · ' + item.rpm + ' rpm' : '';
+            const detail = interfaceText(item.type) + speed + ' · ' + interfaceText(count + ' 个菌种');
+            return '<div class="housing-layout-rack microbe' + (selected ? ' active' : '') + '" role="button" aria-pressed="' + String(selected) + '" tabindex="0" data-room-layout-rack="microbe" data-microbe-rack="' + esc(item.id) + '" style="' + housingRackInlineStyle(item) + '"><span>CULTURE RACK</span><strong>' + esc(interfaceText(item.name)) + '</strong><small>' + esc(detail) + '</small><button class="housing-layout-rack-delete" type="button" data-delete-microbe-rack="' + esc(item.id) + '" aria-label="删除培养架" title="删除培养架"></button></div>';
+        }).join('') || '<button class="housing-room-empty" type="button" data-add="microbeRack"><strong>＋ 在此培养箱新建摇架</strong><span>新建后可拖动到实际位置</span></button>';
+        if (!rack) {
+            selectedMicrobeId = ''; title.textContent = '尚未建立摇架'; meta.textContent = incubator.name + ' · 点击上方按钮建立摇架或层架';
+            grid.removeAttribute('style'); grid.innerHTML = '<button class="empty-card" type="button" data-add="microbeRack"><strong>＋ 新建摇架 / 层架</strong></button>';
+            renderMicrobePositionInspector(); return;
+        }
+        const microbes = state.microbes.filter(function (item) { return item.rackId === rack.id; });
+        const byPosition = new Map(microbes.map(function (item) { return [item.position, item]; }));
+        if (!microbes.some(function (item) { return item.id === selectedMicrobeId; })) selectedMicrobeId = microbes[0] ? microbes[0].id : '';
+        title.textContent = interfaceText(rack.name);
+        if (editButton) { editButton.hidden = false; editButton.dataset.editMicrobeRack = rack.id; }
+        meta.textContent = interfaceText(incubator.name) + ' · ' + interfaceText(rack.type) + (rack.rpm ? ' · ' + rack.rpm + ' rpm' : '') + ' · ' + interfaceText(rack.rows + ' 行 × ' + rack.columns + ' 列');
+        grid.style.gridTemplateColumns = 'repeat(' + rack.columns + ', minmax(64px, 1fr))';
+        let cells = '';
+        for (let row = 0; row < rack.rows; row += 1) for (let column = 1; column <= rack.columns; column += 1) {
+            const position = String.fromCharCode(65 + row) + column; const microbe = byPosition.get(position);
+            if (!microbe) cells += '<button class="plant-rack-position microbe-rack-position empty" type="button" data-housing-slot="microbe" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-microbe-position="' + position + '"><span>' + position + '</span><strong>＋</strong></button>';
+            else cells += '<button class="plant-rack-position microbe-rack-position occupied' + (microbe.id === selectedMicrobeId ? ' active' : '') + '" type="button" data-housing-slot="microbe" data-housing-item="' + esc(microbe.id) + '" data-biological-drag="microbe" data-biological-item="' + esc(microbe.id) + '" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-bioresource-type="microbe" data-bioresource-id="' + esc(microbe.id) + '"><span>' + position + '</span><strong>' + esc(microbe.name) + '</strong><small>' + esc(microbe.medium || microbe.status || '已放置') + '</small></button>';
+        }
+        grid.innerHTML = cells;
+        renderMicrobePositionInspector();
+    }
+
+    function renderMicrobePositionInspector() {
+        const inspector = document.getElementById('microbePositionInspector');
+        if (!inspector) return;
+        const microbe = state.microbes.find(function (item) { return item.id === selectedMicrobeId && item.rackId === activeMicrobeRackId; });
+        if (!microbe) { inspector.innerHTML = '<div class="plant-position-empty"><span>MICROBE</span><strong>选择一个位置</strong><p>查看该位置的菌种与培养条件。</p></div>'; return; }
+        inspector.innerHTML = '<div class="plant-position-summary"><header><div><small>' + esc(microbe.id) + '</small><h3>' + esc(microbe.name) + '</h3></div><span>' + esc(microbe.position) + '</span></header><div class="plant-position-meta"><div><small>物种</small><strong><i>' + esc(microbe.species || '未填写') + '</i></strong></div><div><small>培养基</small><strong>' + esc(microbe.medium || '未填写') + '</strong></div><div><small>培养条件</small><strong>' + esc(microbe.growthConditions || '未填写') + '</strong></div><div><small>状态</small><strong>' + esc(microbe.status || '未填写') + '</strong></div></div><div class="plant-position-buttons"><button class="button primary" type="button" data-bioresource-type="microbe" data-bioresource-id="' + esc(microbe.id) + '">查看菌种详情</button></div></div>';
+    }
+
+    function selectMicrobeIncubator(id) {
+        const incubator = state.microbeIncubators.find(function (item) { return item.id === id; });
+        if (!incubator) return;
+        activeMicrobeIncubatorId = incubator.id; localStorage.setItem('rhineLabActiveMicrobeIncubator', incubator.id);
+        const rack = state.microbeRacks.find(function (item) { return item.incubatorId === incubator.id; });
+        activeMicrobeRackId = rack ? rack.id : ''; localStorage.setItem('rhineLabActiveMicrobeRack', activeMicrobeRackId);
+        selectedMicrobeId = rack ? ((state.microbes.find(function (item) { return item.rackId === rack.id; }) || {}).id || '') : '';
+        renderBioResources();
+    }
+
+    function selectMicrobeRack(id) {
+        const rack = state.microbeRacks.find(function (item) { return item.id === id; });
+        if (!rack) return;
+        activeMicrobeIncubatorId = rack.incubatorId; activeMicrobeRackId = rack.id;
+        localStorage.setItem('rhineLabActiveMicrobeIncubator', activeMicrobeIncubatorId); localStorage.setItem('rhineLabActiveMicrobeRack', rack.id);
+        selectedMicrobeId = (state.microbes.find(function (item) { return item.rackId === rack.id; }) || {}).id || '';
+        renderBioResources();
     }
 
     function renderViruses() {
@@ -4402,8 +4670,9 @@
                 const position = String.fromCharCode(65 + row) + column;
                 const cage = cageByPosition.get(position);
                 if (!cage) { cells += '<button class="animal-rack-position empty" type="button" data-housing-slot="animal" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-animal-position="' + position + '" aria-label="在 ' + position + ' 新建笼位"><span>' + position + '</span><strong>＋</strong></button>'; continue; }
-                const count = state.mice.filter(function (animal) { return animal.cageId === cage.id; }).length;
-                cells += '<button class="animal-rack-position occupied' + (cage.id === selectedAnimalCageId ? ' active' : '') + '" type="button" data-housing-slot="animal" data-housing-item="' + esc(cage.id) + '" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-animal-cage="' + esc(cage.id) + '"><span>' + position + '</span><strong>' + esc(cage.label) + '</strong><small>' + count + ' / ' + cage.capacity + ' 个体</small></button>';
+                const animals = state.mice.filter(function (animal) { return animal.cageId === cage.id; });
+                const icons = animals.map(function (animal) { return '<span class="cage-mouse-token" data-biological-drag="mouse" data-biological-item="' + esc(animal.id) + '" data-mouse-id="' + esc(animal.id) + '" title="' + esc(animal.id) + '">' + biologicalDragIconHtml('mouse') + '</span>'; }).join('');
+                cells += '<button class="animal-rack-position occupied' + (cage.id === selectedAnimalCageId ? ' active' : '') + '" type="button" data-housing-slot="animal" data-housing-item="' + esc(cage.id) + '" data-rack-id="' + esc(rack.id) + '" data-position="' + position + '" data-animal-cage="' + esc(cage.id) + '"><span>' + position + '</span><strong>' + esc(cage.label) + '</strong><small>' + animals.length + ' / ' + cage.capacity + ' 个体</small><span class="cage-mouse-tokens">' + icons + '</span></button>';
             }
         }
         grid.innerHTML = cells;
@@ -4418,7 +4687,7 @@
         }
         const animals = state.mice.filter(item => item.cageId === cage.id);
         const animalRows = animals.map(function (animal) {
-            return '<button class="animal-cage-animal" type="button" data-mouse-id="' + esc(animal.id) + '"><strong>' + esc(animal.id) + ' · ' + esc(animal.species) + '</strong><small>' + esc(animal.strain || '品系未设置') + ' · ' + esc(animal.status || '在养') + '</small><b>→</b></button>';
+            return '<button class="animal-cage-animal" type="button" data-biological-drag="mouse" data-biological-item="' + esc(animal.id) + '" data-mouse-id="' + esc(animal.id) + '"><strong>' + esc(animal.id) + ' · ' + esc(animal.species) + '</strong><small>' + esc(animal.strain || '品系未设置') + ' · ' + esc(animal.status || '在养') + '</small><b>→</b></button>';
         }).join('') || '<p class="search-empty">此笼位尚无动物条目。</p>';
         inspector.innerHTML = '<div class="animal-cage-summary"><header><div><small>' + esc(cage.id) + '</small><h3>' + esc(cage.label) + '</h3></div><span>' + esc(cage.position) + '</span></header><div class="animal-cage-meta"><div><small>物种</small><strong>' + esc(cage.species) + '</strong></div><div><small>容量</small><strong>' + animals.length + ' / ' + cage.capacity + '</strong></div><div><small>状态</small><strong>' + esc(cage.status) + '</strong></div></div><p class="animal-cage-notes">' + esc(cage.notes || '未填写饲养条件或备注。') + '</p><div class="animal-cage-list"><header><h4>笼内动物</h4><span>' + animals.length + ' 个体</span></header>' + animalRows + '</div><div class="animal-cage-buttons"><button class="button primary" type="button" data-add-animal-to-cage>＋ 向此笼位添加动物</button><button class="button danger" type="button" data-delete-animal-cage="' + esc(cage.id) + '">删除笼位</button></div></div>';
     }
@@ -4674,7 +4943,7 @@
     }
 
     function recordTypeLabel(type) {
-        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', coldStorage: '冻存设备', freezer: '冻存盒', animalRoom: '动物房间', animalRack: '动物笼架', animalCage: '动物笼位', plantRoom: '植物培养室', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
+        return { experiment: '实验记录', protocol: '实验方案', formulation: '实验配方', mouse: '动物', plant: '植物材料', microbe: '菌种', microbeIncubator: '菌种培养箱', microbeRack: '菌种培养架', plasmid: '质粒', virus: '病毒', reagent: '试剂', sample: '样本', cell: '细胞培养', result: '实验结果', coldStorage: '冻存设备', freezer: '冻存盒', animalRoom: '动物房间', animalRack: '动物笼架', animalCage: '动物笼位', plantRoom: '植物培养室', plantRack: '植物培养架', bioProject: '生物信息项目', bioDataset: '生物信息数据集', bioPipeline: '分析流程', bioRun: '分析任务', task: '日程' }[type] || '记录';
     }
 
     function recordCollection(type) {
@@ -4697,6 +4966,8 @@
         if (type === 'animalCage') return state.animalCages;
         if (type === 'plantRoom') return state.plantRooms;
         if (type === 'plantRack') return state.plantRacks;
+        if (type === 'microbeIncubator') return state.microbeIncubators;
+        if (type === 'microbeRack') return state.microbeRacks;
         if (type === 'bioProject') return state.bioProjects;
         if (type === 'bioDataset') return state.bioDatasets;
         if (type === 'bioPipeline') return state.bioPipelines;
@@ -4806,6 +5077,16 @@
             activePlantRackId = nextRack ? nextRack.id : '';
             selectedPlantId = state.plants.find(function (plant) { return plant.rackId === activePlantRackId; })?.id || '';
             localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
+        } else if (target.type === 'microbeRack') {
+            state.microbes.forEach(function (microbe) {
+                if (microbe.rackId === record.id) {
+                    microbe.rackId = ''; microbe.position = ''; microbe.location = '未分配位置';
+                }
+            });
+            const nextRack = state.microbeRacks.find(function (item) { return item.incubatorId === activeMicrobeIncubatorId; }) || null;
+            activeMicrobeRackId = nextRack ? nextRack.id : '';
+            selectedMicrobeId = state.microbes.find(function (microbe) { return microbe.rackId === activeMicrobeRackId; })?.id || '';
+            localStorage.setItem('rhineLabActiveMicrobeRack', activeMicrobeRackId);
         }
         addActivity('删除' + recordTypeLabel(target.type) + '记录“' + label + '”并保存操作记录');
         saveState();
@@ -4841,6 +5122,8 @@
             plantRooms: [],
             plantRacks: [],
             microbes: [],
+            microbeIncubators: [],
+            microbeRacks: [],
             plasmids: [],
             viruses: [],
             bioProjects: [],
@@ -7297,6 +7580,8 @@ function getReagentDisplayStatus(reagent) {
                 field('medium', '培养基', 'memory-text', '例：LB / YPD / MRS', false),
                 field('growthConditions', '培养条件', 'memory-text', '例：37°C · 200 rpm · 16 h', false, true),
                 field('resistance', '抗性 / 筛选标记', 'memory-text', '例：Ampicillin', false),
+                field('rackId', '培养摇架 / 层架', 'microbe-rack-select', '', false),
+                field('position', '架内位置', 'text', '例：A1', false),
                 field('location', '存储位置', 'memory-text', '例：-80°C / MIC-A1', false),
                 field('status', '当前状态', 'select', ['在库', '培养中', '待鉴定', '污染隔离', '已耗尽'], true),
                 field('frozenSampleId', '关联冻存样本', 'frozen-sample-select', '', false, true),
@@ -7390,6 +7675,30 @@ function getReagentDisplayStatus(reagent) {
                 field('roomId', '所属培养室', 'plant-room-select', '', true),
                 field('rows', '培养架行数（最多 12 行）', 'number', '5', true),
                 field('columns', '每行位置数', 'number', '10', true)
+            ]
+        },
+        microbeIncubator: {
+            kicker: 'MICROBIAL INCUBATOR', title: '新建菌种培养箱',
+            fields: [
+                field('name', '培养箱名称', 'text', '例：微生物培养箱 37°C', true),
+                field('temperature', '温度', 'text', '例：37°C', true),
+                field('atmosphere', '气体环境', 'select', ['常氧', '厌氧', '微需氧', 'CO₂'], true),
+                field('location', '实际位置', 'text', '例：微生物室 / 北侧', false),
+                field('shape', '设备轮廓', 'select', ['矩形', '圆角', '斜角'], true),
+                field('entranceSide', '门体方向', 'select', ['左侧', '右侧', '上侧', '下侧'], true),
+                field('entrancePosition', '门体位置（%）', 'number', '50', true),
+                field('notes', '培养箱说明', 'textarea', '记录温控范围、用途或维护信息…', false, true)
+            ]
+        },
+        microbeRack: {
+            kicker: 'CULTURE RACK', title: '新建摇架 / 层架',
+            fields: [
+                field('name', '架体名称', 'text', '例：摇架 #1', true),
+                field('incubatorId', '所属培养箱', 'microbe-incubator-select', '', true),
+                field('type', '架体类型', 'select', ['摇架', '静置层架', '滚瓶架'], true),
+                field('rpm', '转速（rpm，静置填 0）', 'number', '200', true),
+                field('rows', '架体行数（最多 12 行）', 'number', '3', true),
+                field('columns', '每行位置数', 'number', '6', true)
             ]
         },
         bioProject: {
@@ -7606,7 +7915,8 @@ function getReagentDisplayStatus(reagent) {
             const rack = state.plantRacks.find(function (item) { return item.id === activePlantRackId; });
             defaultsForEntry = Object.assign({ materialType: '植株', status: '生长中', rackId: rack ? rack.id : '', position: rack ? firstAvailablePlantPosition(rack, state.plants) : '' }, pendingPlantDefaults || {});
         } else if (type === 'microbe') {
-            defaultsForEntry = { biosafetyLevel: 'BSL-1', status: '在库' };
+            const rack = state.microbeRacks.find(function (item) { return item.id === activeMicrobeRackId; });
+            defaultsForEntry = Object.assign({ biosafetyLevel: 'BSL-1', status: '培养中', rackId: rack ? rack.id : '', position: rack ? firstAvailablePlantPosition(rack, state.microbes) : '' }, pendingMicrobeDefaults || {});
         } else if (type === 'plasmid') {
             defaultsForEntry = { status: '在库' };
         } else if (type === 'virus') {
@@ -7619,6 +7929,10 @@ function getReagentDisplayStatus(reagent) {
             defaultsForEntry = { shape: '矩形', entranceSide: '右侧', entrancePosition: 50 };
         } else if (type === 'plantRack') {
             defaultsForEntry = { roomId: activePlantRoomId || (state.plantRooms[0] ? state.plantRooms[0].id : ''), rows: '5', columns: '10' };
+        } else if (type === 'microbeIncubator') {
+            defaultsForEntry = { temperature: '37°C', atmosphere: '常氧', shape: '矩形', entranceSide: '右侧', entrancePosition: 50 };
+        } else if (type === 'microbeRack') {
+            defaultsForEntry = { incubatorId: activeMicrobeIncubatorId || (state.microbeIncubators[0] ? state.microbeIncubators[0].id : ''), type: '摇架', rpm: 200, rows: 3, columns: 6 };
         } else if (type === 'bioProject') {
             defaultsForEntry = { status: '准备中' };
         } else if (type === 'bioDataset') {
@@ -7721,6 +8035,7 @@ function getReagentDisplayStatus(reagent) {
         pendingSampleDefaults = null;
         pendingAnimalCageDefaults = null;
         pendingPlantDefaults = null;
+        pendingMicrobeDefaults = null;
         pendingFreezerDefaults = null;
         els.entryDialog.showModal();
         const first = els.dialogFields.querySelector('input, select, textarea');
@@ -7841,6 +8156,15 @@ function getReagentDisplayStatus(reagent) {
         } else if (config.type === 'plant-rack-select') {
             const options = ['<option value="">未分配培养架</option>'].concat(state.plantRacks.map(function (rack) { return '<option value="' + esc(rack.id) + '">' + esc(interfaceText(rack.name)) + ' · ' + esc(interfaceText(rack.facility)) + '</option>'; })).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
+        } else if (config.type === 'microbe-incubator-select') {
+            const options = state.microbeIncubators.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(interfaceText(item.name)) + ' · ' + esc(item.temperature) + '</option>'; }).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '"' + required + '>' + (options || '<option value="">请先新建培养箱</option>') + '</select>';
+        } else if (config.type === 'microbe-rack-select') {
+            const options = ['<option value="">不放入培养架</option>'].concat(state.microbeRacks.map(function (rack) {
+                const incubator = state.microbeIncubators.find(function (item) { return item.id === rack.incubatorId; });
+                return '<option value="' + esc(rack.id) + '">' + esc(interfaceText(rack.name)) + ' · ' + esc(interfaceText(incubator ? incubator.name : '未分配培养箱')) + '</option>';
+            })).join('');
+            control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
         } else if (config.type === 'bio-project-select') {
             const options = ['<option value="">不关联项目</option>'].concat(state.bioProjects.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name + ' · ' + item.id) + '</option>'; })).join('');
             control = '<select id="field-' + config.name + '" name="' + config.name + '">' + options + '</select>';
@@ -7865,9 +8189,9 @@ function getReagentDisplayStatus(reagent) {
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="text"' + (options ? ' list="' + listId + '"' : '') + ' autocomplete="off" placeholder="' + esc(config.placeholderOrOptions) + '"' + required + '>' + (options ? '<datalist id="' + listId + '">' + options + '</datalist>' : '');
         } else {
             const defaultValue = ['date', 'time'].includes(config.type) ? ' value="' + (config.type === 'date' ? todayIso() : esc(config.placeholderOrOptions)) + '"' : '';
-            const integerFields = ['shelves', 'rackCount', 'deviceRows', 'deviceColumns', 'rows', 'columns', 'shelf', 'storageRack', 'storageRow', 'storageColumn'];
-            const structuralInteger = config.type === 'number' && integerFields.includes(config.name) && ['coldStorage', 'coldStorageLevel', 'coldStorageRack', 'freezer', 'animalRack', 'plantRack'].includes(activeDialogType);
-            const minmax = config.type === 'number' ? (structuralInteger ? ' min="' + (['rackCount', 'storageRack'].includes(config.name) ? '0' : '1') + '" step="1" inputmode="numeric"' : ' min="0" step="0.01"') : '';
+            const integerFields = ['shelves', 'rackCount', 'deviceRows', 'deviceColumns', 'rows', 'columns', 'rpm', 'shelf', 'storageRack', 'storageRow', 'storageColumn'];
+            const structuralInteger = config.type === 'number' && integerFields.includes(config.name) && ['coldStorage', 'coldStorageLevel', 'coldStorageRack', 'freezer', 'animalRack', 'plantRack', 'microbeRack'].includes(activeDialogType);
+            const minmax = config.type === 'number' ? (structuralInteger ? ' min="' + (['rackCount', 'storageRack', 'rpm'].includes(config.name) ? '0' : '1') + '" step="1" inputmode="numeric"' : ' min="0" step="0.01"') : '';
             control = '<input id="field-' + config.name + '" name="' + config.name + '" type="' + config.type + '" placeholder="' + esc(config.placeholderOrOptions) + '"' + defaultValue + minmax + required + '>';
         }
         return '<div class="' + className + '"><label for="field-' + config.name + '">' + esc(config.label) + '</label>' + control + '</div>';
@@ -8069,7 +8393,7 @@ function getReagentDisplayStatus(reagent) {
         const data = Object.fromEntries(formData.entries());
         if (!resolveCustomSelectValues(data)) return;
         data.createdBy = anonymousContributor(data.createdBy);
-        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'plant', 'microbe', 'plasmid', 'virus', 'reagent', 'sample', 'cell', 'result', 'coldStorage', 'animalRoom', 'plantRoom', 'bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
+        if (editingRecord && ['experiment', 'protocol', 'formulation', 'task', 'mouse', 'plant', 'microbe', 'plasmid', 'virus', 'reagent', 'sample', 'cell', 'result', 'coldStorage', 'animalRoom', 'plantRoom', 'microbeIncubator', 'microbeRack', 'bioProject', 'bioDataset', 'bioPipeline', 'bioRun'].includes(activeDialogType)) {
             saveEditedRecord(data);
             return;
         }
@@ -8163,6 +8487,31 @@ function getReagentDisplayStatus(reagent) {
             localStorage.setItem('rhineLabActivePlantRoom', room.id);
             localStorage.setItem('rhineLabActivePlantRack', rack.id);
             activityText = '在“' + room.name + '”新建植物培养架“' + rack.name + '”';
+        } else if (activeDialogType === 'microbeIncubator') {
+            const incubator = {
+                id: generatedRecordId('MINC'), name: displayOr(data.name, '未命名菌种培养箱'),
+                temperature: displayOr(data.temperature, '37°C'), atmosphere: displayOr(data.atmosphere, '常氧'), location: displayOr(data.location, '位置待设置'),
+                shape: displayOr(data.shape, '矩形'), entranceSide: displayOr(data.entranceSide, '右侧'), entrancePosition: number(data.entrancePosition, 12, 88) || 50,
+                notes: String(data.notes || '').trim(), createdBy: data.createdBy, history: [createdHistoryEntry()]
+            };
+            state.microbeIncubators.push(incubator);
+            activeMicrobeIncubatorId = incubator.id; activeMicrobeRackId = ''; selectedMicrobeId = '';
+            localStorage.setItem('rhineLabActiveMicrobeIncubator', incubator.id); localStorage.setItem('rhineLabActiveMicrobeRack', '');
+            activityText = '新建菌种培养箱“' + incubator.name + '”';
+        } else if (activeDialogType === 'microbeRack') {
+            const incubator = state.microbeIncubators.find(function (item) { return item.id === data.incubatorId; });
+            if (!incubator) { showToast('请先新建并选择一个菌种培养箱'); return; }
+            const incubatorRacks = state.microbeRacks.filter(function (item) { return item.incubatorId === incubator.id; });
+            const rack = {
+                id: generatedRecordId('MRACK'), incubatorId: incubator.id, name: displayOr(data.name, '未命名培养架'), type: displayOr(data.type, '摇架'),
+                rpm: Math.max(0, Math.round(positiveNumber(data.rpm, 0))), rows: Math.min(12, Math.max(1, Math.round(positiveNumber(data.rows, 3)))), columns: Math.min(48, Math.max(1, Math.round(positiveNumber(data.columns, 6)))),
+                layoutX: housingLayoutCoordinate(undefined, incubatorRacks.length, 'x'), layoutY: housingLayoutCoordinate(undefined, incubatorRacks.length, 'y'),
+                createdBy: data.createdBy, history: [createdHistoryEntry()]
+            };
+            state.microbeRacks.push(rack);
+            activeMicrobeIncubatorId = incubator.id; activeMicrobeRackId = rack.id; selectedMicrobeId = '';
+            localStorage.setItem('rhineLabActiveMicrobeIncubator', incubator.id); localStorage.setItem('rhineLabActiveMicrobeRack', rack.id);
+            activityText = '在“' + incubator.name + '”新建' + rack.type + '“' + rack.name + '”';
         } else if (activeDialogType === 'animalCage') {
             const rack = state.animalRacks.find(item => item.id === data.rackId);
             if (!rack) {
@@ -8232,10 +8581,19 @@ function getReagentDisplayStatus(reagent) {
         } else if (activeDialogType === 'microbe') {
             data.id = displayOr(data.id, generatedRecordId('MIC'));
             if (state.microbes.some(function (item) { return item.id === data.id; })) { showToast('该菌种编号已存在'); return; }
+            const rack = state.microbeRacks.find(function (item) { return item.id === data.rackId; });
+            const position = rack ? normalizePlantPosition(data.position) || firstAvailablePlantPosition(rack, state.microbes) : '';
+            if (rack && (!position || !isValidPlantPosition(rack, position))) { showToast('培养架位置格式不正确或超出范围'); return; }
+            if (rack && state.microbes.some(function (item) { return item.rackId === rack.id && item.position === position; })) { showToast('该培养架位置已有菌种'); return; }
             data.name = displayOr(data.name, '未命名菌种');
             data.status = displayOr(data.status, '在库');
+            data.rackId = rack ? rack.id : '';
+            data.position = position;
+            if (rack && position) data.location = formatMicrobeLocation(rack, position);
             data.history = [createdHistoryEntry()];
             state.microbes.unshift(data);
+            if (rack) { activeMicrobeRackId = rack.id; localStorage.setItem('rhineLabActiveMicrobeRack', rack.id); }
+            selectedMicrobeId = data.id;
             syncFrozenSampleLineage('microbe', data.id, data.frozenSampleId);
             activityText = '录入菌种“' + data.name + '”';
         } else if (activeDialogType === 'plasmid') {
@@ -8684,15 +9042,32 @@ function getReagentDisplayStatus(reagent) {
             updated.storageColumn = storageColumn;
             updated.temperature = unit.temperature;
             updated.storageLocation = formatColdStorageBoxLocation(updated);
-        } else if (target.type === 'animalRoom' || target.type === 'plantRoom') {
+        } else if (target.type === 'animalRoom' || target.type === 'plantRoom' || target.type === 'microbeIncubator') {
             updated.id = current.id;
-            updated.name = displayOr(data.name, current.name || (target.type === 'animalRoom' ? '未命名动物房间' : '未命名植物培养室'));
+            const fallbackName = target.type === 'animalRoom' ? '未命名动物房间' : (target.type === 'plantRoom' ? '未命名植物培养室' : '未命名菌种培养箱');
+            updated.name = displayOr(data.name, current.name || fallbackName);
             updated.shape = displayOr(data.shape, current.shape || '矩形');
             updated.entranceSide = displayOr(data.entranceSide, current.entranceSide || '右侧');
             updated.entrancePosition = number(data.entrancePosition, 12, 88) || 50;
             updated.notes = String(data.notes || '').trim();
-            const racks = target.type === 'animalRoom' ? state.animalRacks : state.plantRacks;
-            racks.filter(function (rack) { return rack.roomId === current.id; }).forEach(function (rack) { rack.facility = updated.name; });
+            if (target.type === 'microbeIncubator') {
+                updated.temperature = displayOr(data.temperature, current.temperature || '37°C');
+                updated.atmosphere = displayOr(data.atmosphere, current.atmosphere || '常氧');
+                updated.location = displayOr(data.location, current.location || '位置待设置');
+            } else {
+                const racks = target.type === 'animalRoom' ? state.animalRacks : state.plantRacks;
+                racks.filter(function (rack) { return rack.roomId === current.id; }).forEach(function (rack) { rack.facility = updated.name; });
+            }
+        } else if (target.type === 'microbeRack') {
+            const incubator = state.microbeIncubators.find(function (item) { return item.id === data.incubatorId; });
+            if (!incubator) { showToast('请先新建并选择一个菌种培养箱'); return; }
+            updated.id = current.id;
+            updated.name = displayOr(data.name, current.name);
+            updated.rows = Math.min(12, Math.max(1, Math.round(Number(data.rows) || 1)));
+            updated.columns = Math.min(48, Math.max(1, Math.round(Number(data.columns) || 1)));
+            updated.type = ['摇架', '静置层架', '滚瓶架'].includes(data.type) ? data.type : '摇架';
+            updated.rpm = Math.max(0, Math.min(2000, Math.round(Number(data.rpm) || 0)));
+            if (state.microbes.some(function (item) { return item.rackId === current.id && !isValidPlantPosition(updated, item.position); })) { showToast('请先移出超出新尺寸的菌种'); return; }
         } else if (target.type === 'mouse') {
             updated.id = current.id;
             const cage = state.animalCages.find(item => item.id === data.cageId);
@@ -8711,7 +9086,14 @@ function getReagentDisplayStatus(reagent) {
             updated.location = rack && position ? formatPlantLocation(rack, position) : '未分配位置';
         } else if (target.type === 'microbe') {
             updated.id = current.id;
+            const rack = state.microbeRacks.find(function (item) { return item.id === data.rackId; });
+            const position = rack ? normalizePlantPosition(data.position) || firstAvailablePlantPosition(rack, state.microbes.filter(function (item) { return item.id !== current.id; })) : '';
+            if (rack && (!position || !isValidPlantPosition(rack, position))) { showToast('培养架位置格式不正确或超出范围'); return; }
+            if (rack && state.microbes.some(function (item) { return item.id !== current.id && item.rackId === rack.id && item.position === position; })) { showToast('该培养架位置已有菌种'); return; }
             updated.name = displayOr(data.name, current.name || '未命名菌种');
+            updated.rackId = rack ? rack.id : '';
+            updated.position = position;
+            if (rack && position) updated.location = formatMicrobeLocation(rack, position);
         } else if (target.type === 'plasmid') {
             updated.id = current.id;
             updated.name = displayOr(data.name, current.name || '未命名质粒');
@@ -8789,6 +9171,12 @@ function getReagentDisplayStatus(reagent) {
         if (target.type === 'cell') updated.changeHistory.push(historyEntry);
         else updated.history.push(historyEntry);
         collection[index] = updated;
+        if (target.type === 'microbeRack' || target.type === 'microbeIncubator') {
+            state.microbes.forEach(function (item) {
+                const rack = state.microbeRacks.find(function (entry) { return entry.id === item.rackId; });
+                if (rack && item.position) item.location = formatMicrobeLocation(rack, item.position);
+            });
+        }
         if (target.type === 'coldStorage') {
             state.freezerBoxes.filter(function (box) { return box.storageUnitId === updated.id; }).forEach(function (box) { box.temperature = updated.temperature; box.storageLocation = formatColdStorageBoxLocation(box, [updated]); });
             state.reagents.forEach(function (reagent) { const position = reagentDoorPosition(reagent); if (position && position.unitId === updated.id) reagent.location = formatReagentStorageLocation(updated, position, state.freezerBoxes.find(function (box) { return box.id === position.boxId; })); });
@@ -8823,11 +9211,24 @@ function getReagentDisplayStatus(reagent) {
         } else if (target.type === 'plantRoom') {
             activePlantRoomId = updated.id;
             localStorage.setItem('rhineLabActivePlantRoom', updated.id);
+        } else if (target.type === 'microbeIncubator') {
+            activeMicrobeIncubatorId = updated.id;
+            localStorage.setItem('rhineLabActiveMicrobeIncubator', updated.id);
+        } else if (target.type === 'microbeRack') {
+            activeMicrobeIncubatorId = updated.incubatorId; activeMicrobeRackId = updated.id;
+            localStorage.setItem('rhineLabActiveMicrobeIncubator', updated.incubatorId);
+            localStorage.setItem('rhineLabActiveMicrobeRack', updated.id);
         } else if (target.type === 'plant') {
             selectedPlantId = updated.id;
             if (updated.rackId) {
                 activePlantRackId = updated.rackId;
                 localStorage.setItem('rhineLabActivePlantRack', updated.rackId);
+            }
+        } else if (target.type === 'microbe') {
+            selectedMicrobeId = updated.id;
+            if (updated.rackId) {
+                activeMicrobeRackId = updated.rackId;
+                localStorage.setItem('rhineLabActiveMicrobeRack', updated.rackId);
             }
         } else if (target.type === 'formulation') {
             activeProtocolTab = 'formulations';

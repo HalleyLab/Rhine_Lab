@@ -42,6 +42,8 @@ assert.match(bottleFunctions.button({ name: 'DMEM', catalog: '11965092', locatio
 assert.doesNotMatch(bottleFunctions.button({ name: 'DMEM', catalog: '11965092', location: '4°C' }, 'reagent-door-bottle', ''), /title=/);
 assert.deepEqual(emptyWorkspace().coldStorageUnits, []);
 assert.deepEqual(emptyWorkspace().freezerBoxes, []);
+assert.deepEqual(emptyWorkspace().microbeIncubators, []);
+assert.deepEqual(emptyWorkspace().microbeRacks, []);
 assert.match(app, /data-door-shelf/);
 assert.match(app, /nextReagentStorageZ/);
 assert.match(app, /position\.x \+ '%;top:' \+ position\.y/);
@@ -82,13 +84,21 @@ assert.match(mobile, /\.cold-storage-device\.has-reagent-door/);
 assert.match(app, /other \? '交换冻存盒位置'/);
 assert.match(app, /function openColdStorageDeviceDuringDrag/);
 assert.match(app, /function bindHousingSlotDrag/);
+assert.match(app, /data-biological-drag="mouse"/);
+assert.match(app, /data-biological-drag="plant"/);
+assert.match(app, /data-biological-drag="microbe"/);
+assert.match(app, /function biologicalDragIconHtml/);
+assert.match(app, /目标笼位已达到容量上限/);
+assert.match(app, /function renderMicrobeHousing/);
+assert.match(html, /id="microbeIncubatorMap"/);
+assert.match(html, /data-add="microbeRack"/);
 assert.match(app, /const touchPoints = new Map\(\)/);
 assert.match(app, /touchPoints\.size < 2/);
 assert.match(app, /touchIds: new Set/);
 assert.match(app, /function housingHitAt/);
 assert.match(app, /function housingSlotTargetAt/);
 assert.match(app, /document\.elementsFromPoint/);
-assert.match(app, /housingSlotTargetAt\(x, y, drag\.kind\) \|\| drag\.target/);
+assert.match(app, /event\.type === 'pointerup' \? housingSlotTargetAt\(x, y, drag\.kind\) : null/);
 assert.doesNotMatch(app, /drag\.slot\.releasePointerCapture/);
 assert.match(app, /function coldStorageRackDropPlan/);
 assert.match(app, /function coldStorageApplyRackDrop/);
@@ -148,4 +158,89 @@ const preservedStorage = await runBootstrap({ rhineLabWorkspaceV2: { marker: 'le
 assert.deepEqual(preservedStorage.values.get('rhineLabWorkspaceV3'), { marker: 'current' });
 assert.equal(preservedStorage.writes.length, 0);
 
-console.log('Storage layout, mobile tools, and first-frame theme checks passed.');
+const cultureHelpers = new Function('number', 'positiveNumber', 'normalizeHousingRooms', 'housingLayoutCoordinate', 'anonymousContributor',
+  app.match(/function normalizePlantPosition\(value\) \{[^\n]*\}/)[0] +
+  app.match(/function isValidPlantPosition\(rack, position\) \{[^\n]*\}/)[0] +
+  app.match(/function formatMicrobeLocation\(rack, position, incubators\) \{[\s\S]*?\n    \}/)[0] +
+  app.match(/function migrateMicrobeHousing\(data\) \{[\s\S]*?\n    \}/)[0] +
+  '; return { migrate: migrateMicrobeHousing, valid: isValidPlantPosition };'
+)(clamp, value => Math.max(0, Number(value) || 0), rooms => rooms, () => 25, value => value);
+assert.equal(cultureHelpers.valid({ rows: 4, columns: 4 }, 'A0'), false);
+assert.equal(cultureHelpers.valid({ rows: 4, columns: 4 }, 'D4'), true);
+assert.equal(cultureHelpers.valid({ rows: 4, columns: 4 }, 'E1'), false);
+const cultureData = {
+  microbeIncubators: [{ id: 'INC', name: '37°C' }],
+  microbeRacks: [{ id: 'R1', incubatorId: 'INC', rows: 2.6, columns: 5.5 }],
+  microbes: [{ id: 'M1', rackId: 'R1', position: 'a-1' }, { id: 'M2', rackId: 'R1', position: 'A1', location: 'original' }]
+};
+cultureHelpers.migrate(cultureData);
+assert.equal(cultureData.microbeRacks[0].rows, 3); assert.equal(cultureData.microbeRacks[0].columns, 6);
+assert.equal(cultureData.microbes[0].location, '37°C / 摇架 #1 / A1');
+assert.equal(cultureData.microbes[1].rackId, ''); assert.equal(cultureData.microbes[1].location, 'original');
+const emptyCulture = { microbeIncubators: [], microbeRacks: [], microbes: [] };
+cultureHelpers.migrate(emptyCulture); assert.deepEqual(emptyCulture.microbeIncubators, []);
+
+// Exercise the actual pointer handlers, not a separate copy of the move logic.
+function housingDragHarness(kind, state, target) {
+  const listeners = new Map();
+  const classes = () => ({ add() {}, remove() {} });
+  const source = { dataset: { biologicalDrag: kind, biologicalItem: 'moving' }, classList: classes(), closest: () => source };
+  const env = {
+    state, saves: 0, messages: [],
+    activeAnimalRackId: 'R1', activePlantRackId: 'R1', activeMicrobeRackId: 'R1',
+    selectedAnimalCageId: '', selectedPlantId: '', selectedMicrobeId: '',
+    zoomedAnimalRoomId: '', zoomedPlantRoomId: '', zoomedMicrobeIncubatorId: '',
+    document: {
+      addEventListener(name, handler) { const handlers = listeners.get(name) || []; handlers.push(handler); listeners.set(name, handlers); },
+      body: { appendChild() {}, setPointerCapture() {}, hasPointerCapture: () => false },
+      createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() {} })
+    },
+    window: { setTimeout() {} }, localStorage: { setItem() {} },
+    dragInteractionsLocked: () => false, housingHitAt: () => null,
+    housingSlotTargetAt: () => env.target,
+    biologicalDragIconHtml: () => '<svg></svg>',
+    saveState: () => env.saves++, showToast: message => env.messages.push(message), addActivity() {},
+    renderMice() {}, renderPlants() {}, renderBioResources() {},
+    selectAnimalRoom() {}, selectPlantRoom() {}, selectMicrobeIncubator() {},
+    selectAnimalRack() {}, selectPlantRack() {}, selectMicrobeRack() {},
+    formatPlantLocation: (rack, position) => rack ? rack.id + '/' + position : 'unassigned',
+    formatMicrobeLocation: (rack, position) => rack ? rack.id + '/' + position : 'unassigned',
+    target: target && { dataset: target, classList: classes() }
+  };
+  new Function('env', 'with (env) {' + app.match(/function bindHousingSlotDrag\(\) \{[\s\S]*?\n    \}/)[0] + '; bindHousingSlotDrag(); }')(env);
+  const send = (type, x = 80) => (listeners.get(type) || []).forEach(handler => handler({ type, target: source, button: 0, pointerType: 'mouse', pointerId: 1, clientX: x, clientY: 80, preventDefault() {}, stopPropagation() {} }));
+  send('pointerdown', 10); send('pointermove');
+  return { env, send };
+}
+const dragState = () => ({
+  mice: [{ id: 'moving', cageId: 'C1' }],
+  animalCages: [{ id: 'C1', rackId: 'R1', label: 'A1', capacity: 2 }, { id: 'C2', rackId: 'R2', label: 'B1', capacity: 1 }],
+  plants: [{ id: 'moving', rackId: 'R1', position: 'A1' }, { id: 'other', rackId: 'R2', position: 'B2' }],
+  microbes: [{ id: 'moving', rackId: 'R1', position: 'A1' }, { id: 'other', rackId: 'R2', position: 'B2' }],
+  plantRacks: [{ id: 'R1' }, { id: 'R2' }], microbeRacks: [{ id: 'R1' }, { id: 'R2' }]
+});
+let dragCheck = housingDragHarness('mouse', dragState(), { animalCage: 'C2' });
+dragCheck.send('pointerup');
+assert.equal(dragCheck.env.state.mice[0].cageId, 'C2');
+assert.equal(dragCheck.env.saves, 1);
+const fullCageState = dragState(); fullCageState.mice.push({ id: 'resident', cageId: 'C2' });
+dragCheck = housingDragHarness('mouse', fullCageState, { animalCage: 'C2' }); dragCheck.send('pointerup');
+assert.equal(fullCageState.mice[0].cageId, 'C1'); assert.equal(dragCheck.env.saves, 0);
+assert.match(dragCheck.env.messages[0], /容量上限/);
+for (const kind of ['plant', 'microbe']) {
+  dragCheck = housingDragHarness(kind, dragState(), { rackId: 'R2', position: 'B2' }); dragCheck.send('pointerup');
+  const records = dragCheck.env.state[kind === 'plant' ? 'plants' : 'microbes'];
+  assert.equal(records[0].location, 'R2/B2'); assert.equal(records[1].location, 'R1/A1');
+  assert.equal(dragCheck.env.saves, 1);
+}
+dragCheck = housingDragHarness('plant', dragState(), { rackId: 'R2', position: 'A3' }); dragCheck.send('pointerup');
+assert.equal(dragCheck.env.state.plants[0].position, 'A3');
+dragCheck = housingDragHarness('mouse', dragState(), { animalCage: 'C2' }); dragCheck.send('pointercancel');
+assert.equal(dragCheck.env.state.mice[0].cageId, 'C1'); assert.equal(dragCheck.env.saves, 0);
+dragCheck = housingDragHarness('plant', dragState(), { rackId: 'R2', position: 'B2' });
+dragCheck.env.target = null; dragCheck.send('pointerup'); assert.equal(dragCheck.env.saves, 0);
+const unassignedCulture = dragState(); unassignedCulture.microbes[0].rackId = ''; unassignedCulture.microbes[0].position = '';
+dragCheck = housingDragHarness('microbe', unassignedCulture, { rackId: 'R2', position: 'B2' }); dragCheck.send('pointerup');
+assert.equal(unassignedCulture.microbes[1].position, 'B2'); assert.equal(dragCheck.env.saves, 0);
+
+console.log('Storage layout, mobile tools, theme, and biology drag checks passed.');
