@@ -42,13 +42,18 @@ public class RhineUsbSyncPlugin extends Plugin {
     public void exchange(PluginCall call) {
         String authKey = call.getString("authKey", "");
         JSObject snapshot = call.getObject("snapshot");
+        String host = call.getString("host", "").trim();
         if (!authKey.matches("^[a-f0-9]{64}$") || snapshot == null) {
             call.reject("同步配置无效");
             return;
         }
+        if (!host.isEmpty() && (!host.matches("^\\d{1,3}(\\.\\d{1,3}){3}$") || !isPrivateAddress(host))) {
+            call.reject("电脑地址无效");
+            return;
+        }
         executor.execute(() -> {
             try {
-                Peer peer = discoverDesktop(authKey);
+                Peer peer = discoverDesktop(authKey, host);
                 call.resolve(exchangeWithDesktop(peer, authKey, snapshot));
             } catch (Exception error) {
                 call.reject("未发现已连接的 Rhine Lab 电脑端");
@@ -56,7 +61,7 @@ public class RhineUsbSyncPlugin extends Plugin {
         });
     }
 
-    private Peer discoverDesktop(String authKey) throws Exception {
+    private Peer discoverDesktop(String authKey, String host) throws Exception {
         String timestamp = String.valueOf(System.currentTimeMillis());
         String nonce = randomHex(16);
         JSObject request = new JSObject();
@@ -69,7 +74,8 @@ public class RhineUsbSyncPlugin extends Plugin {
         try (DatagramSocket socket = new DatagramSocket()) {
             socket.setBroadcast(true);
             socket.setSoTimeout(1800);
-            socket.send(new DatagramPacket(body, body.length, InetAddress.getByName("255.255.255.255"), DISCOVERY_PORT));
+            // System Bluetooth PAN supplies the route; unicast avoids the Wi-Fi default broadcast route.
+            socket.send(new DatagramPacket(body, body.length, InetAddress.getByName(host.isEmpty() ? "255.255.255.255" : host), DISCOVERY_PORT));
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
             String address = packet.getAddress().getHostAddress();
@@ -78,6 +84,7 @@ public class RhineUsbSyncPlugin extends Plugin {
             String fingerprint = response.optString("fingerprint");
             String signed = "REPLY\n" + timestamp + "\n" + nonce + "\n" + port + "\n" + fingerprint;
             if (!isPrivateAddress(address)
+                || (!host.isEmpty() && !host.equals(address))
                 || !PROTOCOL.equals(response.optString("protocol"))
                 || !timestamp.equals(response.optString("timestamp"))
                 || !nonce.equals(response.optString("nonce"))
@@ -103,7 +110,7 @@ public class RhineUsbSyncPlugin extends Plugin {
         connection.setHostnameVerifier((hostname, session) -> peer.address.equals(hostname));
         try {
             connection.setConnectTimeout(3500);
-            connection.setReadTimeout(12000);
+            connection.setReadTimeout(120000);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
@@ -171,6 +178,8 @@ public class RhineUsbSyncPlugin extends Plugin {
     }
 
     private static boolean isPrivateAddress(String address) {
+        if (address == null || !address.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")) return false;
+        for (String part : address.split("\\.")) if (!part.matches("^(0|[1-9]\\d{0,2})$") || Integer.parseInt(part) > 255) return false;
         if (address.startsWith("10.") || address.startsWith("192.168.") || address.startsWith("169.254.")) return true;
         if (!address.startsWith("172.")) return false;
         String[] parts = address.split("\\.");

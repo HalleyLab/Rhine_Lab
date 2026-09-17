@@ -1,7 +1,8 @@
 const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
-const { createUsbSyncBridge, isSnapshot } = require('./usb-sync.cjs');
+const { createUsbSyncBridge, isSnapshot, isPrivateAddress } = require('./usb-sync.cjs');
+const { networkInterfaces } = require('node:os');
 
 const isDevelopment = !app.isPackaged;
 let mainWindow = null;
@@ -11,6 +12,14 @@ let updateInstallQueued = false;
 let desktopUsbSync = null;
 let usbSyncBridge = null;
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+ipcMain.handle('rhine-local-sync-addresses', function (event) {
+    if (!mainWindow || event.sender !== mainWindow.webContents) return [];
+    return Object.entries(networkInterfaces()).flatMap(function ([name, addresses]) {
+        return addresses.filter(function (item) { return item.family === 'IPv4' && !item.internal && isPrivateAddress(item.address); })
+            .map(function (item) { return { name: name, address: item.address }; });
+    });
+});
 
 ipcMain.on('rhine-usb-sync-snapshot', function (_event, configuration) {
     const authKey = configuration && String(configuration.authKey || '');

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhine-lab-pages-v157-0.3.3';
+const CACHE_NAME = 'rhine-lab-pages-v159-0.3.3';
 const APP_SHELL = [
     './',
     './index.html',
     './app.webmanifest',
     './css/rhine-lab.css?v=0.3.3-web4',
     './css/rhine-dashboard-refresh.css?v=20260914-3',
-    './css/rhine-lab-v019.css?v=0.3.3',
+    './css/rhine-lab-v019.css?v=0.3.3-bt1',
     './css/rhine-lab-theme-atlas.css?v=20260818-1',
     './css/rhine-lab-theme-atlas-v2.css?v=20260830-1',
     './css/rhine-lab-workflow-refine.css?v=0.3.3',
@@ -15,9 +15,9 @@ const APP_SHELL = [
     './css/rhine-lab-motion-icons.css?v=0.3.3',
     './css/rhine-lab-mobile.css?v=0.3.3-web5',
     './js/rhine-lab-config.js?v=0.3.3-ai',
-    './js/rhine-lab-i18n.js?v=0.3.3-web5',
+    './js/rhine-lab-i18n.js?v=0.3.3-bt2',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
-    './js/rhine-lab-sync-v019.js?v=0.3.3-ai2',
+    './js/rhine-lab-sync-v019.js?v=0.3.3-bt2',
     './js/rhine-lab-pwa.js?v=0.3.3-r2',
     './js/rhine-lab-assistant.js?v=0.3.3-ai5',
     './js/rhine-lab-close-icons.js?v=0.3.3',

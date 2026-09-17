@@ -388,6 +388,12 @@ html[lang="en"] .sync-local-transfer-entry .local-transfer-control {
 
 .portable-sync-dialog article { width: min(620px, calc(100vw - 32px)); }
 .portable-sync-dialog .sync-transfer-panel { margin-bottom: 18px; }
+.usb-sync-panel { flex-wrap: wrap; }
+.usb-sync-panel > div:first-child { width: 100%; }
+.usb-sync-panel .local-sync-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.local-sync-help { width: 100%; margin: 4px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.local-sync-addresses { width: 100%; margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: 14px; }
+.usb-sync-panel .sync-transfer-password { width: 100%; }
 
 @media (max-width: 640px) {
     .sync-local-transfer-entry { padding-inline: 15px; }

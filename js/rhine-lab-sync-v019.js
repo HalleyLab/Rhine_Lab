@@ -17,6 +17,13 @@
         message: document.getElementById('syncTransferMessage'),
         usbPanel: document.getElementById('usbSyncPanel'),
         usbToggle: document.getElementById('usbSyncToggle'),
+        bluetoothToggle: document.getElementById('bluetoothSyncToggle'),
+        transportLabel: document.getElementById('localSyncTransportLabel'),
+        addressField: document.getElementById('localSyncAddressField'),
+        address: document.getElementById('localSyncAddress'),
+        desktopAddresses: document.getElementById('localSyncDesktopAddresses'),
+        addressRefresh: document.getElementById('localSyncAddressRefresh'),
+        unsupported: document.getElementById('localSyncUnsupported'),
         usbStatus: document.getElementById('usbSyncStatus'),
         entrySaveStatus: document.getElementById('entrySaveStatus'),
         systemConnection: document.getElementById('systemConnectionLabel')
@@ -25,7 +32,7 @@
     const USB_SETTINGS_KEY = 'rhineLabUsbSyncSettings';
     const USB_PROTOCOL = 'rhine-lab-local-sync-v1';
     const USB_SNAPSHOT_LIMIT = 28 * 1024 * 1024;
-    const WORKSPACE_COLLECTIONS = ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'schedule', 'protocols', 'formulations', 'activities', 'lineageLinks', 'plateLayouts'];
+    const WORKSPACE_COLLECTIONS = ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'coldStorageUnits', 'schedule', 'protocols', 'formulations', 'activities', 'lineageLinks', 'plateLayouts'];
     let adapter = null;
     let selectedFile = null;
     let started = false;
@@ -36,6 +43,9 @@
     let usbExchangeTimer = null;
     let usbExchangeBusy = false;
     let usbRefreshTimer = null;
+    let syncGeneration = 0;
+    let snapshotVersion = 0;
+    let lastSyncStatus = '未启用';
 
     function text(value) {
         return window.RhineLabI18n && window.RhineLabI18n.t ? window.RhineLabI18n.t(value) : value;
@@ -87,13 +97,26 @@
         return window.RhineLabDesktop && typeof window.RhineLabDesktop.updateUsbSyncSnapshot === 'function' ? window.RhineLabDesktop : null;
     }
 
-    function androidBridge() {
+    function mobileBridge() {
         const plugins = window.Capacitor && window.Capacitor.Plugins;
-        return plugins && plugins.RhineUsbSync && typeof plugins.RhineUsbSync.exchange === 'function' ? plugins.RhineUsbSync : null;
+        const bridge = plugins && (plugins.RhineLocalSync || plugins.RhineUsbSync);
+        return bridge && typeof bridge.exchange === 'function' ? bridge : null;
     }
 
     function nativeSyncAvailable() {
-        return Boolean(desktopBridge() || androidBridge());
+        return Boolean(desktopBridge() || mobileBridge());
+    }
+
+    function isPrivateIpv4(value) {
+        const parts = String(value || '').split('.');
+        if (parts.length !== 4 || parts.some(function (part) { return !/^(?:0|[1-9]\d{0,2})$/.test(part) || Number(part) > 255; })) return false;
+        return Number(parts[0]) === 10 || Number(parts[0]) === 192 && Number(parts[1]) === 168
+            || Number(parts[0]) === 169 && Number(parts[1]) === 254
+            || Number(parts[0]) === 172 && Number(parts[1]) >= 16 && Number(parts[1]) <= 31;
+    }
+
+    function waitingStatus() {
+        return usbSettings && usbSettings.transport === 'bluetooth' ? '等待蓝牙 PAN 连接' : '等待 USB 网络共享';
     }
 
     function randomDeviceId() {
@@ -110,19 +133,31 @@
     }
 
     function setUsbStatus(message, error) {
+        lastSyncStatus = message;
         if (!ui.usbStatus) return;
         ui.usbStatus.textContent = text(message);
         ui.usbStatus.dataset.state = error ? 'error' : 'ready';
     }
 
     function renderUsbControls() {
-        if (ui.usbPanel) ui.usbPanel.hidden = !nativeSyncAvailable();
-        if (!ui.usbToggle) return;
+        const available = nativeSyncAvailable();
+        if (ui.usbPanel) ui.usbPanel.hidden = !available;
+        if (ui.unsupported) ui.unsupported.hidden = available;
+        if (ui.addressField) ui.addressField.hidden = Boolean(desktopBridge());
+        if (ui.addressRefresh) ui.addressRefresh.hidden = !desktopBridge();
         const enabled = Boolean(usbSettings && usbSettings.enabled);
-        ui.usbToggle.textContent = text(enabled ? '关闭数据线同步' : '启用数据线同步');
-        ui.usbToggle.classList.toggle('primary', enabled);
-        ui.usbToggle.classList.toggle('ghost', !enabled);
+        const bluetooth = enabled && usbSettings.transport === 'bluetooth';
+        if (ui.transportLabel) ui.transportLabel.textContent = text(bluetooth ? '蓝牙网络共享（PAN）' : 'USB / 蓝牙同步');
+        [[ui.usbToggle, enabled && !bluetooth, '关闭数据线同步', '启用数据线同步'],
+            [ui.bluetoothToggle, bluetooth, '关闭蓝牙同步', '启用蓝牙同步']].forEach(function (item) {
+            if (!item[0]) return;
+            item[0].textContent = text(item[item[1] ? 2 : 3]);
+            item[0].classList.toggle('primary', Boolean(item[1]));
+            item[0].classList.toggle('ghost', !item[1]);
+            item[0].setAttribute('aria-pressed', String(Boolean(item[1])));
+        });
         if (!enabled) setUsbStatus('未启用');
+        else setUsbStatus(lastSyncStatus, ui.usbStatus && ui.usbStatus.dataset.state === 'error');
     }
 
     async function saveUsbSettings() {
@@ -135,15 +170,24 @@
         usbSettings.deviceId = usbSettings.deviceId || randomDeviceId();
         usbSettings.peers = usbSettings.peers && typeof usbSettings.peers === 'object' ? usbSettings.peers : {};
         usbSettings.target = usbSettings.target === 'lab' ? 'lab' : 'personal';
+        usbSettings.transport = usbSettings.transport === 'bluetooth' ? 'bluetooth' : 'usb';
+        usbSettings.host = isPrivateIpv4(usbSettings.host) ? usbSettings.host : '';
+        if (ui.address) ui.address.value = usbSettings.host;
         if (ui.target) ui.target.value = usbSettings.target;
         if (typeof usbSettings.password !== 'string' || usbSettings.password.length < 10) usbSettings.enabled = false;
+        const plugins = window.Capacitor && window.Capacitor.Plugins;
+        if (mobileBridge() && (usbSettings.transport === 'bluetooth' || plugins.RhineLocalSync) && !usbSettings.host) usbSettings.enabled = false;
     }
 
     function blobToDataUrl(blob) {
         return new Promise(function (resolve, reject) {
             const reader = new FileReader();
-            reader.onload = function () { resolve(String(reader.result || '')); };
+            reader.onload = function () {
+                if (typeof reader.result === 'string' && reader.result.startsWith('data:')) resolve(reader.result);
+                else reject(new Error('无法读取附件'));
+            };
             reader.onerror = function () { reject(reader.error || new Error('无法读取附件')); };
+            reader.onabort = reader.onerror;
             reader.readAsDataURL(blob);
         });
     }
@@ -156,7 +200,9 @@
             if (!response.ok) throw new Error('附件读取失败');
             record[field] = await blobToDataUrl(await response.blob());
         } catch (_error) {
-            delete record[field];
+            const error = new Error('照片或附件无法读取，已停止同步；请重新上传后重试。');
+            error.code = 'ATTACHMENT_UNAVAILABLE';
+            throw error;
         }
     }
 
@@ -165,8 +211,11 @@
         const copy = JSON.parse(JSON.stringify(source || {}));
         delete copy.security;
         const jobs = [];
-        ['experiments', 'reagents', 'samples', 'protocols'].forEach(function (name) {
+        ['experiments', 'reagents', 'samples', 'protocols', 'cellCultures'].forEach(function (name) {
             (copy[name] || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'photoData')); });
+        });
+        (copy.cellCultures || []).forEach(function (culture) {
+            (culture.history || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'photoData')); });
         });
         (copy.freezerBoxes || []).forEach(function (item) { jobs.push(materializeAttachment(item, 'lastScanPhoto')); });
         (copy.results || []).forEach(function (result) {
@@ -233,8 +282,9 @@
     function mergeLabWorkspace(current, incoming) {
         const output = JSON.parse(JSON.stringify(current || {}));
         WORKSPACE_COLLECTIONS.forEach(function (name) { output[name] = mergeRecords(output[name], incoming && incoming[name]); });
-        output.exampleSeedVersion = Math.max(Number(output.exampleSeedVersion) || 0, Number(incoming && incoming.exampleSeedVersion) || 0);
-        output.housingSchemaVersion = Math.max(Number(output.housingSchemaVersion) || 0, Number(incoming && incoming.housingSchemaVersion) || 0);
+        ['exampleSeedVersion', 'housingSchemaVersion', 'microbeHousingSchemaVersion', 'coldStorageSchemaVersion'].forEach(function (name) {
+            output[name] = Math.max(Number(output[name]) || 0, Number(incoming && incoming[name]) || 0);
+        });
         return output;
     }
 
@@ -255,10 +305,11 @@
     }
 
     async function buildUsbSnapshot() {
+        const password = usbSettings.password;
         const workspace = await prepareWorkspace();
         const createdAt = new Date().toISOString();
         const hash = await sha256(JSON.stringify(workspace));
-        const envelope = await secure.encryptPortable({ workspace: workspace, exportedAt: createdAt, sourceDeviceId: usbSettings.deviceId }, usbSettings.password);
+        const envelope = await secure.encryptPortable({ workspace: workspace, exportedAt: createdAt, sourceDeviceId: usbSettings.deviceId }, password);
         const snapshot = { protocol: USB_PROTOCOL, deviceId: usbSettings.deviceId, hash: hash, createdAt: createdAt, envelope: envelope };
         if (new Blob([JSON.stringify(snapshot)]).size > USB_SNAPSHOT_LIMIT) throw new Error('数据量过大，请使用同步文件');
         return snapshot;
@@ -268,13 +319,34 @@
         if (!usbSettings || !usbSettings.enabled) return null;
         if (!usbSnapshotDirty && usbSnapshot) return usbSnapshot;
         if (usbBuildPromise) return usbBuildPromise;
+        const generation = syncGeneration;
+        const version = snapshotVersion;
+        let built = false;
         usbBuildPromise = buildUsbSnapshot().then(async function (snapshot) {
+            if (!usbSettings.enabled || generation !== syncGeneration) return null;
+            built = true;
             usbSnapshot = snapshot;
-            usbSnapshotDirty = false;
+            usbSnapshotDirty = version !== snapshotVersion;
             const desktop = desktopBridge();
-            if (desktop) desktop.updateUsbSyncSnapshot({ authKey: await sha256('rhine-lab-usb-auth-v1\n' + usbSettings.password), snapshot: snapshot });
+            if (desktop) {
+                const authKey = await sha256('rhine-lab-usb-auth-v1\n' + usbSettings.password);
+                if (!usbSettings.enabled || generation !== syncGeneration) return null;
+                desktop.updateUsbSyncSnapshot({ authKey: authKey, snapshot: snapshot });
+            }
             return snapshot;
-        }).finally(function () { usbBuildPromise = null; });
+        }).catch(function (error) {
+            if (generation === syncGeneration) {
+                built = false;
+                usbSnapshot = null;
+                usbSnapshotDirty = true;
+                const desktop = desktopBridge();
+                if (desktop) desktop.updateUsbSyncSnapshot(null);
+            }
+            throw error;
+        }).finally(function () {
+            usbBuildPromise = null;
+            if (usbSettings.enabled && (generation !== syncGeneration || built && usbSnapshotDirty)) scheduleUsbSnapshot();
+        });
         return usbBuildPromise;
     }
 
@@ -282,20 +354,25 @@
         if (!usbSettings || !usbSettings.enabled || !isUsbSnapshot(snapshot) || snapshot.deviceId === usbSettings.deviceId) return;
         const previous = usbSettings.peers[snapshot.deviceId];
         if (previous && previous.createdAt >= snapshot.createdAt) return;
+        const generation = syncGeneration;
         const unpacked = await secure.decryptPortable(snapshot.envelope, usbSettings.password);
-        if (!unpacked || unpacked.sourceDeviceId !== snapshot.deviceId || unpacked.exportedAt !== snapshot.createdAt || !unpacked.workspace) throw new Error('数据线同步验证失败');
-        if (await sha256(JSON.stringify(unpacked.workspace)) !== snapshot.hash) throw new Error('数据线同步验证失败');
+        if (!unpacked || unpacked.sourceDeviceId !== snapshot.deviceId || unpacked.exportedAt !== snapshot.createdAt || !unpacked.workspace) throw new Error('本地同步验证失败');
+        if (await sha256(JSON.stringify(unpacked.workspace)) !== snapshot.hash) throw new Error('本地同步验证失败');
+        if (!usbSettings.enabled || generation !== syncGeneration) return;
+        const target = usbSettings.target;
+        const localWorkspace = target === 'personal' ? await prepareWorkspace() : null;
+        const localHash = localWorkspace ? await sha256(JSON.stringify(localWorkspace)) : '';
+        if (!usbSettings.enabled || generation !== syncGeneration || target !== usbSettings.target) return;
         const shared = adapter.buildSharedProjection ? adapter.buildSharedProjection(unpacked.workspace) : unpacked.workspace;
         const merged = mergeLabWorkspace(adapter.getLabState ? adapter.getLabState() : {}, shared);
         if (adapter.setLabState) await adapter.setLabState(merged);
         else adapter.applyState(merged, 'lab');
         let status = 'LAB 数据已同步';
-        if (usbSettings.target === 'personal') {
-            const localWorkspace = await prepareWorkspace();
-            const localHash = await sha256(JSON.stringify(localWorkspace));
+        if (target === 'personal') {
             const firstPairing = !previous || !previous.localHash || !previous.remoteHash;
+            const sharedBaseline = !firstPairing && previous.localHash === previous.remoteHash;
             const canAcceptFirst = firstPairing && workspaceRecordCount(localWorkspace) === 0 && workspaceRecordCount(unpacked.workspace) > 0;
-            const remoteOnlyChanged = !firstPairing && snapshot.hash !== previous.remoteHash && localHash === previous.localHash;
+            const remoteOnlyChanged = sharedBaseline && snapshot.hash !== previous.remoteHash && localHash === previous.localHash;
             if (snapshot.hash === localHash) {
                 usbSettings.peers[snapshot.deviceId] = { localHash: localHash, remoteHash: snapshot.hash, createdAt: snapshot.createdAt };
                 status = '个人数据已同步';
@@ -309,9 +386,9 @@
             } else if (firstPairing) {
                 usbSettings.peers[snapshot.deviceId] = { localHash: localHash, remoteHash: snapshot.hash, createdAt: snapshot.createdAt };
                 status = '已建立同步基线；现有记录已合并到 LAB';
-            } else if (snapshot.hash !== previous.remoteHash && localHash !== previous.localHash) {
+            } else if (!sharedBaseline || snapshot.hash !== previous.remoteHash && localHash !== previous.localHash) {
                 usbSettings.peers[snapshot.deviceId].createdAt = snapshot.createdAt;
-                status = '两端都有修改，已合并到 LAB';
+                status = sharedBaseline ? '两端都有修改，已合并到 LAB' : '两端数据不同，已合并到 LAB；个人工作区未覆盖';
             }
         } else {
             usbSettings.peers[snapshot.deviceId] = { remoteHash: snapshot.hash, createdAt: snapshot.createdAt };
@@ -323,17 +400,23 @@
     }
 
     async function exchangeWithDesktop() {
-        const android = androidBridge();
-        if (!android || usbExchangeBusy || !usbSettings || !usbSettings.enabled) return;
+        const mobile = mobileBridge();
+        if (!mobile || usbExchangeBusy || !usbSettings || !usbSettings.enabled) return;
         usbExchangeBusy = true;
+        const generation = syncGeneration;
         try {
             const snapshot = await refreshUsbSnapshot();
+            if (!snapshot || !usbSettings.enabled || generation !== syncGeneration) return;
             const authKey = await sha256('rhine-lab-usb-auth-v1\n' + usbSettings.password);
-            const result = await android.exchange({ authKey: authKey, snapshot: snapshot });
+            const result = await mobile.exchange({ authKey: authKey, snapshot: snapshot, host: usbSettings.host || '' });
+            if (!usbSettings.enabled || generation !== syncGeneration) return;
             if (result && result.snapshot) await receiveUsbSnapshot(result.snapshot);
             else setUsbStatus('已连接，等待电脑端数据');
         } catch (error) {
-            setUsbStatus(error && /密码|验证/.test(error.message || '') ? '传输密码不一致' : '等待 USB 网络共享', Boolean(error && /密码|验证/.test(error.message || '')));
+            if (usbSettings.enabled && generation === syncGeneration) {
+                if (error && error.code === 'ATTACHMENT_UNAVAILABLE') setUsbStatus(error.message, true);
+                else setUsbStatus(error && /密码|验证|decrypt|OperationError/i.test((error.message || '') + error.name) ? '传输密码不一致' : waitingStatus(), Boolean(error && /密码|验证|decrypt|OperationError/i.test((error.message || '') + error.name)));
+            }
         } finally {
             usbExchangeBusy = false;
         }
@@ -341,42 +424,56 @@
 
     async function startUsbSync() {
         if (usbExchangeTimer) window.clearInterval(usbExchangeTimer);
+        const generation = ++syncGeneration;
+        snapshotVersion += 1;
         usbSnapshotDirty = true;
-        setUsbStatus('等待 USB 网络共享');
+        setUsbStatus(waitingStatus());
         await refreshUsbSnapshot();
-        if (androidBridge()) {
+        if (mobileBridge() && usbSettings.enabled && generation === syncGeneration) {
             await exchangeWithDesktop();
-            usbExchangeTimer = window.setInterval(exchangeWithDesktop, 7000);
+            if (usbSettings.enabled && generation === syncGeneration) usbExchangeTimer = window.setInterval(exchangeWithDesktop, 7000);
         }
     }
 
-    async function toggleUsbSync() {
-        if (usbSettings && usbSettings.enabled) {
+    async function toggleUsbSync(transport) {
+        if (usbSettings && usbSettings.enabled && usbSettings.transport === transport) {
+            syncGeneration += 1;
             usbSettings.enabled = false;
             delete usbSettings.password;
             await saveUsbSettings();
             if (usbExchangeTimer) window.clearInterval(usbExchangeTimer);
             usbExchangeTimer = null;
             usbSnapshot = null;
+            if (usbRefreshTimer) window.clearTimeout(usbRefreshTimer);
             const desktop = desktopBridge();
             if (desktop) desktop.updateUsbSyncSnapshot(null);
             renderUsbControls();
             setLocalStatus();
             return;
         }
-        const password = String(ui.password && ui.password.value || '');
+        const password = String(ui.password && ui.password.value || usbSettings && usbSettings.password || '');
         if (password.length < 10) { setMessage('传输密码至少需要 10 个字符', true); return; }
+        const host = String(ui.address && ui.address.value || '').trim();
+        const plugins = window.Capacitor && window.Capacitor.Plugins;
+        if (mobileBridge() && ((transport === 'bluetooth' || plugins.RhineLocalSync) && !host || host && !isPrivateIpv4(host))) {
+            setMessage('请输入电脑端显示的蓝牙网络 IPv4 地址', true);
+            return;
+        }
         usbSettings = usbSettings || { deviceId: randomDeviceId(), peers: {} };
+        if (usbSettings.password !== password) usbSettings.peers = {};
         usbSettings.enabled = true;
         usbSettings.password = password;
+        usbSettings.transport = transport;
+        usbSettings.host = host;
         usbSettings.target = ui.target && ui.target.value === 'lab' ? 'lab' : 'personal';
-        usbSettings.peers = {};
         await saveUsbSettings();
+        setMessage('');
         renderUsbControls();
         await startUsbSync();
     }
 
     function scheduleUsbSnapshot() {
+        snapshotVersion += 1;
         usbSnapshotDirty = true;
         if (!usbSettings || !usbSettings.enabled) return;
         if (usbRefreshTimer) window.clearTimeout(usbRefreshTimer);
@@ -386,7 +483,9 @@
     }
 
     async function configureNativeSync() {
+        renderUsbControls();
         if (!nativeSyncAvailable()) return;
+        if (secure && secure.prepareLocalStorage) await secure.prepareLocalStorage([USB_SETTINGS_KEY]);
         loadUsbSettings();
         renderUsbControls();
         const desktop = desktopBridge();
@@ -396,6 +495,13 @@
             });
         }
         if (usbSettings.enabled) await startUsbSync();
+    }
+
+    async function showDesktopAddresses() {
+        const desktop = desktopBridge();
+        if (!desktop || !desktop.getLocalSyncAddresses || !ui.desktopAddresses) return;
+        const addresses = await desktop.getLocalSyncAddresses();
+        ui.desktopAddresses.textContent = addresses.map(function (item) { return item.name + ': ' + item.address; }).join('\n') || text('未找到本地网络地址，请先连接蓝牙 PAN');
     }
 
     function updateImportButton() {
@@ -448,6 +554,7 @@
 
     function openDialog() {
         if (ui.dialog && !ui.dialog.open) ui.dialog.showModal();
+        showDesktopAddresses().catch(function () { setUsbStatus('无法读取电脑网络地址', true); });
     }
 
     function bindUi() {
@@ -470,8 +577,23 @@
             importWorkspace().catch(function (error) { setMessage(error && error.message ? error.message : '无法导入同步文件，请检查文件和密码。', true); });
         });
         if (ui.usbToggle) ui.usbToggle.addEventListener('click', function () {
-            toggleUsbSync().catch(function (error) { setUsbStatus(error && error.message ? error.message : '无法启用数据线同步', true); });
+            toggleUsbSync('usb').catch(function (error) { setUsbStatus(error && error.message ? error.message : '无法启用数据线同步', true); });
         });
+        if (ui.bluetoothToggle) ui.bluetoothToggle.addEventListener('click', function () {
+            toggleUsbSync('bluetooth').catch(function (error) { setUsbStatus(error && error.message ? error.message : '无法启用蓝牙同步', true); });
+        });
+        if (ui.addressRefresh) ui.addressRefresh.addEventListener('click', function () { showDesktopAddresses().catch(function () { setUsbStatus('无法读取电脑网络地址', true); }); });
+        if (ui.address) ui.address.addEventListener('change', function () {
+            const host = ui.address.value.trim();
+            if (host && !isPrivateIpv4(host)) { setMessage('请输入电脑端显示的蓝牙网络 IPv4 地址', true); return; }
+            if (usbSettings && usbSettings.enabled) {
+                const plugins = window.Capacitor && window.Capacitor.Plugins;
+                if (!host && (usbSettings.transport === 'bluetooth' || plugins && plugins.RhineLocalSync)) { setMessage('请输入电脑端显示的蓝牙网络 IPv4 地址', true); return; }
+                usbSettings.host = host;
+                saveUsbSettings().then(startUsbSync).catch(function (error) { setUsbStatus(error.message, true); });
+            }
+        });
+        window.addEventListener('rhine:languagechange', renderUsbControls);
         window.addEventListener('rhine:languagechange', setLocalStatus);
         window.addEventListener('rhine:languagechange', updateImportButton);
         updateImportButton();

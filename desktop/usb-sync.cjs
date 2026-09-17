@@ -7,6 +7,7 @@ const PROTOCOL = 'rhine-lab-local-sync-v1';
 const DISCOVERY_PORT = 32124;
 const HTTP_PORT = 32123;
 const MAX_BODY_BYTES = 32 * 1024 * 1024;
+const REQUEST_TIMEOUT_MS = 300000;
 
 function isPrivateAddress(value) {
     const address = String(value || '').replace(/^::ffff:/, '');
@@ -57,14 +58,15 @@ function createEphemeralCertificate() {
     });
 }
 
-function validRequest(request, body, authKey, usedNonces) {
+function validRequest(request, body, authKey, usedNonces, receivedAt) {
     const now = Date.now();
-    usedNonces.forEach(function (seenAt, key) { if (now - seenAt > 60000) usedNonces.delete(key); });
+    usedNonces.forEach(function (seenAt, key) { if (now - seenAt > REQUEST_TIMEOUT_MS + 60000) usedNonces.delete(key); });
     const timestamp = String(request.headers['x-rhine-timestamp'] || '');
     const nonce = String(request.headers['x-rhine-nonce'] || '');
     const signature = String(request.headers['x-rhine-auth'] || '');
     if (!/^[a-f0-9]{64}$/.test(authKey) || !/^\d{13}$/.test(timestamp) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(signature)) return false;
-    if (Math.abs(now - Number(timestamp)) > 30000 || usedNonces.has(nonce)) return false;
+    // Check clock skew at arrival, not after a photo-heavy Bluetooth upload finishes.
+    if (Math.abs(receivedAt - Number(timestamp)) > 30000 || usedNonces.has(nonce)) return false;
     const expected = requestSignature(authKey, timestamp, nonce, body);
     if (!crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))) return false;
     usedNonces.set(nonce, now);
@@ -85,6 +87,7 @@ function createUsbSyncBridge(options) {
         startPromise = createEphemeralCertificate().then(function (certificate) {
         if (version !== startVersion) return;
         httpServer = https.createServer({ pfx: certificate.pfx }, function (request, response) {
+            const receivedAt = Date.now();
             const remoteAddress = request.socket && request.socket.remoteAddress;
             if (!isPrivateAddress(remoteAddress) || request.method !== 'POST' || request.url !== '/exchange') {
                 response.writeHead(404).end();
@@ -105,7 +108,7 @@ function createUsbSyncBridge(options) {
                 try {
                     const raw = Buffer.concat(chunks);
                     const local = options.getLocal();
-                    if (!local || !validRequest(request, raw, local.authKey, usedNonces)) {
+                    if (!local || !validRequest(request, raw, local.authKey, usedNonces, receivedAt)) {
                         response.writeHead(401).end();
                         return;
                     }
@@ -120,6 +123,7 @@ function createUsbSyncBridge(options) {
                 }
             });
         });
+        httpServer.requestTimeout = REQUEST_TIMEOUT_MS;
         httpServer.on('error', options.onError);
         httpServer.listen(HTTP_PORT, '0.0.0.0');
 

@@ -17,7 +17,7 @@
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.3">
     <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.3-web4">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260914-3">
-    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.3">
+    <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.3-bt1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas-v2.css?v=20260830-1">
     <link rel="stylesheet" href="css/rhine-lab-workflow-refine.css?v=0.3.3">
@@ -528,9 +528,16 @@
                     <b aria-hidden="true">⇌</b>
                 </div>
                 <div class="usb-sync-panel" id="usbSyncPanel" hidden>
-                    <div><strong>USB 网络共享</strong><span id="usbSyncStatus">未启用</span></div>
-                    <button class="button ghost" id="usbSyncToggle" type="button">启用数据线同步</button>
+                    <div><strong id="localSyncTransportLabel">USB / 蓝牙同步</strong><span id="usbSyncStatus" aria-live="polite">未启用</span></div>
+                    <div class="local-sync-buttons"><button class="button ghost" id="usbSyncToggle" type="button">启用数据线同步</button><button class="button ghost" id="bluetoothSyncToggle" type="button">启用蓝牙同步</button></div>
+                    <p class="local-sync-help">蓝牙：先在系统中配对。Android 开启蓝牙网络共享；iPhone 开启个人热点。电脑加入手机的蓝牙 PAN，再在两端输入相同的传输密码。</p>
+                    <p class="local-sync-help">手机填写电脑端蓝牙网络连接的 IPv4 地址。保持两端应用打开；数据加密直传，不上传服务器。电脑防火墙需允许本地 TCP 32123 / UDP 32124。</p>
+                    <p class="local-sync-help">首次同步两端都有记录，或两端同时修改时，合并到 LAB；不会自动覆盖个人工作区。</p>
+                    <label class="sync-transfer-password" id="localSyncAddressField"><span>电脑地址</span><input id="localSyncAddress" type="text" inputmode="decimal" maxlength="15" autocomplete="off" placeholder="192.168.44.2"></label>
+                    <p class="local-sync-addresses" id="localSyncDesktopAddresses"></p>
+                    <button class="button ghost" id="localSyncAddressRefresh" type="button" hidden>刷新电脑地址</button>
                 </div>
+                <p class="local-sync-help" id="localSyncUnsupported" hidden>蓝牙同步需要安装手机和电脑应用；浏览器版请使用同步文件。</p>
                 <label class="sync-transfer-password"><span>传输密码</span><input id="syncTransferPassword" type="password" minlength="10" autocomplete="off" placeholder="至少 10 位"></label>
                 <label class="sync-transfer-password"><span>导入到</span><select id="syncTransferTarget"><option value="personal">个人工作区（替换）</option><option value="lab">LAB 共用界面（合并）</option></select></label>
                 <div class="sync-transfer-actions">
@@ -675,10 +682,10 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.3.3-web5"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.3.3-bt2"></script>
     <script src="js/rhine-lab-config.js?v=0.3.3-ai"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
-    <script src="js/rhine-lab-sync-v019.js?v=0.3.3-ai2"></script>
+    <script src="js/rhine-lab-sync-v019.js?v=0.3.3-bt2"></script>
     <script src="js/rhine-lab-pwa.js?v=0.3.3-r2"></script>
     <script src="js/rhine-lab-assistant.js?v=0.3.3-ai5"></script>
     <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.3"></script>

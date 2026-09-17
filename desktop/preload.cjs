@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('RHINE_LAB_DISTRIBUTION', 'desktop');
 contextBridge.exposeInMainWorld('RhineLabDesktop', Object.freeze({
     platform: process.platform,
+    getLocalSyncAddresses: function () { return ipcRenderer.invoke('rhine-local-sync-addresses'); },
     updateUsbSyncSnapshot: function (configuration) { ipcRenderer.send('rhine-usb-sync-snapshot', configuration); },
     onUsbSyncRemote: function (listener) {
         const handler = function (_event, snapshot) { listener(snapshot); };
