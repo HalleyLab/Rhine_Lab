@@ -18,12 +18,13 @@ Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱�
 - 记录细胞培养、传代、培养条件与冻存样本位置。
 - 查看动物、细胞、样本、实验和结果之间的简明谱系。
 - 提供科学计算器、配液计算、Master Mix 及多孔板标注工具。
+- 在 Windows 应用中通过可视化运行中心执行本地或 SSH 服务器生信流程；浏览器可连接自有运行网关。
 - 支持本地加密存储、跨设备同步和只读 LAB 共用界面。
 - 提供网页、Windows 与 Android 版本，并支持中英文和日夜主题。
 
 云同步后端采用 Cloudflare Workers、D1 与 R2；工作区、LAB 投影和附件在客户端加密后上传。部署说明见 [cloudflare/README.md](cloudflare/README.md)。
 
-当前版本：**0.3.3**
+当前版本：**0.3.4**
 
 ### 手机 / 电脑蓝牙同步
 
@@ -52,12 +53,13 @@ Rhine Lab is a personal research workspace for life-science laboratories, combin
 - Record cell culture conditions, passages, and frozen-sample locations.
 - View concise lineage links between animals, cells, samples, experiments, and results.
 - Use a scientific calculator, solution calculators, Master Mix tools, and customizable plate annotations.
+- Run local or SSH-hosted bioinformatics pipelines from the visual Windows runner; browsers can use a private runner gateway.
 - Keep data encrypted locally, synchronize between devices, and use read-only shared LAB workspaces.
 - Available for web, Windows, and Android with Chinese/English and light/dark themes.
 
 Cloud sync uses Cloudflare Workers, D1, and R2. Workspace snapshots, LAB projections, and attachments are encrypted on the client before upload. See [cloudflare/README.md](cloudflare/README.md) for deployment notes.
 
-Current version: **0.3.3**
+Current version: **0.3.4**
 
 ### Phone / computer Bluetooth sync
 

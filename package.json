@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",
@@ -24,7 +24,8 @@
     "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never",
     "cloudflare:dev": "wrangler dev --config cloudflare/wrangler.toml",
     "cloudflare:db:local": "wrangler d1 execute rhine-lab --local --config cloudflare/wrangler.toml --file cloudflare/schema.sql",
-    "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.toml"
+    "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.toml",
+    "verify:bio-runner": "node scripts/check-bio-runner.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
@@ -33,7 +34,8 @@
     "@capacitor/ios": "8.5.0",
     "@capacitor/splash-screen": "8.0.2",
     "@capacitor/status-bar": "8.0.3",
-    "electron-updater": "6.8.9"
+    "electron-updater": "6.8.9",
+    "ssh2": "^1.17.0"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
@@ -83,6 +85,7 @@
         "repo": "Rhine_Lab",
         "releaseType": "release"
       }
-    ]
+    ],
+    "npmRebuild": false
   }
 }

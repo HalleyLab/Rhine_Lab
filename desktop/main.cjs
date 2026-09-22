@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron')
 const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
 const { createUsbSyncBridge, isSnapshot, isPrivateAddress } = require('./usb-sync.cjs');
+const { createBioRunner } = require('./bio-runner.cjs');
 const { networkInterfaces } = require('node:os');
 
 const isDevelopment = !app.isPackaged;
@@ -11,7 +12,48 @@ let updatePromptOpen = false;
 let updateInstallQueued = false;
 let desktopUsbSync = null;
 let usbSyncBridge = null;
+let bioRunner = null;
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+function isMainWindowSender(event) {
+    return Boolean(mainWindow && !mainWindow.isDestroyed() && event.sender === mainWindow.webContents);
+}
+
+function setupBioRunner() {
+    bioRunner = createBioRunner({ emit: function (payload) {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('rhine-bio-event', payload);
+    } });
+}
+
+ipcMain.handle('rhine-bio-probe-remote', function (event, configuration) {
+    if (!isMainWindowSender(event) || !bioRunner) throw new Error('未授权的运行器请求');
+    return bioRunner.probeRemote(configuration);
+});
+ipcMain.handle('rhine-bio-connect-remote', function (event, configuration) {
+    if (!isMainWindowSender(event) || !bioRunner) throw new Error('未授权的运行器请求');
+    return bioRunner.connectRemote(configuration);
+});
+ipcMain.handle('rhine-bio-disconnect-remote', function (event, sessionId) {
+    if (!isMainWindowSender(event) || !bioRunner) return false;
+    return bioRunner.disconnectRemote(sessionId);
+});
+ipcMain.handle('rhine-bio-run-local', function (event, job) {
+    if (!isMainWindowSender(event) || !bioRunner) throw new Error('未授权的运行器请求');
+    return bioRunner.runLocal(job);
+});
+ipcMain.handle('rhine-bio-run-remote', function (event, job) {
+    if (!isMainWindowSender(event) || !bioRunner) throw new Error('未授权的运行器请求');
+    return bioRunner.runRemote(job);
+});
+ipcMain.handle('rhine-bio-stop-job', function (event, jobId) {
+    if (!isMainWindowSender(event) || !bioRunner) return false;
+    return bioRunner.stopJob(jobId);
+});
+ipcMain.handle('rhine-bio-choose-directory', async function (event) {
+    if (!isMainWindowSender(event)) throw new Error('未授权的目录请求');
+    const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory', 'createDirectory'] });
+    return result.canceled ? '' : String(result.filePaths[0] || '');
+});
 
 ipcMain.handle('rhine-local-sync-addresses', function (event) {
     if (!mainWindow || event.sender !== mainWindow.webContents) return [];
@@ -200,6 +242,7 @@ app.whenReady().then(function () {
         app.setAsDefaultProtocolClient('rhinelab', protocolExecutable);
     }
     Menu.setApplicationMenu(applicationMenu);
+    setupBioRunner();
     if (singleInstance) createWindow();
     setupUsbSyncBridge();
     setupAutomaticUpdates();
@@ -211,6 +254,7 @@ app.whenReady().then(function () {
 app.on('before-quit', function () {
     if (updateCheckTimer) clearInterval(updateCheckTimer);
     if (usbSyncBridge) usbSyncBridge.stop();
+    if (bioRunner) bioRunner.dispose();
 });
 
 app.on('window-all-closed', function () {

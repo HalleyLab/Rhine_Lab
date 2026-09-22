@@ -8,6 +8,8 @@
         cloudflareFallbackApiUrl: 'https://rhine-lab-api.rhine-lab.workers.dev',
         // Only a message the user explicitly sends is forwarded by the Worker.
         assistantApiUrl: 'https://api.rh1nelab.com/api/assistant',
+        // Optional private HTTPS gateway for browser-based bioinformatics runs. Desktop SSH works without it.
+        bioRunnerApiUrl: '',
         publicAppUrl: 'https://halleylab.github.io/Rhine_Lab/',
         seedUrl: './data/showcase.json'
     }, window.RHINE_LAB_CONFIG || {});

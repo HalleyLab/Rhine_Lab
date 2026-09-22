@@ -2,7 +2,9 @@ overrides:
   "@noble/hashes": 1.8.0
 
 allowBuilds:
+  cpu-features: false
   electron-winstaller: false
   esbuild: true
   sharp: true
+  ssh2: false
   workerd: true

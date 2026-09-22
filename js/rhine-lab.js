@@ -552,6 +552,36 @@
         getLocale: function () { return document.documentElement.lang === 'en' ? 'en' : 'zh'; }
     };
 
+    window.RhineLabBioBridge = {
+        getSnapshot: function () {
+            return { readOnly: Boolean(workspaceReadOnly), pipelines: clone(state.bioPipelines), datasets: clone(state.bioDatasets), runs: clone(state.bioRuns) };
+        },
+        createRun: function (input) {
+            if (workspaceReadOnly) { showToast('当前工作区只读，不能启动分析任务'); return null; }
+            const pipeline = state.bioPipelines.find(function (item) { return item.id === input.pipelineId; });
+            const dataset = state.bioDatasets.find(function (item) { return item.id === input.datasetId; });
+            if (!pipeline || !dataset) { showToast('请选择有效的分析流程和数据集'); return null; }
+            const run = { id: generatedRecordId('BIO-RUN'), projectId: dataset.projectId || pipeline.projectId || '', pipelineId: pipeline.id, datasetId: dataset.id, name: pipeline.name + ' · ' + dataset.name, compute: String(input.compute || ''), startDate: todayIso(), endDate: '', status: '排队中', outputLocation: String(input.outputLocation || ''), notes: '', createdBy: anonymousContributor(), history: [createdHistoryEntry()] };
+            state.bioRuns.unshift(run);
+            addActivity('建立分析任务“' + run.name + '”');
+            appendAuditLog({ action: 'created', recordType: 'bioRun', recordId: run.id, changes: clone(run) });
+            saveState(); renderBioinformatics();
+            window.dispatchEvent(new CustomEvent('rhine:biochange'));
+            return clone(run);
+        },
+        updateRun: function (id, updates) {
+            const run = state.bioRuns.find(function (item) { return item.id === id; });
+            if (!run || workspaceReadOnly) return null;
+            const allowed = ['status', 'endDate', 'outputLocation', 'compute', 'runnerJobId', 'runnerTarget', 'runnerStartedAt', 'runnerFinishedAt', 'runnerExitCode', 'runnerLog'];
+            allowed.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(updates || {}, key)) run[key] = updates[key]; });
+            run.history = Array.isArray(run.history) ? run.history : [];
+            if (updates && updates.status) run.history.unshift({ at: new Date().toISOString(), action: 'updated', changes: [{ field: '运行状态', after: updates.status }] });
+            saveState(); renderBioinformatics();
+            window.dispatchEvent(new CustomEvent('rhine:biochange'));
+            return clone(run);
+        }
+    };
+
     init();
 
     function getAssistantContext() {
@@ -1892,7 +1922,7 @@
     function getInitialView() {
         const hash = location.hash.replace('#', '');
         if (hash === 'results') return 'experiments';
-        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
+        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'bioinformatics', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
     }
 
     function applySavedTheme() {
