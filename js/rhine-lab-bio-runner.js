@@ -15,7 +15,6 @@
             waiting: '等待运行任务…', connected: '已登录', probing: '正在读取服务器指纹…', connecting: '正在登录服务器…',
             running: '任务正在运行', completed: '任务已完成', failed: '任务运行失败', stopped: '任务已停止',
             noGateway: '网页不能直接建立 SSH 连接。请使用桌面应用，或为私有部署配置 bioRunnerApiUrl。',
-            localDesktopOnly: '浏览器不能直接运行本机程序；请在 Windows 桌面应用中使用本地运行。',
             noPipeline: '请先登记一个分析流程', noDataset: '请先登记一个输入数据集', readOnly: '当前工作区只读，不能启动任务。',
             verifyFirst: '请先检测服务器并核对指纹', passwordMissing: '请输入服务器密码', loggedOut: '服务器连接已断开',
             command: '即将运行', security: '密码仅用于当前登录，不会写入工作区或浏览器存储。',
@@ -31,7 +30,6 @@
             waiting: 'Waiting for a run…', connected: 'Signed in', probing: 'Reading the server fingerprint…', connecting: 'Signing in…',
             running: 'Run in progress', completed: 'Run completed', failed: 'Run failed', stopped: 'Run stopped',
             noGateway: 'A browser cannot open SSH directly. Use the desktop app or configure bioRunnerApiUrl for a private deployment.',
-            localDesktopOnly: 'Browsers cannot launch local programs. Use local runs in the Windows desktop app.',
             noPipeline: 'Register a pipeline first', noDataset: 'Register an input dataset first', readOnly: 'This workspace is read-only.',
             verifyFirst: 'Check the server and verify its fingerprint first', passwordMissing: 'Enter the server password', loggedOut: 'Server disconnected',
             command: 'Command', security: 'The password is used for this session only and is not saved to workspace or browser storage.',
@@ -115,7 +113,7 @@
         root.innerHTML = '<header class="bio-runner-head"><div><p class="micro-label">COMPUTE RUNNER</p><h2>' + t('center') + '</h2><small>' + escapeHtml(native ? t('desktop') : (gateway ? t('gateway') : t('unavailable'))) + '</small></div><span class="bio-runner-status" data-connected="' + Boolean(remoteSession) + '">' + escapeHtml(remoteSession ? t('connected') + ' · ' + remoteSession.host : (native ? t('desktop') : (gateway ? t('gateway') : 'OFFLINE'))) + '</span></header>' +
             '<div class="bio-runner-layout"><section class="bio-runner-config">' +
                 '<div class="bio-runner-field-row"><label><span>' + t('pipeline') + '</span><select id="bioRunnerPipeline">' + options(snapshot.pipelines, t('noPipeline')) + '</select></label><label><span>' + t('dataset') + '</span><select id="bioRunnerDataset">' + options(snapshot.datasets, t('noDataset')) + '</select></label></div>' +
-                '<fieldset class="bio-runner-target"><legend>' + t('target') + '</legend><label><input type="radio" name="bioRunnerTarget" value="local" ' + (target === 'local' ? 'checked' : '') + '><span>' + t('local') + '</span></label><label><input type="radio" name="bioRunnerTarget" value="remote" ' + (target === 'remote' ? 'checked' : '') + '><span>' + t('remote') + '</span></label></fieldset>' +
+                '<fieldset class="bio-runner-target"><legend>' + t('target') + '</legend><label><input type="radio" name="bioRunnerTarget" value="local" ' + (target === 'local' ? 'checked' : '') + (native ? '' : ' disabled') + '><span>' + t('local') + '</span></label><label><input type="radio" name="bioRunnerTarget" value="remote" ' + (target === 'remote' ? 'checked' : '') + '><span>' + t('remote') + '</span></label></fieldset>' +
                 '<label class="bio-runner-path"><span>' + t('cwd') + '</span><div><input id="bioRunnerCwd" type="text" autocomplete="off"><button type="button" data-bio-runner-choose ' + (native ? '' : 'hidden') + '>' + t('choose') + '</button></div></label>' +
                 '<div class="bio-runner-field-row"><label><span>' + t('input') + '</span><input id="bioRunnerInput" type="text" autocomplete="off"></label><label><span>' + t('output') + '</span><input id="bioRunnerOutput" type="text" autocomplete="off"></label></div>' +
                 '<section class="bio-runner-remote" ' + (target === 'remote' ? '' : 'hidden') + '><div class="bio-runner-field-row server"><label><span>' + t('host') + '</span><input id="bioRunnerHost" type="text" inputmode="url" autocomplete="off" placeholder="192.168.1.10"></label><label class="port"><span>' + t('port') + '</span><input id="bioRunnerPort" type="number" min="1" max="65535" step="1" value="22"></label></div><div class="bio-runner-field-row"><label><span>' + t('username') + '</span><input id="bioRunnerUsername" type="text" autocomplete="username"></label><label><span>' + t('password') + '</span><input id="bioRunnerPassword" type="password" autocomplete="current-password"></label></div><p class="bio-runner-security">' + t('security') + '</p><div class="bio-runner-server-actions"><button class="button ghost compact" type="button" data-bio-runner-probe>' + t('probe') + '</button><button class="button primary compact" type="button" data-bio-runner-connect disabled>' + t('connect') + '</button><button class="button ghost compact" type="button" data-bio-runner-disconnect ' + (remoteSession ? '' : 'hidden') + '>' + t('disconnect') + '</button></div><div class="bio-runner-fingerprint" id="bioRunnerFingerprint" hidden><span>' + t('fingerprint') + '</span><code></code><label><input id="bioRunnerFingerprintConfirm" type="checkbox"> ' + t('confirmFingerprint') + '</label></div>' + (!native && !gateway ? '<p class="bio-runner-warning">' + t('noGateway') + '</p>' : '') + '</section>' +
@@ -203,7 +201,6 @@
         if (!pipeline) { setMessage(t('noPipeline'), 'error'); return; }
         if (!dataset) { setMessage(t('noDataset'), 'error'); return; }
         const target = document.querySelector('[name="bioRunnerTarget"]:checked').value;
-        if (target === 'local' && !desktop()) { setMessage(t('localDesktopOnly'), 'error'); return; }
         if (target === 'remote' && !remoteSession) { setMessage(t('verifyFirst'), 'error'); return; }
         logText = '';
         const run = bridge().createRun({ pipelineId: pipeline.id, datasetId: dataset.id, compute: target === 'local' ? t('local') : (remoteSession.host + ':' + remoteSession.port), outputLocation: value('bioRunnerOutput') });
@@ -267,8 +264,6 @@
     root.addEventListener('change', function (event) {
         if (event.target.name === 'bioRunnerTarget') {
             root.querySelector('.bio-runner-remote').hidden = event.target.value !== 'remote';
-            if (event.target.value === 'local' && !desktop()) setMessage(t('localDesktopOnly'), 'warning');
-            else if (!activeJob) setMessage(t('waiting'));
         }
         if (event.target.id === 'bioRunnerPipeline') updateCommandPreview();
         if (event.target.id === 'bioRunnerDataset') { document.getElementById('bioRunnerInput').value = ''; updateDatasetPath(); }
