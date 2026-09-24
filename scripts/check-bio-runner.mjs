@@ -9,6 +9,8 @@ const preload = await readFile(new URL('../desktop/preload.cjs', import.meta.url
 const app = await readFile(new URL('../js/rhine-lab.js', import.meta.url), 'utf8');
 const ui = await readFile(new URL('../js/rhine-lab-bio-runner.js', import.meta.url), 'utf8');
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const minimalCss = await readFile(new URL('../css/rhine-lab-minimal.css', import.meta.url), 'utf8');
+const notices = await readFile(new URL('../THIRD_PARTY_NOTICES.md', import.meta.url), 'utf8');
 
 assert.deepEqual(runner.parseCommandLine('nextflow run nf-core/rnaseq -profile docker'), { executable: 'nextflow', args: ['run', 'nf-core/rnaseq', '-profile', 'docker'] });
 assert.throws(() => runner.parseCommandLine('nextflow run x | powershell'), /管道/);
@@ -22,6 +24,11 @@ assert.throws(() => runner.validateRemoteTarget({ host: 'x;rm', username: 'u', p
 assert.match(main, /createBioRunner/); assert.match(main, /rhine-bio-run-remote/); assert.match(main, /isMainWindowSender/);
 assert.match(preload, /bioRunner: Object\.freeze/); assert.doesNotMatch(preload, /ipcRenderer:\s*ipcRenderer/);
 assert.match(app, /RhineLabBioBridge/); assert.doesNotMatch(app, /currentUserLabel/); assert.match(app, /createRun/); assert.match(app, /updateRun/);
-assert.match(ui, /password is used for this session only|密码仅用于当前登录/); assert.doesNotMatch(ui, /localStorage\.setItem[\s\S]*Password/i);
-assert.match(html, /id="bioRunnerCenter"/); assert.match(html, /rhine-lab-bio-runner\.js\?v=0\.3\.4/);
+assert.match(ui, /password is used for this session only|密码仅用于当前登录/);
+assert.match(ui, /localDesktopOnly/);
+assert.ok(!ui.includes("native ? '' : ' disabled'")); assert.doesNotMatch(ui, /localStorage\.setItem[\s\S]*Password/i);
+assert.match(html, /id="bioRunnerCenter"/);
+assert.match(html, /rhine-lab-minimal\.css\?v=0\.3\.4/);
+assert.match(minimalCss, /Pico CSS v2 \(MIT\)/);
+assert.match(notices, /## Pico CSS/); assert.match(html, /rhine-lab-bio-runner\.js\?v=0\.3\.4/);
 console.log('Bioinformatics runner checks passed.');
