@@ -15,7 +15,7 @@
     <link rel="manifest" href="app.webmanifest">
     <link rel="icon" href="images/rhine-life-app-icon.png?v=0.3.3" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="images/rhine-life-app-icon.png?v=0.3.3">
-    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.3-web4">
+    <link rel="stylesheet" href="css/rhine-lab.css?v=0.3.4-layout3">
     <link rel="stylesheet" href="css/rhine-dashboard-refresh.css?v=20260914-3">
     <link rel="stylesheet" href="css/rhine-lab-v019.css?v=0.3.3-bt1">
     <link rel="stylesheet" href="css/rhine-lab-theme-atlas.css?v=20260818-1">
@@ -26,8 +26,8 @@
     <link rel="stylesheet" href="css/rhine-lab-bio-runner.css?v=0.3.4">
     <link rel="stylesheet" href="css/rhine-lab-assistant.css?v=0.3.3-ai5">
     <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.3">
-    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.3-web5">
-    <link rel="stylesheet" href="css/rhine-lab-layout.css?v=0.3.4-layout2">
+    <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.3.4-layout3">
+    <link rel="stylesheet" href="css/rhine-lab-layout.css?v=0.3.4-layout3">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -62,7 +62,7 @@
             <nav class="primary-nav" aria-label="Rhine Lab 功能导航">
                 <p class="nav-label">WORKSPACE / 工作区</p>
                 <button class="nav-item active" type="button" data-view="dashboard"><span class="nav-code">01</span><span>工作总览</span><b>OVERVIEW</b></button>
-                <button class="nav-item" type="button" data-view="lab-layout"><span class="nav-code">02</span><span>实验室布局</span><b>LAB LAYOUT</b></button>
+                <button class="nav-item" type="button" data-view="lab-layout"><span class="nav-code">02</span><span>空间布局</span><b>LAB LAYOUT</b></button>
                 <button class="nav-item" type="button" data-view="experiments"><span class="nav-code">03</span><span>实验记录</span><b>RECORDS</b></button>
                 <button class="nav-item" type="button" data-view="mice"><span class="nav-code">04</span><span>生物管理</span><b>BIOLOGICALS</b></button>
                 <button class="nav-item" type="button" data-view="bioinformatics"><span class="nav-code">05</span><span>生物信息</span><b>BIOINFORMATICS</b></button>
@@ -75,7 +75,6 @@
 
             <div class="sidebar-foot">
                 <div class="system-status"><span class="pulse-dot"></span><div><strong id="systemConnectionLabel">本地模式</strong></div></div>
-                <button class="clear-workspace-button" type="button" data-open-clear-workspace><span>⌫</span><span><strong>清空当前工作区</strong><small>删除本工作区的全部记录</small></span></button>
             </div>
         </aside>
 
@@ -116,6 +115,7 @@
                             </div>
                             <button class="utility-nav-item background-toggle" id="backgroundToggle" type="button" aria-label="切换背景" title="切换背景" aria-pressed="false" data-background-mode="default"><span class="background-toggle-glyph desktop-utility-control" aria-hidden="true"><i></i><i></i><i></i></span><svg class="utility-item-icon mobile-utility-control" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4-8 4-8-4 8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"></path></svg><span class="utility-label mobile-utility-control">切换背景</span></button>
                             <button class="utility-nav-item" id="themeToggle" type="button" aria-label="夜间模式🌙" title="夜间模式🌙"><span class="desktop-theme-glyph desktop-utility-control" aria-hidden="true">◐</span><span class="utility-theme-icon mobile-utility-control" aria-hidden="true">🌙</span><span class="utility-label mobile-utility-control">夜间模式</span></button>
+                            <button class="utility-nav-item" id="clearWorkspaceAction" type="button" data-open-clear-workspace aria-label="清空当前工作区" title="清空当前工作区" aria-haspopup="dialog" aria-controls="clearWorkspaceDialog"><svg class="utility-item-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"></path></svg><span class="utility-label mobile-utility-control">清空当前工作区</span></button>
                         </nav>
                     </div>
                 </div>
@@ -434,9 +434,9 @@
                     </section>
                 </section>
 
-                <section class="view" id="view-lab-layout" data-title="实验室布局">
+                <section class="view" id="view-lab-layout" data-title="空间布局">
                     <div class="page-heading technical-heading lab-layout-heading">
-                        <div><p class="eyebrow"><span>LABORATORY FLOOR PLAN</span></p><h1>实验室布局</h1><p>房间、走廊与设备的平面布局。</p></div>
+                        <div><p class="eyebrow"><span>LABORATORY FLOOR PLAN</span></p><h1>空间布局</h1><p>房间、走廊与设备的平面布局。</p></div>
                         <svg class="lab-layout-heading-art" viewBox="0 0 210 120" aria-hidden="true"><path d="M12 12h64v42H12zM104 12h92v72h-92zM12 78h64v30H12zM90 12v96M12 66h64M104 96h92M134 30h42v36h-42z"/></svg>
                     </div>
                     <section class="panel lab-layout-workspace" id="labLayoutWorkspace" data-i18n-skip></section>
@@ -694,7 +694,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>记录已保存</p></div>
     <div class="mobile-scrim" id="mobileScrim"></div>
 
-    <script src="js/rhine-lab-i18n.js?v=0.3.4-layout1"></script>
+    <script src="js/rhine-lab-i18n.js?v=0.3.4-layout3"></script>
     <script src="js/rhine-lab-config.js?v=0.3.3-ai"></script>
     <script src="js/rhine-lab-crypto.js?v=0.1.9-storage-recovery"></script>
     <script src="js/rhine-lab-sync-v019.js?v=0.3.4-layout1"></script>
@@ -702,7 +702,7 @@
     <script src="js/rhine-lab-assistant.js?v=0.3.3-ai5"></script>
     <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.3"></script>
     <script src="js/rhine-lab-bio-runner.js?v=0.3.4"></script>
-    <script src="js/rhine-lab-layout.js?v=0.3.4-layout2"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.3.4-layout1"></script>
+    <script src="js/rhine-lab-layout.js?v=0.3.4-layout3"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.3.4-layout3"></script>
 </body>
 </html>

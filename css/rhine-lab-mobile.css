@@ -778,7 +778,7 @@
         color: var(--muted);
     }
 
-    .top-actions .utility-nav :is(#syncControl, #workspaceModeAction, #backgroundToggle, #themeToggle) {
+    .top-actions .utility-nav :is(#syncControl, #workspaceModeAction, #backgroundToggle, #themeToggle, #clearWorkspaceAction) {
         display: grid !important;
         grid-template-columns: 18px max-content !important;
         grid-template-rows: 50px !important;
@@ -795,7 +795,8 @@
     .top-actions .utility-nav #syncControl > i,
     .top-actions .utility-nav #workspaceModeAction > .utility-item-icon,
     .top-actions .utility-nav #backgroundToggle > .utility-item-icon,
-    .top-actions .utility-nav #themeToggle > .utility-theme-icon {
+    .top-actions .utility-nav #themeToggle > .utility-theme-icon,
+    .top-actions .utility-nav #clearWorkspaceAction > .utility-item-icon {
         position: static !important;
         inset: auto !important;
         grid-area: 1 / 1 !important;
@@ -811,7 +812,8 @@
     .top-actions .utility-nav #syncControl > span,
     .top-actions .utility-nav #workspaceModeAction > .utility-label,
     .top-actions .utility-nav #backgroundToggle > .utility-label,
-    .top-actions .utility-nav #themeToggle > .utility-label {
+    .top-actions .utility-nav #themeToggle > .utility-label,
+    .top-actions .utility-nav #clearWorkspaceAction > .utility-label {
         position: static !important;
         inset: auto !important;
         grid-area: 1 / 2 !important;

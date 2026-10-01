@@ -5186,6 +5186,7 @@
 
     function openClearWorkspaceDialog() {
         if (denyReadOnlyMutation()) return;
+        setUtilityNav(false);
         els.clearWorkspacePhrase.value = '';
         els.confirmClearWorkspace.disabled = true;
         els.clearWorkspaceDialog.showModal();

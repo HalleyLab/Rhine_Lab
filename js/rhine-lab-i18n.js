@@ -6,6 +6,7 @@
 
     const english = Object.freeze({
         '实验室布局': 'Lab Layout',
+        '空间布局': 'Lab Layout',
         '房间、走廊与设备的平面布局。': 'Arrange rooms, corridors and laboratory equipment.',
         'Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、样本与实验日程。': 'Rhine Lab life-science workspace for experiments, animals, reagents, samples and schedules.',
         'Rhine Lab 生命科学实验管理工作台：实验记录、生物资源、试剂、冻存样本、细胞维持与实验日程。': 'Rhine Lab life-science workspace for experiment records, biological resources, reagent inventory, frozen samples, cell culture and scheduling.',

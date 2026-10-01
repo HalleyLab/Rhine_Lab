@@ -7890,48 +7890,6 @@ html[lang="en"] .record-detail-code {
     border-radius: 10px 3px 10px 3px;
 }
 
-.clear-workspace-button {
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px 12px;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: 12px 4px 12px 4px;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-}
-
-.clear-workspace-button > span:first-child {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    color: var(--danger);
-    background: rgba(224, 92, 78, .09);
-    border-radius: 50%;
-    place-items: center;
-    font-size: 17px;
-}
-
-.clear-workspace-button strong,
-.clear-workspace-button small {
-    display: block;
-}
-
-.clear-workspace-button strong {
-    font-size: 12px;
-}
-
-.clear-workspace-button small {
-    margin-top: 3px;
-    font-size: 10px;
-}
-
 .clear-workspace-dialog {
     width: min(520px, calc(100% - 28px));
     padding: 0;
@@ -10158,7 +10116,7 @@ html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
     cursor: not-allowed;
 }
 
-.public-demo-locked .clear-workspace-button { display: none; }
+.workspace-readonly .top-actions .utility-nav #clearWorkspaceAction { display: none !important; }
 
 .dark-theme .animal-rack-position.occupied,
 .dark-theme .animal-cage-animal { background: rgba(255, 255, 255, .035); }
@@ -12252,6 +12210,8 @@ html[lang="zh-CN"] .activity-item time{
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+.utility-nav #clearWorkspaceAction > .utility-item-icon { margin: 0; }
+.utility-nav #clearWorkspaceAction:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
 .utility-nav .workspace-mode-toggle,
 .topbar .utility-nav .language-dock {
     position: static !important;
@@ -12327,7 +12287,8 @@ html[lang="zh-CN"] .activity-item time{
         border-radius: 999px;
     }
     .utility-nav #backgroundToggle,
-    .utility-nav #themeToggle {
+    .utility-nav #themeToggle,
+    .utility-nav #clearWorkspaceAction {
         display: grid;
         width: 38px;
         min-width: 38px;
