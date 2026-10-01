@@ -129,8 +129,8 @@
     };
     Object.assign(words.zh, { triangle: '三角形', diamond: '菱形', pentagon: '五边形', hexagon: '六边形', octagon: '八边形', star: '星形', 'l-shape': 'L 形', 't-shape': 'T 形', 'u-shape': 'U 形', finishOutline: '完成轮廓', undoPoint: '撤销顶点', editOutline: '编辑轮廓', vertex: '轮廓顶点', invalidOutline: '轮廓需要至少三个不共线的顶点。' });
     Object.assign(words.en, { triangle: 'Triangle', diamond: 'Diamond', pentagon: 'Pentagon', hexagon: 'Hexagon', octagon: 'Octagon', star: 'Star', 'l-shape': 'L shape', 't-shape': 'T shape', 'u-shape': 'U shape', finishOutline: 'Finish outline', undoPoint: 'Undo vertex', editOutline: 'Edit outline', vertex: 'Outline vertex', invalidOutline: 'The outline needs at least three non-collinear vertices.' });
-    Object.assign(words.zh, { title: '空间布局', newEmptyRoom: '新建空房间', chooseDevice: '选择设备', shape: '自定义', shapeType: '自定义' });
-    Object.assign(words.en, { newEmptyRoom: 'New empty room', chooseDevice: 'Choose equipment', shape: 'Custom', shapeType: 'Custom' });
+    Object.assign(words.zh, { title: '空间布局', newEmptyRoom: '新建空房间', chooseDevice: '选择设备', deviceName: '设备名称', shape: '自定义', shapeType: '自定义' });
+    Object.assign(words.en, { newEmptyRoom: 'New empty room', chooseDevice: 'Choose equipment', deviceName: 'Equipment name', shape: 'Custom', shapeType: 'Custom' });
     const t = key => words[document.documentElement.lang === 'en' ? 'en' : 'zh'][key] || key;
     const shapeName = key => t(key === 'rect' ? 'rectangle' : key === 'ellipse' ? 'circle' : key);
     const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -138,7 +138,7 @@
     let snapshot = { plans: [], equipment: [], readOnly: true, canArrange: false };
     let plans = [], planId = '', roomId = '', selectedId = '', tool = 'select', zoom = 1, gesture = null;
     let history = [], future = [], scope = '', status = '';
-    let drawingShape = 'rect', drawingDevice = 'bench', draft = [];
+    let drawingShape = 'rect', drawingDevice = 'bench', drawingName = '', draft = [];
     const measure = document.createElement('canvas').getContext('2d');
     const plan = () => plans.find(item => item.id === planId);
     const room = () => plan() && plan().items.find(item => item.id === roomId && item.kind === 'room');
@@ -183,9 +183,10 @@
         const tools = activeRoom ? ['select'] : ['select', 'room'];
         const toolNames = { select: 'select', room: 'newEmptyRoom' };
         const equipmentPicker = activeRoom ? '<select data-layout-device aria-label="' + esc(t('chooseDevice')) + '" ' + (snapshot.readOnly ? 'disabled' : '') + '><option value="">' + esc(t('chooseDevice')) + '</option>' + deviceTypes.map(type => '<option value="' + type + '" ' + (tool === 'device' && drawingDevice === type ? 'selected' : '') + '>' + esc(t(type)) + '</option>').join('') + '</select>' : '';
+        const nameInput = activeRoom && tool === 'device' && drawingDevice === 'custom' ? '<label class="lab-layout-custom"><span>' + esc(t('deviceName')) + '</span><input data-layout-device-name type="text" maxlength="160" value="' + esc(drawingName) + '" ' + (snapshot.readOnly ? 'disabled' : '') + '></label>' : '';
         const customPicker = tool !== 'select' ? '<label class="lab-layout-custom"><span>' + esc(t('custom')) + '</span><select data-layout-shape aria-label="' + esc(t('custom')) + '">' + shapeTypes.map(type => '<option value="' + type + '" ' + (drawingShape === type ? 'selected' : '') + '>' + esc(shapeName(type)) + '</option>').join('') + '</select></label>' + (drawingShape === 'custom' ? button('finish-outline', t('finishOutline'), draft.length < 3) + button('undo-point', t('undoPoint'), !draft.length) : '') : '';
         root.innerHTML = '<header class="lab-layout-toolbar"><label><span class="sr-only">' + esc(t('choosePlan')) + '</span><select data-layout-plan>' + plans.map((item, index) => '<option value="' + esc(item.id) + '" ' + (item.id === planId ? 'selected' : '') + '>' + esc(label(item, index)) + '</option>').join('') + '</select></label>' + button('new', '＋ ' + t('newPlan'), snapshot.readOnly) + '<div class="lab-layout-history">' + button('undo', '↶ ' + t('undo'), snapshot.readOnly || !history.length) + button('redo', '↷ ' + t('redo'), snapshot.readOnly || !future.length) + '</div></header>' +
-            '<div class="lab-layout-tools" role="toolbar" aria-label="' + esc(t('title')) + '">' + tools.map(key => '<button type="button" data-layout-tool="' + key + '" aria-pressed="' + (tool === key) + '" ' + (snapshot.readOnly && key !== 'select' ? 'disabled' : '') + '>' + esc(t(toolNames[key])) + '</button>').join('') + equipmentPicker + customPicker + '</div>' +
+            '<div class="lab-layout-tools" role="toolbar" aria-label="' + esc(t('title')) + '">' + tools.map(key => '<button type="button" data-layout-tool="' + key + '" aria-pressed="' + (tool === key) + '" ' + (snapshot.readOnly && key !== 'select' ? 'disabled' : '') + '>' + esc(t(toolNames[key])) + '</button>').join('') + equipmentPicker + nameInput + customPicker + '</div>' +
             '<div class="lab-layout-path">' + (activeRoom ? button('back', '← ' + t('back')) : '') + '<strong>' + esc(activeRoom ? label(activeRoom, current.items.indexOf(activeRoom)) : label(current, plans.indexOf(current))) + '</strong><span class="lab-layout-status" role="status">' + esc(t(snapshot.readOnly ? 'readOnly' : status || 'saved')) + '</span><div class="lab-layout-zoom">' + button('zoom-out', '−', false, 'aria-label="' + esc(t('zoomOut')) + '"') + button('fit', t('fit')) + button('zoom-in', '＋', false, 'aria-label="' + esc(t('zoomIn')) + '"') + '</div></div>' +
             '<div class="lab-layout-workbench"><div class="lab-layout-drawing"><div class="lab-layout-viewport"><svg class="lab-layout-canvas" tabindex="0" role="group" aria-label="' + esc(t('canvas')) + '" viewBox="0 0 ' + scene().width + ' ' + scene().height + '" data-tool="' + tool + '"></svg></div>' + (!activeRoom ? '<div class="lab-layout-room-list" aria-label="' + esc(t('roomList')) + '">' + current.items.filter(item => item.kind === 'room').map(item => '<button type="button" data-layout-enter="' + esc(item.id) + '">' + esc(label(item, current.items.indexOf(item))) + '</button>').join('') + '</div>' : '') + '</div><aside class="lab-layout-inspector" aria-label="' + esc(t('inspector')) + '"></aside></div>';
         renderBoard(); renderInspector();
@@ -282,7 +283,7 @@
 
     function newItem(box) {
         const kind = tool === 'device' ? 'device' : 'room';
-        return Object.assign({ id: id(), kind, shape: drawingShape, name: '', notes: '' }, box, kind === 'room' ? { function: 'general', purpose: '', interiorWidth: 1000, interiorHeight: 700, items: [] } : kind === 'device' ? { deviceType: drawingDevice, link: '' } : {});
+        return Object.assign({ id: id(), kind, shape: drawingShape, name: kind === 'device' && drawingDevice === 'custom' ? clean(drawingName).trim() : '', notes: '' }, box, kind === 'room' ? { function: 'general', purpose: '', interiorWidth: 1000, interiorHeight: 700, items: [] } : kind === 'device' ? { deviceType: drawingDevice, link: '' } : {});
     }
 
     function position(event, svg) {
@@ -395,9 +396,13 @@
         save(before);
     });
 
+    root.addEventListener('input', event => {
+        if (event.target.matches('[data-layout-device-name]') && !snapshot.readOnly) drawingName = clean(event.target.value);
+    });
+
     root.addEventListener('change', event => {
         if (event.target.matches('[data-layout-shape]')) { drawingShape = event.target.value; draft = []; render(); return; }
-        if (event.target.matches('[data-layout-device]') && !snapshot.readOnly) { drawingDevice = event.target.value; tool = drawingDevice ? 'device' : 'select'; drawingShape = 'rect'; draft = []; render(); return; }
+        if (event.target.matches('[data-layout-device]') && !snapshot.readOnly) { drawingDevice = event.target.value; drawingName = ''; tool = drawingDevice ? 'device' : 'select'; drawingShape = 'rect'; draft = []; render(); return; }
         if (!event.target.matches('[data-layout-plan]')) return;
         planId = event.target.value; roomId = ''; selectedId = ''; tool = 'select'; draft = []; zoom = 1; render();
     });
