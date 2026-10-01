@@ -30,12 +30,12 @@
 .lab-layout-item.corridor .lab-layout-outline { fill:color-mix(in srgb,var(--muted) 10%,var(--surface)); stroke-dasharray:6 4; }
 .lab-layout-item.device .lab-layout-outline { fill:color-mix(in srgb,var(--acid) 9%,var(--surface)); }
 .lab-layout-item.selected .lab-layout-outline,.lab-layout-item:focus-visible .lab-layout-outline { stroke:var(--cyan); stroke-width:3; }
-.lab-layout-label { fill:var(--ink); font:800 24px var(--font-interface); pointer-events:none; }
-.lab-layout-sublabel { fill:var(--muted); font:700 18px var(--font-interface); pointer-events:none; }
+.lab-layout-label { fill:var(--ink); font:800 18px var(--font-interface); pointer-events:none; }
+.lab-layout-sublabel { fill:var(--muted); font:700 12px var(--font-interface); pointer-events:none; }
 .lab-layout-device-icon { fill:none; stroke:var(--ink); stroke-width:2; pointer-events:none; }
 .lab-layout-resize { fill:var(--cyan); stroke:var(--surface); stroke-width:2; cursor:nwse-resize; vector-effect:non-scaling-stroke; }
 .lab-layout-preview { fill:color-mix(in srgb,var(--cyan) 15%,transparent); stroke:var(--cyan); stroke-width:2; stroke-dasharray:5 3; vector-effect:non-scaling-stroke; pointer-events:none; }
-.lab-layout-hint { margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
+.lab-layout-vertex { fill:var(--surface); stroke:var(--cyan); stroke-width:2; cursor:crosshair; vector-effect:non-scaling-stroke; }
 .lab-layout-room-list { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
 .lab-layout-inspector { padding:18px 16px; border-left:1px solid var(--line); background:var(--surface); }
 .lab-layout-inspector h3 { margin:6px 0 18px; font-size:16px; overflow-wrap:anywhere; }

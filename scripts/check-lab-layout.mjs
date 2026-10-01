@@ -20,12 +20,28 @@ assert.equal(normalized[0].items[0].items[0].link, 'cold:FZ-1');
 assert.deepEqual(plain(model.normalizePlans(normalized)), normalized);
 assert.equal(model.normalizePlans([null, 'bad', { items: [null, { id: 'x' }, { id: 'x' }] }])[0].items.length, 2);
 assert.deepEqual(plain(model.normalizePlans(undefined)), []);
+for (const shape of model.shapeTypes) {
+    const shapes = plain(model.normalizePlans([{ items: [{ kind: 'room', shape, points: [[0, 0], [1, 0], [.75, 1], [0, .6]], items: [{ kind: 'device', shape, deviceType: 'freezer' }] }] }]));
+    assert.equal(shapes[0].items[0].shape, shape);
+    assert.equal(shapes[0].items[0].items[0].shape, shape);
+    assert.deepEqual(plain(model.normalizePlans(shapes)), shapes);
+    const box = model.contentBox({ shape, points: model.shapePoints(shape), width: 260, height: 190 });
+    assert.ok(box.width > 0 && box.height > 0, shape + ' must have label space');
+    assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= 260 && box.y + box.height <= 190);
+}
+assert.deepEqual(plain(model.polygonBox([{ x: 40, y: 20 }, { x: 240, y: 20 }, { x: 240, y: 120 }, { x: 100, y: 120 }, { x: 100, y: 220 }, { x: 40, y: 220 }], scene)), { x: 40, y: 20, width: 200, height: 200, points: [[0, 0], [1, 0], [1, .5], [.3, .5], [.3, 1], [0, 1]] });
+assert.equal(model.polygonBox([{ x: 10, y: 10 }, { x: 20, y: 20 }, { x: 30, y: 30 }], scene), null);
+assert.equal(model.polygonBox([{ x: 10, y: 10 }], scene), null);
+assert.deepEqual(plain(model.shapePoints('custom', [[-5, -4], [2, 0], [1, 2]])), [[0, 0], [1, 0], [1, 1]]);
+assert.deepEqual(plain(model.shapePoints('custom', [['bad', 0], [1, 1]])), [[0, 0], [1, 0], [1, 1], [0, 1]]);
+assert.doesNotMatch(source, /class="lab-layout-hint"/);
 
 const [app, sync, html, sw] = await Promise.all(['../js/rhine-lab.js', '../js/rhine-lab-sync-v019.js', '../index.html', '../sw.js'].map(file => readFile(new URL(file, import.meta.url), 'utf8')));
 assert.match(app, /labFloorPlans: window\.RhineLabLayoutModel\.normalizePlans/);
 assert.match(app, /labFloorPlans: \[\]/);
 assert.match(sync, /WORKSPACE_COLLECTIONS = .*'labFloorPlans'/);
 assert.match(html, /data-view="lab-layout"/);
+assert.deepEqual(Array.from(html.matchAll(/class="nav-item[^\"]*"[^>]*data-view="([^"]+)"/g), match => match[1]).slice(0, 2), ['dashboard', 'lab-layout']);
 assert.match(sw, /rhine-lab-layout\.js/);
 const bridgeSource = app.slice(app.indexOf('    window.RhineLabLayoutBridge = {'), app.indexOf('    window.RhineLabBioBridge = {'));
 const policy = {
@@ -53,4 +69,4 @@ assert.equal(policy.state.labFloorPlans[0].items[0].x, 240);
 assert.equal(policy.state.labFloorPlans[0].items[0].items[0].x, 100);
 policy.window.RHINE_LAB_STORAGE_LOCKED = true;
 assert.equal(policy.window.RhineLabLayoutBridge.savePlans(rearranged, true), false);
-console.log('Lab layout geometry, nested room data, migration, sync and read-only permission checks passed.');
+console.log('Lab layout shapes, custom outlines, label space, navigation, nested room data, sync and read-only checks passed.');
