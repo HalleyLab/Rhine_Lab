@@ -14,7 +14,7 @@ class RhineBridgeViewController: CAPBridgeViewController {
 public class RhineLocalSyncPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "RhineLocalSyncPlugin"
     public let jsName = "RhineLocalSync"
-    public let pluginMethods = [CAPPluginMethod(name: "exchange", returnType: CAPPluginReturnPromise)]
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "exchange", returnType: CAPPluginReturnPromise)].compactMap { $0 }
     private let queue = DispatchQueue(label: "com.halleylab.rhinelab.local-sync")
     private let protocolName = "rhine-lab-local-sync-v1"
 
