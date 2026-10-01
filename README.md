@@ -24,7 +24,7 @@ Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱�
 
 云同步后端采用 Cloudflare Workers、D1 与 R2；工作区、LAB 投影和附件在客户端加密后上传。部署说明见 [cloudflare/README.md](cloudflare/README.md)。
 
-当前版本：**0.3.4**
+当前版本：**0.4.1**
 
 ### 手机 / 电脑蓝牙同步
 
@@ -59,7 +59,7 @@ Rhine Lab is a personal research workspace for life-science laboratories, combin
 
 Cloud sync uses Cloudflare Workers, D1, and R2. Workspace snapshots, LAB projections, and attachments are encrypted on the client before upload. See [cloudflare/README.md](cloudflare/README.md) for deployment notes.
 
-Current version: **0.3.4**
+Current version: **0.4.1**
 
 ### Phone / computer Bluetooth sync
 
