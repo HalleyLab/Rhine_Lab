@@ -32,7 +32,7 @@
     const USB_SETTINGS_KEY = 'rhineLabUsbSyncSettings';
     const USB_PROTOCOL = 'rhine-lab-local-sync-v1';
     const USB_SNAPSHOT_LIMIT = 28 * 1024 * 1024;
-    const WORKSPACE_COLLECTIONS = ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'coldStorageUnits', 'schedule', 'protocols', 'formulations', 'activities', 'lineageLinks', 'plateLayouts'];
+    const WORKSPACE_COLLECTIONS = ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'freezerBoxes', 'coldStorageUnits', 'schedule', 'protocols', 'formulations', 'activities', 'lineageLinks', 'plateLayouts', 'labFloorPlans'];
     let adapter = null;
     let selectedFile = null;
     let started = false;

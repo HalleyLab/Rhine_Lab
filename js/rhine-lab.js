@@ -186,6 +186,7 @@
         { id: 'PLT-NB-002', name: '本氏烟草', scientificName: 'Nicotiana benthamiana', materialType: '植株', accession: 'LAB-NB-01', generation: 'P1', genotype: 'WT', growthStage: '6 叶期', growthConditions: '24°C · 16 h / 8 h 光周期', location: '植物房 GR-02 / B1', parentage: '种子繁殖', treatment: '待农杆菌浸润', phenotype: '叶片展开正常', status: '待处理', frozenSampleId: '', notes: '', createdBy: 'NODE-04', history: [] },
         { id: 'PLT-RC-003', name: '水稻愈伤组织', scientificName: 'Oryza sativa', materialType: '愈伤组织', accession: 'Nipponbare', generation: 'T0', genotype: '编辑候选株', growthStage: '诱导期', growthConditions: '28°C · 暗培养', location: '组织培养室 TC-01 / C3', parentage: '成熟胚诱导', treatment: '潮霉素筛选', phenotype: '淡黄色颗粒状愈伤', status: '筛选中', frozenSampleId: '', notes: '', createdBy: 'NODE-03', history: [] }
     ];
+    defaults.labFloorPlans = [];
     defaults.plantRooms = [
         { id: 'PROOM-GR01', name: '植物房 GR-01', notes: '标准光照培养室', createdBy: 'NODE-04' },
         { id: 'PROOM-TC01', name: '组织培养室 TC-01', notes: '无菌组织培养区', createdBy: 'NODE-03' }
@@ -335,7 +336,7 @@
 
     function applyConfiguredSeed(seed) {
         if (!seed || typeof seed !== 'object') return;
-        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'coldStorageUnits', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations'].forEach(function (key) {
+        ['experiments', 'results', 'mice', 'animalRooms', 'animalRacks', 'animalCages', 'plants', 'plantRooms', 'plantRacks', 'microbes', 'microbeIncubators', 'microbeRacks', 'plasmids', 'viruses', 'bioProjects', 'bioDatasets', 'bioPipelines', 'bioRuns', 'cellCultures', 'reagents', 'samples', 'coldStorageUnits', 'freezerBoxes', 'schedule', 'activities', 'lineageLinks', 'plateLayouts', 'formulations', 'labFloorPlans'].forEach(function (key) {
             if (Array.isArray(seed[key])) defaults[key] = clone(seed[key]);
         });
         if (Array.isArray(seed.protocols)) {
@@ -550,6 +551,55 @@
         applyAction: applyAssistantAction,
         isReadOnly: function () { return Boolean(workspaceReadOnly); },
         getLocale: function () { return document.documentElement.lang === 'en' ? 'en' : 'zh'; }
+    };
+
+    window.RhineLabLayoutBridge = {
+        getSnapshot: function () {
+            const equipment = [];
+            [['cold', state.coldStorageUnits], ['animal', state.animalRacks], ['plant', state.plantRacks], ['microbe', state.microbeIncubators]].forEach(function (entry) {
+                entry[1].forEach(function (item) { equipment.push({ id: entry[0] + ':' + item.id, name: interfaceText(item.name || item.id) }); });
+            });
+            return { scope: workspaceMode, plans: clone(state.labFloorPlans), equipment: equipment, readOnly: Boolean(workspaceReadOnly), canArrange: !dragInteractionsLocked() };
+        },
+        savePlans: function (plans, arrange) {
+            if (!Array.isArray(plans) || window.RHINE_LAB_STORAGE_LOCKED) return false;
+            const normalized = window.RhineLabLayoutModel.normalizePlans(plans);
+            if (workspaceReadOnly) {
+                if (!publicDemoMode || !arrange) return false;
+                function arrangeItems(current, incoming, scene) {
+                    current.forEach(function (item) {
+                        const proposed = incoming.find(function (entry) { return entry.id === item.id; });
+                        if (!proposed) return;
+                        const box = window.RhineLabLayoutModel.fitBox(Object.assign({}, item, { x: proposed.x, y: proposed.y }), scene);
+                        item.x = box.x; item.y = box.y;
+                        if (item.kind === 'room') arrangeItems(item.items, proposed.items || [], { width: item.interiorWidth, height: item.interiorHeight });
+                    });
+                }
+                state.labFloorPlans.forEach(function (plan) {
+                    const proposed = normalized.find(function (entry) { return entry.id === plan.id; });
+                    if (proposed) arrangeItems(plan.items, proposed.items, plan);
+                });
+            } else {
+                state.labFloorPlans = normalized.map(function (plan) {
+                    const existing = state.labFloorPlans.find(function (entry) { return entry.id === plan.id; });
+                    plan.createdBy = existing && existing.createdBy || anonymousContributor();
+                    plan.updatedAt = new Date().toISOString();
+                    return plan;
+                });
+            }
+            saveState();
+            return true;
+        },
+        openEquipment: function (id) {
+            const cold = state.coldStorageUnits.find(function (item) { return 'cold:' + item.id === id; });
+            if (cold) { activeColdStorageId = cold.id; coldStorageOverviewHidden = false; activeColdStorageShelf = 1; activeColdStorageRack = 0; activeFreezerBoxId = (state.freezerBoxes.find(function (box) { return box.storageUnitId === cold.id; }) || {}).id || ''; switchView('samples'); return; }
+            const animal = state.animalRacks.find(function (item) { return 'animal:' + item.id === id; });
+            if (animal) { setBiologyTab('animals'); selectAnimalRoom(animal.roomId); selectAnimalRack(animal.id); switchView('mice'); return; }
+            const plant = state.plantRacks.find(function (item) { return 'plant:' + item.id === id; });
+            if (plant) { setBiologyTab('plants'); selectPlantRoom(plant.roomId); selectPlantRack(plant.id); switchView('mice'); return; }
+            const microbe = state.microbeIncubators.find(function (item) { return 'microbe:' + item.id === id; });
+            if (microbe) { setBiologyTab('microbes'); selectMicrobeIncubator(microbe.id); switchView('mice'); }
+        }
     };
 
     window.RhineLabBioBridge = {
@@ -873,6 +923,7 @@
             auditLog: Array.isArray(stored.auditLog) ? stored.auditLog : [],
             lineageLinks: Array.isArray(stored.lineageLinks) ? stored.lineageLinks : [],
             plateLayouts: Array.isArray(stored.plateLayouts) ? stored.plateLayouts : [],
+            labFloorPlans: window.RhineLabLayoutModel.normalizePlans(stored.labFloorPlans),
             security: stored.security && typeof stored.security === 'object' ? clone(stored.security) : { labKeys: {} },
             exampleSeedVersion: Number(stored.exampleSeedVersion) || 0,
             housingSchemaVersion: Number(stored.housingSchemaVersion) || 0,
@@ -1922,7 +1973,7 @@
     function getInitialView() {
         const hash = location.hash.replace('#', '');
         if (hash === 'results') return 'experiments';
-        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'bioinformatics', 'schedule', 'cells'].includes(hash) ? hash : 'dashboard';
+        return ['dashboard', 'experiments', 'mice', 'reagents', 'samples', 'protocols', 'bioinformatics', 'schedule', 'cells', 'lab-layout'].includes(hash) ? hash : 'dashboard';
     }
 
     function applySavedTheme() {
@@ -4062,7 +4113,8 @@
             protocols: renderProtocols,
             schedule: renderSchedule,
             cells: renderCellCultures,
-            bioinformatics: renderBioinformatics
+            bioinformatics: renderBioinformatics,
+            'lab-layout': function () { window.dispatchEvent(new CustomEvent('rhine:layoutchange')); }
         };
         const renderer = renderers[view];
         if (renderer) renderer();
@@ -5172,6 +5224,7 @@
             auditLog: [],
             lineageLinks: [],
             plateLayouts: [],
+            labFloorPlans: [],
             security: { labKeys: {} },
             exampleSeedVersion: 999,
             housingSchemaVersion: 2
