@@ -58,7 +58,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 9px;
-    min-width: min(100%, 620px);
+    min-width: 0;
 }
 .biology-toolbar-actions .inline-search { flex: 1 1 270px; max-width: 390px; }
 .biology-toolbar-actions .button { flex: 0 0 auto; white-space: nowrap; }

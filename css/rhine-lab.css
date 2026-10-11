@@ -12966,3 +12966,41 @@ body.background-all-lives .freezer-box-tab.active b {
     -webkit-user-select: none;
     -webkit-user-drag: none;
 }
+
+/* Align visible ink and content, not the empty space inside glyph boxes. */
+.global-search > .search-icon {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    display: block;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    transform: translate(.5px, -.5px);
+}
+.button > span:not([class]) {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 1em;
+    width: 1em;
+    line-height: 1;
+    font-size: 1.15em;
+}
+.panel-head:has(> div > h2) { align-items: flex-end; }
+.panel-head > .status-chip { margin-bottom: -3px; }
+.panel-head > .live-label { margin-bottom: 2px; }
+.record-card-top { align-items: flex-start; }
+.record-card-top > .status-chip { flex-shrink: 0; }
+.record-card-top > .micro-label { line-height: 1.5; }
+.cold-storage-overview > header { align-items: flex-start; }
+.cold-storage-overview > header > .button { margin-top: 13px; }
+.cold-storage-level-panel > header { align-items: flex-start; }
+.cold-storage-level-panel > header > .cold-storage-level-actions { flex-shrink: 0; gap: 6px; }
+.cold-storage-level-actions .button { white-space: nowrap; }
+.reagent-inventory-bottle {
+    display: grid;
+    place-items: center;
+    width: 32px;
+}
+#view-reagents .data-table th:first-child { padding-left: 56px; }

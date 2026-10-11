@@ -11,7 +11,7 @@
 .bioinfo-table-panel .data-table{min-width:1050px}
 .bioinfo-table-panel .data-table tbody tr{cursor:pointer}
 
-.bioinformatics-heading>div:first-child:not(.heading-visual){max-width:50%}
+.bioinformatics-heading>div:first-child:not(.heading-visual){max-width:100%}
 .heading-visual-bioinformatics{--heading-signal:#8fbd25;--heading-signal-soft:rgba(143,189,37,.17);isolation:isolate}
 .heading-visual-bioinformatics::before{background:radial-gradient(circle at 67% 57%,rgba(143,189,37,.18) 0 3px,transparent 4px),radial-gradient(circle at 54% 35%,rgba(81,170,166,.16) 0 4px,transparent 5px),linear-gradient(118deg,transparent 0 62%,rgba(233,154,53,.11) 62.3% 68%,transparent 68.3%),linear-gradient(rgba(82,105,92,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(82,105,92,.08) 1px,transparent 1px)!important;background-size:auto,auto,auto,22px 22px,22px 22px!important}
 .heading-visual-bioinformatics .heading-monogram{font-size:12px;letter-spacing:.04em}

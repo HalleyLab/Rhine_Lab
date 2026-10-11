@@ -90,7 +90,7 @@ body:is(.background-all-lives,.background-black-current) :is(.hero-atmosphere,.h
     background-repeat: no-repeat;
 }
 body:is(.background-all-lives,.background-black-current) :is(.hero-atmosphere,.heading-visual) > * { display: none !important; }
-body:is(.background-all-lives,.background-black-current) :is(.hero-copy,.page-heading.technical-heading > div:first-child,.page-heading.technical-heading > .button,.page-heading.technical-heading > .heading-actions) { position: relative; z-index: 2; }
+body:is(.background-all-lives,.background-black-current) :is(.hero-copy,.page-heading.technical-heading > div:first-child) { position: relative; z-index: 2; }
 
 body.background-all-lives :is(.hero-atmosphere,.heading-visual) {
     background-image: url("../images/theme-atlas/all-lives-collage-fragments-v2.png");
@@ -317,7 +317,7 @@ body.background-black-current .run-current-step { background:linear-gradient(112
 body.background-black-current .apparatus-grid { background:linear-gradient(rgba(94,211,191,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(94,211,191,.035) 1px,transparent 1px),#06150f;background-size:20px 20px; }
 
 /* Theme assets remain decorative and never reduce readable contrast. */
-body:is(.background-all-lives,.background-black-current) :is(.hero-copy,.page-heading.technical-heading > div:first-child) { max-width:min(64%,820px); }
+body:is(.background-all-lives,.background-black-current) .hero-copy { max-width:min(64%,820px); }
 body:is(.background-all-lives,.background-black-current) :is(.hero-atmosphere,.heading-visual) { -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.38) 18%,#000 48%);mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.38) 18%,#000 48%); }
 
 body.dark-theme.background-all-lives :is(dialog > article,.entry-dialog form,.record-detail-dialog > article,.protocol-detail-dialog > article,.freezer-scan-dialog > article,.search-dialog,.sync-dialog,.notification-panel) { color:var(--theme-text);background:#19231f;border-color:var(--theme-rule); }
@@ -325,7 +325,7 @@ body.dark-theme.background-all-lives .record-detail-hero::after { opacity:.26;mi
 body.dark-theme.background-black-current .record-detail-hero::after { opacity:.32;filter:brightness(.78); }
 
 @media (max-width:700px) {
-    body:is(.background-all-lives,.background-black-current) :is(.hero-copy,.page-heading.technical-heading > div:first-child) { max-width:74%; }
+    body:is(.background-all-lives,.background-black-current) .hero-copy { max-width:74%; }
     body:is(.background-all-lives,.background-black-current) :is(.hero-atmosphere,.heading-visual) { -webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%); }
 }
 
@@ -482,12 +482,12 @@ body.dark-theme.background-all-lives :is(.dashboard-hero,.page-heading.technical
     body.background-all-lives::after { width: 390px; height: 180px; right: -110px; }
 }
 
-/* Atlas refinement 04 ¡ª one alternate theme, page-specific collage and clear controls. */
+/* Atlas refinement 04: one alternate theme, page-specific collage and clear controls. */
 body.background-all-lives :is(.dashboard-hero,.page-heading.technical-heading) {
     overflow: hidden;
 }
 
-body.background-all-lives :is(.hero-copy,.page-heading.technical-heading > div:first-child) {
+body.background-all-lives .hero-copy {
     position: relative;
     z-index: 5;
     width: min(52%, 720px);
@@ -683,7 +683,7 @@ body.dark-theme.background-all-lives .topbar .language-dock {
 }
 
 @media (max-width:700px) {
-    body.background-all-lives :is(.hero-copy,.page-heading.technical-heading > div:first-child) {
+    body.background-all-lives .hero-copy {
         width: 72%;
         max-width: 72%;
     }
@@ -700,7 +700,7 @@ body.dark-theme.background-all-lives .topbar .language-dock {
     }
 }
 
-/* Atlas refinement 06 ¡ª rich page-specific xerox collage library. */
+/* Atlas refinement 06: rich page-specific xerox collage library. */
 body.background-all-lives :is(.hero-atmosphere,.heading-visual) {
     background-repeat: no-repeat !important;
     background-color: transparent;
