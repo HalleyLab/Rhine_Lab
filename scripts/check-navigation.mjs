@@ -19,14 +19,15 @@ const context = {
     nav:{ addEventListener:(type, handler) => handlers[type] = handler },
     buttons, toggle:{ click:() => calls.push('toggle') }, overlay:() => blocked,
     editable:'editable', editor:'editor', visible:element => !!element && !element.disabled,
-    clearHints:() => calls.push('clear'), showHints:() => calls.push('hints'), hints:[],
+    clearHints:() => calls.push('clear'), showHints:() => calls.push('hints'), selectedAction:null,
+    selectAction:(key, step = 0) => calls.push([key,step]),
     dock:true, motion:{ matches:false }, dockFrame:0, dockPointer:null, dockCenters:buttons.map((_,index) => index * 52),
     requestAnimationFrame:callback => { frames.set(++frameId,callback); return frameId; }, cancelAnimationFrame:id => frames.delete(id)
 };
 vm.createContext(context);
 vm.runInContext(source.slice(source.indexOf("    document.addEventListener('keydown'"), source.indexOf("    document.addEventListener('keyup'")), context);
 const key = (value, options = {}) => {
-    const event = { key:value, target, preventDefault() { this.prevented = true; }, ...options };
+    const event = { key:value, target, preventDefault() { this.prevented = this.defaultPrevented = true; }, stopImmediatePropagation() { this.stopped = true; }, ...options };
     handlers.keydown(event);
     return event;
 };
@@ -52,7 +53,13 @@ key('Enter', { ctrlKey:true }); assert.deepEqual(calls.splice(0), ['save']);
 save.disabled = true; key('Enter', { ctrlKey:true }); assert.deepEqual(calls, []);
 typing = false; key('ArrowLeft'); key('2', { altKey:true }); assert.deepEqual(calls, []);
 key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
-context.hints = [{ key:'q', button:create }]; key('q', { altKey:true }); assert.deepEqual(calls.splice(0), ['clear','new']);
+key('e', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',0]], 'Choosing a group must not execute it');
+context.selectedAction = { key:'e', button:create };
+key('ArrowDown', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',1]]);
+key('ArrowUp', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',-1]]);
+assert.equal(key('Enter', { altKey:true }).stopped, true); assert.deepEqual(calls.splice(0), ['clear','new']);
+context.selectedAction = null;
+key('Enter', { altKey:true }); assert.deepEqual(calls, []);
 
 vm.runInContext(source.slice(source.indexOf("    nav.addEventListener('pointermove'"), source.indexOf('    const cards =')), context);
 for (let index=0; index<100; index++) handlers.pointermove({ clientX:index, pointerType:'mouse' });
@@ -60,6 +67,8 @@ assert.equal(frames.size, 1);
 frames.values().next().value(); frames.clear();
 assert.ok(Number(buttons[2].style.values['--dock-scale']) > Number(buttons[1].style.values['--dock-scale']));
 assert.equal(Number(buttons[9].style.values['--dock-scale']), 1);
+assert.ok(buttons.every(button => Number(button.style.values['--dock-scale']) <= 1.18));
+assert.ok(buttons.every(button => Number(button.style.values['--dock-lift'].replace('px','')) >= -2));
 context.motion.matches = true;
 handlers.pointermove({ clientX:0, pointerType:'mouse' }); assert.equal(frames.size, 0);
 context.motion.matches = false;
@@ -74,17 +83,60 @@ assert.equal(observed.length, 1); assert.deepEqual(calls.splice(0), ['scroll-car
 context.observeCards({ nodeType:3 });
 context.motion.matches = true; context.observeCards(root); assert.equal(observed.length, 1);
 
-const shifts = [];
-Object.assign(context, { heading:{ style:{ getPropertyValue:() => shifts.at(-1), setProperty:(_,value) => shifts.push(value) } }, headingTop:100, scrollFrame:1, window:{ scrollY:200 } });
-vm.runInContext(source.slice(source.indexOf('    function paintParallax('), source.indexOf('    function refreshView(')), context);
-context.paintParallax(); assert.deepEqual(shifts, []);
-context.motion.matches = false; context.paintParallax(); assert.deepEqual(shifts, ['24px']);
-context.paintParallax(); assert.equal(shifts.length, 1, 'Do not invalidate styles when the offset is unchanged');
-context.window.scrollY = 2000; context.paintParallax(); assert.equal(shifts.at(-1), '36px');
+// Semantic shortcuts cover any number of same-kind actions, including offscreen ones.
+const element = (attributes = {}, extra = {}) => ({
+    id:'', type:'button', dataset:{},
+    getAttributeNames:() => Object.keys(attributes), getAttribute:name => attributes[name],
+    classList:{ values:new Set(), add(value) { this.values.add(value); }, remove(value) { this.values.delete(value); } },
+    matches:() => false, closest:() => false, getBoundingClientRect:() => ({ left:20,right:200,top:40,bottom:80 }),
+    focus() { this.focused = true; }, scrollIntoView() { this.scrolled = true; }, ...extra
+});
+let candidates = Array.from({ length:90 }, () => element({ 'data-edit-result':'' }));
+const groupContext = {
+    document:{ querySelector:selector => selector === '.view.active' ? { querySelectorAll:() => candidates } : null,
+        createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {} }), body:{ appendChild() {} } },
+    visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
+    requestAnimationFrame() {}, cancelAnimationFrame() {}
+};
+vm.createContext(groupContext);
+vm.runInContext(source.slice(source.indexOf('    let hints ='), source.indexOf("    document.addEventListener('keydown'")) + ';api={actionKey,showHints,selectAction,clearHints,get actions(){return actions},get selected(){return selectedAction},get hints(){return hints}};', groupContext);
+const { api } = groupContext;
+for (const [attributes, extra, expected] of [
+    [{ 'data-add-passage':'' }, {}, 'n'], [{ 'data-edit-task':'' }, {}, 'e'], [{ 'data-delete-result':'' }, {}, 'x'],
+    [{ 'data-remove-run-photo':'' }, {}, 'x'], [{}, { id:'editProtocolButton' }, 'e'],
+    [{}, { id:'entrySubmitButton' }, 's'], [{}, { type:'submit', form:{} }, 's'],
+    [{ 'data-filter':'全部' }, { type:'submit', form:null }, 'f'],
+    [{ 'data-biology-tab':'plants' }, {}, 'f'], [{ 'data-filter':'全部' }, {}, 'f'],
+    [{ 'data-freezer-box':'box1' }, {}, 'v'], [{}, { dataset:{ layoutAction:'new' } }, 'n'],
+    [{}, { dataset:{ layoutAction:'delete-plan' } }, 'x'], [{}, {}, 'a']
+]) assert.equal(api.actionKey(element(attributes, extra)), expected);
+api.showHints(); assert.equal(api.actions.length, 90); assert.equal(api.hints.length, 90);
+assert.ok(api.actions.every(action => action.key === 'e'));
+assert.equal(api.selectAction('e'), true); assert.equal(api.selected.button, candidates[0]);
+api.selectAction('e', -1); assert.equal(api.selected.button, candidates[89]);
+candidates[0].disabled = true;
+api.selectAction('e', 1); assert.equal(api.selected.button, candidates[1]);
+assert.ok(candidates[1].focused && candidates[1].scrolled);
+assert.equal(api.selectAction('x'), false); assert.equal(api.selected.button, candidates[1]);
+assert.ok(api.hints.some(({ hint }) => hint.textContent === 'E 1/89 ↑↓ ↵'));
+api.clearHints(); assert.equal(api.actions.length, 0); assert.equal(api.hints.length, 0);
+assert.equal(candidates[1].classList.values.size, 0);
+// Disabled, hidden and dense diagram controls do not fill the action groups.
+candidates = [element({}, { disabled:true }), element({}, { closest:() => true }), element({ 'aria-hidden':'true' }), element({}, { getBoundingClientRect:() => ({ left:20,right:200,top:900,bottom:940 }) })];
+api.showHints(); assert.equal(api.actions.length, 1); assert.equal(api.hints.length, 0);
+api.selectAction('a'); assert.ok(candidates[3].focused && candidates[3].scrolled);
 
 const [css, layout, biology, html, worker, pkg, android, ios, extension] = await Promise.all(['css/rhine-lab-navigation.css','css/rhine-lab-layout.css','css/rhine-lab-biology.css','index.html','sw.js','package.json','android/app/build.gradle','ios/App/App.xcodeproj/project.pbxproj','browser-extension/manifest.json'].map(read));
 assert.match(css, /prefers-reduced-motion:reduce/);
 assert.match(css, /body\.navigation-dock \.sidebar \.nav-item\.active::after/);
+assert.match(css, /rhineHeadingCopyIn/);
+assert.match(css, /rhineHeadingArtIn/);
+assert.match(css, /page-heading,\.dashboard-hero\) \* \{ animation:none !important/);
+assert.doesNotMatch(source + css, /heading-parallax|paintParallax/);
+assert.match(source, /Place at bottom.*放在底部/);
+assert.match(html, /<span>放在底部<\/span>/);
+const headingStyles = await read('css/rhine-dashboard-refresh.css');
+assert.match(headingStyles, /heading-visual:not\(\.heading-visual-layout\)\) \{[^}]*aspect-ratio: 2 \/ 1/);
 assert.match(layout, /\.lab-layout-empty p \{[^}]*700[^}]*var\(--font-interface\)/);
 assert.match(biology, /\.housing-room-tab small\{font-family:var\(--font-interface\);font-weight:700\}/);
 for (const [, asset] of html.matchAll(/(?:src|href)="((?:css|js)\/[^"?]+\?v=[^"]+)"/g)) assert.ok(worker.includes(asset), asset);
@@ -96,4 +148,4 @@ const assistant = await read('js/rhine-lab-assistant.js');
 const collision = { window:{ innerHeight:844 }, document:{ querySelector:() => ({ getBoundingClientRect:() => ({ left:8,right:382,top:770 }) }) } };
 vm.runInNewContext(assistant.slice(assistant.indexOf('    function characterBottom('), assistant.indexOf('    function placeCharacter(')) + ';result=[characterBottom(310,70),characterBottom(400,70)]', collision);
 assert.deepEqual(Array.from(collision.result), [762,844]);
-console.log('Navigation guards, button shortcuts, dock animation, card observers, parallax, typography and 0.4.2 metadata passed.');
+console.log('Navigation guards, semantic shortcut groups, bounded dock motion, heading entrances, card observers, typography and 0.4.2 metadata passed.');

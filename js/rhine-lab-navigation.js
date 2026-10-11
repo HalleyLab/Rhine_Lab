@@ -33,7 +33,7 @@
 
     function updateLabels() {
         const english = document.documentElement.lang === 'en';
-        const label = dock ? (english ? 'Restore sidebar' : '还原侧栏') : (english ? 'Transform' : '变形');
+        const label = dock ? (english ? 'Restore sidebar' : '还原侧栏') : (english ? 'Place at bottom' : '放在底部');
         const text = toggle.querySelector('span');
         const title = (dock ? (english ? 'Switch to sidebar' : '切换为侧边栏') : (english ? 'Switch to bottom dock' : '切换为底部停靠栏')) + ' · F2';
         if (text.textContent !== label) text.textContent = label;
@@ -100,8 +100,8 @@
         highlight(button);
         if (dock && button && !motion.matches) {
             resetDock();
-            button.style.setProperty('--dock-scale', '1.4');
-            button.style.setProperty('--dock-lift', '-6px');
+            button.style.setProperty('--dock-scale', '1.18');
+            button.style.setProperty('--dock-lift', '-2px');
         }
     });
     nav.addEventListener('focusout', () => { if (!nav.contains(document.activeElement)) { nav.classList.remove('is-hovering'); resetDock(); } });
@@ -114,8 +114,8 @@
             if (dockCenters.length !== buttons.length) dockCenters = buttons.map(button => { const rect = button.getBoundingClientRect(); return rect.x + rect.width / 2; });
             buttons.forEach((button, index) => {
                 const influence = Math.max(0, 1 - Math.abs(dockPointer - dockCenters[index]) / 116) ** 2;
-                button.style.setProperty('--dock-scale', String(1 + influence * .65));
-                button.style.setProperty('--dock-lift', (-influence * 10) + 'px');
+                button.style.setProperty('--dock-scale', String(1 + influence * .18));
+                button.style.setProperty('--dock-lift', (-influence * 2) + 'px');
             });
         });
     });
@@ -150,35 +150,13 @@
         })).observe(main, { childList:true, subtree:true });
     }
 
-    let heading = null;
-    let headingTop = 0;
-    let headingHeight = 0;
-    let scrollFrame = 0;
-    function paintParallax() {
-        scrollFrame = 0;
-        if (!heading || motion.matches) return;
-        const shift = Math.min(36, Math.max(0, window.scrollY) * .12) + 'px';
-        if ((heading.style.getPropertyValue('--heading-parallax') || '0px') !== shift) heading.style.setProperty('--heading-parallax', shift);
-    }
     function refreshView() {
         clearHints();
         updateLabels();
-        if (heading) heading.style.removeProperty('--heading-parallax');
-        heading = document.querySelector('.view.active > :is(.page-heading,.dashboard-hero)');
         document.querySelectorAll('.view.active').forEach(observeCards);
-        if (scrollFrame) cancelAnimationFrame(scrollFrame);
-        scrollFrame = 0;
-        // Read geometry after translations and card registration have settled.
-        if (heading && !motion.matches) scrollFrame = requestAnimationFrame(() => {
-            const rect = heading.getBoundingClientRect();
-            headingTop = rect.top + window.scrollY;
-            headingHeight = rect.height;
-            paintParallax();
-        });
     }
     window.addEventListener('scroll', () => {
-        if (!motion.matches && heading && window.scrollY < headingTop + headingHeight + 80 && !scrollFrame) scrollFrame = requestAnimationFrame(paintParallax);
-        clearHints();
+        if (actions.length && !hintFrame) hintFrame = requestAnimationFrame(paintHints);
     }, { passive:true });
     window.addEventListener('resize', () => { resetDock(); refreshView(); });
     window.addEventListener('rhine:viewchange', refreshView);
@@ -195,31 +173,67 @@
     const visible = element => !!(element && !element.disabled && !element.closest('[inert],[hidden]') && element.getClientRects().length);
     const overlay = () => document.querySelector('dialog[open],#searchOverlay:not([hidden]),#notificationPanel:not([hidden]),#utilityNav:not([hidden]),#assistantDrawer:not([hidden])');
     let hints = [];
+    let actions = [];
+    let selectedAction = null;
+    let hintFrame = 0;
     function clearHints() {
-        if (!hints.length) return;
+        if (hintFrame) cancelAnimationFrame(hintFrame);
+        hintFrame = 0;
+        hints.forEach(({ hint }) => hint.remove());
+        selectedAction?.button.classList.remove('keyboard-action-target');
+        hints = [];
+        actions = [];
+        selectedAction = null;
+    }
+    function actionKey(button) {
+        const names = button.getAttributeNames().join(' ');
+        const id = button.id;
+        const layout = button.dataset.layoutAction;
+        if (/data-(add|new|create)(-|\b)/.test(names) || /^(add|new|create)|Add$/.test(id) || layout === 'new' || button.dataset.layoutTool === 'room') return 'n';
+        if (/data-edit(-|\b)/.test(names) || /^(edit)|Edit/.test(id) || layout === 'rename') return 'e';
+        if (/data-(delete|remove)(-|\b)/.test(names) || /^(delete)|Delete/.test(id) || layout?.startsWith('delete')) return 'x';
+        if ((button.type === 'submit' && button.form) || /data-save(-|\b)/.test(names) || /^(save)|Submit/.test(id) || layout === 'save') return 's';
+        if (button.matches('[role="tab"],.filter-tabs button,.calendar-modes button') || /data-(filter|[\w-]+-(tab|filter|mode))\b/.test(names)) return 'f';
+        if (button.matches('[role="button"],summary,.row-arrow,.clickable-data-row,.protocol-card') || /data-(open|view-target|cold-storage|freezer-box|room-tab|layout-enter|[\w-]+-(id|record|toggle))\b/.test(names)) return 'v';
+        return 'a';
+    }
+    function paintHints() {
+        hintFrame = 0;
         hints.forEach(({ hint }) => hint.remove());
         hints = [];
+        const group = selectedAction && actions.filter(action => action.key === selectedAction.key && visible(action.button));
+        const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ rect }) => rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth);
+        positioned.forEach(({ key, button, rect }) => {
+            const hint = document.createElement('kbd');
+            const selected = button === selectedAction?.button;
+            hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '');
+            hint.setAttribute('aria-hidden', 'true');
+            hint.textContent = key.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ↑↓ ↵' : '');
+            hint.style.left = Math.max(2, Math.min(innerWidth - (selected ? 120 : 24), rect.right - (selected ? 110 : 16))) + 'px';
+            hint.style.top = Math.max(2, rect.top - 4) + 'px';
+            document.body.appendChild(hint);
+            hints.push({ button, hint });
+        });
     }
     function showHints() {
         clearHints();
         const scope = document.querySelector('dialog[open]') || document.querySelector('.view.active');
         if (!scope) return;
-        const keys = 'qwertyuiopasdfghjklzxcvbnm';
-        Array.from(scope.querySelectorAll('button')).filter(button => {
-            if (!visible(button) || button.closest('svg,.animal-rack-grid,.plant-rack-grid,.cold-storage-device-level-slots,.freezer-grid')) return false;
-            const rect = button.getBoundingClientRect();
-            return rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth;
-        }).slice(0, keys.length).forEach((button, index) => {
-            const hint = document.createElement('kbd');
-            const rect = button.getBoundingClientRect();
-            hint.className = 'keyboard-action-hint';
-            hint.setAttribute('aria-hidden', 'true');
-            hint.textContent = keys[index].toUpperCase();
-            hint.style.left = Math.max(2, rect.right - 16) + 'px';
-            hint.style.top = Math.max(2, rect.top - 4) + 'px';
-            document.body.appendChild(hint);
-            hints.push({ key:keys[index], button, hint });
-        });
+        actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:actionKey(button), button }));
+        paintHints();
+    }
+    function selectAction(key, step = 0) {
+        if (!actions.length) showHints();
+        const group = actions.filter(action => action.key === key && visible(action.button));
+        if (!group.length) return false;
+        const index = group.indexOf(selectedAction);
+        selectedAction?.button.classList.remove('keyboard-action-target');
+        selectedAction = group[index < 0 ? 0 : (index + step + group.length) % group.length];
+        selectedAction.button.classList.add('keyboard-action-target');
+        selectedAction.button.focus({ preventScroll:true });
+        selectedAction.button.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' });
+        paintHints();
+        return true;
     }
     document.addEventListener('keydown', event => {
         if (event.defaultPrevented || event.isComposing || event.repeat) return;
@@ -238,10 +252,21 @@
             if (/^[0-9]$/.test(key) && !overlay()) {
                 const button = buttons[(Number(key) + 9) % 10];
                 if (button) { event.preventDefault(); clearHints(); button.click(); }
-            } else {
-                const action = hints.find(hint => hint.key === key);
-                if (action && visible(action.button)) { event.preventDefault(); clearHints(); action.button.click(); }
+            } else if (['arrowup','arrowdown','arrowleft','arrowright'].includes(key) && selectedAction) {
+                event.preventDefault();
+                selectAction(selectedAction.key, key === 'arrowup' || key === 'arrowleft' ? -1 : 1);
+            } else if (key === 'enter' && selectedAction && visible(selectedAction.button)) {
+                event.preventDefault();
+                const button = selectedAction.button;
+                clearHints();
+                button.click();
+            } else if (key === 'escape') {
+                clearHints();
+            } else if (['n','e','x','s','f','v','a'].includes(key) && (!overlay() || document.querySelector('dialog[open]'))) {
+                event.preventDefault();
+                selectAction(key);
             }
+            if (event.defaultPrevented) event.stopImmediatePropagation();
             return;
         }
         if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || overlay() || target.closest(editor)) return;
@@ -256,7 +281,7 @@
             const create = Array.from(document.querySelectorAll('.view.active .page-heading button[data-add],.view.active .dashboard-hero button[data-add],.view.active .module-toolbar button.primary[data-add],.view.active [data-layout-action="new"]')).find(visible);
             if (create) { event.preventDefault(); create.click(); }
         }
-    });
+    }, true);
     document.addEventListener('keyup', event => { if (event.key === 'Alt') clearHints(); });
     window.addEventListener('blur', clearHints);
     document.addEventListener('pointerdown', clearHints, { passive:true });

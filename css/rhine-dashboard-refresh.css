@@ -170,12 +170,21 @@ body:not(.background-all-lives):not(.background-black-current) :is(.dashboard-he
 
 body:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual) {
     contain: paint;
+    width: min(47%, 520px);
     background-image: url("../images/theme-atlas/rhine-life-science-atlas-v1.svg");
     background-repeat: no-repeat;
     background-size: 500% 200%;
     opacity: .68;
     -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, .44) 18%, #000 42%);
     mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, .44) 18%, #000 42%);
+}
+
+/* Keep each atlas tile at its native ratio so adjacent page artwork cannot bleed in. */
+body:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual:not(.heading-visual-layout)) {
+    inset: 50% 0 auto auto;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    transform: translateY(-50%);
 }
 
 body:not(.background-all-lives):not(.background-black-current) :is(.heading-visual, .hero-atmosphere) > * {
@@ -190,7 +199,7 @@ body:not(.background-all-lives):not(.background-black-current) .hero-atmosphere:
     display: none !important;
 }
 
-body:not(.background-all-lives):not(.background-black-current) #view-dashboard .hero-atmosphere { background-position: 0 0; }
+body:not(.background-all-lives):not(.background-black-current) #view-dashboard .hero-atmosphere { left:auto; width:min(46%,480px); background-position:0 0; }
 body:not(.background-all-lives):not(.background-black-current) #view-experiments .heading-visual { background-position: 25% 0; }
 body:not(.background-all-lives):not(.background-black-current) #view-reagents .heading-visual { background-position: 50% 0; }
 body:not(.background-all-lives):not(.background-black-current) #view-protocols .heading-visual { background-position: 75% 0; }
