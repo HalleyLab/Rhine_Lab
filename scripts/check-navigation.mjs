@@ -21,6 +21,7 @@ const context = {
     editable:'editable', editor:'editor', visible:element => !!element && !element.disabled,
     clearHints:() => calls.push('clear'), showHints:() => calls.push('hints'), selectedAction:null,
     selectAction:(key, step = 0) => calls.push([key,step]),
+    activateNumber:key => { calls.push('tab' + key); return true; },
     dock:true, motion:{ matches:false }, dockFrame:0, dockPointer:null, dockCenters:buttons.map((_,index) => index * 52),
     requestAnimationFrame:callback => { frames.set(++frameId,callback); return frameId; }, cancelAnimationFrame:id => frames.delete(id)
 };
@@ -40,9 +41,11 @@ for (const name of ['typing','editing','blocked','control']) {
 typing = editing = blocked = control = false;
 key('d', { isComposing:true }); key('a', { repeat:true }); key('a', { defaultPrevented:true }); key('a', { ctrlKey:true });
 assert.deepEqual(calls, []);
-assert.equal(key('3', { altKey:true }).prevented, true); assert.deepEqual(calls.splice(0), ['clear',2]);
-key('0', { altKey:true }); assert.deepEqual(calls.splice(0), ['clear',9]);
-key('¡', { altKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['clear',0]);
+assert.equal(key('3', { altKey:true, shiftKey:true }).prevented, true); assert.deepEqual(calls.splice(0), ['clear',2]);
+key('0', { altKey:true, shiftKey:true }); assert.deepEqual(calls.splice(0), ['clear',9]);
+key('¡', { altKey:true, shiftKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['clear',0]);
+key('2'); assert.deepEqual(calls.splice(0), ['tab2']);
+key('¡', { altKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['tab1','hints']);
 key('n'); assert.deepEqual(calls.splice(0), ['new']);
 key('F2'); assert.deepEqual(calls.splice(0), ['toggle']);
 key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
@@ -51,7 +54,8 @@ const save = { click:() => calls.push('save') };
 dialog = { querySelector:() => save }; blocked = true;
 key('Enter', { ctrlKey:true }); assert.deepEqual(calls.splice(0), ['save']);
 save.disabled = true; key('Enter', { ctrlKey:true }); assert.deepEqual(calls, []);
-typing = false; key('ArrowLeft'); key('2', { altKey:true }); assert.deepEqual(calls, []);
+typing = false; key('ArrowLeft'); key('2', { altKey:true, shiftKey:true }); assert.deepEqual(calls, []);
+key('2', { altKey:true }); assert.deepEqual(calls.splice(0), ['tab2','hints']);
 key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
 key('e', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',0]], 'Choosing a group must not execute it');
 context.selectedAction = { key:'e', button:create };
@@ -92,15 +96,18 @@ const element = (attributes = {}, extra = {}) => ({
     focus() { this.focused = true; }, scrollIntoView() { this.scrolled = true; }, ...extra
 });
 let candidates = Array.from({ length:90 }, () => element({ 'data-edit-result':'' }));
-let headingCopy = null, modal = null;
+let headingCopy = null, modal = null, tabGroups = [], focusedGroup = null, isDock = false;
+const scope = { contains:group => tabGroups.includes(group), querySelectorAll:selector => selector === 'button' ? candidates : selector.includes('.filter-tabs') ? tabGroups : candidates };
 const groupContext = {
-    document:{ querySelector:selector => selector === '.view.active' ? { querySelectorAll:() => candidates } : selector === 'dialog[open]' ? modal : headingCopy,
-        createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {} } },
+    document:{ querySelector:selector => selector === '.view.active' ? scope : selector === 'dialog[open]' ? modal : selector.includes(':first-child') ? headingCopy : null,
+        activeElement:{ closest:() => focusedGroup }, getElementById:() => ({ getBoundingClientRect:() => ({ top:700 }) }),
+        createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {}, classList:{ contains:() => isDock } } },
+    compact:{ matches:true },
     visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
     requestAnimationFrame() {}, cancelAnimationFrame() {}
 };
 vm.createContext(groupContext);
-vm.runInContext(source.slice(source.indexOf('    let hints ='), source.indexOf("    document.addEventListener('keydown'")) + ';api={actionKey,showHints,selectAction,clearHints,get actions(){return actions},get selected(){return selectedAction},get hints(){return hints}};', groupContext);
+vm.runInContext(source.slice(source.indexOf('    let hints ='), source.indexOf("    document.addEventListener('keydown'")) + ';api={actionKey,showHints,selectAction,clearHints,activateNumber,hintBounds,get actions(){return actions},get selected(){return selectedAction},get hints(){return hints}};', groupContext);
 const { api } = groupContext;
 for (const [attributes, extra, expected] of [
     [{ 'data-add-passage':'' }, {}, 'n'], [{ 'data-edit-task':'' }, {}, 'e'], [{ 'data-delete-result':'' }, {}, 'x'],
@@ -130,21 +137,49 @@ api.showHints(); api.selectAction('e');
 assert.ok(parseFloat(api.hints.find(item => item.selected).hint.style.top)>=98, 'Move below copy when there is no space above the button');
 api.clearHints(); headingCopy = null;
 const dialogHints = [];
-modal = { querySelectorAll:() => candidates, appendChild:hint => dialogHints.push(hint) };
+modal = { contains:() => false, querySelectorAll:selector => selector.includes('.filter-tabs') ? [] : candidates, appendChild:hint => dialogHints.push(hint) };
 candidates = [element({}, { id:'entrySubmitButton', closest:selector => selector === 'dialog[open]' ? modal : false })];
 api.showHints(); api.selectAction('s'); assert.ok(dialogHints.includes(api.hints[0].hint), 'Hints must be inside the native dialog top layer');
+isDock = true;
+candidates[0].getBoundingClientRect = () => ({ left:20,right:200,top:710,bottom:750 });
+api.showHints(); api.selectAction('s');
+assert.equal(api.hints[0].hint.hidden,false); assert.ok(parseFloat(api.hints[0].hint.style.top)+31<=684,'Dialog footer hints remain above the dock too');
+isDock = false;
 api.clearHints(); modal = null;
 // Disabled, hidden and dense diagram controls do not fill the action groups.
 candidates = [element({}, { disabled:true }), element({}, { closest:() => true }), element({ 'aria-hidden':'true' }), element({}, { getBoundingClientRect:() => ({ left:20,right:200,top:900,bottom:940 }) })];
 api.showHints(); assert.equal(api.actions.length, 1); assert.equal(api.hints.length, 0);
 api.selectAction('a'); assert.ok(candidates[3].focused && candidates[3].scrolled);
+// Small switcher rows use numbers; focusing another row changes only that row's mapping.
+const primaryTabs = Array.from({ length:6 }, (_, index) => element({ 'data-filter':'' }, { click:() => calls.push(index) }));
+const secondaryTabs = Array.from({ length:3 }, (_, index) => element({ 'data-biology-tab':'' }, { click:() => calls.push('secondary' + index) }));
+tabGroups = [element({}, { querySelectorAll:() => primaryTabs }), element({}, { querySelectorAll:() => secondaryTabs })];
+candidates = [...primaryTabs,...secondaryTabs];
+api.showHints(); assert.deepEqual(Array.from(api.actions, action => action.key), ['1','2','3','4','5','6']);
+assert.equal(api.activateNumber('2'),true); assert.deepEqual(calls.splice(0),[1]);
+assert.equal(api.activateNumber('0'),false);
+focusedGroup = tabGroups[1]; api.showHints();
+assert.deepEqual(Array.from(api.actions, action => action.key),['1','2','3']);
+api.activateNumber('3'); assert.deepEqual(calls.splice(0),['secondary2']);
+tabGroups = []; focusedGroup = null;
+// Hints keep a viewport margin and never sit in or below the bottom dock.
+candidates = [element({}, { getBoundingClientRect:() => ({ left:20,right:200,top:710,bottom:750 }) })];
+isDock = true; api.showHints(); assert.equal(api.hints.length,0);
+assert.equal(api.hintBounds().bottom,684);
+isDock = false; api.showHints(); assert.equal(api.hints.length,1); assert.equal(api.hints[0].hint.hidden,false);
+assert.ok(parseFloat(api.hints[0].hint.style.left)>=16);
+groupContext.compact.matches = false; assert.equal(api.hintBounds().left,24);
+api.clearHints();
 
 // Visible header travel is bounded, frame-coalesced, and disabled for reduced motion.
 const depthStyle = { value:null, setProperty(_, value) { this.value = value; }, removeProperty() { this.value = null; } };
-let depthScroll;
+let depthScroll, headingEntries;
+const headingClasses = new Set(), headingObserved = [];
+const depthHeading = { style:depthStyle, classList:{ add:value => headingClasses.add(value), remove:value => headingClasses.delete(value), toggle:(value,on) => on ? headingClasses.add(value) : headingClasses.delete(value) }, getBoundingClientRect:() => ({ top:100 - depthContext.window.scrollY,height:200 }) };
+const headingIO = function (callback) { headingEntries = callback; this.observe = node => headingObserved.push(node); this.unobserve = node => headingObserved.splice(headingObserved.indexOf(node),1); };
 const depthContext = {
-    document:{ querySelector:() => ({ style:depthStyle, getBoundingClientRect:() => ({ top:100 - depthContext.window.scrollY,height:200 }) }) },
-    window:{ scrollY:0, innerHeight:1000, addEventListener:(_, listener) => depthScroll = listener }, motion:{ matches:false }, actions:[], hintFrame:0,
+    document:{ querySelector:() => depthHeading }, IntersectionObserver:headingIO,
+    window:{ IntersectionObserver:headingIO, scrollY:0, innerHeight:1000, addEventListener:(_, listener) => depthScroll = listener }, motion:{ matches:false }, actions:[], hintFrame:0,
     requestAnimationFrame:callback => { frames.set(++frameId,callback); return frameId; }, cancelAnimationFrame:id => frames.delete(id)
 };
 vm.createContext(depthContext);
@@ -156,12 +191,19 @@ for(let i=0;i<100;i++) depthScroll();
 assert.equal(frames.size,1); frames.values().next().value(); frames.clear();
 assert.equal(depthStyle.value, '80.0px');
 depthContext.window.scrollY = 5000; depthContext.api.paintHeadingDepth(); assert.equal(depthStyle.value, '200.0px');
+for(let i=0;i<2;i++) {
+    headingEntries([{ target:depthHeading,isIntersecting:false }]); assert.equal(headingClasses.has('is-heading-visible'),false);
+    depthContext.window.scrollY = 0; depthContext.api.paintHeadingDepth(); assert.equal(depthStyle.value,'0.0px');
+    headingEntries([{ target:depthHeading,isIntersecting:true }]); assert.equal(headingClasses.has('is-heading-visible'),true);
+    depthContext.window.scrollY = 80; depthContext.api.paintHeadingDepth(); assert.equal(depthStyle.value,'80.0px');
+}
 depthContext.motion.matches = true; depthContext.api.refreshHeadingDepth(); assert.equal(depthStyle.value,null);
 depthScroll(); assert.equal(frames.size,0);
 depthContext.motion.matches = false; depthContext.api.refreshHeadingDepth(); depthScroll();
 assert.equal(frames.size,1);
 depthContext.document.querySelector = () => null;
 depthContext.api.refreshHeadingDepth(); assert.equal(frames.size,0); assert.equal(depthStyle.value,null);
+assert.equal(headingObserved.length,0); assert.equal(headingClasses.size,0);
 
 const [css, layout, biology, html, worker, pkg, android, ios, extension] = await Promise.all(['css/rhine-lab-navigation.css','css/rhine-lab-layout.css','css/rhine-lab-biology.css','index.html','sw.js','package.json','android/app/build.gradle','ios/App/App.xcodeproj/project.pbxproj','browser-extension/manifest.json'].map(read));
 assert.match(css, /prefers-reduced-motion:reduce/);
@@ -169,8 +211,8 @@ assert.match(css, /body\.navigation-dock \.sidebar \.nav-item\.active::after/);
 assert.match(css, /rhineHeadingCopyIn/);
 assert.match(css, /rhineHeadingArtIn/);
 assert.match(css, /page-heading,\.dashboard-hero\) \* \{ animation:none !important/);
-assert.match(css, /data-depth="far"[^}]*\.52/);
-assert.match(css, /data-depth="mid"[^}]*\.30/);
+assert.match(css, /data-depth="far"[^}]*\.9/);
+assert.match(css, /data-depth="mid"[^}]*\.45/);
 assert.match(css, /data-depth="near"[^}]*\.12/);
 assert.match(css, /--heading-travel:0px !important/);
 assert.match(css, /font:800 14px/);
@@ -179,6 +221,15 @@ const atlas = await read('images/theme-atlas/rhine-life-science-atlas-v1.svg');
 assert.equal((atlas.match(/data-view=/g) || []).length,10);
 for(const depth of ['far','mid','near']) assert.equal((atlas.match(new RegExp('data-depth="' + depth + '"','g')) || []).length,10);
 assert.ok(worker.includes('images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1'));
+const collage = await read('images/theme-atlas/all-lives-heading-art-v1.svg');
+for(const view of ['dashboard','experiments','mice','reagents']) assert.ok(collage.includes('data-view="' + view + '"'));
+for(const depth of ['far','mid','near']) assert.equal((collage.match(new RegExp('data-depth="' + depth + '"','g')) || []).length,4);
+assert.doesNotMatch(collage, /<text\b/);
+assert.ok(worker.includes('images/theme-atlas/all-lives-heading-art-v1.svg?v=0.4.2-depth2'));
+assert.match(css,/sidebar-foot[^}]*background:transparent !important/);
+assert.match(css,/navigation-mode-toggle \{[^}]*background:transparent !important/);
+assert.match(css,/100% \+ 32px/);
+assert.match(css,/is-heading-visible/);
 assert.match(source, /Place at bottom.*放在底部/);
 assert.match(html, /<span>放在底部<\/span>/);
 const headingStyles = await read('css/rhine-dashboard-refresh.css');

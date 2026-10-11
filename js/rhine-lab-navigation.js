@@ -37,7 +37,9 @@
         const text = toggle.querySelector('span');
         const title = (dock ? (english ? 'Switch to sidebar' : '切换为侧边栏') : (english ? 'Switch to bottom dock' : '切换为底部停靠栏')) + ' · F2';
         if (text.textContent !== label) text.textContent = label;
-        if (toggle.title !== title) toggle.title = title;
+        if (dock) toggle.removeAttribute('title');
+        else if (toggle.title !== title) toggle.title = title;
+        toggle.dataset.navLabel = label;
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
         toggle.setAttribute('aria-keyshortcuts', 'F2');
         toggle.setAttribute('aria-pressed', String(dock));
@@ -45,9 +47,10 @@
             const label = button.querySelector('span:not(.nav-code)').textContent;
             if (button.dataset.navLabel !== label) button.dataset.navLabel = label;
             if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
-            button.setAttribute('aria-keyshortcuts', 'Alt+' + ((index + 1) % 10));
-            const title = label + ' · Alt+' + ((index + 1) % 10);
-            if (button.title !== title) button.title = title;
+            button.setAttribute('aria-keyshortcuts', 'Alt+Shift+' + ((index + 1) % 10));
+            const title = label + ' · Alt+Shift+' + ((index + 1) % 10);
+            if (dock) button.removeAttribute('title');
+            else if (button.title !== title) button.title = title;
             if (button.classList.contains('active')) {
                 if (!button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
             } else if (button.hasAttribute('aria-current')) button.removeAttribute('aria-current');
@@ -155,6 +158,9 @@
     let depthStart = 0;
     let depthHeight = 0;
     let depthTravel = -1;
+    const headingObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+        entries.forEach(entry => entry.target.classList.toggle('is-heading-visible', entry.isIntersecting));
+    }, { rootMargin:'-80px 0px 0px', threshold:0 }) : null;
     function paintHeadingDepth() {
         depthFrame = 0;
         if (!depthHeading || motion.matches) return;
@@ -166,8 +172,13 @@
     function refreshHeadingDepth() {
         if (depthFrame) cancelAnimationFrame(depthFrame);
         depthFrame = 0;
+        const next = document.querySelector('.view.active > :is(.page-heading,.dashboard-hero)');
         depthHeading?.style.removeProperty('--heading-travel');
-        depthHeading = document.querySelector('.view.active > :is(.page-heading,.dashboard-hero)');
+        if (depthHeading !== next) {
+            if (depthHeading) { headingObserver?.unobserve(depthHeading); depthHeading.classList.remove('is-heading-visible'); }
+            depthHeading = next;
+            if (depthHeading) { depthHeading.classList.add('is-heading-visible'); headingObserver?.observe(depthHeading); }
+        }
         depthTravel = -1;
         if (!depthHeading || motion.matches) return;
         const rect = depthHeading.getBoundingClientRect();
@@ -176,39 +187,43 @@
         paintHeadingDepth();
     }
     // Reuse the local vector atlas; the original background remains if it cannot load.
-    fetch('images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1').then(response => {
-        if (!response.ok) throw new Error('Heading artwork unavailable');
-        return response.text();
-    }).then(source => {
-        const atlas = new DOMParser().parseFromString(source, 'image/svg+xml');
-        if (atlas.querySelector('parsererror')) return;
-        atlas.querySelectorAll('svg > g[data-view]').forEach(tile => {
-            const art = document.querySelector('#view-' + tile.dataset.view + ' .heading-visual,#view-' + tile.dataset.view + ' .hero-atmosphere');
-            if (!art) return;
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('viewBox', '0 0 800 400');
-            svg.setAttribute('fill', 'none');
-            svg.setAttribute('class', 'heading-depth-art');
-            svg.setAttribute('aria-hidden', 'true');
-            const defs = atlas.querySelector('defs').cloneNode(true);
-            const scene = tile.cloneNode(true);
-            scene.removeAttribute('transform');
-            // Keep gradient/clip references unique across inline page illustrations.
-            defs.querySelectorAll('[id]').forEach(node => {
-                const id = node.id;
-                const unique = 'heading-' + tile.dataset.view + '-' + id;
-                node.id = unique;
-                [scene, ...scene.querySelectorAll('*')].forEach(element => {
-                    ['fill','stroke','clip-path'].forEach(attribute => {
-                        if (element.getAttribute(attribute) === 'url(#' + id + ')') element.setAttribute(attribute, 'url(#' + unique + ')');
+    function loadHeadingArt(url, kind) {
+        return fetch(url).then(response => {
+            if (!response.ok) throw new Error('Heading artwork unavailable');
+            return response.text();
+        }).then(source => {
+            const atlas = new DOMParser().parseFromString(source, 'image/svg+xml');
+            if (atlas.querySelector('parsererror')) return;
+            atlas.querySelectorAll('svg > g[data-view]').forEach(tile => {
+                const art = document.querySelector('#view-' + tile.dataset.view + ' .heading-visual,#view-' + tile.dataset.view + ' .hero-atmosphere');
+                if (!art) return;
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 800 400');
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('class', 'heading-' + kind + '-art');
+                svg.setAttribute('aria-hidden', 'true');
+                const defs = atlas.querySelector('defs').cloneNode(true);
+                const scene = tile.cloneNode(true);
+                scene.removeAttribute('transform');
+                // Keep gradient/clip references unique across inline page illustrations.
+                defs.querySelectorAll('[id]').forEach(node => {
+                    const id = node.id;
+                    const unique = 'heading-' + kind + '-' + tile.dataset.view + '-' + id;
+                    node.id = unique;
+                    [scene, ...scene.querySelectorAll('*')].forEach(element => {
+                        ['fill','stroke','clip-path'].forEach(attribute => {
+                            if (element.getAttribute(attribute) === 'url(#' + id + ')') element.setAttribute(attribute, 'url(#' + unique + ')');
+                        });
                     });
                 });
+                svg.append(defs, scene);
+                art.appendChild(svg);
+                art.classList.add('has-' + kind + '-art');
             });
-            svg.append(defs, scene);
-            art.appendChild(svg);
-            art.classList.add('has-depth-art');
-        });
-    }).catch(() => { /* Keep the cached, static artwork. */ });
+        }).catch(() => { /* Keep the cached, static artwork. */ });
+    }
+    loadHeadingArt('images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1', 'depth');
+    loadHeadingArt('images/theme-atlas/all-lives-heading-art-v1.svg?v=0.4.2-depth2', 'collage');
 
     function refreshView() {
         clearHints();
@@ -238,6 +253,27 @@
     let actions = [];
     let selectedAction = null;
     let hintFrame = 0;
+    const switchers = '.filter-tabs,[role="tablist"],.calendar-modes';
+    function numberTabs() {
+        const scope = document.querySelector('dialog[open]') || document.querySelector('.view.active');
+        if (!scope) return [];
+        const focused = document.activeElement?.closest(switchers);
+        const group = focused && scope.contains(focused) ? focused : Array.from(scope.querySelectorAll(switchers)).find(visible);
+        return group ? Array.from(group.querySelectorAll('button')).filter(visible) : [];
+    }
+    function activateNumber(key) {
+        const button = numberTabs()[(Number(key) + 9) % 10];
+        if (!button) return false;
+        clearHints();
+        button.click();
+        return true;
+    }
+    function hintBounds() {
+        const margin = compact.matches ? 16 : 24;
+        const bar = document.querySelector('.topbar')?.getBoundingClientRect();
+        const dock = document.body.classList.contains('navigation-dock') && document.getElementById('sidebar')?.getBoundingClientRect();
+        return { left:margin, right:innerWidth - margin, top:Math.max(margin, (bar?.bottom || 0) + 12), bottom:Math.min(innerHeight - margin, dock ? dock.top - 16 : innerHeight) };
+    }
     function clearHints() {
         if (hintFrame) cancelAnimationFrame(hintFrame);
         hintFrame = 0;
@@ -263,13 +299,14 @@
         hintFrame = 0;
         hints.forEach(({ hint }) => hint.remove());
         hints = [];
+        const bounds = hintBounds();
         const group = selectedAction && actions.filter(action => action.key === selectedAction.key && visible(action.button));
-        const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ rect }) => rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth);
+        const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ button, rect }) => rect.top >= bounds.top && rect.bottom <= (button.closest('dialog[open]') ? innerHeight : bounds.bottom) && rect.right > bounds.left && rect.left < bounds.right);
         positioned.sort((a, b) => Number(b.button === selectedAction?.button) - Number(a.button === selectedAction?.button));
         positioned.forEach(({ key, button, rect }) => {
             const hint = document.createElement('kbd');
             const selected = button === selectedAction?.button;
-            hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '');
+            hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '') + (/^[0-9]$/.test(key) ? ' is-tab' : '');
             hint.setAttribute('aria-hidden', 'true');
             hint.setAttribute('data-shortcut', key);
             hint.textContent = key.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ↑↓ ↵' : '');
@@ -284,7 +321,7 @@
         const overlaps = (a, b) => a.left < b.right + 3 && a.right > b.left - 3 && a.top < b.bottom + 3 && a.bottom > b.top - 3;
         const measured = hints.map(item => ({ ...item, size:item.hint.getBoundingClientRect() }));
         measured.forEach(({ hint, rect, size, selected }) => {
-            const left = Math.max(8, Math.min(innerWidth - size.width - 8, rect.right - size.width));
+            const left = Math.max(bounds.left, Math.min(bounds.right - size.width, rect.right - size.width));
             const candidates = [
                 { left, top:rect.top - size.height - 8 },
                 { left, top:rect.bottom + 8 },
@@ -292,8 +329,9 @@
                 { left:rect.right + 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 }
             ];
             if (selected) obstacles.forEach(other => candidates.push({ left, top:other.top - size.height - 8 }, { left, top:other.bottom + 8 }));
+            if (selected && document.querySelector('dialog[open]')) candidates.push({ left, top:bounds.bottom - size.height });
             const spot = candidates.map(point => ({ ...point, right:point.left + size.width, bottom:point.top + size.height })).find(point =>
-                point.left >= 8 && point.right <= innerWidth - 8 && point.top >= 8 && point.bottom <= innerHeight - 8 &&
+                point.left >= bounds.left && point.right <= bounds.right && point.top >= bounds.top && point.bottom <= bounds.bottom &&
                 !obstacles.some(other => overlaps(point, other)) && !placed.some(other => overlaps(point, other)));
             // Crowded controls remain reachable by group; don't cover their icons with badges.
             hint.hidden = !spot;
@@ -307,7 +345,8 @@
         clearHints();
         const scope = document.querySelector('dialog[open]') || document.querySelector('.view.active');
         if (!scope) return;
-        actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:actionKey(button), button }));
+        const tabs = numberTabs();
+        actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:tabs.includes(button) ? String((tabs.indexOf(button) + 1) % 10) : actionKey(button), button })).filter(action => action.key !== 'f');
         paintHints();
     }
     function selectAction(key, step = 0) {
@@ -319,7 +358,9 @@
         selectedAction = group[index < 0 ? 0 : (index + step + group.length) % group.length];
         selectedAction.button.classList.add('keyboard-action-target');
         selectedAction.button.focus({ preventScroll:true });
-        selectedAction.button.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' });
+        const rect = selectedAction.button.getBoundingClientRect();
+        const bounds = hintBounds();
+        if (rect.top < bounds.top + 40 || rect.bottom > bounds.bottom - 40) selectedAction.button.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' });
         paintHints();
         return true;
     }
@@ -335,11 +376,13 @@
             return;
         }
         if (target.closest(editable)) return;
+        if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key) && !overlay()) {
+            event.preventDefault(); event.stopImmediatePropagation(); clearHints(); buttons[(Number(key) + 9) % 10].click(); return;
+        }
         if (key === 'alt' && !event.ctrlKey && !event.metaKey && !event.shiftKey && (!overlay() || document.querySelector('dialog[open]'))) { event.preventDefault(); showHints(); return; }
         if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-            if (/^[0-9]$/.test(key) && !overlay()) {
-                const button = buttons[(Number(key) + 9) % 10];
-                if (button) { event.preventDefault(); clearHints(); button.click(); }
+            if (/^[0-9]$/.test(key) && (!overlay() || document.querySelector('dialog[open]'))) {
+                if (activateNumber(key)) { event.preventDefault(); showHints(); }
             } else if (['arrowup','arrowdown','arrowleft','arrowright'].includes(key) && selectedAction) {
                 event.preventDefault();
                 selectAction(selectedAction.key, key === 'arrowup' || key === 'arrowleft' ? -1 : 1);
@@ -350,7 +393,7 @@
                 button.click();
             } else if (key === 'escape') {
                 clearHints();
-            } else if (['n','e','x','s','f','v','a'].includes(key) && (!overlay() || document.querySelector('dialog[open]'))) {
+            } else if (['n','e','x','s','v','a'].includes(key) && (!overlay() || document.querySelector('dialog[open]'))) {
                 event.preventDefault();
                 selectAction(key);
             }
@@ -358,6 +401,7 @@
             return;
         }
         if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || overlay() || target.closest(editor)) return;
+        if (/^[0-9]$/.test(key)) { if (activateNumber(key)) event.preventDefault(); return; }
         if (key === 'f2') { event.preventDefault(); toggle.click(); return; }
         if (['arrowleft','arrowright','a','d'].includes(key)) {
             if (target.closest('button:not(.nav-item),[role="button"],a,summary')) return;
