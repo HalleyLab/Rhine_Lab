@@ -213,22 +213,9 @@ body.dark-theme:not(.background-all-lives):not(.background-black-current) :is(.h
     opacity: .5;
 }
 
-.view { animation: rhineViewFade .18s ease-out both; }
-
-@keyframes rhineViewFade {
-    from { opacity: .01; }
-    to { opacity: 1; }
-}
-
 @media (max-width: 700px) {
     body:not(.background-all-lives):not(.background-black-current) :is(.hero-atmosphere, .heading-visual) {
         width: 56%;
         opacity: .42 !important;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .view {
-        animation: none;
     }
 }

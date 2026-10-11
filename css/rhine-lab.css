@@ -10175,7 +10175,7 @@ html.native-app body.dark-theme .app-boot-screen span { color: #6e7874; }
 }
 /* 2026-08-11 definitive type audit: Unicode-aware mixed-script stacks and a consistent information scale. */
 :root {
-    --font-latin: "Rhine Helvetica", Helvetica, "Helvetica Neue", Arial, sans-serif;
+    --font-latin: "Rhine Helvetica", "Rhine SimHei", Helvetica, "Helvetica Neue", Arial, SimHei, "黑体", sans-serif;
     --font-cjk: "Rhine SimHei", SimHei, "黑体", "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
     --font-interface: "Rhine Helvetica", "Rhine SimHei", SimHei, "黑体", sans-serif;
 }

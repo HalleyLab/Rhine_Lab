@@ -36,7 +36,7 @@
 .bioinfo-detail-hero :is(h3,p){color:#26332d!important}
 .bioinfo-detail-hero .record-detail-code{color:#668c20!important}
 .bioinfo-detail-hero .status-chip{color:#2d3b33;background:rgba(247,250,243,.9);border-color:rgba(117,153,56,.3)}
-.bioinfo-code-block{margin:0;padding:13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--soft);font:600 12px/1.6 Consolas,'Courier New',monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.bioinfo-code-block{margin:0;padding:13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--soft);font:600 12px/1.6 Consolas,'Rhine SimHei','Courier New',SimHei,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 .dark-theme .bioinfo-subpage-tabs{background:color-mix(in srgb,var(--paper) 92%,#08101a)}
 .dark-theme .bioinfo-detail-hero{color:#f3f7f2!important;background:linear-gradient(108deg,rgba(104,139,43,.28),rgba(42,55,48,.98) 40%,rgba(27,40,38,.99))!important;border-color:rgba(143,189,37,.34)!important}
 .dark-theme .bioinfo-detail-hero :is(h3,p){color:#f3f7f2!important}
@@ -325,6 +325,7 @@ body.dark-theme #view-bioinformatics .bio-file-browser{
   background:color-mix(in srgb,var(--surface-2) 78%,var(--surface));
 }
 
+.bio-script-file pre{font-family:Consolas,'Rhine SimHei','Courier New',SimHei,monospace}
 @media(min-width:701px){
   #view-bioinformatics .bio-file-breadcrumb,
   #view-bioinformatics .bio-workflow-library-head{padding-left:18px}

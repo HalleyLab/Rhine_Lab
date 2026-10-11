@@ -68,6 +68,7 @@
         byId('assistantMessages').addEventListener('change', handleActionEdit);
         window.addEventListener('rhine:languagechange', function () { updateLabels(); renderMessages(); });
         window.addEventListener('resize', restoreCharacterPosition);
+        window.addEventListener('rhine:navigationchange', restoreCharacterPosition);
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && !byId('assistantDrawer').hidden) closeDrawer();
         });
@@ -171,11 +172,18 @@
         dragState = null;
     }
 
+    function characterBottom(left, width) {
+        const navigation = document.querySelector('body.navigation-dock .sidebar');
+        if (!navigation) return window.innerHeight;
+        const dock = navigation.getBoundingClientRect();
+        return left < dock.right && left + width > dock.left ? dock.top - 8 : window.innerHeight;
+    }
+
     function placeCharacter(left, top) {
         const toggle = byId('assistantToggle');
         const rect = toggle.getBoundingClientRect();
         const nextLeft = Math.max(0, Math.min(window.innerWidth - rect.width, Number(left) || 0));
-        const nextTop = Math.max(0, Math.min(window.innerHeight - rect.height, Number(top) || 0));
+        const nextTop = Math.max(0, Math.min(characterBottom(nextLeft, rect.width) - rect.height, Number(top) || 0));
         toggle.style.left = nextLeft + 'px';
         toggle.style.top = nextTop + 'px';
         toggle.style.right = 'auto';
@@ -205,7 +213,7 @@
 
     function dockCharacter(edge, top) {
         const toggle = byId('assistantToggle');
-        const nextTop = Math.max(8, Math.min(window.innerHeight - DOCK_HEIGHT - 8, Number(top) || 8));
+        const nextTop = Math.max(8, Math.min(characterBottom(edge === 'left' ? 0 : window.innerWidth - DOCK_WIDTH, DOCK_WIDTH) - DOCK_HEIGHT - 8, Number(top) || 8));
         toggle.dataset.edge = edge;
         toggle.classList.add('has-custom-position', 'is-edge-docked');
         toggle.style.left = (edge === 'left' ? 0 : window.innerWidth - DOCK_WIDTH) + 'px';

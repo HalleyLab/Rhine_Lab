@@ -4116,6 +4116,7 @@
         document.title = translatedTitle + ' · Rhine Lab';
         if (updateHash) history.pushState(null, '', '#' + view);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.dispatchEvent(new CustomEvent('rhine:viewchange', { detail: { view } }));
     }
 
     function renderAll() {
@@ -4354,7 +4355,7 @@
         activePlantRackId = rack ? rack.id : '';
         localStorage.setItem('rhineLabActivePlantRack', activePlantRackId);
         roomTitle.textContent = interfaceText(room.name);
-        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个培养架 · 可拖动调整布局');
+        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个培养架');
         applyHousingRoomGeometry(roomMap, room);
         const plantRoomExpanded = room.id === zoomedPlantRoomId;
         roomMap.classList.toggle('is-zoomed', plantRoomExpanded);
@@ -4743,7 +4744,7 @@
         activeAnimalRackId = rack ? rack.id : '';
         localStorage.setItem('rhineLabActiveAnimalRack', activeAnimalRackId);
         roomTitle.textContent = interfaceText(room.name);
-        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个笼架 · 可拖动调整布局');
+        roomMeta.textContent = (room.notes ? room.notes + ' · ' : '') + interfaceText(racks.length + ' 个笼架');
         applyHousingRoomGeometry(roomMap, room);
         const animalRoomExpanded = room.id === zoomedAnimalRoomId;
         roomMap.classList.toggle('is-zoomed', animalRoomExpanded);

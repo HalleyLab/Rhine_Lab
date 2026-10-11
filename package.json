@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "description": "Rhine Lab life-science workspace for web, mobile and desktop",
   "type": "module",
@@ -26,7 +26,8 @@
     "cloudflare:db:local": "wrangler d1 execute rhine-lab --local --config cloudflare/wrangler.toml --file cloudflare/schema.sql",
     "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.toml",
     "verify:bio-runner": "node scripts/check-bio-runner.mjs",
-    "verify:lab-layout": "node scripts/check-lab-layout.mjs"
+    "verify:lab-layout": "node scripts/check-lab-layout.mjs",
+    "verify:navigation": "node scripts/check-navigation.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",

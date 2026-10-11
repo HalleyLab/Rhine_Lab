@@ -390,6 +390,7 @@ body.dark-theme.background-all-lives .biology-subpage-tabs button.active :is(.bi
 .housing-layout-rack.active::before{width:7px}
 .housing-layout-rack-state{position:absolute;right:32px;bottom:7px;padding:2px 5px;color:color-mix(in srgb,var(--ink) 72%,var(--room-accent) 28%);background:color-mix(in srgb,var(--paper) 72%,var(--room-accent) 28%);border:1px solid color-mix(in srgb,var(--room-accent) 58%,var(--line));border-radius:999px;font-family:var(--font-interface);font-size:9px;font-style:normal;font-weight:800;line-height:1}
 .housing-layout-rack>small{font-family:var(--font-interface);font-size:10px;font-weight:700}
+.housing-room-tab small{font-family:var(--font-interface);font-weight:700}
 .dark-theme .housing-room-tab.active,.dark-theme .housing-layout-rack.active{background:color-mix(in srgb,var(--paper) 72%,var(--room-accent) 28%)}
 @media(max-width:700px){.housing-room-overview{padding:17px 13px 19px}.housing-room-map{min-height:360px}.housing-room-tab{flex-basis:208px}.housing-layout-rack{width:144px}}
 /* Housing room simplification and card zoom 2026-08-26 */
