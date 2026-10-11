@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    const quantityFormatters = new Map();
+
     const STORAGE_KEY = 'rhineLabWorkspaceV3';
     const INPUT_MEMORY_KEY = 'rhineLabInputMemoryV2';
 
@@ -2795,6 +2797,8 @@
 
     function bindColdStorageRackGridDrag() {
         let drag = null;
+        let dragFrame = 0;
+        let pendingPointer = null;
         let suppressClick = false;
         function clearPreview() {
             document.querySelectorAll('.rack-drop-preview,.rack-drop-invalid').forEach(function (cell) { cell.classList.remove('rack-drop-preview', 'rack-drop-invalid'); });
@@ -2822,7 +2826,7 @@
             };
             rackElement.setPointerCapture?.(event.pointerId);
         });
-        document.addEventListener('pointermove', function (event) {
+        function updateRackDrag(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
             if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3) return;
             if (!drag.moved) {
@@ -2840,9 +2844,25 @@
                 drag.target = target; preview(target, drag.layout, drag.valid);
             }
             event.preventDefault();
+        }
+        function flushRackDrag() {
+            dragFrame = 0;
+            const pointer = pendingPointer;
+            pendingPointer = null;
+            if (pointer) updateRackDrag(pointer);
+        }
+        document.addEventListener('pointermove', function (event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            pendingPointer = event;
+            if (!dragFrame) dragFrame = window.requestAnimationFrame(flushRackDrag);
+            event.preventDefault();
         }, { passive: false });
         function finish(event) {
             if (!drag || event.pointerId !== drag.pointerId) return;
+            if (dragFrame) window.cancelAnimationFrame(dragFrame);
+            dragFrame = 0;
+            if (event.type === 'pointerup') flushRackDrag();
+            pendingPointer = null;
             drag.rackElement.classList.remove('is-dragging');
             const target = drag.target; const plan = drag.plan; const valid = event.type === 'pointerup' && drag.moved && drag.valid && target && plan;
             clearPreview();
@@ -9532,7 +9552,9 @@ function getReagentDisplayStatus(reagent) {
     }
 
     function formatQuantity(value) {
-        return Number(value || 0).toLocaleString(interfaceLocale(), { maximumFractionDigits: 3 });
+        const locale = interfaceLocale();
+        if (!quantityFormatters.has(locale)) quantityFormatters.set(locale, new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }));
+        return quantityFormatters.get(locale).format(Number(value || 0));
     }
 
     function esc(value) {

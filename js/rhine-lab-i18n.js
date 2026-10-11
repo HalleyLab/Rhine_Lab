@@ -7,7 +7,7 @@
     const english = Object.freeze({
         '实验室布局': 'Lab Layout',
         '空间布局': 'Lab Layout',
-        '房间、走廊与设备的平面布局。': 'Arrange rooms, corridors and laboratory equipment.',
+        '“工作中就该保持安静、专注。”': '“Everyone should be quiet and focused during work.”',
         'Rhine Lab 生命科学实验管理工作台：实验记录、动物、试剂、样本与实验日程。': 'Rhine Lab life-science workspace for experiments, animals, reagents, samples and schedules.',
         'Rhine Lab 生命科学实验管理工作台：实验记录、生物资源、试剂、冻存样本、细胞维持与实验日程。': 'Rhine Lab life-science workspace for experiment records, biological resources, reagent inventory, frozen samples, cell culture and scheduling.',
         'Rhine Lab · 生命科学研究工作台': 'Rhine Lab · Life Science Research Workspace',
@@ -2097,12 +2097,13 @@
             const roots = Array.from(pendingRoots).filter(function (root) {
                 return root && (root.isConnected || root === document.body);
             });
-            pendingRoots.clear();
-            const topLevelRoots = roots.filter(function (root, index) {
-                return !roots.some(function (other, otherIndex) {
-                    return index !== otherIndex && other.nodeType === Node.ELEMENT_NODE && other.contains(root);
-                });
+            const topLevelRoots = roots.filter(function (root) {
+                for (let parent = root.parentNode; parent; parent = parent.parentNode) {
+                    if (pendingRoots.has(parent)) return false;
+                }
+                return true;
             });
+            pendingRoots.clear();
             topLevelRoots.forEach(applyTree);
         }
 
@@ -2120,7 +2121,7 @@
                     scheduleTranslation(mutation.target);
                     return;
                 }
-                if (mutation.type === 'childList' && mutation.addedNodes.length) scheduleTranslation(mutation.target);
+                if (mutation.type === 'childList') mutation.addedNodes.forEach(scheduleTranslation);
                 if (mutation.type === 'attributes') scheduleTranslation(mutation.target);
             });
         });

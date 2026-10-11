@@ -350,7 +350,7 @@ a {
 }
 
 @keyframes statusPulse {
-    50% { box-shadow: 0 0 0 7px rgba(216, 255, 69, 0); }
+    50% { opacity: .45; }
 }
 
 .system-status strong,
@@ -579,11 +579,19 @@ main {
 
 .view {
     display: none;
-    animation: viewEnter .36s ease both;
 }
 
 .view.active {
     display: block;
+}
+
+/* Animate the heading, not an entire long table or storage diagram. */
+.view.active > :is(.page-heading, .dashboard-hero) {
+    animation: viewEnter .2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .view.active > :is(.page-heading, .dashboard-hero) { animation: none; }
 }
 
 @keyframes viewEnter {

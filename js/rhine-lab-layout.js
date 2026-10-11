@@ -294,6 +294,8 @@
 
     function cancelGesture() {
         if (!gesture) return;
+        if (gestureFrame) window.cancelAnimationFrame(gestureFrame);
+        gestureFrame = 0; pendingGestureMove = null;
         const previous = gesture; gesture = null; plans = previous.before;
         if (previous.svg.hasPointerCapture(previous.pointerId)) previous.svg.releasePointerCapture(previous.pointerId);
         render();
@@ -320,7 +322,9 @@
         event.preventDefault();
     });
 
-    root.addEventListener('pointermove', event => {
+    let gestureFrame = 0;
+    let pendingGestureMove = null;
+    function updateGestureMove(event) {
         if (!gesture || event.pointerId !== gesture.pointerId) return;
         if (gesture.mode === 'select' || gesture.mode === 'polygon-point') return;
         if (gesture.mode === 'pan') {
@@ -349,10 +353,26 @@
             else renderBoard();
         }
         event.preventDefault();
+    }
+
+    function flushGestureMove() {
+        gestureFrame = 0;
+        const event = pendingGestureMove;
+        pendingGestureMove = null;
+        if (event) updateGestureMove(event);
+    }
+
+    root.addEventListener('pointermove', event => {
+        if (!gesture || event.pointerId !== gesture.pointerId) return;
+        pendingGestureMove = event;
+        if (!gestureFrame) gestureFrame = window.requestAnimationFrame(flushGestureMove);
+        event.preventDefault();
     });
 
     root.addEventListener('pointerup', event => {
         if (!gesture || event.pointerId !== gesture.pointerId) return;
+        if (gestureFrame) window.cancelAnimationFrame(gestureFrame);
+        flushGestureMove();
         const previous = gesture;
         gesture = null;
         if (previous.svg.hasPointerCapture(event.pointerId)) previous.svg.releasePointerCapture(event.pointerId);
