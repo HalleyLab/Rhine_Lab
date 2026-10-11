@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v170-0.4.2-entry1';
+const CACHE_NAME = 'rhine-lab-pages-v171-0.4.2-depth1';
 const APP_SHELL = [
     './',
     './index.html',
@@ -16,7 +16,7 @@ const APP_SHELL = [
     './css/rhine-lab-motion-icons.css?v=0.3.3',
     './css/rhine-lab-mobile.css?v=0.4.1-optical1',
     './css/rhine-lab-layout.css?v=0.4.2',
-    './css/rhine-lab-navigation.css?v=0.4.2-entry1',
+    './css/rhine-lab-navigation.css?v=0.4.2-depth1',
     './js/rhine-lab-config.js?v=0.3.3-ai',
     './js/rhine-lab-i18n.js?v=0.4.1-perf1',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
@@ -27,7 +27,7 @@ const APP_SHELL = [
     './js/rhine-lab-theme-init.js?v=0.3.3',
     './js/rhine-lab-bio-runner.js?v=0.4.1',
     './js/rhine-lab-layout.js?v=0.4.2',
-    './js/rhine-lab-navigation.js?v=0.4.2-entry1',
+    './js/rhine-lab-navigation.js?v=0.4.2-depth1',
     './js/rhine-lab-bootstrap.js?v=0.4.2',
     './js/rhine-lab.js?v=0.4.2',
     './js/vendor/morphicons/dom.js',
@@ -39,7 +39,8 @@ const APP_SHELL = [
     './images/reagent-vial-default.svg',
     './images/assistant/kristen-wright.png',
     './images/theme-atlas/all-lives-bioinformatics-collage-v1.svg',
-    './images/theme-atlas/rhine-life-science-atlas-v1.svg'
+    './images/theme-atlas/rhine-life-science-atlas-v1.svg',
+    './images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1'
 ];
 
 self.addEventListener('install', function (event) {

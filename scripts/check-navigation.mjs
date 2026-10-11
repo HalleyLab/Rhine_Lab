@@ -92,9 +92,10 @@ const element = (attributes = {}, extra = {}) => ({
     focus() { this.focused = true; }, scrollIntoView() { this.scrolled = true; }, ...extra
 });
 let candidates = Array.from({ length:90 }, () => element({ 'data-edit-result':'' }));
+let headingCopy = null, modal = null;
 const groupContext = {
-    document:{ querySelector:selector => selector === '.view.active' ? { querySelectorAll:() => candidates } : null,
-        createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {} }), body:{ appendChild() {} } },
+    document:{ querySelector:selector => selector === '.view.active' ? { querySelectorAll:() => candidates } : selector === 'dialog[open]' ? modal : headingCopy,
+        createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {} } },
     visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
     requestAnimationFrame() {}, cancelAnimationFrame() {}
 };
@@ -119,12 +120,48 @@ api.selectAction('e', 1); assert.equal(api.selected.button, candidates[1]);
 assert.ok(candidates[1].focused && candidates[1].scrolled);
 assert.equal(api.selectAction('x'), false); assert.equal(api.selected.button, candidates[1]);
 assert.ok(api.hints.some(({ hint }) => hint.textContent === 'E 1/89 ↑↓ ↵'));
+const activeHint = api.hints.find(({ hint }) => hint.className.includes('is-current')).hint;
+assert.equal(activeHint.hidden, false);
+assert.ok(parseFloat(activeHint.style.top) >= 88, 'Hints stay outside the target and its icons');
 api.clearHints(); assert.equal(api.actions.length, 0); assert.equal(api.hints.length, 0);
 assert.equal(candidates[1].classList.values.size, 0);
+headingCopy = { getBoundingClientRect:() => ({ left:0,right:390,top:0,bottom:90 }) };
+api.showHints(); api.selectAction('e');
+assert.ok(parseFloat(api.hints.find(item => item.selected).hint.style.top)>=98, 'Move below copy when there is no space above the button');
+api.clearHints(); headingCopy = null;
+const dialogHints = [];
+modal = { querySelectorAll:() => candidates, appendChild:hint => dialogHints.push(hint) };
+candidates = [element({}, { id:'entrySubmitButton', closest:selector => selector === 'dialog[open]' ? modal : false })];
+api.showHints(); api.selectAction('s'); assert.ok(dialogHints.includes(api.hints[0].hint), 'Hints must be inside the native dialog top layer');
+api.clearHints(); modal = null;
 // Disabled, hidden and dense diagram controls do not fill the action groups.
 candidates = [element({}, { disabled:true }), element({}, { closest:() => true }), element({ 'aria-hidden':'true' }), element({}, { getBoundingClientRect:() => ({ left:20,right:200,top:900,bottom:940 }) })];
 api.showHints(); assert.equal(api.actions.length, 1); assert.equal(api.hints.length, 0);
 api.selectAction('a'); assert.ok(candidates[3].focused && candidates[3].scrolled);
+
+// Visible header travel is bounded, frame-coalesced, and disabled for reduced motion.
+const depthStyle = { value:null, setProperty(_, value) { this.value = value; }, removeProperty() { this.value = null; } };
+let depthScroll;
+const depthContext = {
+    document:{ querySelector:() => ({ style:depthStyle, getBoundingClientRect:() => ({ top:100 - depthContext.window.scrollY,height:200 }) }) },
+    window:{ scrollY:0, innerHeight:1000, addEventListener:(_, listener) => depthScroll = listener }, motion:{ matches:false }, actions:[], hintFrame:0,
+    requestAnimationFrame:callback => { frames.set(++frameId,callback); return frameId; }, cancelAnimationFrame:id => frames.delete(id)
+};
+vm.createContext(depthContext);
+vm.runInContext(source.slice(source.indexOf('    let depthHeading ='), source.indexOf('    // Reuse the local vector atlas')) + ';api={paintHeadingDepth,refreshHeadingDepth}', depthContext);
+vm.runInContext(source.slice(source.indexOf("    window.addEventListener('scroll'"), source.indexOf("    window.addEventListener('resize'")), depthContext);
+depthContext.api.refreshHeadingDepth(); assert.equal(depthStyle.value, '0.0px');
+depthContext.window.scrollY = 80;
+for(let i=0;i<100;i++) depthScroll();
+assert.equal(frames.size,1); frames.values().next().value(); frames.clear();
+assert.equal(depthStyle.value, '80.0px');
+depthContext.window.scrollY = 5000; depthContext.api.paintHeadingDepth(); assert.equal(depthStyle.value, '200.0px');
+depthContext.motion.matches = true; depthContext.api.refreshHeadingDepth(); assert.equal(depthStyle.value,null);
+depthScroll(); assert.equal(frames.size,0);
+depthContext.motion.matches = false; depthContext.api.refreshHeadingDepth(); depthScroll();
+assert.equal(frames.size,1);
+depthContext.document.querySelector = () => null;
+depthContext.api.refreshHeadingDepth(); assert.equal(frames.size,0); assert.equal(depthStyle.value,null);
 
 const [css, layout, biology, html, worker, pkg, android, ios, extension] = await Promise.all(['css/rhine-lab-navigation.css','css/rhine-lab-layout.css','css/rhine-lab-biology.css','index.html','sw.js','package.json','android/app/build.gradle','ios/App/App.xcodeproj/project.pbxproj','browser-extension/manifest.json'].map(read));
 assert.match(css, /prefers-reduced-motion:reduce/);
@@ -132,7 +169,16 @@ assert.match(css, /body\.navigation-dock \.sidebar \.nav-item\.active::after/);
 assert.match(css, /rhineHeadingCopyIn/);
 assert.match(css, /rhineHeadingArtIn/);
 assert.match(css, /page-heading,\.dashboard-hero\) \* \{ animation:none !important/);
-assert.doesNotMatch(source + css, /heading-parallax|paintParallax/);
+assert.match(css, /data-depth="far"[^}]*\.52/);
+assert.match(css, /data-depth="mid"[^}]*\.30/);
+assert.match(css, /data-depth="near"[^}]*\.12/);
+assert.match(css, /--heading-travel:0px !important/);
+assert.match(css, /font:800 14px/);
+assert.match(css, /keyboard-action-hint\.is-current[^}]*font-size:15px/);
+const atlas = await read('images/theme-atlas/rhine-life-science-atlas-v1.svg');
+assert.equal((atlas.match(/data-view=/g) || []).length,10);
+for(const depth of ['far','mid','near']) assert.equal((atlas.match(new RegExp('data-depth="' + depth + '"','g')) || []).length,10);
+assert.ok(worker.includes('images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1'));
 assert.match(source, /Place at bottom.*放在底部/);
 assert.match(html, /<span>放在底部<\/span>/);
 const headingStyles = await read('css/rhine-dashboard-refresh.css');
@@ -148,4 +194,4 @@ const assistant = await read('js/rhine-lab-assistant.js');
 const collision = { window:{ innerHeight:844 }, document:{ querySelector:() => ({ getBoundingClientRect:() => ({ left:8,right:382,top:770 }) }) } };
 vm.runInNewContext(assistant.slice(assistant.indexOf('    function characterBottom('), assistant.indexOf('    function placeCharacter(')) + ';result=[characterBottom(310,70),characterBottom(400,70)]', collision);
 assert.deepEqual(Array.from(collision.result), [762,844]);
-console.log('Navigation guards, semantic shortcut groups, bounded dock motion, heading entrances, card observers, typography and 0.4.2 metadata passed.');
+console.log('Navigation guards, grouped shortcuts, external hint placement, bounded layered parallax, dock motion, heading entrances, fonts and 0.4.2 metadata passed.');

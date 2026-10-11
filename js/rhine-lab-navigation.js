@@ -150,18 +150,80 @@
         })).observe(main, { childList:true, subtree:true });
     }
 
+    let depthHeading = null;
+    let depthFrame = 0;
+    let depthStart = 0;
+    let depthHeight = 0;
+    let depthTravel = -1;
+    function paintHeadingDepth() {
+        depthFrame = 0;
+        if (!depthHeading || motion.matches) return;
+        const travel = Math.max(0, Math.min(depthHeight, window.scrollY - depthStart));
+        if (travel === depthTravel) return;
+        depthTravel = travel;
+        depthHeading.style.setProperty('--heading-travel', travel.toFixed(1) + 'px');
+    }
+    function refreshHeadingDepth() {
+        if (depthFrame) cancelAnimationFrame(depthFrame);
+        depthFrame = 0;
+        depthHeading?.style.removeProperty('--heading-travel');
+        depthHeading = document.querySelector('.view.active > :is(.page-heading,.dashboard-hero)');
+        depthTravel = -1;
+        if (!depthHeading || motion.matches) return;
+        const rect = depthHeading.getBoundingClientRect();
+        depthStart = Math.max(0, rect.top + window.scrollY - window.innerHeight * .3);
+        depthHeight = rect.height;
+        paintHeadingDepth();
+    }
+    // Reuse the local vector atlas; the original background remains if it cannot load.
+    fetch('images/theme-atlas/rhine-life-science-atlas-v1.svg?v=0.4.2-depth1').then(response => {
+        if (!response.ok) throw new Error('Heading artwork unavailable');
+        return response.text();
+    }).then(source => {
+        const atlas = new DOMParser().parseFromString(source, 'image/svg+xml');
+        if (atlas.querySelector('parsererror')) return;
+        atlas.querySelectorAll('svg > g[data-view]').forEach(tile => {
+            const art = document.querySelector('#view-' + tile.dataset.view + ' .heading-visual,#view-' + tile.dataset.view + ' .hero-atmosphere');
+            if (!art) return;
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 800 400');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('class', 'heading-depth-art');
+            svg.setAttribute('aria-hidden', 'true');
+            const defs = atlas.querySelector('defs').cloneNode(true);
+            const scene = tile.cloneNode(true);
+            scene.removeAttribute('transform');
+            // Keep gradient/clip references unique across inline page illustrations.
+            defs.querySelectorAll('[id]').forEach(node => {
+                const id = node.id;
+                const unique = 'heading-' + tile.dataset.view + '-' + id;
+                node.id = unique;
+                [scene, ...scene.querySelectorAll('*')].forEach(element => {
+                    ['fill','stroke','clip-path'].forEach(attribute => {
+                        if (element.getAttribute(attribute) === 'url(#' + id + ')') element.setAttribute(attribute, 'url(#' + unique + ')');
+                    });
+                });
+            });
+            svg.append(defs, scene);
+            art.appendChild(svg);
+            art.classList.add('has-depth-art');
+        });
+    }).catch(() => { /* Keep the cached, static artwork. */ });
+
     function refreshView() {
         clearHints();
         updateLabels();
         document.querySelectorAll('.view.active').forEach(observeCards);
+        refreshHeadingDepth();
     }
     window.addEventListener('scroll', () => {
         if (actions.length && !hintFrame) hintFrame = requestAnimationFrame(paintHints);
+        if (depthHeading && !motion.matches && !depthFrame) depthFrame = requestAnimationFrame(paintHeadingDepth);
     }, { passive:true });
     window.addEventListener('resize', () => { resetDock(); refreshView(); });
     window.addEventListener('rhine:viewchange', refreshView);
     window.addEventListener('rhine:ready', refreshView);
-    window.addEventListener('rhine:languagechange', updateLabels);
+    window.addEventListener('rhine:languagechange', () => { updateLabels(); refreshHeadingDepth(); });
     motion.addEventListener('change', () => {
         resetDock();
         document.querySelectorAll('.scroll-card').forEach(card => card.classList.add('is-revealed'));
@@ -203,16 +265,42 @@
         hints = [];
         const group = selectedAction && actions.filter(action => action.key === selectedAction.key && visible(action.button));
         const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ rect }) => rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth);
+        positioned.sort((a, b) => Number(b.button === selectedAction?.button) - Number(a.button === selectedAction?.button));
         positioned.forEach(({ key, button, rect }) => {
             const hint = document.createElement('kbd');
             const selected = button === selectedAction?.button;
             hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '');
             hint.setAttribute('aria-hidden', 'true');
+            hint.setAttribute('data-shortcut', key);
             hint.textContent = key.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ↑↓ ↵' : '');
-            hint.style.left = Math.max(2, Math.min(innerWidth - (selected ? 120 : 24), rect.right - (selected ? 110 : 16))) + 'px';
-            hint.style.top = Math.max(2, rect.top - 4) + 'px';
-            document.body.appendChild(hint);
-            hints.push({ button, hint });
+            // Native dialogs are in the top layer, above even fixed body overlays.
+            (button.closest('dialog[open]') || document.body).appendChild(hint);
+            hints.push({ button, hint, rect, selected });
+        });
+        const placed = [];
+        const obstacles = positioned.map(item => item.rect);
+        const copy = !document.querySelector('dialog[open]') && document.querySelector('.view.active > :is(.page-heading,.dashboard-hero) > :first-child');
+        if (copy) obstacles.push(copy.getBoundingClientRect());
+        const overlaps = (a, b) => a.left < b.right + 3 && a.right > b.left - 3 && a.top < b.bottom + 3 && a.bottom > b.top - 3;
+        const measured = hints.map(item => ({ ...item, size:item.hint.getBoundingClientRect() }));
+        measured.forEach(({ hint, rect, size, selected }) => {
+            const left = Math.max(8, Math.min(innerWidth - size.width - 8, rect.right - size.width));
+            const candidates = [
+                { left, top:rect.top - size.height - 8 },
+                { left, top:rect.bottom + 8 },
+                { left:rect.left - size.width - 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 },
+                { left:rect.right + 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 }
+            ];
+            if (selected) obstacles.forEach(other => candidates.push({ left, top:other.top - size.height - 8 }, { left, top:other.bottom + 8 }));
+            const spot = candidates.map(point => ({ ...point, right:point.left + size.width, bottom:point.top + size.height })).find(point =>
+                point.left >= 8 && point.right <= innerWidth - 8 && point.top >= 8 && point.bottom <= innerHeight - 8 &&
+                !obstacles.some(other => overlaps(point, other)) && !placed.some(other => overlaps(point, other)));
+            // Crowded controls remain reachable by group; don't cover their icons with badges.
+            hint.hidden = !spot;
+            if (!spot) return;
+            hint.style.left = spot.left + 'px';
+            hint.style.top = spot.top + 'px';
+            placed.push(spot);
         });
     }
     function showHints() {
