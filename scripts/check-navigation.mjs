@@ -256,6 +256,11 @@ assert.match(biology, /\.housing-room-tab small\{font-family:var\(--font-interfa
 for (const [, asset] of html.matchAll(/(?:src|href)="((?:css|js)\/[^"?]+\?v=[^"]+)"/g)) assert.ok(worker.includes(asset), asset);
 assert.equal(JSON.parse(pkg).version, '0.4.2');
 assert.equal(JSON.parse(extension).version, '0.4.2');
+const distributions = await read('.github/workflows/desktop-distributions.yml');
+assert.ok(distributions.includes("require('./browser-extension/manifest.json').version"));
+assert.ok(distributions.includes('Rhine-Lab-Browser-Extension-$version.zip'));
+assert.ok(distributions.includes('path: dist/release-*/*.zip'));
+assert.doesNotMatch(distributions, /release-0\.4\.1|Extension-0\.4\.1/);
 assert.match(android, /versionCode 42\s+versionName "0.4.2"/);
 assert.equal((ios.match(/MARKETING_VERSION = 0.4.2/g) || []).length, 2);
 const assistant = await read('js/rhine-lab-assistant.js');
