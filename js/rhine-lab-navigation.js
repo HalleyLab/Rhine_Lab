@@ -33,13 +33,18 @@
 
     function updateLabels() {
         const english = document.documentElement.lang === 'en';
+        const help = document.getElementById('keyboardShortcutHelp');
+        if (help) {
+            help.firstElementChild.textContent = english ? 'Hold' : '按住';
+            help.lastElementChild.textContent = english ? 'for shortcuts' : '显示快捷键';
+        }
         const label = dock ? (english ? 'Restore sidebar' : '还原侧栏') : (english ? 'Place at bottom' : '放在底部');
         const text = toggle.querySelector('span');
         const title = (dock ? (english ? 'Switch to sidebar' : '切换为侧边栏') : (english ? 'Switch to bottom dock' : '切换为底部停靠栏')) + ' · F2';
         if (text.textContent !== label) text.textContent = label;
         if (dock) toggle.removeAttribute('title');
         else if (toggle.title !== title) toggle.title = title;
-        toggle.dataset.navLabel = label;
+        toggle.dataset.navLabel = label + ' · F2';
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
         toggle.setAttribute('aria-keyshortcuts', 'F2');
         toggle.setAttribute('aria-pressed', String(dock));
@@ -301,7 +306,7 @@
         hints = [];
         const bounds = hintBounds();
         const group = selectedAction && actions.filter(action => action.key === selectedAction.key && visible(action.button));
-        const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ button, rect }) => rect.top >= bounds.top && rect.bottom <= (button.closest('dialog[open]') ? innerHeight : bounds.bottom) && rect.right > bounds.left && rect.left < bounds.right);
+        const positioned = actions.filter(action => visible(action.button)).map(action => ({ ...action, rect:action.button.getBoundingClientRect() })).filter(({ button, rect }) => rect.top >= bounds.top && rect.bottom <= (button === toggle || button.closest('dialog[open]') ? innerHeight : bounds.bottom) && rect.right > bounds.left && rect.left < bounds.right);
         positioned.sort((a, b) => Number(b.button === selectedAction?.button) - Number(a.button === selectedAction?.button));
         positioned.forEach(({ key, button, rect }) => {
             const hint = document.createElement('kbd');
@@ -320,7 +325,7 @@
         if (copy) obstacles.push(copy.getBoundingClientRect());
         const overlaps = (a, b) => a.left < b.right + 3 && a.right > b.left - 3 && a.top < b.bottom + 3 && a.bottom > b.top - 3;
         const measured = hints.map(item => ({ ...item, size:item.hint.getBoundingClientRect() }));
-        measured.forEach(({ hint, rect, size, selected }) => {
+        measured.forEach(({ button, hint, rect, size, selected }) => {
             const left = Math.max(bounds.left, Math.min(bounds.right - size.width, rect.right - size.width));
             const candidates = [
                 { left, top:rect.top - size.height - 8 },
@@ -328,6 +333,7 @@
                 { left:rect.left - size.width - 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 },
                 { left:rect.right + 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 }
             ];
+            if (button === toggle && document.body.classList.contains('navigation-dock')) candidates.unshift({ left, top:bounds.bottom - size.height });
             if (selected) obstacles.forEach(other => candidates.push({ left, top:other.top - size.height - 8 }, { left, top:other.bottom + 8 }));
             if (selected && document.querySelector('dialog[open]')) candidates.push({ left, top:bounds.bottom - size.height });
             const spot = candidates.map(point => ({ ...point, right:point.left + size.width, bottom:point.top + size.height })).find(point =>
@@ -347,6 +353,7 @@
         if (!scope) return;
         const tabs = numberTabs();
         actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:tabs.includes(button) ? String((tabs.indexOf(button) + 1) % 10) : actionKey(button), button })).filter(action => action.key !== 'f');
+        if (!document.querySelector('dialog[open]') && visible(toggle)) actions.push({ key:'f2', button:toggle });
         paintHints();
     }
     function selectAction(key, step = 0) {
@@ -376,6 +383,9 @@
             return;
         }
         if (target.closest(editable)) return;
+        if (key === 'f2' && !event.ctrlKey && !event.metaKey && !event.shiftKey && !overlay() && !target.closest(editor)) {
+            event.preventDefault(); clearHints(); toggle.click(); return;
+        }
         if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key) && !overlay()) {
             event.preventDefault(); event.stopImmediatePropagation(); clearHints(); buttons[(Number(key) + 9) % 10].click(); return;
         }
@@ -402,7 +412,6 @@
         }
         if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || overlay() || target.closest(editor)) return;
         if (/^[0-9]$/.test(key)) { if (activateNumber(key)) event.preventDefault(); return; }
-        if (key === 'f2') { event.preventDefault(); toggle.click(); return; }
         if (['arrowleft','arrowright','a','d'].includes(key)) {
             if (target.closest('button:not(.nav-item),[role="button"],a,summary')) return;
             const index = buttons.findIndex(button => button.classList.contains('active'));

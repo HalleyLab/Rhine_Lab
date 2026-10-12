@@ -47,7 +47,11 @@ key('¡', { altKey:true, shiftKey:true, code:'Digit1' }); assert.deepEqual(calls
 key('2'); assert.deepEqual(calls.splice(0), ['tab2']);
 key('¡', { altKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['tab1','hints']);
 key('n'); assert.deepEqual(calls.splice(0), ['new']);
-key('F2'); assert.deepEqual(calls.splice(0), ['toggle']);
+key('F2'); assert.deepEqual(calls.splice(0), ['clear','toggle']);
+control = true; key('F2'); assert.deepEqual(calls.splice(0), ['clear','toggle'], 'F2 works while the navigation toggle is focused'); control = false;
+key('F2', { altKey:true }); assert.deepEqual(calls.splice(0), ['clear','toggle'], 'F2 also works while Alt hints are visible');
+typing = true; key('F2'); assert.deepEqual(calls, []); typing = false;
+blocked = true; key('F2'); assert.deepEqual(calls, []); blocked = false;
 key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
 typing = true; key('n'); key('2', { altKey:true }); assert.deepEqual(calls, []);
 const save = { click:() => calls.push('save') };
@@ -103,6 +107,7 @@ const groupContext = {
         activeElement:{ closest:() => focusedGroup }, getElementById:() => ({ getBoundingClientRect:() => ({ top:700 }) }),
         createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {}, classList:{ contains:() => isDock } } },
     compact:{ matches:true },
+    toggle:null,
     visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
     requestAnimationFrame() {}, cancelAnimationFrame() {}
 };
@@ -170,6 +175,11 @@ isDock = false; api.showHints(); assert.equal(api.hints.length,1); assert.equal(
 assert.ok(parseFloat(api.hints[0].hint.style.left)>=16);
 groupContext.compact.matches = false; assert.equal(api.hintBounds().left,24);
 api.clearHints();
+groupContext.toggle = element({}, { getBoundingClientRect:() => ({ left:250,right:294,top:714,bottom:762 }) });
+isDock = true; api.showHints();
+const f2 = api.hints.find(({ hint }) => hint.textContent === 'F2');
+assert.ok(f2&&!f2.hint.hidden); assert.ok(parseFloat(f2.hint.style.top)+31<=684,'F2 appears safely above the dock');
+groupContext.toggle = null; isDock = false; api.clearHints();
 
 // Visible header travel is bounded, frame-coalesced, and disabled for reduced motion.
 const depthStyle = { value:null, setProperty(_, value) { this.value = value; }, removeProperty() { this.value = null; } };
@@ -228,7 +238,14 @@ assert.doesNotMatch(collage, /<text\b/);
 assert.ok(worker.includes('images/theme-atlas/all-lives-heading-art-v1.svg?v=0.4.2-depth2'));
 assert.match(css,/sidebar-foot[^}]*background:transparent !important/);
 assert.match(css,/navigation-mode-toggle \{[^}]*background:transparent !important/);
-assert.match(css,/100% \+ 32px/);
+assert.match(css,/100% \+ 20px/);
+assert.match(css,/page-heading,\.dashboard-hero\) > :first-child \{ transform:none/);
+assert.match(css,/technical-heading > div:first-child:not\(\.heading-visual\) \{ align-self:flex-start/);
+assert.match(html,/id="keyboardShortcutHelp"[^>]*data-i18n-skip/);
+assert.match(html,/dock-page-hint-prev[^>]*>‹ <kbd>A<\/kbd>/);
+assert.match(html,/dock-page-hint-next[^>]*><kbd>D<\/kbd> ›/);
+assert.match(html,/navigation-mode-key[^>]*>F2<\/kbd>/);
+assert.match(source,/toggle.dataset.navLabel = label \+ ' · F2'/);
 assert.match(css,/is-heading-visible/);
 assert.match(source, /Place at bottom.*放在底部/);
 assert.match(html, /<span>放在底部<\/span>/);
