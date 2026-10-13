@@ -45,7 +45,7 @@ body:not(.navigation-dock) .primary-nav .nav-item:hover:not(.active) { backgroun
 .navigation-mode-toggle { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; min-height:38px; padding:8px 12px; border:1px solid var(--line-dark); border-radius:12px; color:var(--ink); background:color-mix(in srgb,var(--surface) 72%,transparent); font:700 12px/1.2 var(--font-interface); cursor:pointer; }
 .navigation-mode-toggle svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; }
 .navigation-mode-toggle:hover { background:var(--acid-soft); }
-.navigation-mode-key,.keyboard-shortcut-help kbd,.dock-page-hint kbd { padding:3px 5px; border:1px solid var(--line-dark); border-radius:5px; color:var(--ink); background:var(--surface); font:700 11px/1.2 var(--font-interface); }
+.keyboard-shortcut-help kbd,.dock-page-hint kbd { padding:3px 5px; border:1px solid var(--line-dark); border-radius:5px; color:var(--ink); background:var(--surface); font:700 11px/1.2 var(--font-interface); }
 .keyboard-shortcut-help { display:flex; flex:none; align-items:center; gap:5px; color:var(--muted); font:700 11px/1.2 var(--font-interface); white-space:nowrap; }
 .dock-page-hint { display:none; }
 body.navigation-dock .dock-page-hint { display:flex; position:absolute; top:50%; align-items:center; gap:5px; color:var(--muted); font:700 16px/1 var(--font-interface); translate:0 -50%; pointer-events:none; }
@@ -73,7 +73,6 @@ body.navigation-dock .navigation-mode-toggle svg { width:24px; height:24px; stro
 body.navigation-dock .sidebar .navigation-mode-toggle:is(:hover,:focus-visible) { color:var(--ink) !important; }
 body.navigation-dock .navigation-mode-toggle:is(:hover,:focus-visible) svg { transform:translateY(-2px) scale(1.18); }
 body.navigation-dock .navigation-mode-toggle span { display:none; }
-body.navigation-dock .navigation-mode-key { display:none; }
 body.navigation-dock .mobile-scrim { display:none !important; }
 .keyboard-action-hint { position:fixed; inset:auto; z-index:3000; width:max-content; margin:0; padding:5px 8px; border:1px solid currentColor; border-radius:7px; color:#234c73; background:#fff; box-shadow:0 3px 12px #10251a26; font:800 14px/1.25 var(--font-interface); white-space:nowrap; pointer-events:none; }
 .keyboard-action-hint[hidden] { display:none !important; }

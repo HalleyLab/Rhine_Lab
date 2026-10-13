@@ -244,8 +244,9 @@ assert.match(css,/technical-heading > div:first-child:not\(\.heading-visual\) \{
 assert.match(html,/id="keyboardShortcutHelp"[^>]*data-i18n-skip/);
 assert.match(html,/dock-page-hint-prev[^>]*>‹ <kbd>A<\/kbd>/);
 assert.match(html,/dock-page-hint-next[^>]*><kbd>D<\/kbd> ›/);
-assert.match(html,/navigation-mode-key[^>]*>F2<\/kbd>/);
-assert.match(source,/toggle.dataset.navLabel = label \+ ' · F2'/);
+assert.doesNotMatch(html,/navigation-mode-key|systemConnectionLabel|class="system-status"/);
+assert.match(source,/toggle.dataset.navLabel = label;/);
+assert.doesNotMatch(source,/' · F2'/);
 assert.match(css,/is-heading-visible/);
 assert.match(source, /Place at bottom.*放在底部/);
 assert.match(html, /<span>放在底部<\/span>/);

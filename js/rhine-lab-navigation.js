@@ -40,11 +40,11 @@
         }
         const label = dock ? (english ? 'Restore sidebar' : '还原侧栏') : (english ? 'Place at bottom' : '放在底部');
         const text = toggle.querySelector('span');
-        const title = (dock ? (english ? 'Switch to sidebar' : '切换为侧边栏') : (english ? 'Switch to bottom dock' : '切换为底部停靠栏')) + ' · F2';
+        const title = dock ? (english ? 'Switch to sidebar' : '切换为侧边栏') : (english ? 'Switch to bottom dock' : '切换为底部停靠栏');
         if (text.textContent !== label) text.textContent = label;
         if (dock) toggle.removeAttribute('title');
         else if (toggle.title !== title) toggle.title = title;
-        toggle.dataset.navLabel = label + ' · F2';
+        toggle.dataset.navLabel = label;
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
         toggle.setAttribute('aria-keyshortcuts', 'F2');
         toggle.setAttribute('aria-pressed', String(dock));
