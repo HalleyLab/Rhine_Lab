@@ -8,7 +8,7 @@ const [i18n, app, layout, html, css, worker, bootstrap] = await Promise.all([
 ].map(file => readFile(new URL('../' + file, import.meta.url), 'utf8')));
 
 // Direct page entry must initialize render state before binding the workspace.
-assert.match(app, /\n    init\(\);\n\}\)\(\);\s*$/);
+assert.match(app, /\r?\n    init\(\);\r?\n\}\)\(\);\s*$/);
 for (const declaration of ['let bioFolderArtworkSeq = 0;', 'let embeddedLineageLayoutTimer = 0;', 'const dialogSchemas = {']) {
     assert.ok(app.indexOf(declaration) < app.indexOf('\n    init();'), declaration);
 }
