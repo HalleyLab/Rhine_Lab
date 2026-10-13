@@ -634,8 +634,6 @@
         }
     };
 
-    init();
-
     function getAssistantContext() {
         const today = todayIso();
         return {
@@ -9566,4 +9564,5 @@ function getReagentDisplayStatus(reagent) {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+    init();
 })();

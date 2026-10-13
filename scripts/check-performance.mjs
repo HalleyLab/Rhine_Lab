@@ -7,6 +7,12 @@ const [i18n, app, layout, html, css, worker, bootstrap] = await Promise.all([
     'css/rhine-lab.css', 'sw.js', 'js/rhine-lab-bootstrap.js'
 ].map(file => readFile(new URL('../' + file, import.meta.url), 'utf8')));
 
+// Direct page entry must initialize render state before binding the workspace.
+assert.match(app, /\n    init\(\);\n\}\)\(\);\s*$/);
+for (const declaration of ['let bioFolderArtworkSeq = 0;', 'let embeddedLineageLayoutTimer = 0;', 'const dialogSchemas = {']) {
+    assert.ok(app.indexOf(declaration) < app.indexOf('\n    init();'), declaration);
+}
+
 // A tooltip or drag preview must not retranslate all of document.body.
 const translated = [], jobs = [];
 let notify;

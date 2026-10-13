@@ -74,13 +74,13 @@ body.navigation-dock .sidebar .navigation-mode-toggle:is(:hover,:focus-visible) 
 body.navigation-dock .navigation-mode-toggle:is(:hover,:focus-visible) svg { transform:translateY(-2px) scale(1.18); }
 body.navigation-dock .navigation-mode-toggle span { display:none; }
 body.navigation-dock .mobile-scrim { display:none !important; }
-.keyboard-action-hint { position:fixed; inset:auto; z-index:3000; width:max-content; margin:0; padding:5px 8px; border:1px solid currentColor; border-radius:7px; color:#234c73; background:#fff; box-shadow:0 3px 12px #10251a26; font:800 14px/1.25 var(--font-interface); white-space:nowrap; pointer-events:none; }
+.keyboard-action-hint { position:fixed; inset:auto; z-index:3000; width:max-content; margin:0; padding:3px 6px; border:1px solid currentColor; border-radius:6px; color:#234c73; background:#fff; box-shadow:0 3px 12px #10251a26; font:800 12px/1.25 var(--font-interface); white-space:nowrap; pointer-events:none; }
 .keyboard-action-hint[hidden] { display:none !important; }
 .keyboard-action-hint[data-shortcut="n"] { color:#0b655a; }
 .keyboard-action-hint[data-shortcut="x"] { color:#a03942; }
 .keyboard-action-hint[data-shortcut="s"] { color:#70439c; }
 .keyboard-action-hint.is-tab { color:#785515; }
-.keyboard-action-hint.is-current { z-index:3001; color:#fff; background:#354ec7; border-color:#354ec7; font-size:15px; }
+.keyboard-action-hint.is-current { z-index:3001; color:#fff; background:#354ec7; border-color:#354ec7; font-size:13px; }
 .keyboard-action-target { outline:2px solid #354ec7 !important; outline-offset:3px; }
 .dark-theme .keyboard-action-hint { color:#d6e8ff; background:#182532; }
 .dark-theme .keyboard-action-hint[data-shortcut="n"] { color:#91e2cc; }

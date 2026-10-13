@@ -46,7 +46,7 @@
         else if (toggle.title !== title) toggle.title = title;
         toggle.dataset.navLabel = label;
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
-        toggle.setAttribute('aria-keyshortcuts', 'F2');
+        toggle.setAttribute('aria-keyshortcuts', 'Alt+G');
         toggle.setAttribute('aria-pressed', String(dock));
         buttons.forEach((button, index) => {
             const label = button.querySelector('span:not(.nav-code)').textContent;
@@ -353,7 +353,7 @@
         if (!scope) return;
         const tabs = numberTabs();
         actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:tabs.includes(button) ? String((tabs.indexOf(button) + 1) % 10) : actionKey(button), button })).filter(action => action.key !== 'f');
-        if (!document.querySelector('dialog[open]') && visible(toggle)) actions.push({ key:'f2', button:toggle });
+        if (!document.querySelector('dialog[open]') && visible(toggle)) actions.push({ key:'g', button:toggle });
         paintHints();
     }
     function selectAction(key, step = 0) {
@@ -383,8 +383,8 @@
             return;
         }
         if (target.closest(editable)) return;
-        if (key === 'f2' && !event.ctrlKey && !event.metaKey && !event.shiftKey && !overlay() && !target.closest(editor)) {
-            event.preventDefault(); clearHints(); toggle.click(); return;
+        if (event.altKey && key === 'g' && !event.ctrlKey && !event.metaKey && !event.shiftKey && !overlay() && !target.closest(editor)) {
+            event.preventDefault(); event.stopImmediatePropagation(); clearHints(); toggle.click(); return;
         }
         if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key) && !overlay()) {
             event.preventDefault(); event.stopImmediatePropagation(); clearHints(); buttons[(Number(key) + 9) % 10].click(); return;
