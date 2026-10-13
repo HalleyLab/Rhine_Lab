@@ -9,11 +9,12 @@ vm.runInNewContext(await read('js/rhine-lab-shortcuts.js'),shortcutContext);
 const shortcuts = shortcutContext.window.RhineLabShortcuts;
 const actionCommands = { n:'create',e:'edit',x:'delete',s:'save',v:'view',a:'other',g:'navigation' };
 const handlers = {}, calls = [], frames = new Map();
-let frameId = 0, blocked = false, typing = false, editing = false, control = false, dialog = null;
+let frameId = 0, blocked = false, typing = false, editing = false, control = false, settings = false, dialog = null;
 const target = { closest(selector) {
     if (selector === 'editable') return typing;
     if (selector === 'editor') return editing;
     if (selector === 'dialog[open]') return dialog;
+    if (selector === '#shortcutSettingsDialog') return settings;
     return control;
 } };
 const create = { click: () => calls.push('new') };
@@ -22,6 +23,7 @@ const context = {
     document:{ addEventListener:(type, handler) => handlers[type] = handler, querySelectorAll:() => [create], querySelector:() => dialog },
     nav:{ addEventListener:(type, handler) => handlers[type] = handler },
     buttons, shortcuts, actionCommands, toggle:{ click:() => calls.push('toggle') }, overlay:() => blocked,
+    window:{ dispatchEvent:event => calls.push(event.type) },CustomEvent:class{constructor(type){this.type=type;}},shortcutMode:false,
     editable:'editable', editor:'editor', visible:element => !!element && !element.disabled,
     clearHints:() => calls.push('clear'), showHints:() => calls.push('hints'), selectedAction:null,
     selectAction:(key, step = 0) => calls.push([key,step]),
@@ -29,15 +31,16 @@ const context = {
     dock:true, motion:{ matches:false }, dockFrame:0, dockPointer:null, dockCenters:buttons.map((_,index) => index * 52),
     requestAnimationFrame:callback => { frames.set(++frameId,callback); return frameId; }, cancelAnimationFrame:id => frames.delete(id)
 };
+context.setShortcutMode = active => { context.shortcutMode = active; calls.push('clear'); if(active)calls.push('hints'); };
 vm.createContext(context);
-vm.runInContext(source.slice(source.indexOf("    document.addEventListener('keydown'"), source.indexOf("    document.addEventListener('keyup'")), context);
+vm.runInContext(source.slice(source.indexOf("    document.addEventListener('keydown'"), source.indexOf("    document.getElementById('keyboardShortcutHelp').addEventListener")), context);
 const key = (value, options = {}) => {
     const event = { key:value, target, preventDefault() { this.prevented = this.defaultPrevented = true; }, stopImmediatePropagation() { this.stopped = true; }, ...options };
     handlers.keydown(event);
     return event;
 };
-key('ArrowRight'); assert.deepEqual(calls.splice(0), [1]);
-key('a'); assert.deepEqual(calls.splice(0), [9]);
+key('ArrowRight'); assert.deepEqual(calls.splice(0), ['clear',1]);
+key('a'); assert.deepEqual(calls.splice(0), ['clear',9]);
 for (const name of ['typing','editing','blocked','control']) {
     typing = name === 'typing'; editing = name === 'editing'; blocked = name === 'blocked'; control = name === 'control';
     key('ArrowRight'); assert.deepEqual(calls, [], name);
@@ -45,36 +48,36 @@ for (const name of ['typing','editing','blocked','control']) {
 typing = editing = blocked = control = false;
 key('d', { isComposing:true }); key('a', { repeat:true }); key('a', { defaultPrevented:true }); key('a', { ctrlKey:true });
 assert.deepEqual(calls, []);
-assert.equal(key('3', { altKey:true, shiftKey:true }).prevented, true); assert.deepEqual(calls.splice(0), ['clear',2]);
-key('0', { altKey:true, shiftKey:true }); assert.deepEqual(calls.splice(0), ['clear',9]);
-key('¡', { altKey:true, shiftKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['clear',0]);
+for(const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) for(const value of ['g','a','k','n','Enter','ArrowRight','1','`']) {
+    const event=key(value,{[modifier]:true});assert.ok(!event.prevented&&!event.stopped,modifier+' '+value);assert.deepEqual(calls,[]);
+}
 key('2'); assert.deepEqual(calls.splice(0), ['tab2']);
-key('¡', { altKey:true, code:'Digit1' }); assert.deepEqual(calls.splice(0), ['tab1','hints']);
-key('n'); assert.deepEqual(calls.splice(0), ['new']);
-key('F2'); key('F2', { altKey:true }); key('g'); assert.deepEqual(calls, [], 'F2 and plain G are not intercepted');
-assert.equal(key('g', { altKey:true }).stopped,true); assert.deepEqual(calls.splice(0), ['clear','toggle']);
-control = true; key('g', { altKey:true }); assert.deepEqual(calls.splice(0), ['clear','toggle'], 'Alt+G works while the navigation toggle is focused'); control = false;
-key('©', { altKey:true, code:'KeyG' }); assert.deepEqual(calls.splice(0), ['clear','toggle'], 'Alt+G supports non-English keyboard layouts');
-for (const modifier of ['ctrlKey','metaKey','shiftKey']) { key('g', { altKey:true, [modifier]:true }); assert.deepEqual(calls, []); }
-typing = true; key('g', { altKey:true }); assert.deepEqual(calls, []); typing = false;
-editing = true; key('g', { altKey:true }); assert.deepEqual(calls, []); editing = false;
-blocked = true; key('g', { altKey:true }); assert.deepEqual(calls, []); blocked = false;
-key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
-typing = true; key('n'); key('2', { altKey:true }); assert.deepEqual(calls, []);
-const save = { click:() => calls.push('save') };
-dialog = { querySelector:() => save }; blocked = true;
-key('Enter', { ctrlKey:true }); assert.deepEqual(calls.splice(0), ['save']);
-save.disabled = true; key('Enter', { ctrlKey:true }); assert.deepEqual(calls, []);
-typing = false; key('ArrowLeft'); key('2', { altKey:true, shiftKey:true }); assert.deepEqual(calls, []);
-key('2', { altKey:true }); assert.deepEqual(calls.splice(0), ['tab2','hints']);
-key('Alt'); assert.deepEqual(calls.splice(0), ['hints']);
-key('e', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',0]], 'Choosing a group must not execute it');
+key('n'); key('F2'); key('g'); key('Alt'); key('k'); assert.deepEqual(calls, [], 'Mode actions do not run outside mode');
+assert.equal(key('`').stopped,true); assert.deepEqual(calls.splice(0), ['clear','hints']); assert.equal(context.shortcutMode,true);
+key('g'); assert.deepEqual(calls.splice(0), ['clear','toggle']); assert.equal(context.shortcutMode,false);
+key('`'); calls.length=0; key('Escape'); assert.deepEqual(calls.splice(0),['clear']); assert.equal(context.shortcutMode,false);
+key('`'); calls.length=0; assert.ok(!key('g',{altKey:true}).prevented); assert.deepEqual(calls.splice(0),['clear']); assert.equal(context.shortcutMode,false,'A modifier chord cancels mode without being intercepted');
+for(const name of ['typing','editing','blocked','settings']) {
+    typing=name==='typing';editing=name==='editing';blocked=name==='blocked';settings=name==='settings';
+    assert.ok(!key('`').prevented); assert.deepEqual(calls,[],name);
+}
+typing=editing=blocked=settings=false;
+key('²',{code:'Backquote'}); calls.length=0;
+key('g',{code:'KeyG'}); assert.deepEqual(calls.splice(0),['clear','toggle'],'Physical-key mapping works without Alt');
+key('`'); calls.length=0; key('k'); assert.deepEqual(calls.splice(0),['clear','rhine:searchshortcut']); assert.equal(context.shortcutMode,false);
+key('`'); calls.length=0; key('d'); assert.deepEqual(calls.splice(0),['clear',1]);
+dialog = { querySelector(){} }; blocked = true;
+typing = true; key('`'); key('Enter',{ctrlKey:true}); assert.deepEqual(calls,[],'Typing and old save chord stay untouched');
+typing = false; key('`'); assert.deepEqual(calls.splice(0),['clear','hints'],'Mode can open within a dialog');
+key('2'); assert.deepEqual(calls.splice(0), ['tab2','hints']);
+key('e'); assert.deepEqual(calls.splice(0), [['e',0]], 'Choosing a group must not execute it');
 context.selectedAction = { key:'e', button:create };
-key('ArrowDown', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',1]]);
-key('ArrowUp', { altKey:true }); assert.deepEqual(calls.splice(0), [['e',-1]]);
-assert.equal(key('Enter', { altKey:true }).stopped, true); assert.deepEqual(calls.splice(0), ['clear','new']);
+key('ArrowDown'); assert.deepEqual(calls.splice(0), [['e',1]]);
+key('ArrowUp'); assert.deepEqual(calls.splice(0), [['e',-1]]);
+assert.equal(key('Enter').stopped, true); assert.deepEqual(calls.splice(0), ['clear','new']); assert.equal(context.shortcutMode,false);
 context.selectedAction = null;
-key('Enter', { altKey:true }); assert.deepEqual(calls, []);
+key('Enter'); assert.deepEqual(calls, []);
+dialog=null; blocked=false;
 
 vm.runInContext(source.slice(source.indexOf("    nav.addEventListener('pointermove'"), source.indexOf('    const cards =')), context);
 for (let index=0; index<100; index++) handlers.pointermove({ clientX:index, pointerType:'mouse' });
@@ -114,7 +117,7 @@ const groupContext = {
         activeElement:{ closest:() => focusedGroup }, getElementById:() => ({ getBoundingClientRect:() => ({ top:700 }) }),
         createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {}, classList:{ contains:() => isDock } } },
     compact:{ matches:true },
-    toggle:null,shortcuts,actionCommands,
+    toggle:null,shortcuts,actionCommands,shortcutMode:false,updateLabels(){},
     visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
     requestAnimationFrame() {}, cancelAnimationFrame() {}
 };
@@ -254,7 +257,9 @@ assert.doesNotMatch(html,/navigation-mode-key|systemConnectionLabel|class="syste
 assert.match(source,/toggle.dataset.navLabel = label;/);
 assert.doesNotMatch(source,/' · F2'/);
 assert.doesNotMatch(source,/['"]f2['"]|['"]F2['"]/);
-assert.match(source,/aria-keyshortcuts', shortcuts.get\('navigation'\)/);
+assert.match(source,/aria-keyshortcuts', shortcutMode \? shortcuts.get\('navigation'\)/);
+assert.doesNotMatch(source,/Alt\+Shift|key === 'alt'|addEventListener\('keyup'/);
+assert.match(source,/Never consume modifier chords/);
 assert.doesNotMatch(source,/const candidates = \[/);
 assert.match(html,/id="shortcutSettingsDialog"/);
 assert.ok(html.indexOf('js/rhine-lab-shortcuts.js') < html.indexOf('js/rhine-lab-navigation.js'));

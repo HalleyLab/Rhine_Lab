@@ -46,7 +46,9 @@ body:not(.navigation-dock) .primary-nav .nav-item:hover:not(.active) { backgroun
 .navigation-mode-toggle svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; }
 .navigation-mode-toggle:hover { background:var(--acid-soft); }
 .keyboard-shortcut-help kbd,.dock-page-hint kbd { padding:3px 5px; border:1px solid var(--line-dark); border-radius:5px; color:var(--ink); background:var(--surface); font:700 11px/1.2 var(--font-interface); }
-.keyboard-shortcut-help { display:flex; flex:none; align-items:center; gap:5px; color:var(--muted); font:700 11px/1.2 var(--font-interface); white-space:nowrap; }
+.keyboard-shortcut-help { display:flex; flex:none; align-items:center; gap:5px; padding:5px; border:0; border-radius:6px; background:transparent; color:var(--muted); font:700 11px/1.2 var(--font-interface); white-space:nowrap; cursor:pointer; }
+.keyboard-shortcut-help[aria-pressed=true] { color:var(--ink); background:var(--acid-soft); }
+.topbar:has(#utilityNav:not([hidden])) .keyboard-shortcut-help { display:none; }
 .dock-page-hint { display:none; }
 body.navigation-dock .dock-page-hint { display:flex; position:absolute; top:50%; align-items:center; gap:5px; color:var(--muted); font:700 16px/1 var(--font-interface); translate:0 -50%; pointer-events:none; }
 body.navigation-dock .dock-page-hint-prev { right:calc(100% + 10px); }

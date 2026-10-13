@@ -3847,11 +3847,8 @@
             renderSearchResults(els.overlaySearchInput.value);
         });
 
+        window.addEventListener('rhine:searchshortcut', function () { openSearch(''); });
         document.addEventListener('keydown', function (event) {
-            if (window.RhineLabShortcuts ? window.RhineLabShortcuts.matches(event,'search') : (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-                event.preventDefault();
-                openSearch('');
-            }
             if (event.key === 'Escape' && els.utilityNav && !els.utilityNav.hidden) setUtilityNav(false);
             if (event.key === 'Escape' && !els.searchOverlay.hidden) closeSearch();
             if (event.key === 'Escape' && !els.notificationPanel.hidden) closeNotifications();

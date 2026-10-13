@@ -29,6 +29,7 @@
     marker.setAttribute('aria-hidden', 'true');
     nav.prepend(marker);
     let dock = false;
+    let shortcutMode = false;
     let dockFrame = 0;
     let dockPointer = null;
     let dockCenters = [];
@@ -37,8 +38,13 @@
         const english = document.documentElement.lang === 'en';
         const help = document.getElementById('keyboardShortcutHelp');
         if (help) {
-            help.firstElementChild.textContent = english ? 'Hold' : '按住';
-            help.lastElementChild.textContent = english ? 'for shortcuts' : '显示快捷键';
+            const trigger = shortcuts.get('mode');
+            help.firstElementChild.textContent = shortcutMode ? '' : (trigger ? (english ? 'Press' : '按一下') : (english ? 'Click' : '点击'));
+            help.querySelector('kbd').textContent = shortcutMode ? 'Esc' : (shortcuts.display(shortcuts.get('mode')) || '—');
+            help.querySelector('kbd').hidden = !shortcutMode && !trigger;
+            help.lastElementChild.textContent = shortcutMode ? (english ? 'Exit shortcuts' : '退出快捷键') : (english ? 'for shortcuts' : '显示快捷键');
+            help.setAttribute('aria-pressed',String(shortcutMode));
+            help.setAttribute('aria-keyshortcuts',shortcuts.get('mode'));
         }
         const label = dock ? (english ? 'Restore sidebar' : '还原侧栏') : (english ? 'Place at bottom' : '放在底部');
         const text = toggle.querySelector('span');
@@ -48,7 +54,7 @@
         else if (toggle.title !== title) toggle.title = title;
         toggle.dataset.navLabel = label;
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
-        toggle.setAttribute('aria-keyshortcuts', shortcuts.get('navigation'));
+        toggle.setAttribute('aria-keyshortcuts', shortcutMode ? shortcuts.get('navigation') : '');
         toggle.setAttribute('aria-pressed', String(dock));
         ['previousPage','nextPage'].forEach((id,index) => {
             const hint = document.querySelector(index ? '.dock-page-hint-next' : '.dock-page-hint-prev');
@@ -56,14 +62,14 @@
             hint.style.display = shortcuts.get(id) ? '' : 'none';
         });
         const search = document.getElementById('globalSearch');
-        search.setAttribute('aria-keyshortcuts', shortcuts.get('search'));
-        search.parentElement.querySelector('kbd').textContent = shortcuts.get('search') || '—';
-        buttons.forEach((button, index) => {
+        search.setAttribute('aria-keyshortcuts', shortcutMode ? shortcuts.get('search') : '');
+        search.parentElement.querySelector('kbd').textContent = shortcuts.get('search') ? [shortcuts.display(shortcuts.get('mode')),shortcuts.display(shortcuts.get('search'))].filter(Boolean).join(' → ') : '—';
+        buttons.forEach(button => {
             const label = button.querySelector('span:not(.nav-code)').textContent;
             if (button.dataset.navLabel !== label) button.dataset.navLabel = label;
             if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
-            button.setAttribute('aria-keyshortcuts', 'Alt+Shift+' + ((index + 1) % 10));
-            const title = label + ' · Alt+Shift+' + ((index + 1) % 10);
+            button.removeAttribute('aria-keyshortcuts');
+            const title = label;
             if (dock) button.removeAttribute('title');
             else if (button.title !== title) button.title = title;
             if (button.classList.contains('active')) {
@@ -106,7 +112,7 @@
         document.getElementById('resetShortcuts').textContent = shortcutText('恢复默认','Reset defaults');
         document.getElementById('checkShortcuts').textContent = shortcutText('检测冲突','Check conflicts');
         document.getElementById('saveShortcuts').textContent = shortcutText('保存','Save');
-        document.getElementById('shortcutSettingsScope').textContent = shortcutText('操作组保留 Alt；分类用 1–0，页面用 Alt+Shift+1–0。检测应用内重复和常见保留组合，无法读取其他软件的全局占用。清空可禁用。','Action groups keep Alt; tabs use 1–0 and pages Alt+Shift+1–0. Checks cover app duplicates and common reserved combinations, not other apps’ global bindings. Clear to disable.');
+        document.getElementById('shortcutSettingsScope').textContent = shortcutText('先按一下模式键并松开，再按单键选择操作组；上下键切换，Enter 执行，Esc 退出。也可点击顶栏提示进入。分类仍用 1–0，A / D 可直接切换页面；输入时不触发。不再使用 Alt / Ctrl 组合。清空可禁用，检测应用内重复与保留键。','Press and release the mode key, then a single key to choose actions. Use ↑ / ↓ to cycle, Enter to run, Esc to exit. You can also click the top-bar hint. Tabs still use 1–0; A / D also switch pages directly. Disabled while typing. No Alt / Ctrl combinations. Clear to disable; checks cover app duplicates and reserved keys.');
     }
     function shortcutDraft() {
         return Object.fromEntries(Array.from(shortcutFields.querySelectorAll('input')).map(input => [input.dataset.shortcut,input.value]));
@@ -117,17 +123,16 @@
             const error = errors.find(item => item.id === input.dataset.shortcut);
             const other = shortcuts.definitions.find(item => item.id === error?.other);
             const messages = {
-                invalid:shortcutText('请输入有效组合，例如 Alt+G。','Enter a valid combination, such as Alt+G.'),
-                alt:shortcutText('操作组快捷键需要包含 Alt。','Action-group shortcuts must include Alt.'),
-                modified:shortcutText('请使用 Ctrl 或 Alt 组合键。','Use a Ctrl or Alt combination.'),
-                reserved:shortcutText('与分类切换或常见系统 / 浏览器快捷键冲突。','Conflicts with tabs or a common system / browser shortcut.'),
+                invalid:shortcutText('请输入单个按键，例如 G 或 ArrowUp。','Enter one key, such as G or ArrowUp.'),
+                single:shortcutText('请使用单键，不使用 Alt / Ctrl / Shift 组合。','Use a single key without Alt / Ctrl / Shift.'),
+                reserved:shortcutText('与分类切换、退出或原生操作按键冲突。','Conflicts with tabs, exit or a native key.'),
                 duplicate:shortcutText('与“','Conflicts with “') + (other?.label[document.documentElement.lang === 'en' ? 1 : 0] || '') + shortcutText('”冲突。','”.')
             };
             input.setAttribute('aria-invalid',String(Boolean(error)));
             input.parentElement.querySelector('small').textContent = error ? messages[error.code] : '';
         });
         document.getElementById('saveShortcuts').disabled = errors.length > 0;
-        shortcutStatus.textContent = errors.length ? shortcutText('请先解决标出的冲突。','Resolve the highlighted conflicts first.') : report ? shortcutText('未发现应用内或已知保留组合冲突；全局占用仍需在系统中确认。','No app or known reserved-key conflicts found; global bindings still need a system check.') : '';
+        shortcutStatus.textContent = errors.length ? shortcutText('请先解决标出的冲突。','Resolve the highlighted conflicts first.') : report ? shortcutText('未发现应用内重复或保留键冲突。','No app duplicates or reserved-key conflicts found.') : '';
         return !errors.length;
     }
     function renderShortcutFields(values) {
@@ -136,7 +141,7 @@
         checkShortcutDraft(false);
     }
     document.getElementById('shortcutSettingsButton').addEventListener('click', () => {
-        clearHints(); updateShortcutLabels();
+        setShortcutMode(false); updateShortcutLabels();
         renderShortcutFields(Object.fromEntries(shortcuts.definitions.map(item => [item.id,shortcuts.get(item.id)])));
         shortcutDialog.showModal();
     });
@@ -146,8 +151,7 @@
     shortcutFields.addEventListener('input', () => checkShortcutDraft(false));
     shortcutFields.addEventListener('focusin', event => { if (event.target.matches('input')) event.target.select(); });
     shortcutFields.addEventListener('keydown', event => {
-        if (!event.target.matches('input') || event.isComposing || !event.ctrlKey && !event.altKey && !event.metaKey) return;
-        if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && ['a','c','x','v','z','y'].includes(event.key.toLowerCase())) return;
+        if (!event.target.matches('input') || event.isComposing || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || ['Tab','Escape','Backspace','Delete'].includes(event.key)) return;
         const value = shortcuts.chord(event);
         if (!value) return;
         event.preventDefault(); event.stopPropagation(); event.target.value = value; checkShortcutDraft(false);
@@ -160,7 +164,7 @@
         else shortcutStatus.textContent = shortcutText('无法保存到本机，原快捷键未改变。','Local storage is unavailable; your original shortcuts are unchanged.');
     });
     updateShortcutLabels();
-    window.addEventListener('rhine:shortcutschange', () => { clearHints(); updateLabels(); });
+    window.addEventListener('rhine:shortcutschange', () => setShortcutMode(false));
 
     function highlight(button) {
         if (!button || dock) return;
@@ -310,8 +314,7 @@
     loadHeadingArt('images/theme-atlas/all-lives-heading-art-v1.svg?v=0.4.2-depth2', 'collage');
 
     function refreshView() {
-        clearHints();
-        updateLabels();
+        setShortcutMode(false);
         document.querySelectorAll('.view.active').forEach(observeCards);
         refreshHeadingDepth();
     }
@@ -367,6 +370,12 @@
         actions = [];
         selectedAction = null;
     }
+    function setShortcutMode(active) {
+        clearHints();
+        shortcutMode = active;
+        updateLabels();
+        if (active) showHints();
+    }
     function actionKey(button) {
         const names = button.getAttributeNames().join(' ');
         const id = button.id;
@@ -393,8 +402,8 @@
             hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '') + (/^[0-9]$/.test(key) ? ' is-tab' : '');
             hint.setAttribute('aria-hidden', 'true');
             hint.setAttribute('data-shortcut', key);
-            const label = actionCommands[key] ? shortcuts.get(actionCommands[key]).replace(/^Alt\+/,'') : key;
-            const controls = selected ? ['previousAction','nextAction','confirmAction'].map(id => shortcuts.get(id).replace(/^Alt\+/,'').replace('ArrowUp','↑').replace('ArrowDown','↓').replace('ArrowLeft','←').replace('ArrowRight','→').replace('Enter','↵')).join(' ') : '';
+            const label = actionCommands[key] ? shortcuts.display(shortcuts.get(actionCommands[key])) : key;
+            const controls = selected ? ['previousAction','nextAction','confirmAction'].map(id => shortcuts.display(shortcuts.get(id)).replace('ArrowUp','↑').replace('ArrowDown','↓').replace('ArrowLeft','←').replace('ArrowRight','→').replace('Enter','↵')).join(' ') : '';
             hint.textContent = label.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ' + controls : '');
             // Native dialogs are in the top layer, above even fixed body overlays.
             (button.closest('dialog[open]') || document.body).appendChild(hint);
@@ -442,54 +451,53 @@
     }
     document.addEventListener('keydown', event => {
         if (event.defaultPrevented || event.isComposing || event.repeat) return;
-        let key = event.key.toLowerCase();
-        if (event.altKey && !/^[a-z0-9]$/.test(key) && /^(Digit[0-9]|Key[A-Z])$/.test(event.code || '')) key = event.code.replace(/^(Digit|Key)/, '').toLowerCase();
+        // Never consume modifier chords, even while shortcut mode is active.
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            if (shortcutMode) setShortcutMode(false);
+            return;
+        }
         const target = event.target;
+        if (target.closest(editable) || target.closest('#shortcutSettingsDialog')) return;
+        const key = shortcuts.chord(event);
         const command = shortcuts.command(event);
-        if (command === 'saveDialog') {
-            const dialog = target.closest('dialog[open]');
-            const save = dialog?.querySelector('#entrySubmitButton,#experimentDetailSubmitButton');
-            if (visible(save)) { event.preventDefault(); save.click(); }
-            return;
+        if (shortcutMode && key === 'Escape') {
+            event.preventDefault(); event.stopImmediatePropagation(); setShortcutMode(false); return;
         }
-        if (target.closest(editable)) return;
-        if (command === 'navigation' && !overlay() && !target.closest(editor)) {
-            event.preventDefault(); event.stopImmediatePropagation(); clearHints(); toggle.click(); return;
+        if (command === 'mode' && !target.closest(editor) && (!overlay() || document.querySelector('dialog[open]'))) {
+            event.preventDefault(); event.stopImmediatePropagation(); setShortcutMode(!shortcutMode); return;
         }
-        if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key) && !overlay()) {
-            event.preventDefault(); event.stopImmediatePropagation(); clearHints(); buttons[(Number(key) + 9) % 10].click(); return;
-        }
-        if (key === 'alt' && !event.ctrlKey && !event.metaKey && !event.shiftKey && (!overlay() || document.querySelector('dialog[open]'))) { event.preventDefault(); showHints(); return; }
-        if (command && (!overlay() || document.querySelector('dialog[open]'))) {
+        if (shortcutMode) {
+            if (command === 'navigation' && !overlay()) {
+                event.preventDefault(); event.stopImmediatePropagation(); setShortcutMode(false); toggle.click(); return;
+            }
+            if (command === 'search' && !overlay()) {
+                event.preventDefault(); event.stopImmediatePropagation(); setShortcutMode(false);
+                window.dispatchEvent(new CustomEvent('rhine:searchshortcut')); return;
+            }
             const action = Object.keys(actionCommands).find(key => actionCommands[key] === command && key !== 'g');
-            if (action) { event.preventDefault(); event.stopImmediatePropagation(); selectAction(action); return; }
-            if (selectedAction && ['previousAction','nextAction'].includes(command)) { event.preventDefault(); event.stopImmediatePropagation(); selectAction(selectedAction.key,command === 'previousAction' ? -1 : 1); return; }
-            if (selectedAction && command === 'confirmAction' && visible(selectedAction.button)) { event.preventDefault(); event.stopImmediatePropagation(); const button = selectedAction.button; clearHints(); button.click(); return; }
-        }
-        if (!overlay() && !target.closest(editor) && ['previousPage','nextPage','newEntry'].includes(command)) {
-            if (command === 'newEntry') {
-                const create = Array.from(document.querySelectorAll('.view.active .page-heading button[data-add],.view.active .dashboard-hero button[data-add],.view.active .module-toolbar button.primary[data-add],.view.active [data-layout-action="new"]')).find(visible);
-                if (create) { event.preventDefault(); event.stopImmediatePropagation(); create.click(); }
-            } else if (!target.closest('button:not(.nav-item),[role="button"],a,summary')) {
-                const index = buttons.findIndex(button => button.classList.contains('active'));
-                event.preventDefault(); event.stopImmediatePropagation();
-                buttons[(index + (command === 'previousPage' ? -1 : 1) + buttons.length) % buttons.length].click();
+            let handled = false;
+            if (action) handled = selectAction(action);
+            else if (selectedAction && ['previousAction','nextAction'].includes(command)) handled = selectAction(selectedAction.key,command === 'previousAction' ? -1 : 1);
+            else if (selectedAction && command === 'confirmAction' && visible(selectedAction.button)) {
+                const button = selectedAction.button;
+                setShortcutMode(false); button.click(); handled = true;
+            } else if (/^[0-9]$/.test(key)) {
+                handled = activateNumber(key);
+                if (handled && shortcutMode) showHints();
             }
+            if (handled) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+        }
+        if (overlay() || target.closest(editor)) return;
+        if (['previousPage','nextPage'].includes(command) && (shortcutMode || !target.closest('button:not(.nav-item),[role="button"],a,summary'))) {
+            const index = buttons.findIndex(button => button.classList.contains('active'));
+            event.preventDefault(); event.stopImmediatePropagation(); setShortcutMode(false);
+            buttons[(index + (command === 'previousPage' ? -1 : 1) + buttons.length) % buttons.length].click();
             return;
         }
-        if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-            if (/^[0-9]$/.test(key) && (!overlay() || document.querySelector('dialog[open]'))) {
-                if (activateNumber(key)) { event.preventDefault(); showHints(); }
-            } else if (key === 'escape') {
-                clearHints();
-            }
-            if (event.defaultPrevented) event.stopImmediatePropagation();
-            return;
-        }
-        if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || overlay() || target.closest(editor)) return;
-        if (/^[0-9]$/.test(key)) { if (activateNumber(key)) event.preventDefault(); return; }
+        if (!shortcutMode && /^[0-9]$/.test(key) && activateNumber(key)) event.preventDefault();
     }, true);
-    document.addEventListener('keyup', event => { if (event.key === 'Alt') clearHints(); });
-    window.addEventListener('blur', clearHints);
-    document.addEventListener('pointerdown', clearHints, { passive:true });
+    document.getElementById('keyboardShortcutHelp').addEventListener('click', () => setShortcutMode(!shortcutMode));
+    window.addEventListener('blur', () => setShortcutMode(false));
+    document.addEventListener('pointerdown', event => { if (!event.target.closest('#keyboardShortcutHelp') && shortcutMode) setShortcutMode(false); }, { passive:true });
+    document.addEventListener('focusin', event => { if (shortcutMode && event.target.closest(editable)) setShortcutMode(false); });
 }());
