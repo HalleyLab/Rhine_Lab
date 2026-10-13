@@ -3,7 +3,9 @@
 
     const nav = document.querySelector('.primary-nav');
     const toggle = document.getElementById('navigationModeToggle');
-    if (!nav || !toggle) return;
+    const shortcuts = window.RhineLabShortcuts;
+    if (!nav || !toggle || !shortcuts) return;
+    const actionCommands = { n:'create',e:'edit',x:'delete',s:'save',v:'view',a:'other',g:'navigation' };
     const buttons = Array.from(nav.querySelectorAll('.nav-item'));
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const compact = window.matchMedia('(max-width:820px), (max-width:1200px) and (max-height:700px) and (orientation:landscape)');
@@ -46,8 +48,16 @@
         else if (toggle.title !== title) toggle.title = title;
         toggle.dataset.navLabel = label;
         if (toggle.getAttribute('aria-label') !== title) toggle.setAttribute('aria-label', title);
-        toggle.setAttribute('aria-keyshortcuts', 'Alt+G');
+        toggle.setAttribute('aria-keyshortcuts', shortcuts.get('navigation'));
         toggle.setAttribute('aria-pressed', String(dock));
+        ['previousPage','nextPage'].forEach((id,index) => {
+            const hint = document.querySelector(index ? '.dock-page-hint-next' : '.dock-page-hint-prev');
+            hint.querySelector('kbd').textContent = shortcuts.get(id);
+            hint.style.display = shortcuts.get(id) ? '' : 'none';
+        });
+        const search = document.getElementById('globalSearch');
+        search.setAttribute('aria-keyshortcuts', shortcuts.get('search'));
+        search.parentElement.querySelector('kbd').textContent = shortcuts.get('search') || '—';
         buttons.forEach((button, index) => {
             const label = button.querySelector('span:not(.nav-code)').textContent;
             if (button.dataset.navLabel !== label) button.dataset.navLabel = label;
@@ -82,6 +92,75 @@
     try { dock = localStorage.getItem('rhineLabNavigationMode') === 'dock'; } catch (_) { /* Use the sidebar. */ }
     document.body.classList.toggle('navigation-dock', dock);
     updateLabels();
+
+    const shortcutDialog = document.getElementById('shortcutSettingsDialog');
+    const shortcutFields = document.getElementById('shortcutSettingsFields');
+    const shortcutStatus = document.getElementById('shortcutSettingsStatus');
+    const shortcutText = (zh,en) => document.documentElement.lang === 'en' ? en : zh;
+    function updateShortcutLabels() {
+        const label = shortcutText('快捷键设置','Keyboard shortcuts');
+        const button = document.getElementById('shortcutSettingsButton');
+        button.title = label; button.setAttribute('aria-label',label); button.querySelector('span').textContent = label;
+        document.getElementById('shortcutSettingsTitle').textContent = label;
+        document.getElementById('closeShortcutSettings').setAttribute('aria-label',shortcutText('关闭','Close'));
+        document.getElementById('resetShortcuts').textContent = shortcutText('恢复默认','Reset defaults');
+        document.getElementById('checkShortcuts').textContent = shortcutText('检测冲突','Check conflicts');
+        document.getElementById('saveShortcuts').textContent = shortcutText('保存','Save');
+        document.getElementById('shortcutSettingsScope').textContent = shortcutText('操作组保留 Alt；分类用 1–0，页面用 Alt+Shift+1–0。检测应用内重复和常见保留组合，无法读取其他软件的全局占用。清空可禁用。','Action groups keep Alt; tabs use 1–0 and pages Alt+Shift+1–0. Checks cover app duplicates and common reserved combinations, not other apps’ global bindings. Clear to disable.');
+    }
+    function shortcutDraft() {
+        return Object.fromEntries(Array.from(shortcutFields.querySelectorAll('input')).map(input => [input.dataset.shortcut,input.value]));
+    }
+    function checkShortcutDraft(report) {
+        const errors = shortcuts.validate(shortcutDraft());
+        shortcutFields.querySelectorAll('input').forEach(input => {
+            const error = errors.find(item => item.id === input.dataset.shortcut);
+            const other = shortcuts.definitions.find(item => item.id === error?.other);
+            const messages = {
+                invalid:shortcutText('请输入有效组合，例如 Alt+G。','Enter a valid combination, such as Alt+G.'),
+                alt:shortcutText('操作组快捷键需要包含 Alt。','Action-group shortcuts must include Alt.'),
+                modified:shortcutText('请使用 Ctrl 或 Alt 组合键。','Use a Ctrl or Alt combination.'),
+                reserved:shortcutText('与分类切换或常见系统 / 浏览器快捷键冲突。','Conflicts with tabs or a common system / browser shortcut.'),
+                duplicate:shortcutText('与“','Conflicts with “') + (other?.label[document.documentElement.lang === 'en' ? 1 : 0] || '') + shortcutText('”冲突。','”.')
+            };
+            input.setAttribute('aria-invalid',String(Boolean(error)));
+            input.parentElement.querySelector('small').textContent = error ? messages[error.code] : '';
+        });
+        document.getElementById('saveShortcuts').disabled = errors.length > 0;
+        shortcutStatus.textContent = errors.length ? shortcutText('请先解决标出的冲突。','Resolve the highlighted conflicts first.') : report ? shortcutText('未发现应用内或已知保留组合冲突；全局占用仍需在系统中确认。','No app or known reserved-key conflicts found; global bindings still need a system check.') : '';
+        return !errors.length;
+    }
+    function renderShortcutFields(values) {
+        shortcutFields.innerHTML = shortcuts.definitions.map(item => '<label class="shortcut-setting-row"><span>' + item.label[document.documentElement.lang === 'en' ? 1 : 0] + '</span><input type="text" data-shortcut="' + item.id + '" autocomplete="off" spellcheck="false" maxlength="64" aria-describedby="shortcut-error-' + item.id + '"><small id="shortcut-error-' + item.id + '"></small></label>').join('');
+        shortcutFields.querySelectorAll('input').forEach(input => { input.value = values[input.dataset.shortcut]; });
+        checkShortcutDraft(false);
+    }
+    document.getElementById('shortcutSettingsButton').addEventListener('click', () => {
+        clearHints(); updateShortcutLabels();
+        renderShortcutFields(Object.fromEntries(shortcuts.definitions.map(item => [item.id,shortcuts.get(item.id)])));
+        shortcutDialog.showModal();
+    });
+    document.getElementById('closeShortcutSettings').addEventListener('click', () => shortcutDialog.close());
+    document.getElementById('resetShortcuts').addEventListener('click', () => renderShortcutFields(shortcuts.defaults));
+    document.getElementById('checkShortcuts').addEventListener('click', () => checkShortcutDraft(true));
+    shortcutFields.addEventListener('input', () => checkShortcutDraft(false));
+    shortcutFields.addEventListener('focusin', event => { if (event.target.matches('input')) event.target.select(); });
+    shortcutFields.addEventListener('keydown', event => {
+        if (!event.target.matches('input') || event.isComposing || !event.ctrlKey && !event.altKey && !event.metaKey) return;
+        if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && ['a','c','x','v','z','y'].includes(event.key.toLowerCase())) return;
+        const value = shortcuts.chord(event);
+        if (!value) return;
+        event.preventDefault(); event.stopPropagation(); event.target.value = value; checkShortcutDraft(false);
+    });
+    document.getElementById('shortcutSettingsForm').addEventListener('submit', event => {
+        event.preventDefault();
+        if (!checkShortcutDraft(true)) return;
+        const result = shortcuts.save(shortcutDraft());
+        if (result.ok) shortcutDialog.close();
+        else shortcutStatus.textContent = shortcutText('无法保存到本机，原快捷键未改变。','Local storage is unavailable; your original shortcuts are unchanged.');
+    });
+    updateShortcutLabels();
+    window.addEventListener('rhine:shortcutschange', () => { clearHints(); updateLabels(); });
 
     function highlight(button) {
         if (!button || dock) return;
@@ -243,7 +322,7 @@
     window.addEventListener('resize', () => { resetDock(); refreshView(); });
     window.addEventListener('rhine:viewchange', refreshView);
     window.addEventListener('rhine:ready', refreshView);
-    window.addEventListener('rhine:languagechange', () => { updateLabels(); refreshHeadingDepth(); });
+    window.addEventListener('rhine:languagechange', () => { updateLabels(); updateShortcutLabels(); refreshHeadingDepth(); });
     motion.addEventListener('change', () => {
         resetDock();
         document.querySelectorAll('.scroll-card').forEach(card => card.classList.add('is-revealed'));
@@ -314,37 +393,26 @@
             hint.className = 'keyboard-action-hint' + (selected ? ' is-current' : '') + (/^[0-9]$/.test(key) ? ' is-tab' : '');
             hint.setAttribute('aria-hidden', 'true');
             hint.setAttribute('data-shortcut', key);
-            hint.textContent = key.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ↑↓ ↵' : '');
+            const label = actionCommands[key] ? shortcuts.get(actionCommands[key]).replace(/^Alt\+/,'') : key;
+            const controls = selected ? ['previousAction','nextAction','confirmAction'].map(id => shortcuts.get(id).replace(/^Alt\+/,'').replace('ArrowUp','↑').replace('ArrowDown','↓').replace('ArrowLeft','←').replace('ArrowRight','→').replace('Enter','↵')).join(' ') : '';
+            hint.textContent = label.toUpperCase() + (selected ? ' ' + (group.indexOf(selectedAction) + 1) + '/' + group.length + ' ' + controls : '');
             // Native dialogs are in the top layer, above even fixed body overlays.
             (button.closest('dialog[open]') || document.body).appendChild(hint);
             hints.push({ button, hint, rect, selected });
         });
         const placed = [];
-        const obstacles = positioned.map(item => item.rect);
         const copy = !document.querySelector('dialog[open]') && document.querySelector('.view.active > :is(.page-heading,.dashboard-hero) > :first-child');
-        if (copy) obstacles.push(copy.getBoundingClientRect());
+        const copyRect = copy && copy.getBoundingClientRect();
         const overlaps = (a, b) => a.left < b.right + 3 && a.right > b.left - 3 && a.top < b.bottom + 3 && a.bottom > b.top - 3;
         const measured = hints.map(item => ({ ...item, size:item.hint.getBoundingClientRect() }));
-        measured.forEach(({ button, hint, rect, size, selected }) => {
-            const left = Math.max(bounds.left, Math.min(bounds.right - size.width, rect.right - size.width));
-            const candidates = [
-                { left, top:rect.top - size.height - 8 },
-                { left, top:rect.bottom + 8 },
-                { left:rect.left - size.width - 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 },
-                { left:rect.right + 8, top:rect.top + (rect.bottom - rect.top - size.height) / 2 }
-            ];
-            if (button === toggle && document.body.classList.contains('navigation-dock')) candidates.unshift({ left, top:bounds.bottom - size.height });
-            if (selected) obstacles.forEach(other => candidates.push({ left, top:other.top - size.height - 8 }, { left, top:other.bottom + 8 }));
-            if (selected && document.querySelector('dialog[open]')) candidates.push({ left, top:bounds.bottom - size.height });
-            const spot = candidates.map(point => ({ ...point, right:point.left + size.width, bottom:point.top + size.height })).find(point =>
-                point.left >= bounds.left && point.right <= bounds.right && point.top >= bounds.top && point.bottom <= bounds.bottom &&
-                !obstacles.some(other => overlaps(point, other)) && !placed.some(other => overlaps(point, other)));
-            // Crowded controls remain reachable by group; don't cover their icons with badges.
-            hint.hidden = !spot;
-            if (!spot) return;
-            hint.style.left = spot.left + 'px';
-            hint.style.top = spot.top + 'px';
-            placed.push(spot);
+        measured.forEach(({ button, hint, rect, size }) => {
+            const left = rect.left + (rect.right - rect.left - size.width) / 2;
+            const top = Math.min(rect.top - 6,bounds.bottom) - size.height;
+            const spot = { left,top,right:left + size.width,bottom:top + size.height };
+            // Keep the badge centered above its own target; never scatter it to another side.
+            hint.hidden = left < bounds.left || spot.right > bounds.right || top < bounds.top || spot.bottom > bounds.bottom || (copyRect && overlaps(spot,copyRect)) || placed.some(other => overlaps(spot,other));
+            if (hint.hidden) return;
+            hint.style.left = left + 'px'; hint.style.top = top + 'px'; placed.push(spot);
         });
     }
     function showHints() {
@@ -353,7 +421,8 @@
         if (!scope) return;
         const tabs = numberTabs();
         actions = Array.from(scope.querySelectorAll('button,[role="button"],summary,.clickable-data-row[tabindex],.protocol-card[tabindex]')).filter(button => visible(button) && !button.closest('svg,.animal-rack-grid,.plant-rack-grid,.microbe-rack-grid,.cold-storage-device-level-slots,.cold-storage-map,.freezer-grid') && button.getAttribute('aria-hidden') !== 'true').map(button => ({ key:tabs.includes(button) ? String((tabs.indexOf(button) + 1) % 10) : actionKey(button), button })).filter(action => action.key !== 'f');
-        if (!document.querySelector('dialog[open]') && visible(toggle)) actions.push({ key:'g', button:toggle });
+        actions = actions.filter(action => !actionCommands[action.key] || shortcuts.get(actionCommands[action.key]));
+        if (!document.querySelector('dialog[open]') && visible(toggle) && shortcuts.get('navigation')) actions.push({ key:'g', button:toggle });
         paintHints();
     }
     function selectAction(key, step = 0) {
@@ -376,52 +445,49 @@
         let key = event.key.toLowerCase();
         if (event.altKey && !/^[a-z0-9]$/.test(key) && /^(Digit[0-9]|Key[A-Z])$/.test(event.code || '')) key = event.code.replace(/^(Digit|Key)/, '').toLowerCase();
         const target = event.target;
-        if ((event.ctrlKey || event.metaKey) && !event.altKey && key === 'enter') {
+        const command = shortcuts.command(event);
+        if (command === 'saveDialog') {
             const dialog = target.closest('dialog[open]');
             const save = dialog?.querySelector('#entrySubmitButton,#experimentDetailSubmitButton');
             if (visible(save)) { event.preventDefault(); save.click(); }
             return;
         }
         if (target.closest(editable)) return;
-        if (event.altKey && key === 'g' && !event.ctrlKey && !event.metaKey && !event.shiftKey && !overlay() && !target.closest(editor)) {
+        if (command === 'navigation' && !overlay() && !target.closest(editor)) {
             event.preventDefault(); event.stopImmediatePropagation(); clearHints(); toggle.click(); return;
         }
         if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key) && !overlay()) {
             event.preventDefault(); event.stopImmediatePropagation(); clearHints(); buttons[(Number(key) + 9) % 10].click(); return;
         }
         if (key === 'alt' && !event.ctrlKey && !event.metaKey && !event.shiftKey && (!overlay() || document.querySelector('dialog[open]'))) { event.preventDefault(); showHints(); return; }
+        if (command && (!overlay() || document.querySelector('dialog[open]'))) {
+            const action = Object.keys(actionCommands).find(key => actionCommands[key] === command && key !== 'g');
+            if (action) { event.preventDefault(); event.stopImmediatePropagation(); selectAction(action); return; }
+            if (selectedAction && ['previousAction','nextAction'].includes(command)) { event.preventDefault(); event.stopImmediatePropagation(); selectAction(selectedAction.key,command === 'previousAction' ? -1 : 1); return; }
+            if (selectedAction && command === 'confirmAction' && visible(selectedAction.button)) { event.preventDefault(); event.stopImmediatePropagation(); const button = selectedAction.button; clearHints(); button.click(); return; }
+        }
+        if (!overlay() && !target.closest(editor) && ['previousPage','nextPage','newEntry'].includes(command)) {
+            if (command === 'newEntry') {
+                const create = Array.from(document.querySelectorAll('.view.active .page-heading button[data-add],.view.active .dashboard-hero button[data-add],.view.active .module-toolbar button.primary[data-add],.view.active [data-layout-action="new"]')).find(visible);
+                if (create) { event.preventDefault(); event.stopImmediatePropagation(); create.click(); }
+            } else if (!target.closest('button:not(.nav-item),[role="button"],a,summary')) {
+                const index = buttons.findIndex(button => button.classList.contains('active'));
+                event.preventDefault(); event.stopImmediatePropagation();
+                buttons[(index + (command === 'previousPage' ? -1 : 1) + buttons.length) % buttons.length].click();
+            }
+            return;
+        }
         if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
             if (/^[0-9]$/.test(key) && (!overlay() || document.querySelector('dialog[open]'))) {
                 if (activateNumber(key)) { event.preventDefault(); showHints(); }
-            } else if (['arrowup','arrowdown','arrowleft','arrowright'].includes(key) && selectedAction) {
-                event.preventDefault();
-                selectAction(selectedAction.key, key === 'arrowup' || key === 'arrowleft' ? -1 : 1);
-            } else if (key === 'enter' && selectedAction && visible(selectedAction.button)) {
-                event.preventDefault();
-                const button = selectedAction.button;
-                clearHints();
-                button.click();
             } else if (key === 'escape') {
                 clearHints();
-            } else if (['n','e','x','s','v','a'].includes(key) && (!overlay() || document.querySelector('dialog[open]'))) {
-                event.preventDefault();
-                selectAction(key);
             }
             if (event.defaultPrevented) event.stopImmediatePropagation();
             return;
         }
         if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || overlay() || target.closest(editor)) return;
         if (/^[0-9]$/.test(key)) { if (activateNumber(key)) event.preventDefault(); return; }
-        if (['arrowleft','arrowright','a','d'].includes(key)) {
-            if (target.closest('button:not(.nav-item),[role="button"],a,summary')) return;
-            const index = buttons.findIndex(button => button.classList.contains('active'));
-            const step = key === 'arrowleft' || key === 'a' ? -1 : 1;
-            event.preventDefault();
-            buttons[(index + step + buttons.length) % buttons.length].click();
-        } else if (key === 'n') {
-            const create = Array.from(document.querySelectorAll('.view.active .page-heading button[data-add],.view.active .dashboard-hero button[data-add],.view.active .module-toolbar button.primary[data-add],.view.active [data-layout-action="new"]')).find(visible);
-            if (create) { event.preventDefault(); create.click(); }
-        }
     }, true);
     document.addEventListener('keyup', event => { if (event.key === 'Alt') clearHints(); });
     window.addEventListener('blur', clearHints);

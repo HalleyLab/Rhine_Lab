@@ -4,6 +4,10 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 const source = await read('js/rhine-lab-navigation.js');
+const shortcutContext = { window:{ dispatchEvent(){} }, CustomEvent:class{}, localStorage:{ getItem(){return null;},setItem(){} } };
+vm.runInNewContext(await read('js/rhine-lab-shortcuts.js'),shortcutContext);
+const shortcuts = shortcutContext.window.RhineLabShortcuts;
+const actionCommands = { n:'create',e:'edit',x:'delete',s:'save',v:'view',a:'other',g:'navigation' };
 const handlers = {}, calls = [], frames = new Map();
 let frameId = 0, blocked = false, typing = false, editing = false, control = false, dialog = null;
 const target = { closest(selector) {
@@ -17,7 +21,7 @@ const buttons = Array.from({ length:10 }, (_, index) => ({ classList:{ contains:
 const context = {
     document:{ addEventListener:(type, handler) => handlers[type] = handler, querySelectorAll:() => [create], querySelector:() => dialog },
     nav:{ addEventListener:(type, handler) => handlers[type] = handler },
-    buttons, toggle:{ click:() => calls.push('toggle') }, overlay:() => blocked,
+    buttons, shortcuts, actionCommands, toggle:{ click:() => calls.push('toggle') }, overlay:() => blocked,
     editable:'editable', editor:'editor', visible:element => !!element && !element.disabled,
     clearHints:() => calls.push('clear'), showHints:() => calls.push('hints'), selectedAction:null,
     selectAction:(key, step = 0) => calls.push([key,step]),
@@ -99,7 +103,7 @@ const element = (attributes = {}, extra = {}) => ({
     id:'', type:'button', dataset:{},
     getAttributeNames:() => Object.keys(attributes), getAttribute:name => attributes[name],
     classList:{ values:new Set(), add(value) { this.values.add(value); }, remove(value) { this.values.delete(value); } },
-    matches:() => false, closest:() => false, getBoundingClientRect:() => ({ left:20,right:200,top:40,bottom:80 }),
+    matches:() => false, closest:() => false, getBoundingClientRect:() => ({ left:20,right:200,top:100,bottom:140 }),
     focus() { this.focused = true; }, scrollIntoView() { this.scrolled = true; }, ...extra
 });
 let candidates = Array.from({ length:90 }, () => element({ 'data-edit-result':'' }));
@@ -110,7 +114,7 @@ const groupContext = {
         activeElement:{ closest:() => focusedGroup }, getElementById:() => ({ getBoundingClientRect:() => ({ top:700 }) }),
         createElement:() => ({ className:'', style:{}, setAttribute() {}, remove() {}, getBoundingClientRect:() => ({ width:110,height:31 }) }), body:{ appendChild() {}, classList:{ contains:() => isDock } } },
     compact:{ matches:true },
-    toggle:null,
+    toggle:null,shortcuts,actionCommands,
     visible:button => !!button && !button.disabled, innerWidth:390, innerHeight:844,
     requestAnimationFrame() {}, cancelAnimationFrame() {}
 };
@@ -132,17 +136,18 @@ assert.equal(api.selectAction('e'), true); assert.equal(api.selected.button, can
 api.selectAction('e', -1); assert.equal(api.selected.button, candidates[89]);
 candidates[0].disabled = true;
 api.selectAction('e', 1); assert.equal(api.selected.button, candidates[1]);
-assert.ok(candidates[1].focused && candidates[1].scrolled);
+assert.ok(candidates[1].focused);
 assert.equal(api.selectAction('x'), false); assert.equal(api.selected.button, candidates[1]);
-assert.ok(api.hints.some(({ hint }) => hint.textContent === 'E 1/89 ↑↓ ↵'));
+assert.ok(api.hints.some(({ hint }) => hint.textContent === 'E 1/89 ↑ ↓ ↵'));
 const activeHint = api.hints.find(({ hint }) => hint.className.includes('is-current')).hint;
 assert.equal(activeHint.hidden, false);
-assert.ok(parseFloat(activeHint.style.top) >= 88, 'Hints stay outside the target and its icons');
+assert.equal(parseFloat(activeHint.style.top),63, 'Hints stay directly above their target');
+assert.equal(parseFloat(activeHint.style.left),55, 'Hints are horizontally centered');
 api.clearHints(); assert.equal(api.actions.length, 0); assert.equal(api.hints.length, 0);
 assert.equal(candidates[1].classList.values.size, 0);
 headingCopy = { getBoundingClientRect:() => ({ left:0,right:390,top:0,bottom:90 }) };
 api.showHints(); api.selectAction('e');
-assert.ok(parseFloat(api.hints.find(item => item.selected).hint.style.top)>=98, 'Move below copy when there is no space above the button');
+assert.equal(api.hints.find(item => item.selected).hint.hidden,true, 'Hide a blocked badge instead of moving it to another side');
 api.clearHints(); headingCopy = null;
 const dialogHints = [];
 modal = { contains:() => false, querySelectorAll:selector => selector.includes('.filter-tabs') ? [] : candidates, appendChild:hint => dialogHints.push(hint) };
@@ -249,7 +254,10 @@ assert.doesNotMatch(html,/navigation-mode-key|systemConnectionLabel|class="syste
 assert.match(source,/toggle.dataset.navLabel = label;/);
 assert.doesNotMatch(source,/' · F2'/);
 assert.doesNotMatch(source,/['"]f2['"]|['"]F2['"]/);
-assert.match(source,/aria-keyshortcuts', 'Alt\+G'/);
+assert.match(source,/aria-keyshortcuts', shortcuts.get\('navigation'\)/);
+assert.doesNotMatch(source,/const candidates = \[/);
+assert.match(html,/id="shortcutSettingsDialog"/);
+assert.ok(html.indexOf('js/rhine-lab-shortcuts.js') < html.indexOf('js/rhine-lab-navigation.js'));
 assert.match(css,/keyboard-action-hint \{[^}]*padding:3px 6px[^}]*font:800 12px/);
 assert.match(css,/keyboard-action-hint\.is-current \{[^}]*font-size:13px/);
 assert.match(css,/is-heading-visible/);

@@ -3848,7 +3848,7 @@
         });
 
         document.addEventListener('keydown', function (event) {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+            if (window.RhineLabShortcuts ? window.RhineLabShortcuts.matches(event,'search') : (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
                 openSearch('');
             }

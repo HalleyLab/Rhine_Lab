@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="css/rhine-lab-motion-icons.css?v=0.3.3">
     <link rel="stylesheet" href="css/rhine-lab-mobile.css?v=0.4.1-optical1">
     <link rel="stylesheet" href="css/rhine-lab-layout.css?v=0.4.2">
-    <link rel="stylesheet" href="css/rhine-lab-navigation.css?v=0.4.2-navfix1">
+    <link rel="stylesheet" href="css/rhine-lab-navigation.css?v=0.4.2-keys1">
 </head>
 <body>
     <div class="app-boot-screen" id="appBootScreen" role="status" aria-live="polite" aria-label="正在载入 Rhine Lab">
@@ -119,6 +119,7 @@
                             </div>
                             <button class="utility-nav-item background-toggle" id="backgroundToggle" type="button" aria-label="切换背景" title="切换背景" aria-pressed="false" data-background-mode="default"><span class="background-toggle-glyph desktop-utility-control" aria-hidden="true"><i></i><i></i><i></i></span><svg class="utility-item-icon mobile-utility-control" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4-8 4-8-4 8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"></path></svg><span class="utility-label mobile-utility-control">切换背景</span></button>
                             <button class="utility-nav-item" id="themeToggle" type="button" aria-label="夜间模式🌙" title="夜间模式🌙"><span class="desktop-theme-glyph desktop-utility-control" aria-hidden="true">◐</span><span class="utility-theme-icon mobile-utility-control" aria-hidden="true">🌙</span><span class="utility-label mobile-utility-control">夜间模式</span></button>
+                            <button class="utility-nav-item" id="shortcutSettingsButton" type="button" aria-label="快捷键设置" title="快捷键设置" aria-haspopup="dialog" aria-controls="shortcutSettingsDialog" data-i18n-skip><svg class="utility-item-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M5 9h2m3 0h2m3 0h2m-12 4h2m3 0h2m3 0h2m-10 3h8"/></svg><span class="utility-label mobile-utility-control">快捷键设置</span></button>
                             <button class="utility-nav-item" id="clearWorkspaceAction" type="button" data-open-clear-workspace aria-label="清空当前工作区" title="清空当前工作区" aria-haspopup="dialog" aria-controls="clearWorkspaceDialog"><svg class="utility-item-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"></path></svg><span class="utility-label mobile-utility-control">清空当前工作区</span></button>
                         </nav>
                     </div>
@@ -525,6 +526,14 @@
         </section>
     </div>
 
+    <dialog class="sync-dialog shortcut-settings-dialog" id="shortcutSettingsDialog" aria-labelledby="shortcutSettingsTitle" data-i18n-skip>
+        <form id="shortcutSettingsForm" method="dialog" novalidate>
+            <header><div><p class="micro-label">KEYBOARD SHORTCUTS</p><h2 id="shortcutSettingsTitle">快捷键设置</h2></div><button class="dialog-close" type="button" id="closeShortcutSettings" aria-label="关闭"></button></header>
+            <div class="shortcut-settings-body"><p id="shortcutSettingsScope"></p><div id="shortcutSettingsFields"></div><p id="shortcutSettingsStatus" role="status" aria-live="polite"></p></div>
+            <footer><button class="button ghost" id="resetShortcuts" type="button">恢复默认</button><div><button class="button ghost" id="checkShortcuts" type="button">检测冲突</button><button class="button primary" id="saveShortcuts" type="submit">保存</button></div></footer>
+        </form>
+    </dialog>
+
     <dialog class="entry-dialog" id="entryDialog">
         <form id="entryForm" method="dialog" novalidate>
             <header><div><p class="micro-label" id="dialogKicker">NEW RECORD</p><h2 id="dialogTitle">新建记录</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="关闭"></button></header>
@@ -709,7 +718,8 @@
     <script type="module" src="js/rhine-lab-close-icons.js?v=0.3.3"></script>
     <script src="js/rhine-lab-bio-runner.js?v=0.4.2"></script>
     <script src="js/rhine-lab-layout.js?v=0.4.2"></script>
-    <script src="js/rhine-lab-navigation.js?v=0.4.2-navfix1"></script>
-    <script src="js/rhine-lab-bootstrap.js?v=0.4.2-navfix1"></script>
+    <script src="js/rhine-lab-shortcuts.js?v=0.4.2-keys1"></script>
+    <script src="js/rhine-lab-navigation.js?v=0.4.2-keys1"></script>
+    <script src="js/rhine-lab-bootstrap.js?v=0.4.2-keys1"></script>
 </body>
 </html>
