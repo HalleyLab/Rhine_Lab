@@ -8,12 +8,12 @@ const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const release = path.join(root, 'dist', `release-${pkg.version}`);
 for (const entry of await readdir(release, { withFileTypes: true })) {
   const target = path.join(release, entry.name);
-  if (entry.isDirectory() || !entry.name.includes(pkg.version)) {
+  if (entry.isDirectory() || !entry.name.includes(pkg.version) && !/^latest(?:-mac)?\.yml$/.test(entry.name)) {
     await rm(target, { recursive: true, force: true });
   }
 }
 for (const entry of await readdir(release, { withFileTypes: true })) {
-  if (!entry.isFile() || !/\.(?:exe|apk)$/i.test(entry.name)) continue;
+  if (!entry.isFile() || !/\.(?:exe|apk|dmg|zip)$/i.test(entry.name)) continue;
   const file = path.join(release, entry.name);
   const digest = createHash('sha256').update(await readFile(file)).digest('hex');
   await writeFile(`${file}.sha256`, `${digest}  ${entry.name}\n`, 'utf8');

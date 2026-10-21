@@ -79,14 +79,24 @@ function prepareJob(input) {
     };
 }
 
+function localExecutablePath() {
+    const directories = String(process.env.PATH || '').split(path.delimiter);
+    if (process.platform === 'darwin') directories.push('/opt/homebrew/bin', '/usr/local/bin');
+    return directories.filter(Boolean).join(path.delimiter);
+}
+
 function resolveLocalExecutable(executable) {
     const names = process.platform === 'win32' && !path.extname(executable) ? [executable + '.exe', executable] : [executable];
-    for (const directory of String(process.env.PATH || '').split(path.delimiter)) {
+    for (const directory of localExecutablePath().split(path.delimiter)) {
         const cleanDirectory = directory.replace(/^"|"$/g, '');
         if (!cleanDirectory) continue;
         for (const name of names) {
             const candidate = path.resolve(cleanDirectory, name);
-            try { if (fs.statSync(candidate).isFile()) return candidate; } catch (_error) {}
+            try {
+                if (!fs.statSync(candidate).isFile()) continue;
+                if (process.platform !== 'win32') fs.accessSync(candidate, fs.constants.X_OK);
+                return candidate;
+            } catch (_error) {}
         }
     }
     throw new Error('未在系统 PATH 中找到运行程序：' + executable);
@@ -198,6 +208,7 @@ function createBioRunner(options) {
         try {
             child = spawn(resolveLocalExecutable(job.executable), job.args, {
                 cwd: job.cwd || undefined,
+                env: process.platform === 'darwin' ? Object.assign({}, process.env, { PATH: localExecutablePath() }) : process.env,
                 shell: false,
                 windowsHide: true,
                 stdio: ['ignore', 'pipe', 'pipe']

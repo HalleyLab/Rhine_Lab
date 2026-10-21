@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const { createUsbSyncBridge, isSnapshot, isPrivateAddress } = require('./usb-sync.cjs');
 const { createBioRunner } = require('./bio-runner.cjs');
 const { networkInterfaces } = require('node:os');
@@ -13,6 +14,7 @@ let updateInstallQueued = false;
 let desktopUsbSync = null;
 let usbSyncBridge = null;
 let bioRunner = null;
+let pendingAppUrl = appUrlFromArguments(process.argv);
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 function isMainWindowSender(event) {
@@ -97,11 +99,14 @@ function appUrlFromArguments(argumentsList) {
 }
 
 function sendAppUrl(url) {
-    if (!url || !mainWindow || mainWindow.isDestroyed()) return;
+    if (!/^rhinelab:\/\//i.test(String(url || ''))) return;
+    pendingAppUrl = url;
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isLoading()) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
     mainWindow.webContents.send('rhine-auth-callback', url);
+    pendingAppUrl = '';
 }
 
 function createWindow() {
@@ -131,8 +136,8 @@ function createWindow() {
         callback(false);
     });
     window.once('ready-to-show', function () { window.show(); });
-    window.webContents.once('did-finish-load', function () {
-        sendAppUrl(appUrlFromArguments(process.argv));
+    window.webContents.on('did-finish-load', function () {
+        sendAppUrl(pendingAppUrl);
     });
     window.on('closed', function () { if (mainWindow === window) mainWindow = null; });
     window.loadFile(path.join(__dirname, '..', 'index.html'));
@@ -140,7 +145,12 @@ function createWindow() {
 }
 
 function setupAutomaticUpdates() {
-    if (isDevelopment || process.platform !== 'win32') return;
+    if (isDevelopment || !['win32', 'darwin'].includes(process.platform)) return;
+    if (process.platform === 'darwin') {
+        // Squirrel.Mac cannot update unsigned or ad-hoc-signed development builds.
+        const signature = spawnSync('/usr/bin/codesign', ['-dv', '--verbose=4', app.getPath('exe')], { encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 });
+        if (signature.status !== 0 || !/^TeamIdentifier=[A-Z0-9]{10}$/m.test(signature.stderr || '')) return;
+    }
 
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
@@ -203,13 +213,14 @@ function setupAutomaticUpdates() {
 }
 
 const applicationMenu = Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu', label: 'Rhine Lab' }] : []),
     {
-        label: 'Rhine Lab',
+        label: process.platform === 'darwin' ? '文件' : 'Rhine Lab',
         submenu: [
             { role: 'reload', label: '重新载入' },
             { role: 'togglefullscreen', label: '全屏' },
             { type: 'separator' },
-            { role: 'quit', label: '退出' }
+            process.platform === 'darwin' ? { role: 'close', label: '关闭窗口' } : { role: 'quit', label: '退出' }
         ]
     },
     {
@@ -219,7 +230,8 @@ const applicationMenu = Menu.buildFromTemplate([
             { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }
         ]
     },
-    { label: '视图', submenu: [{ role: 'zoomIn' }, { role: 'zoomOut' }, { role: 'resetZoom' }] }
+    { label: '视图', submenu: [{ role: 'zoomIn' }, { role: 'zoomOut' }, { role: 'resetZoom' }] },
+    ...(process.platform === 'darwin' ? [{ role: 'windowMenu' }] : [])
 ]);
 
 const singleInstance = app.requestSingleInstanceLock();
@@ -231,6 +243,7 @@ app.on('second-instance', function (_event, commandLine) {
 
 app.on('open-url', function (event, url) {
     event.preventDefault();
+    if (singleInstance && app.isReady() && (!mainWindow || mainWindow.isDestroyed())) createWindow();
     sendAppUrl(url);
 });
 

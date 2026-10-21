@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhine-lab-pages-v178-0.4.2-keys2';
+const CACHE_NAME = 'rhine-lab-pages-v179-0.4.2-mac1';
 const APP_SHELL = [
     './',
     './index.html',
@@ -18,7 +18,7 @@ const APP_SHELL = [
     './css/rhine-lab-layout.css?v=0.4.2',
     './css/rhine-lab-navigation.css?v=0.4.2-keys2',
     './js/rhine-lab-config.js?v=0.3.3-ai',
-    './js/rhine-lab-i18n.js?v=0.4.1-perf1',
+    './js/rhine-lab-i18n.js?v=0.4.2-mac1',
     './js/rhine-lab-crypto.js?v=0.1.9-storage-recovery',
     './js/rhine-lab-sync-v019.js?v=0.4.1',
     './js/rhine-lab-pwa.js?v=0.3.3-r2',
@@ -29,8 +29,8 @@ const APP_SHELL = [
     './js/rhine-lab-layout.js?v=0.4.2',
     './js/rhine-lab-shortcuts.js?v=0.4.2-keys2',
     './js/rhine-lab-navigation.js?v=0.4.2-keys2',
-    './js/rhine-lab-bootstrap.js?v=0.4.2-keys2',
-    './js/rhine-lab.js?v=0.4.2-keys2',
+    './js/rhine-lab-bootstrap.js?v=0.4.2-mac1',
+    './js/rhine-lab.js?v=0.4.2-mac1',
     './js/vendor/morphicons/dom.js',
     './js/vendor/morphicons/spring-CFHloqPP.js',
     './js/vendor/morphicons/normalize-CYnN3Npw.js',

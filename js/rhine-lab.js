@@ -1814,17 +1814,20 @@
 
     function resolveLatestDesktopDownload() {
         const button = document.getElementById('desktopDownloadButton');
-        if (!button || isInstalledAppRuntime()) return;
+        const macButton = document.getElementById('macDownloadButton');
+        if ((!button && !macButton) || isInstalledAppRuntime()) return;
         fetch('https://api.github.com/repos/HalleyLab/Rhine_Lab/releases/latest', { cache: 'no-store' })
             .then(function (response) { if (!response.ok) throw new Error('Release lookup failed'); return response.json(); })
             .then(function (release) {
                 const assets = Array.isArray(release.assets) ? release.assets : [];
-                const installer = assets.find(function (asset) { return /-Windows-Setup\.exe$/i.test(String(asset.name || '')); });
-                if (!installer || !installer.browser_download_url) throw new Error('Windows installer missing');
-                button.href = installer.browser_download_url;
-                button.download = installer.name;
+                [[button, /-Windows-Setup\.exe$/i], [macButton, /-macOS-universal\.dmg$/i]].forEach(function ([link, pattern]) {
+                    const installer = assets.find(function (asset) { return pattern.test(String(asset.name || '')); });
+                    if (!link || !installer || !/^https:\/\/github\.com\/HalleyLab\/Rhine_Lab\/releases\/download\//i.test(String(installer.browser_download_url || ''))) return;
+                    link.href = installer.browser_download_url;
+                    link.download = installer.name;
+                });
             })
-            .catch(function () { button.removeAttribute('download'); });
+            .catch(function () { [button, macButton].forEach(function (link) { if (link) link.removeAttribute('download'); }); });
     }
 
     function normalizeActivityEntry(activity) {

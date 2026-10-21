@@ -18,13 +18,42 @@ Rhine Lab 是一款面向生命科学研究的个人实验管理工具，以莱�
 - 记录细胞培养、传代、培养条件与冻存样本位置。
 - 查看动物、细胞、样本、实验和结果之间的简明谱系。
 - 提供科学计算器、配液计算、Master Mix 及多孔板标注工具。
-- 在 Windows 应用中通过可视化运行中心执行本地或 SSH 服务器生信流程；浏览器可连接自有运行网关。
+- 在 Windows / macOS 应用中通过可视化运行中心执行本地或 SSH 服务器生信流程；浏览器可连接自有运行网关。
 - 支持本地加密存储、跨设备同步和只读 LAB 共用界面。
-- 提供网页、Windows 与 Android 版本，并支持中英文和日夜主题。
+- 支持网页、Windows、macOS 与 Android，并提供中英文和日夜主题。
 
 云同步后端采用 Cloudflare Workers、D1 与 R2；工作区、LAB 投影和附件在客户端加密后上传。部署说明见 [cloudflare/README.md](cloudflare/README.md)。
 
 当前版本：**0.4.2**
+
+### macOS 桌面版
+
+- 使用现有 Electron 桌面应用，个人工作区保存在本机；新安装默认空工作区，支持加密同步文件导入。
+- 通用安装包同时包含 Apple Silicon 与 Intel 架构：DMG 用于安装，ZIP 和 `latest-mac.yml` 用于已签名版本的自动更新。
+- 支持 macOS 菜单、Dock 重新打开窗口、`rhinelab://` 回调、本地运行与 SSH；从 Finder 启动时也会查找 Homebrew 的运行程序。
+
+在 Mac 上安装 Node.js 24 和 pnpm 11 后运行：
+
+```sh
+pnpm install --frozen-lockfile
+pnpm verify:desktop
+pnpm desktop:build:mac
+```
+
+产物位于 `dist/release-0.4.2/`，包括 `Rhine-Lab-0.4.2-macOS-universal.dmg` 与 ZIP。打开 DMG 后，将 Rhine Lab 拖入“应用程序”再运行。开发包为临时签名，未经 Apple 公证，不启用自动更新；这不等同于可免安全提示的正式发行包。电脑上需另外安装运行生信流程所需的 Python、R、Docker 等工具。
+
+`Build desktop distributions` 工作流使用 macOS runner 生成开发测试产物。正式发布复用 `Publish Rhine Lab release` 工作流的 macOS 任务：公证沿用现有 iOS 的 App Store Connect API 密钥，另需增加 Mac 专用证书及密码。
+
+| Secret | 内容 |
+| --- | --- |
+| `MAC_CSC_LINK` | Developer ID Application 证书和私钥导出的 `.p12` 文件的 Base64；不是 iOS Distribution 证书 |
+| `MAC_CSC_KEY_PASSWORD` | `.p12` 密码 |
+| `APPLE_TEAM_ID` | Apple 开发者团队 ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | 已有 App Store Connect 团队 API 的 Issuer ID |
+| `APP_STORE_CONNECT_KEY_ID` | 已有 API 的 Key ID |
+| `APP_STORE_CONNECT_PRIVATE_KEY` | 已有 API 的 `.p8` 内容；API 密钥需具有公证权限 |
+
+正式任务执行 `pnpm desktop:build:mac:release`，验证双架构、签名和公证票据后上传 DMG、ZIP、校验文件和 `latest-mac.yml`。缺少凭据会明确失败，不会静默发布未经公证的正式 Mac 包。不要提交证书或密钥文件。macOS 侧跨设备传输使用已建立的本地网络连接或加密同步文件；蓝牙 PAN 能否建立由系统和手机支持情况决定。
 
 ### 手机 / 电脑蓝牙同步
 
@@ -53,13 +82,19 @@ Rhine Lab is a personal research workspace for life-science laboratories, combin
 - Record cell culture conditions, passages, and frozen-sample locations.
 - View concise lineage links between animals, cells, samples, experiments, and results.
 - Use a scientific calculator, solution calculators, Master Mix tools, and customizable plate annotations.
-- Run local or SSH-hosted bioinformatics pipelines from the visual Windows runner; browsers can use a private runner gateway.
+- Run local or SSH-hosted bioinformatics pipelines from the Windows / macOS desktop runner; browsers can use a private runner gateway.
 - Keep data encrypted locally, synchronize between devices, and use read-only shared LAB workspaces.
-- Available for web, Windows, and Android with Chinese/English and light/dark themes.
+- Supports web, Windows, macOS, and Android with Chinese/English and light/dark themes.
 
 Cloud sync uses Cloudflare Workers, D1, and R2. Workspace snapshots, LAB projections, and attachments are encrypted on the client before upload. See [cloudflare/README.md](cloudflare/README.md) for deployment notes.
 
 Current version: **0.4.2**
+
+### macOS desktop
+
+On a Mac with Node.js 24 and pnpm 11, run `pnpm install --frozen-lockfile`, `pnpm verify:desktop`, then `pnpm desktop:build:mac`. The universal DMG / ZIP in `dist/release-0.4.2/` supports both Apple Silicon and Intel. Workspaces stay local and new installations start empty. Install your own Python / R / Docker tools for local analysis.
+
+Development packages use ad-hoc signing, are not notarized, and do not auto-update. The desktop-distributions workflow builds test artifacts on a macOS runner. Public releases reuse the existing iOS App Store Connect API secrets and Team ID for notarization; add a **Developer ID Application** `.p12` certificate and its password as `MAC_CSC_LINK` and `MAC_CSC_KEY_PASSWORD`. The API key must allow notarization. The release workflow runs `pnpm desktop:build:mac:release`, verifies architecture, signing and notarization, then uploads the DMG, update ZIP and `latest-mac.yml`. Missing credentials fail the macOS release job instead of silently publishing an unsigned package. Never commit certificates or private keys. Local-network transfer and encrypted sync files are available; Bluetooth PAN support depends on the operating system and phone.
 
 ### Phone / computer Bluetooth sync
 

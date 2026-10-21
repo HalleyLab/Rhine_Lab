@@ -22,6 +22,9 @@
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
     "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never",
+    "desktop:build:mac": "pnpm desktop:assets && electron-builder --mac --universal --config.mac.identity=- --publish never",
+    "desktop:build:mac:release": "pnpm desktop:assets && electron-builder --mac --universal --config.mac.notarize=true --config.forceCodeSigning=true --publish never",
+    "verify:desktop": "node scripts/check-desktop.mjs",
     "cloudflare:dev": "wrangler dev --config cloudflare/wrangler.toml",
     "cloudflare:db:local": "wrangler d1 execute rhine-lab --local --config cloudflare/wrangler.toml --file cloudflare/schema.sql",
     "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.toml",
@@ -73,6 +76,25 @@
         "nsis"
       ]
     },
+    "mac": {
+      "artifactName": "Rhine-Lab-${version}-macOS-${arch}.${ext}",
+      "icon": "images/rhine-lab-desktop-icon.png",
+      "category": "public.app-category.productivity",
+      "target": [
+        { "target": "dmg", "arch": ["universal"] },
+        { "target": "zip", "arch": ["universal"] }
+      ],
+      "hardenedRuntime": true,
+      "entitlements": "desktop/entitlements.mac.plist",
+      "entitlementsInherit": "desktop/entitlements.mac.plist",
+      "notarize": false,
+      "extendInfo": {
+        "NSLocalNetworkUsageDescription": "Rhine Lab uses your local network to synchronize encrypted workspace data with your other devices."
+      }
+    },
+    "protocols": [
+      { "name": "Rhine Lab", "schemes": ["rhinelab"] }
+    ],
     "nsis": {
       "oneClick": true,
       "perMachine": false,

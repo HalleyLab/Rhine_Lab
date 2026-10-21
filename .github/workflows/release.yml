@@ -75,6 +75,76 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+  macos:
+    name: Publish signed macOS universal application
+    needs: release
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      RELEASE_TAG: ${{ needs.release.outputs.release_tag }}
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate macOS signing and notarization credentials
+        shell: bash
+        run: |
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_TEAM_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_PRIVATE_KEY; do
+            test -n "${!name}" || { echo "::error::$name is required for the signed macOS release."; exit 1; }
+          done
+      - name: Prepare notarization API key
+        shell: bash
+        run: |
+          key_path="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          printf '%s\n' "$APP_STORE_CONNECT_PRIVATE_KEY" | tr -d '\r' > "$key_path"
+          chmod 600 "$key_path"
+          grep -q 'BEGIN PRIVATE KEY' "$key_path" || { echo '::error::The App Store Connect key is not a valid p8 key.'; exit 1; }
+          echo "APPLE_API_KEY=$key_path" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
+          echo "APPLE_API_ISSUER=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify desktop compatibility
+        run: pnpm verify:desktop
+      - name: Build, sign and notarize macOS package
+        run: pnpm desktop:build:mac:release
+      - name: Verify universal binary, signing and notarization
+        shell: bash
+        run: |
+          app="dist/release-$(node -p "require('./package.json').version")/mac-universal/Rhine Lab.app"
+          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/Rhine Lab"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+          xcrun stapler validate "$app"
+      - name: Upload macOS installer and update metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          shasum -a 256 "dist/release-$version/Rhine-Lab-$version-macOS-universal.dmg" > "dist/release-$version/Rhine-Lab-$version-macOS-universal.dmg.sha256"
+          gh release upload "$RELEASE_TAG" dist/release-*/*-macOS-universal.* dist/release-*/latest-mac.yml --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-macOS-Universal
+          path: |
+            dist/release-*/*-macOS-universal.*
+            dist/release-*/latest-mac.yml
+          retention-days: 30
+          if-no-files-found: error
+
   android:
     name: Publish Android updater package
     needs: release

@@ -74,3 +74,34 @@ jobs:
           path: dist/release-*/*.exe
           retention-days: 30
           if-no-files-found: error
+
+  macos:
+    name: macOS universal test application
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify desktop compatibility
+        run: pnpm verify:desktop
+      - name: Build ad-hoc-signed macOS test package
+        run: pnpm desktop:build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhine-Lab-macOS-Universal-Test
+          path: |
+            dist/release-*/*-macOS-universal.dmg
+            dist/release-*/*-macOS-universal.zip
+          retention-days: 30
+          if-no-files-found: error

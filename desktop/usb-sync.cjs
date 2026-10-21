@@ -2,6 +2,10 @@ const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
 const dgram = require('node:dgram');
 const https = require('node:https');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const { tmpdir } = require('node:os');
+const { promisify } = require('node:util');
 
 const PROTOCOL = 'rhine-lab-local-sync-v1';
 const DISCOVERY_PORT = 32124;
@@ -37,7 +41,23 @@ function messageSignature(authKey, value) {
     return crypto.createHmac('sha256', Buffer.from(authKey, 'hex')).update(value).digest('hex');
 }
 
+async function createPosixCertificate() {
+    const directory = await fs.mkdtemp(path.join(tmpdir(), 'rhine-lab-sync-'));
+    try {
+        await fs.chmod(directory, 0o700);
+        const keyPath = path.join(directory, 'key.pem');
+        const certificatePath = path.join(directory, 'cert.pem');
+        await promisify(execFile)('/usr/bin/openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256', '-days', '1', '-subj', '/CN=Rhine Lab Local Sync', '-keyout', keyPath, '-out', certificatePath], { timeout: 15000, maxBuffer: 1024 * 1024 });
+        const [key, cert] = await Promise.all([fs.readFile(keyPath), fs.readFile(certificatePath)]);
+        const certificate = new crypto.X509Certificate(cert);
+        return { tlsOptions: { key, cert }, fingerprint: crypto.createHash('sha256').update(certificate.raw).digest('hex') };
+    } finally {
+        await fs.rm(directory, { recursive: true, force: true });
+    }
+}
+
 function createEphemeralCertificate() {
+    if (process.platform !== 'win32') return createPosixCertificate();
     const script = [
         '$rsa=[System.Security.Cryptography.RSA]::Create(2048)',
         '$dn=[System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new("CN=Rhine Lab Local Sync")',
@@ -52,7 +72,7 @@ function createEphemeralCertificate() {
             try {
                 const value = JSON.parse(stdout.trim());
                 const certificate = Buffer.from(value.cert, 'base64');
-                resolve({ pfx: Buffer.from(value.pfx, 'base64'), fingerprint: crypto.createHash('sha256').update(certificate).digest('hex') });
+                resolve({ tlsOptions: { pfx: Buffer.from(value.pfx, 'base64') }, fingerprint: crypto.createHash('sha256').update(certificate).digest('hex') });
             } catch (parseError) { reject(parseError); }
         });
     });
@@ -86,7 +106,7 @@ function createUsbSyncBridge(options) {
         const version = ++startVersion;
         startPromise = createEphemeralCertificate().then(function (certificate) {
         if (version !== startVersion) return;
-        httpServer = https.createServer({ pfx: certificate.pfx }, function (request, response) {
+        httpServer = https.createServer(certificate.tlsOptions, function (request, response) {
             const receivedAt = Date.now();
             const remoteAddress = request.socket && request.socket.remoteAddress;
             if (!isPrivateAddress(remoteAddress) || request.method !== 'POST' || request.url !== '/exchange') {
