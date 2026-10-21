@@ -35,14 +35,15 @@ assert.ok(pkg.build.mac.extendInfo.NSLocalNetworkUsageDescription);
 for (const source of [distribution, release]) {
     assert.match(source, /runs-on: macos-15/);
     assert.match(source, /pnpm verify:desktop/);
+    assert.match(source, /lipo "\$app\/Contents\/MacOS\/Rhine Lab" -verify_arch arm64 x86_64/, 'lipo input must precede its variable-length architecture list');
 }
 for (const secret of ['MAC_CSC_LINK','MAC_CSC_KEY_PASSWORD','APPLE_TEAM_ID','APP_STORE_CONNECT_ISSUER_ID','APP_STORE_CONNECT_KEY_ID','APP_STORE_CONNECT_PRIVATE_KEY']) assert.ok(release.includes('secrets.' + secret));
 assert.match(release,/APPLE_API_KEY=\$key_path/);
 assert.match(release,/chmod 600 "\$key_path"/);
-for (const check of ['lipo -verify_arch arm64 x86_64','codesign --verify','spctl --assess','xcrun stapler validate','latest-mac.yml']) assert.ok(release.includes(check));
+for (const check of ['codesign --verify','spctl --assess','xcrun stapler validate','latest-mac.yml']) assert.ok(release.includes(check));
 assert.match(distribution, /Rhine-Lab-macOS-Universal-Test/);
 assert.ok(distribution.indexOf('Verify universal test bundle') < distribution.indexOf('name: Rhine-Lab-macOS-Universal-Test'));
-for (const check of ['lipo -verify_arch arm64 x86_64','codesign --verify','ELECTRON_RUN_AS_NODE=1']) assert.ok(distribution.includes(check));
+for (const check of ['codesign --verify','ELECTRON_RUN_AS_NODE=1']) assert.ok(distribution.includes(check));
 assert.match(finalizer, /exe\|apk\|dmg\|zip/);
 const removalExpression = finalizer.split(/\r?\n/).find(line => line.includes('entry.isDirectory()')).trim().slice(4, -3);
 const shouldRemove = new Function('entry','pkg','return ' + removalExpression);

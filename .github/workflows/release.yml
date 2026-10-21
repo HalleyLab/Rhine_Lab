@@ -124,7 +124,7 @@ jobs:
         shell: bash
         run: |
           app="dist/release-$(node -p "require('./package.json').version")/mac-universal/Rhine Lab.app"
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/Rhine Lab"
+          lipo "$app/Contents/MacOS/Rhine Lab" -verify_arch arm64 x86_64
           codesign --verify --deep --strict --verbose=2 "$app"
           spctl --assess --type execute --verbose=2 "$app"
           xcrun stapler validate "$app"
