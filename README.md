@@ -40,7 +40,7 @@ pnpm verify:desktop
 pnpm desktop:build:mac
 ```
 
-产物位于 `dist/release-0.4.2/`，包括 `Rhine-Lab-0.4.2-macOS-universal.dmg` 与 ZIP。打开 DMG 后，将 Rhine Lab 拖入“应用程序”再运行。开发包为临时签名，未经 Apple 公证，不启用自动更新；这不等同于可免安全提示的正式发行包。电脑上需另外安装运行生信流程所需的 Python、R、Docker 等工具。
+产物位于 `dist/release-0.4.2/`，包括 `Rhine-Lab-0.4.2-macOS-universal.dmg` 与 ZIP。打开 DMG 后，将 Rhine Lab 拖入“应用程序”再运行。开发包为临时签名，不启用 Hardened Runtime、Apple 公证或自动更新；正式签名包仍启用 Hardened Runtime。这不等同于可免安全提示的正式发行包。电脑上需另外安装运行生信流程所需的 Python、R、Docker 等工具。
 
 `Build desktop distributions` 工作流使用 macOS runner 生成开发测试产物。正式发布复用 `Publish Rhine Lab release` 工作流的 macOS 任务：公证沿用现有 iOS 的 App Store Connect API 密钥，另需增加 Mac 专用证书及密码。
 
@@ -94,7 +94,7 @@ Current version: **0.4.2**
 
 On a Mac with Node.js 24 and pnpm 11, run `pnpm install --frozen-lockfile`, `pnpm verify:desktop`, then `pnpm desktop:build:mac`. The universal DMG / ZIP in `dist/release-0.4.2/` supports both Apple Silicon and Intel. Workspaces stay local and new installations start empty. Install your own Python / R / Docker tools for local analysis.
 
-Development packages use ad-hoc signing, are not notarized, and do not auto-update. The desktop-distributions workflow builds test artifacts on a macOS runner. Public releases reuse the existing iOS App Store Connect API secrets and Team ID for notarization; add a **Developer ID Application** `.p12` certificate and its password as `MAC_CSC_LINK` and `MAC_CSC_KEY_PASSWORD`. The API key must allow notarization. The release workflow runs `pnpm desktop:build:mac:release`, verifies architecture, signing and notarization, then uploads the DMG, update ZIP and `latest-mac.yml`. Missing credentials fail the macOS release job instead of silently publishing an unsigned package. Never commit certificates or private keys. Local-network transfer and encrypted sync files are available; Bluetooth PAN support depends on the operating system and phone.
+Development packages use ad-hoc signing without Hardened Runtime, are not notarized, and do not auto-update. Signed public releases retain Hardened Runtime. The desktop-distributions workflow verifies the universal architectures, signature and packaged Electron runtime on a macOS runner before uploading test artifacts. Public releases reuse the existing iOS App Store Connect API secrets and Team ID for notarization; add a **Developer ID Application** `.p12` certificate and its password as `MAC_CSC_LINK` and `MAC_CSC_KEY_PASSWORD`. The API key must allow notarization. The release workflow runs `pnpm desktop:build:mac:release`, verifies architecture, signing and notarization, then uploads the DMG, update ZIP and `latest-mac.yml`. Missing credentials fail the macOS release job instead of silently publishing an unsigned package. Never commit certificates or private keys. Local-network transfer and encrypted sync files are available; Bluetooth PAN support depends on the operating system and phone.
 
 ### Phone / computer Bluetooth sync
 

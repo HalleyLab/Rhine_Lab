@@ -22,7 +22,7 @@
     "desktop:start": "electron .",
     "desktop:assets": "node scripts/create-desktop-assets.mjs",
     "desktop:build": "pnpm desktop:assets && electron-builder --win nsis --publish never",
-    "desktop:build:mac": "pnpm desktop:assets && electron-builder --mac --universal --config.mac.identity=- --publish never",
+    "desktop:build:mac": "pnpm desktop:assets && electron-builder --mac --universal --config.mac.identity=- --config.mac.hardenedRuntime=false --publish never",
     "desktop:build:mac:release": "pnpm desktop:assets && electron-builder --mac --universal --config.mac.notarize=true --config.forceCodeSigning=true --publish never",
     "verify:desktop": "node scripts/check-desktop.mjs",
     "cloudflare:dev": "wrangler dev --config cloudflare/wrangler.toml",

@@ -97,6 +97,13 @@ jobs:
         run: pnpm verify:desktop
       - name: Build ad-hoc-signed macOS test package
         run: pnpm desktop:build:mac
+      - name: Verify universal test bundle
+        run: |
+          version=$(node -p "require('./package.json').version")
+          app="dist/release-$version/mac-universal/Rhine Lab.app"
+          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/Rhine Lab"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          ELECTRON_RUN_AS_NODE=1 "$app/Contents/MacOS/Rhine Lab" -e "console.log('Packaged Electron runtime started:', process.arch, process.versions.electron)"
       - uses: actions/upload-artifact@v4
         with:
           name: Rhine-Lab-macOS-Universal-Test

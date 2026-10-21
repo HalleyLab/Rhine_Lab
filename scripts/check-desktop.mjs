@@ -26,6 +26,8 @@ assert.equal(pkg.build.npmRebuild, false, 'Existing optional native dependency b
 assert.deepEqual(pkg.build.protocols[0].schemes, ['rhinelab']);
 assert.match(pkg.scripts['desktop:build'], /--win nsis/);
 assert.match(pkg.scripts['desktop:build:mac'], /--universal --config.mac.identity=-/);
+assert.match(pkg.scripts['desktop:build:mac'], /--config.mac.hardenedRuntime=false/, 'Ad-hoc test signing cannot enforce same-team library validation');
+assert.doesNotMatch(pkg.scripts['desktop:build:mac:release'], /hardenedRuntime=false/, 'Formal releases retain hardened runtime');
 assert.match(pkg.scripts['desktop:build:mac:release'], /mac.notarize=true --config.forceCodeSigning=true/);
 assert.match(entitlements, /com.apple.security.cs.allow-jit/);
 assert.doesNotMatch(entitlements, /disable-library-validation|allow-unsigned-executable-memory/);
@@ -39,6 +41,8 @@ assert.match(release,/APPLE_API_KEY=\$key_path/);
 assert.match(release,/chmod 600 "\$key_path"/);
 for (const check of ['lipo -verify_arch arm64 x86_64','codesign --verify','spctl --assess','xcrun stapler validate','latest-mac.yml']) assert.ok(release.includes(check));
 assert.match(distribution, /Rhine-Lab-macOS-Universal-Test/);
+assert.ok(distribution.indexOf('Verify universal test bundle') < distribution.indexOf('name: Rhine-Lab-macOS-Universal-Test'));
+for (const check of ['lipo -verify_arch arm64 x86_64','codesign --verify','ELECTRON_RUN_AS_NODE=1']) assert.ok(distribution.includes(check));
 assert.match(finalizer, /exe\|apk\|dmg\|zip/);
 const removalExpression = finalizer.split(/\r?\n/).find(line => line.includes('entry.isDirectory()')).trim().slice(4, -3);
 const shouldRemove = new Function('entry','pkg','return ' + removalExpression);
