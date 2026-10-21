@@ -256,7 +256,7 @@ app.whenReady().then(function () {
     }
     Menu.setApplicationMenu(applicationMenu);
     setupBioRunner();
-    if (singleInstance) createWindow();
+    if (singleInstance && (!mainWindow || mainWindow.isDestroyed())) createWindow();
     setupUsbSyncBridge();
     setupAutomaticUpdates();
     app.on('activate', function () {

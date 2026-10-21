@@ -73,7 +73,7 @@ function desktop(platform, signature = 'TeamIdentifier=ABCDE12345', packaged = t
     vm.runInNewContext(main,{require:name=>{assert.ok(name in dependencies,name);return dependencies[name];},__dirname:'/app/desktop',process:{platform,argv,env:{},execPath:'/app/Rhine Lab'},console,
         setTimeout:(fn,delay)=>{scheduled.push({fn,delay});return 1;},setInterval:()=>({unref(){}}),clearInterval(){}});
     return {app,windows,update,handlers,scheduled,get menu(){return menu;},get quits(){return quits;},get disposed(){return disposed;},get stopped(){return stopped;},get checks(){return checks;},
-        async ready(){finishReady();await tick();}};
+        async ready(beforeContinuation){finishReady();beforeContinuation?.();await tick();}};
 }
 const mac = desktop('darwin');
 let prevented = false;
@@ -98,6 +98,10 @@ mac.windows[1].close();mac.app.emit('open-url',{preventDefault(){}},'rhinelab://
 assert.equal(mac.windows.length,3);mac.windows[2].finish();assert.equal(mac.windows[2].sent[0][1],'rhinelab://auth?code=reopen');
 mac.app.emit('open-url',{preventDefault(){}},'https://example.org/');assert.equal(mac.windows[2].sent.length,1);
 mac.app.emit('before-quit');assert.equal(mac.disposed,1);assert.equal(mac.stopped,1);
+const opening=desktop('darwin');
+await opening.ready(()=>opening.app.emit('open-url',{preventDefault(){}},'rhinelab://auth?code=ready-boundary'));
+assert.equal(opening.windows.length,1,'A URL arriving at ready must not create a second window');
+opening.windows[0].finish();assert.equal(opening.windows[0].sent[0][1],'rhinelab://auth?code=ready-boundary');
 for (const signature of ['TeamIdentifier=not set','']) {
     const unsigned=desktop('darwin',signature);await unsigned.ready();assert.equal(unsigned.update.listenerCount('update-available'),0);
 }
